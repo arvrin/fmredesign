@@ -1,26 +1,477 @@
 @import "tailwindcss";
+/* Note: performance-fixes.css is imported at the end to override component styles */
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/* Tailwind v4 CSS-first configuration */
+@theme {
+  /* Custom Colors - Freaking Minds Brand */
+  --color-fm-magenta-50: #fdf2f8;
+  --color-fm-magenta-100: #fce7f3;
+  --color-fm-magenta-200: #fbcfe8;
+  --color-fm-magenta-300: #fb4ca0;
+  --color-fm-magenta-400: #e94392;
+  --color-fm-magenta-500: #d73a84;
+  --color-fm-magenta-600: #c53276;
+  --color-fm-magenta-700: #b32968;
+  --color-fm-magenta-800: #a1215a;
+  --color-fm-magenta-900: #8f184c;
+  
+  --color-fm-purple-700: #6e1845;
+  --color-fm-purple-800: #5c1338;
+  --color-fm-purple-900: #4a0e2b;
+  
+  --color-fm-orange-400: #ff855d;
+  --color-fm-orange-500: #ff7849;
+  --color-fm-orange-600: #ff6b35;
+  
+  --color-fm-neutral-50: #ffffff;
+  --color-fm-neutral-100: #f8f9fa;
+  --color-fm-neutral-200: #f2f2f2;
+  --color-fm-neutral-300: #e6e6e6;
+  --color-fm-neutral-400: #cccccc;
+  --color-fm-neutral-500: #808080;
+  --color-fm-neutral-600: #666666;
+  --color-fm-neutral-700: #404040;
+  --color-fm-neutral-800: #2d2d2d;
+  --color-fm-neutral-900: #1a1a1a;
+  
+  --color-fm-success: #16a34a;
+  --color-fm-warning: #f59e0b;
+  --color-fm-error: #ef4444;
+  --color-fm-info: #3b82f6;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  /* Typography */
+  --font-family-sans: 'Inter Variable', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-family-display: 'Inter Variable', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-family-mono: 'JetBrains Mono', 'Fira Code', 'Monaco', 'Cascadia Code', monospace;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  /* Custom Font Sizes - Display */
+  --font-size-display-xl: 4rem;
+  --font-size-display-lg: 3.5rem;
+  --font-size-display-md: 3rem;
+  
+  /* Custom Font Sizes - Headings */
+  --font-size-h1: 2.5rem;
+  --font-size-h2: 2rem;
+  --font-size-h3: 1.5rem;
+  --font-size-h4: 1.25rem;
+  --font-size-h5: 1.125rem;
+  --font-size-h6: 1rem;
+
+  /* Line Heights for Custom Typography */
+  --line-height-display-xl: 4.5rem;
+  --line-height-display-lg: 4rem;
+  --line-height-display-md: 3.5rem;
+  --line-height-h1: 3rem;
+  --line-height-h2: 2.5rem;
+  --line-height-h3: 2rem;
+  --line-height-h4: 1.75rem;
+  --line-height-h5: 1.5rem;
+  --line-height-h6: 1.5rem;
+
+  /* Letter Spacing for Custom Typography */
+  --letter-spacing-display: -0.02em;
+  --letter-spacing-heading: -0.01em;
+
+  /* Custom Spacing */
+  --spacing-18: 4.5rem;
+  --spacing-88: 22rem;
+  --spacing-128: 32rem;
+
+  /* Border Radius */
+  --border-radius-sm: 6px;
+  --border-radius-md: 12px;
+  --border-radius-lg: 16px;
+  --border-radius-xl: 24px;
+
+  /* Box Shadows - FM Brand */
+  --shadow-fm-sm: 0 1px 2px 0 rgba(143, 24, 76, 0.05);
+  --shadow-fm-md: 0 4px 6px -1px rgba(143, 24, 76, 0.1), 0 2px 4px -1px rgba(143, 24, 76, 0.06);
+  --shadow-fm-lg: 0 10px 15px -3px rgba(143, 24, 76, 0.1), 0 4px 6px -2px rgba(143, 24, 76, 0.05);
+  --shadow-fm-xl: 0 20px 25px -5px rgba(143, 24, 76, 0.1), 0 10px 10px -5px rgba(143, 24, 76, 0.04);
+
+  /* Animations */
+  --animate-fade-in: fadeIn 0.6s ease-out;
+  --animate-fade-in-up: fadeInUp 0.6s ease-out;
+  --animate-scale-in: scaleIn 0.3s ease-out;
+  --animate-pulse-slow: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+
+  /* Animation Keyframes */
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(24px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes scaleIn {
+    from {
+      opacity: 0;
+      transform: scale(0.9);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Typography utility classes */
+@layer utilities {
+  .text-display-xl {
+    font-size: var(--font-size-display-xl);
+    line-height: var(--line-height-display-xl);
+    letter-spacing: var(--letter-spacing-display);
+  }
+  
+  .text-display-lg {
+    font-size: var(--font-size-display-lg);
+    line-height: var(--line-height-display-lg);
+    letter-spacing: var(--letter-spacing-display);
+  }
+  
+  .text-display-md {
+    font-size: var(--font-size-display-md);
+    line-height: var(--line-height-display-md);
+    letter-spacing: var(--letter-spacing-display);
+  }
+  
+  .text-h1 {
+    font-size: var(--font-size-h1);
+    line-height: var(--line-height-h1);
+    letter-spacing: var(--letter-spacing-heading);
+  }
+  
+  .text-h2 {
+    font-size: var(--font-size-h2);
+    line-height: var(--line-height-h2);
+    letter-spacing: var(--letter-spacing-heading);
+  }
+  
+  .text-h3 {
+    font-size: var(--font-size-h3);
+    line-height: var(--line-height-h3);
+  }
+  
+  .text-h4 {
+    font-size: var(--font-size-h4);
+    line-height: var(--line-height-h4);
+  }
+  
+  .text-h5 {
+    font-size: var(--font-size-h5);
+    line-height: var(--line-height-h5);
+  }
+  
+  .text-h6 {
+    font-size: var(--font-size-h6);
+    line-height: var(--line-height-h6);
+  }
+
+  /* Responsive Typography Improvements */
+  @media (max-width: 768px) {
+    .text-display-xl {
+      font-size: 2.5rem;
+      line-height: 3rem;
+    }
+    
+    .text-display-lg {
+      font-size: 2rem;
+      line-height: 2.5rem;
+    }
+    
+    .text-display-md {
+      font-size: 1.75rem;
+      line-height: 2.25rem;
+    }
+    
+    .text-h1 {
+      font-size: 1.875rem;
+      line-height: 2.25rem;
+    }
+    
+    .text-h2 {
+      font-size: 1.5rem;
+      line-height: 2rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .text-display-xl {
+      font-size: 2rem;
+      line-height: 2.5rem;
+    }
+    
+    .text-display-lg {
+      font-size: 1.75rem;
+      line-height: 2.25rem;
+    }
+  }
 }
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: theme(colors.fm.neutral.50);
+  color: theme(colors.fm.neutral.900);
+  font-family: theme(fontFamily.sans);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Base Typography Styles */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  line-height: 1.2;
+  color: theme(colors.fm.neutral.900);
+  margin: 0;
+}
+
+p {
+  margin: 0;
+  line-height: 1.6;
+}
+
+a {
+  color: theme(colors.fm.magenta.700);
+  text-decoration: none;
+  transition: color 150ms ease;
+}
+
+a:hover {
+  color: theme(colors.fm.magenta.800);
+}
+
+/* Focus styles for accessibility */
+*:focus-visible {
+  outline: 2px solid theme(colors.fm.magenta.700);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Removed problematic CSS that was breaking badges and buttons */
+
+/* Text Contrast (without !important to avoid conflicts) */
+.text-fm-neutral-600 {
+  color: var(--color-fm-neutral-600, #666666);
+}
+
+.text-fm-neutral-700 {
+  color: var(--color-fm-neutral-700, #404040);
+}
+
+.text-fm-neutral-900 {
+  color: var(--color-fm-neutral-900, #1a1a1a);
+}
+
+/* Minimal paragraph improvements (no forced sizing) */
+p {
+  line-height: 1.6;
+}
+
+/* Restored original link styling */
+
+/* Button reset - Only for unstyled buttons */
+button:not([class*="bg-"]):not([class*="border-"]):not([class*="shadow-"]) {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+/* Utility Classes - Improved Container */
+.fm-container {
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 2rem;
+  max-width: 1280px;
+}
+
+@media (max-width: 1024px) {
+  .fm-container {
+    padding: 0 1.5rem;
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .fm-container {
+    padding: 0 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .fm-container {
+    padding: 0 0.75rem;
+  }
+}
+
+/* Section Spacing Improvements */
+section {
+  padding: 6rem 0;
+}
+
+@media (max-width: 768px) {
+  section {
+    padding: 4rem 0;
+  }
+}
+
+@media (max-width: 480px) {
+  section {
+    padding: 3rem 0;
+  }
+}
+
+/* Grid System Improvements */
+.grid {
+  display: grid;
+  gap: 2rem;
+}
+
+@media (max-width: 768px) {
+  .grid {
+    gap: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .grid {
+    gap: 1rem;
+  }
+}
+
+/* Mobile Touch Targets (selective, not breaking badges) */
+input,
+select,
+textarea {
+  min-height: 44px;
+}
+
+/* Mobile Navigation Improvements */
+@media (max-width: 768px) {
+  /* Ensure mobile menu is properly sized */
+  .mobile-menu-button {
+    padding: 0.75rem;
+    min-height: 48px;
+    min-width: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  /* Improve mobile form inputs */
+  input,
+  select,
+  textarea {
+    font-size: 16px; /* Prevent iOS zoom */
+    padding: 0.75rem;
+  }
+  
+  /* Mobile menu button only */
+  .mobile-menu-button {
+    min-height: 48px;
+  }
+}
+
+/* Mobile spacing (removed !important rules) */
+@media (max-width: 640px) {
+  .py-24 {
+    padding-top: 3rem;
+    padding-bottom: 3rem;
+  }
+}
+
+/* Essential Form Improvements Only */
+input:focus,
+select:focus,
+textarea:focus {
+  outline: 2px solid theme(colors.fm.magenta.700);
+  outline-offset: 2px;
+}
+
+/* Form validation states */
+input:invalid,
+select:invalid,
+textarea:invalid {
+  border-color: theme(colors.fm.error);
+}
+
+input:valid,
+select:valid,
+textarea:valid {
+  border-color: theme(colors.fm.success);
+}
+
+/* Required field indicator */
+label[data-required]::after,
+.required::after {
+  content: " *";
+  color: theme(colors.fm.error);
+}
+
+/* Form error messaging */
+.form-error {
+  color: theme(colors.fm.error);
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+  display: block;
+}
+
+.form-success {
+  color: theme(colors.fm.success);
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+  display: block;
+}
+
+/* Improve checkbox and radio accessibility */
+input[type="checkbox"],
+input[type="radio"] {
+  width: 1.25rem;
+  height: 1.25rem;
+  accent-color: theme(colors.fm.magenta.700);
+}
+
+/* Loading states */
+.loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.loading::after {
+  content: "";
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  margin-left: 0.5rem;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* CRITICAL PERFORMANCE FIXES - LOADED LAST FOR MAXIMUM SPECIFICITY */
+@import "../styles/performance-fixes.css";

@@ -1,0 +1,421 @@
+/* Footer and Newsletter Premium Animations */
+
+/* Multi-layer Background Gradients */
+@keyframes footer-gradient-flow-primary {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  33% {
+    background-position: 100% 50%;
+  }
+  66% {
+    background-position: 50% 100%;
+  }
+}
+
+@keyframes footer-gradient-flow-secondary {
+  0%, 100% {
+    background-position: 100% 0%;
+  }
+  50% {
+    background-position: 0% 100%;
+  }
+}
+
+/* Newsletter Background Gradients - Performance Optimized */
+.newsletter-gradient-bg::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(ellipse 450px 300px at 35% 35%, rgba(179,41,104,0.1) 0%, transparent 50%);
+  background-size: 120% 120%;
+  animation: footer-gradient-flow-primary 20s ease-in-out infinite;
+  animation-fill-mode: both;
+  opacity: 0.3;
+}
+
+.newsletter-gradient-bg::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(ellipse 400px 250px at 55% 75%, rgba(255,107,53,0.08) 0%, transparent 50%);
+  background-size: 120% 120%;
+  animation: footer-gradient-flow-secondary 24s ease-in-out infinite;
+  animation-fill-mode: both;
+  opacity: 0.2;
+}
+
+/* Footer Background Gradients - Simplified */
+.footer-gradient-bg::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(ellipse 500px 250px at 25% 25%, rgba(179,41,104,0.06) 0%, transparent 50%);
+  background-size: 120% 120%;
+  animation: footer-gradient-flow-primary 22s ease-in-out infinite;
+  animation-fill-mode: both;
+  opacity: 0.2;
+}
+
+.footer-gradient-bg::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(ellipse 400px 200px at 65% 45%, rgba(255,107,53,0.04) 0%, transparent 50%);
+  background-size: 120% 120%;
+  animation: footer-gradient-flow-secondary 26s ease-in-out infinite;
+  animation-fill-mode: both;
+  opacity: 0.15;
+}
+
+/* Noise Overlay */
+.noise-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.015'/%3E%3C/svg%3E");
+  pointer-events: none;
+}
+
+/* Newsletter Glass Container - Essential backdrop-filter only */
+.newsletter-glass-container {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(179, 41, 104, 0.15), 
+              0 4px 16px rgba(0, 0, 0, 0.1),
+              inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Footer Logo Enhancement */
+.footer-logo {
+  filter: brightness(0) invert(1);
+  transition: all 0.3s ease;
+}
+
+.footer-logo:hover {
+  filter: brightness(0) invert(1) drop-shadow(0 0 10px rgba(179, 41, 104, 0.5));
+  transform: scale(1.05);
+}
+
+/* Social Icons Enhancement - Remove backdrop-filter */
+.social-icon-premium {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.social-icon-premium:hover {
+  background: linear-gradient(135deg, 
+    rgba(179, 41, 104, 0.8) 0%, 
+    rgba(179, 41, 104, 0.9) 100%);
+  border-color: rgba(179, 41, 104, 0.6);
+  transform: translateY(-2px) scale(1.1);
+  box-shadow: 0 8px 25px rgba(179, 41, 104, 0.4);
+}
+
+/* Newsletter Input Enhancement - Remove backdrop-filter */
+.newsletter-input-premium {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+}
+
+.newsletter-input-premium:focus {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(179, 41, 104, 0.6);
+  box-shadow: 0 0 0 3px rgba(179, 41, 104, 0.2);
+}
+
+.newsletter-input-premium::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* Badge Glow Effect */
+.footer-badge-glow {
+  position: relative;
+}
+
+.footer-badge-glow::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, rgba(179, 41, 104, 0.3), rgba(179, 41, 104, 0.1));
+  border-radius: inherit;
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  filter: blur(8px);
+}
+
+.footer-badge-glow:hover::before {
+  opacity: 1;
+}
+
+/* Animation Classes */
+@keyframes footer-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes footer-fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes footer-scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.footer-animate-fade-in {
+  animation: footer-fade-in 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  opacity: 0;
+}
+
+.footer-animate-fade-in-up {
+  animation: footer-fade-in-up 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  opacity: 0;
+}
+
+.footer-animate-scale-in {
+  animation: footer-scale-in 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  opacity: 0;
+}
+
+/* Link Hover Enhancements */
+.footer-link-premium {
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.footer-link-premium::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 1px;
+  bottom: -2px;
+  left: 0;
+  background: linear-gradient(90deg, 
+    rgba(179, 41, 104, 0.8) 0%, 
+    rgba(179, 41, 104, 0.4) 100%);
+  transition: width 0.3s ease;
+}
+
+.footer-link-premium:hover::after {
+  width: 100%;
+}
+
+.footer-link-premium:hover {
+  color: rgba(179, 41, 104, 0.9);
+  transform: translateX(4px);
+}
+
+/* Contact Info Enhancement */
+.contact-info-item {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.contact-info-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  transform: translateX(4px);
+}
+
+.contact-info-icon {
+  transition: all 0.3s ease;
+}
+
+.contact-info-item:hover .contact-info-icon {
+  color: rgba(179, 41, 104, 0.8);
+  transform: scale(1.1);
+}
+
+/* Newsletter Button Enhancement */
+.newsletter-button-premium {
+  position: relative;
+  overflow: hidden;
+}
+
+.newsletter-button-premium::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(255, 255, 255, 0.2), 
+    transparent);
+  transition: left 0.5s ease;
+}
+
+.newsletter-button-premium:hover::before {
+  left: 100%;
+}
+
+/* Heart Animation */
+@keyframes heart-beat {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+.heart-beat {
+  animation: heart-beat 1.5s ease-in-out infinite;
+}
+
+/* Newsletter Container Magenta Glow Effect */
+@keyframes newsletter-magenta-glow {
+  0%, 100% {
+    opacity: 0.15;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.25;
+    transform: scale(1.02);
+  }
+}
+
+@keyframes newsletter-glow-pulse {
+  0%, 100% {
+    opacity: 0.1;
+    background-position: 0% 50%;
+  }
+  33% {
+    opacity: 0.2;
+    background-position: 100% 50%;
+  }
+  66% {
+    opacity: 0.15;
+    background-position: 50% 100%;
+  }
+}
+
+.newsletter-glow-container {
+  position: relative;
+}
+
+.newsletter-glow-container::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, 
+    rgba(179, 41, 104, 0.3) 0%,
+    rgba(179, 41, 104, 0.1) 25%,
+    rgba(255, 107, 53, 0.2) 50%,
+    rgba(179, 41, 104, 0.1) 75%,
+    rgba(179, 41, 104, 0.3) 100%
+  );
+  background-size: 200% 200%;
+  border-radius: inherit;
+  z-index: -1;
+  animation: newsletter-glow-pulse 4s ease-in-out infinite;
+  filter: blur(8px);
+}
+
+.newsletter-glow-container::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, 
+    rgba(179, 41, 104, 0.15) 0%, 
+    rgba(179, 41, 104, 0.08) 40%, 
+    transparent 70%
+  );
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  z-index: -1;
+  animation: newsletter-magenta-glow 3s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Motion preferences support */
+@media (prefers-reduced-motion: reduce) {
+  .newsletter-gradient-bg::before,
+  .newsletter-gradient-bg::after,
+  .footer-gradient-bg::before,
+  .footer-gradient-bg::after,
+  .footer-animate-fade-in,
+  .footer-animate-fade-in-up,
+  .footer-animate-scale-in,
+  .heart-beat,
+  .footer-badge-glow::before,
+  .newsletter-button-premium::before {
+    animation: none !important;
+    transform: none !important;
+    will-change: auto !important;
+  }
+  
+  .social-icon-premium:hover,
+  .footer-link-premium:hover,
+  .contact-info-item:hover {
+    transform: none !important;
+  }
+}
+
+/* Responsive Optimizations */
+@media (max-width: 768px) {
+  .newsletter-gradient-bg::before,
+  .newsletter-gradient-bg::after,
+  .footer-gradient-bg::before,
+  .footer-gradient-bg::after {
+    animation-duration: 15s;
+  }
+  
+  .social-icon-premium:hover {
+    transform: translateY(-1px) scale(1.05);
+  }
+  
+  .footer-link-premium:hover {
+    transform: translateX(2px);
+  }
+}

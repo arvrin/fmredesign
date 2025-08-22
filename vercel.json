@@ -1,0 +1,23 @@
+{
+  "framework": "nextjs",
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "installCommand": "npm install",
+  "devCommand": "npm run dev",
+  "env": {
+    "NEXT_PUBLIC_GOOGLE_SPREADSHEET_ID": "@next_public_google_spreadsheet_id",
+    "GOOGLE_PROJECT_ID": "@google_project_id", 
+    "GOOGLE_PRIVATE_KEY_ID": "@google_private_key_id",
+    "GOOGLE_PRIVATE_KEY": "@google_private_key",
+    "GOOGLE_CLIENT_EMAIL": "@google_client_email",
+    "GOOGLE_CLIENT_ID": "@google_client_id",
+    "ADMIN_PASSWORD": "@admin_password",
+    "JWT_SECRET": "@jwt_secret"
+  },
+  "functions": {
+    "src/app/api/**": {
+      "maxDuration": 30
+    }
+  },
+  "regions": ["bom1"]
+}

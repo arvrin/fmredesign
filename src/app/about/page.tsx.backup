@@ -1,0 +1,285 @@
+import type { Metadata } from "next";
+import { Button } from "@/components/ui/Button";
+import { ArrowRight, Users, Target, Award, Heart, Lightbulb, TrendingUp } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "About Us - Freaking Minds | Digital Marketing Experts in Bhopal",
+  description: "Meet the team behind Freaking Minds. 50+ years of combined experience in digital marketing, creative design, and strategic consulting. Based in Bhopal, serving clients across India.",
+  keywords: [
+    "about freaking minds",
+    "digital marketing team bhopal",
+    "marketing agency team",
+    "creative agency about",
+    "digital marketing experts",
+    "bhopal marketing professionals"
+  ],
+  openGraph: {
+    title: "About Freaking Minds - Digital Marketing Experts",
+    description: "Meet our passionate team of digital marketing experts dedicated to transforming businesses through creative excellence and strategic innovation.",
+    url: "https://freakingminds.in/about",
+    type: "website",
+  },
+};
+
+const values = [
+  {
+    icon: Lightbulb,
+    title: "Innovation",
+    description: "We constantly push boundaries and explore new creative territories to deliver cutting-edge solutions that set our clients apart."
+  },
+  {
+    icon: Heart,
+    title: "Authenticity",
+    description: "We believe in genuine brand stories and authentic connections. Every strategy we create reflects the true essence of your brand."
+  },
+  {
+    icon: Target,
+    title: "Results",
+    description: "Data-driven approach ensures every campaign delivers measurable ROI. We don't just create beautiful campaigns, we create business growth."
+  },
+  {
+    icon: Users,
+    title: "Collaboration",
+    description: "Your success is our success. We work as an extension of your team, bringing expertise while respecting your vision and goals."
+  }
+];
+
+const teamMembers = [
+  {
+    name: "Rajesh Sharma",
+    role: "Founder & Creative Director",
+    experience: "15+ years",
+    expertise: "Brand Strategy, Creative Direction",
+    description: "Visionary leader with a passion for transforming brands through innovative marketing strategies."
+  },
+  {
+    name: "Priya Patel",
+    role: "Head of Digital Strategy",
+    experience: "12+ years",
+    expertise: "Digital Marketing, Performance Analytics",
+    description: "Data-driven strategist specializing in ROI-focused digital campaigns and growth hacking."
+  },
+  {
+    name: "Amit Kumar",
+    role: "Creative Head",
+    experience: "10+ years",
+    expertise: "Design, Video Production, Branding",
+    description: "Award-winning creative professional who brings brands to life through compelling visual narratives."
+  },
+  {
+    name: "Sneha Agarwal",
+    role: "Social Media Strategist",
+    experience: "8+ years",
+    expertise: "Social Media, Content Strategy, Community Building",
+    description: "Social media expert who creates viral campaigns and builds engaged communities around brands."
+  }
+];
+
+const stats = [
+  { number: "50+", label: "Years Combined Experience" },
+  { number: "250+", label: "Successful Campaigns" },
+  { number: "100+", label: "Happy Clients" },
+  { number: "15+", label: "Industry Awards" }
+];
+
+export default function AboutPage() {
+  return (
+    <div className="min-h-screen">
+      {/* Hero Section */}
+      <section className="pt-24 pb-16 bg-gradient-to-br from-fm-neutral-50 to-fm-neutral-100">
+        <div className="fm-container">
+          <div className="max-w-4xl mx-auto text-center">
+            <div className="inline-flex items-center px-4 py-2 bg-fm-magenta-50 border border-fm-magenta-200 rounded-full text-fm-magenta-700 text-sm font-medium mb-8">
+              <Users className="w-4 h-4 mr-2" />
+              Meet the Minds Behind the Magic
+            </div>
+            
+            <h1 className="text-display-lg md:text-display-xl font-bold text-fm-neutral-900 mb-6">
+              We&apos;re Not Just a Team,{' '}
+              <span className="text-fm-magenta-700">We&apos;re Your Partners</span> in Growth
+            </h1>
+            
+            <p className="text-lg md:text-xl text-fm-neutral-600 max-w-3xl mx-auto mb-12 leading-relaxed">
+              Founded in the heart of Bhopal, Freaking Minds has been revolutionizing digital marketing 
+              for over a decade. We combine strategic thinking with creative excellence to deliver 
+              campaigns that don&apos;t just look good—they drive real business results.
+            </p>
+
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Button variant="primary" size="lg">
+                Start Your Journey
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </Button>
+              <Button variant="secondary" size="lg">
+                View Our Work
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Our Story Section */}
+      <section className="py-24 bg-fm-neutral-50">
+        <div className="fm-container">
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
+            <div>
+              <h2 className="text-h1 font-bold text-fm-neutral-900 mb-6">
+                Our Story: From Vision to{' '}
+                <span className="text-fm-magenta-700">Movement</span>
+              </h2>
+              <div className="space-y-6 text-fm-neutral-700">
+                <p>
+                  What started as a small creative studio in Bhopal has evolved into one of Central India&apos;s 
+                  most trusted digital marketing agencies. Our journey began with a simple belief: every 
+                  brand has a unique story waiting to be told.
+                </p>
+                <p>
+                  Over the years, we&apos;ve had the privilege of working with startups, SMEs, and 
+                  established enterprises across various industries. Each partnership has taught us 
+                  something new, making us better strategists, designers, and storytellers.
+                </p>
+                <p>
+                  Today, Freaking Minds stands as a testament to what happens when passion meets 
+                  purpose, and creativity meets strategy. We&apos;re not just creating campaigns; 
+                  we&apos;re building legacies.
+                </p>
+              </div>
+            </div>
+            
+            <div className="relative">
+              <div className="aspect-square bg-gradient-to-br from-fm-magenta-100 to-fm-magenta-200 rounded-2xl flex items-center justify-center">
+                <div className="text-center">
+                  <TrendingUp className="w-24 h-24 text-fm-magenta-700 mx-auto mb-4" />
+                  <p className="text-fm-magenta-700 font-semibold">Growth Through Innovation</p>
+                </div>
+              </div>
+              
+              {/* Floating stats */}
+              <div className="absolute -top-6 -left-6 bg-fm-neutral-50 rounded-lg p-4 shadow-fm-lg">
+                <div className="text-2xl font-bold text-fm-magenta-700">2012</div>
+                <div className="text-sm text-fm-neutral-600">Founded</div>
+              </div>
+              
+              <div className="absolute -bottom-6 -right-6 bg-fm-neutral-50 rounded-lg p-4 shadow-fm-lg">
+                <div className="text-2xl font-bold text-fm-magenta-700">100+</div>
+                <div className="text-sm text-fm-neutral-600">Clients Served</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Values Section */}
+      <section className="py-24 bg-fm-neutral-100">
+        <div className="fm-container">
+          <div className="text-center mb-16">
+            <h2 className="text-h1 font-bold text-fm-neutral-900 mb-6">
+              Our Values Drive{' '}
+              <span className="text-fm-magenta-700">Everything</span> We Do
+            </h2>
+            <p className="text-lg text-fm-neutral-600 max-w-2xl mx-auto">
+              These core principles guide every decision we make and every campaign we create.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {values.map((value, index) => (
+              <div key={index} className="bg-fm-neutral-50 rounded-xl p-8 text-center hover:shadow-fm-lg transition-all duration-300">
+                <div className="w-16 h-16 bg-fm-magenta-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <value.icon className="w-8 h-8 text-fm-magenta-700" />
+                </div>
+                <h3 className="text-h4 font-semibold text-fm-neutral-900 mb-4">
+                  {value.title}
+                </h3>
+                <p className="text-fm-neutral-600 leading-relaxed">
+                  {value.description}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Team Section */}
+      <section className="py-24 bg-fm-neutral-50">
+        <div className="fm-container">
+          <div className="text-center mb-16">
+            <h2 className="text-h1 font-bold text-fm-neutral-900 mb-6">
+              Meet the{' '}
+              <span className="text-fm-magenta-700">Creative Minds</span>
+            </h2>
+            <p className="text-lg text-fm-neutral-600 max-w-2xl mx-auto">
+              Our diverse team brings together years of experience across strategy, 
+              creative design, and digital marketing.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
+            {teamMembers.map((member, index) => (
+              <div key={index} className="bg-fm-neutral-50 rounded-xl overflow-hidden shadow-fm-sm hover:shadow-fm-lg transition-all duration-300">
+                <div className="aspect-square bg-gradient-to-br from-fm-magenta-100 to-fm-magenta-200 flex items-center justify-center">
+                  <Users className="w-16 h-16 text-fm-magenta-700" />
+                </div>
+                
+                <div className="p-6">
+                  <h3 className="text-h5 font-semibold text-fm-neutral-900 mb-2">
+                    {member.name}
+                  </h3>
+                  <p className="text-fm-magenta-700 font-medium mb-2">
+                    {member.role}
+                  </p>
+                  <p className="text-sm text-fm-neutral-600 mb-3">
+                    {member.experience} • {member.expertise}
+                  </p>
+                  <p className="text-sm text-fm-neutral-700 leading-relaxed">
+                    {member.description}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Team Stats */}
+          <div className="bg-fm-magenta-700 rounded-2xl p-12 text-center text-fm-neutral-50">
+            <h3 className="text-h2 font-bold mb-8">Our Collective Impact</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+              {stats.map((stat, index) => (
+                <div key={index}>
+                  <div className="text-3xl md:text-4xl font-bold mb-2">
+                    {stat.number}
+                  </div>
+                  <div className="text-fm-neutral-200 text-sm">
+                    {stat.label}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-24 bg-gradient-to-r from-fm-magenta-700 to-fm-magenta-800 text-fm-neutral-50">
+        <div className="fm-container text-center">
+          <Award className="w-16 h-16 mx-auto mb-6 text-fm-neutral-200" />
+          <h2 className="text-h1 font-bold mb-6">
+            Ready to Start Your Success Story?
+          </h2>
+          <p className="text-lg text-fm-neutral-200 max-w-2xl mx-auto mb-8">
+            Join the growing list of brands that have transformed their digital presence 
+            with Freaking Minds. Let&apos;s create something extraordinary together.
+          </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Button variant="secondary" size="lg" className="bg-fm-neutral-50 text-fm-magenta-700 hover:bg-fm-neutral-100">
+              Get Started Today
+              <ArrowRight className="w-5 h-5 ml-2" />
+            </Button>
+            <Button variant="ghost-light" size="lg">
+              Schedule a Call
+            </Button>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}

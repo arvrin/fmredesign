@@ -1,0 +1,331 @@
+/* Case Studies Section Premium Animations */
+
+/* Multi-layer Background Gradients */
+@keyframes casestudies-gradient-flow-primary {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  33% {
+    background-position: 100% 50%;
+  }
+  66% {
+    background-position: 50% 100%;
+  }
+}
+
+@keyframes casestudies-gradient-flow-secondary {
+  0%, 100% {
+    background-position: 100% 0%;
+  }
+  50% {
+    background-position: 0% 100%;
+  }
+}
+
+@keyframes casestudies-gradient-flow-tertiary {
+  0%, 100% {
+    background-position: 50% 0%;
+  }
+  25% {
+    background-position: 0% 50%;
+  }
+  75% {
+    background-position: 100% 50%;
+  }
+}
+
+/* Background Animation Classes - Performance Optimized */
+.casestudies-gradient-bg::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(ellipse 600px 400px at 25% 35%, rgba(179,41,104,0.08) 0%, transparent 50%);
+  background-size: 120% 120%;
+  animation: casestudies-gradient-flow-primary 18s ease-in-out infinite;
+  animation-fill-mode: both;
+  opacity: 0.4;
+}
+
+.casestudies-gradient-bg::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(ellipse 500px 350px at 65% 25%, rgba(255,107,53,0.06) 0%, transparent 50%);
+  background-size: 120% 120%;
+  animation: casestudies-gradient-flow-secondary 22s ease-in-out infinite;
+  animation-fill-mode: both;
+  opacity: 0.3;
+}
+
+/* Noise Overlay */
+.noise-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.02'/%3E%3C/svg%3E");
+  pointer-events: none;
+}
+
+/* Premium Glass Card Styles - Reduced backdrop-filter */
+.casestudies-card-premium {
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 32px rgba(179, 41, 104, 0.1), 
+              0 4px 16px rgba(179, 41, 104, 0.05),
+              inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Apply backdrop-filter only to featured cards */
+.casestudies-card-premium.featured {
+  backdrop-filter: blur(12px);
+}
+
+.casestudies-card-premium:hover {
+  transform: translateY(-6px) scale(1.01);
+  box-shadow: 0 16px 32px rgba(179, 41, 104, 0.12), 
+              0 6px 20px rgba(179, 41, 104, 0.08),
+              inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  will-change: transform;
+}
+
+.casestudies-card-premium:not(:hover) {
+  will-change: auto;
+}
+
+.casestudies-card-premium.featured:hover {
+  backdrop-filter: blur(16px);
+}
+
+/* Featured Card Glass Container - Essential backdrop-filter only */
+.featured-card-glass {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 12px 40px rgba(179, 41, 104, 0.12), 
+              0 6px 20px rgba(179, 41, 104, 0.08),
+              inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  position: relative;
+}
+
+.featured-card-glass::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, 
+    rgba(179, 41, 104, 0.3) 0%, 
+    rgba(255, 107, 53, 0.2) 50%, 
+    rgba(179, 41, 104, 0.3) 100%);
+  border-radius: inherit;
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.featured-card-glass:hover::before {
+  opacity: 1;
+}
+
+/* Metrics Glass Containers - Remove backdrop-filter */
+.metrics-glass {
+  background: rgba(179, 41, 104, 0.08);
+  border: 1px solid rgba(179, 41, 104, 0.1);
+  box-shadow: 0 4px 16px rgba(179, 41, 104, 0.08),
+              inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  transition: all 0.3s ease;
+}
+
+.metrics-glass:hover {
+  background: rgba(179, 41, 104, 0.08);
+  box-shadow: 0 6px 20px rgba(179, 41, 104, 0.12),
+              inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+/* Tag Styles with Brand Gradient - Remove backdrop-filter */
+.tag-brand-gradient {
+  background: linear-gradient(135deg, 
+    rgba(179, 41, 104, 0.12) 0%, 
+    rgba(179, 41, 104, 0.18) 100%);
+  border: 1px solid rgba(179, 41, 104, 0.2);
+  color: #b32968;
+  transition: all 0.3s ease;
+}
+
+.tag-brand-gradient:hover {
+  background: linear-gradient(135deg, 
+    rgba(179, 41, 104, 0.15) 0%, 
+    rgba(179, 41, 104, 0.2) 100%);
+  transform: translateY(-1px);
+}
+
+/* CTA Section Premium Background */
+.cta-premium-bg {
+  background: linear-gradient(135deg, 
+    #b32968 0%, 
+    #8f184c 50%, 
+    #6e1845 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.cta-premium-bg::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(ellipse 500px 300px at 35% 65%, rgba(255, 255, 255, 0.08) 0%, transparent 50%);
+  background-size: 120% 120%;
+  animation: casestudies-gradient-flow-tertiary 24s ease-in-out infinite;
+  animation-fill-mode: both;
+  opacity: 0.6;
+}
+
+/* Animation Classes */
+@keyframes casestudies-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes casestudies-fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes casestudies-scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.casestudies-animate-fade-in {
+  animation: casestudies-fade-in 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  opacity: 0;
+}
+
+.casestudies-animate-fade-in-up {
+  animation: casestudies-fade-in-up 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  opacity: 0;
+}
+
+.casestudies-animate-scale-in {
+  animation: casestudies-scale-in 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  opacity: 0;
+}
+
+/* Badge Glow Effect */
+.badge-glow {
+  position: relative;
+}
+
+.badge-glow::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, rgba(179, 41, 104, 0.3), rgba(179, 41, 104, 0.1));
+  border-radius: inherit;
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  filter: blur(6px);
+}
+
+.badge-glow:hover::before {
+  opacity: 1;
+}
+
+/* Visual Enhancement for Placeholders */
+.visual-premium {
+  background: linear-gradient(135deg, 
+    rgba(179, 41, 104, 0.1) 0%, 
+    rgba(255, 107, 53, 0.1) 50%, 
+    rgba(110, 24, 69, 0.1) 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.visual-premium::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(45deg, 
+    transparent 30%, 
+    rgba(255, 255, 255, 0.1) 50%, 
+    transparent 70%);
+  animation: shimmer 3s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0%, 100% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(100%);
+  }
+}
+
+/* Motion preferences support */
+@media (prefers-reduced-motion: reduce) {
+  .casestudies-gradient-bg::before,
+  .casestudies-gradient-bg::after,
+  .casestudies-animate-fade-in,
+  .casestudies-animate-fade-in-up,
+  .casestudies-animate-scale-in,
+  .visual-premium::before,
+  .badge-glow::before {
+    animation: none !important;
+    transform: none !important;
+    will-change: auto !important;
+  }
+  
+  .casestudies-card-premium:hover {
+    transform: none !important;
+  }
+}
+
+/* Responsive Optimizations */
+@media (max-width: 768px) {
+  .casestudies-card-premium:hover {
+    transform: translateY(-3px) scale(1.005);
+  }
+  
+  .casestudies-gradient-bg::before,
+  .casestudies-gradient-bg::after {
+    animation-duration: 12s;
+  }
+}

@@ -1,0 +1,161 @@
+/* CRITICAL PERFORMANCE FIXES - CONTACT SECTION LAG ELIMINATION */
+
+/* PRIORITY 1: COMPLETELY DISABLE CONTACT SECTION BACKGROUND ANIMATIONS */
+.contact-gradient-bg::before,
+.contact-gradient-bg::after {
+  animation: none !important;
+  background: none !important;
+  opacity: 0 !important;
+  display: none !important;
+}
+
+/* PRIORITY 2: DISABLE ALL BACKDROP-FILTERS */
+.contact-card-premium,
+.social-proof-glass,
+.social-icon-premium,
+.newsletter-input-premium,
+.form-glass-container,
+.newsletter-glass-container {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* PRIORITY 3: DISABLE ALL CONTACT ENTRANCE ANIMATIONS */
+.contact-animate-fade-in,
+.contact-animate-fade-in-up,
+.contact-animate-scale-in {
+  animation: none !important;
+  opacity: 1 !important;
+  transform: none !important;
+  transition: none !important;
+}
+
+/* PRIORITY 4: DISABLE ALL HOVER TRANSFORMS AND COMPLEX EFFECTS */
+.contact-card-premium:hover,
+.icon-container-premium:hover,
+.contact-info-item:hover,
+.form-input-premium:focus,
+.form-input-premium:hover {
+  transform: none !important;
+  backdrop-filter: none !important;
+  animation: none !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+}
+
+/* PRIORITY 5: DISABLE FOOTER/NEWSLETTER EXPENSIVE EFFECTS */
+.footer-gradient-bg::before,
+.footer-gradient-bg::after,
+.newsletter-gradient-bg::before,
+.newsletter-gradient-bg::after {
+  animation-duration: 60s !important;
+  background-size: 100% 100% !important;
+  opacity: 0.1 !important;
+}
+
+/* PRIORITY 6: DISABLE ALL will-change DECLARATIONS */
+* {
+  will-change: auto !important;
+}
+
+/* PRIORITY 7: DISABLE COMPLEX BOX-SHADOWS */
+.contact-card-premium,
+.form-glass-container,
+.newsletter-glass-container {
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
+}
+
+/* PRIORITY 8: MOBILE COMPLETE ANIMATION DISABLE */
+@media (max-width: 768px) {
+  .contact-gradient-bg::before,
+  .contact-gradient-bg::after,
+  .footer-gradient-bg::before,
+  .footer-gradient-bg::after,
+  .newsletter-gradient-bg::before,
+  .newsletter-gradient-bg::after,
+  .heart-beat {
+    animation: none !important;
+    background: none !important;
+    opacity: 0 !important;
+    display: none !important;
+  }
+  
+  .contact-animate-fade-in,
+  .contact-animate-fade-in-up,
+  .contact-animate-scale-in,
+  .footer-animate-fade-in,
+  .footer-animate-fade-in-up,
+  .footer-animate-scale-in {
+    animation: none !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}
+
+/* PRIORITY 9: ACCESSIBILITY - COMPLETE ANIMATION DISABLE */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+    transform: none !important;
+    backdrop-filter: none !important;
+  }
+}
+
+/* PRIORITY 10: FORCE SIMPLE RENDERING */
+.contact-section,
+#contact-section {
+  contain: layout style paint !important;
+  transform: translateZ(0) !important;
+  backface-visibility: hidden !important;
+}
+
+/* PRIORITY 11: DISABLE NOISE OVERLAYS */
+.noise-overlay {
+  display: none !important;
+  background: none !important;
+  opacity: 0 !important;
+}
+
+/* PRIORITY 12: MAXIMUM SPECIFICITY CASCADE OVERRIDES FOR CONTACT ANIMATIONS */
+.contact-section-performance-override .contact-gradient-bg::before,
+.contact-section-performance-override .contact-gradient-bg::after,
+html .contact-gradient-bg::before,
+html .contact-gradient-bg::after,
+body .contact-gradient-bg::before,
+body .contact-gradient-bg::after {
+  animation: none !important;
+  background: none !important;
+  opacity: 0 !important;
+  display: none !important;
+  content: none !important;
+}
+
+/* PRIORITY 13: FORCE DISABLE ALL CONTACT ANIMATIONS WITH MAXIMUM SPECIFICITY */
+html .contact-animate-fade-in,
+html .contact-animate-fade-in-up,
+html .contact-animate-scale-in,
+body .contact-animate-fade-in,
+body .contact-animate-fade-in-up,
+body .contact-animate-scale-in,
+.contact-section-performance-override .contact-animate-fade-in,
+.contact-section-performance-override .contact-animate-fade-in-up,
+.contact-section-performance-override .contact-animate-scale-in {
+  animation: none !important;
+  animation-name: none !important;
+  animation-duration: 0s !important;
+  opacity: 1 !important;
+  transform: none !important;
+  transition: none !important;
+}
+
+/* PRIORITY 14: FORCE DISABLE ALL CONTACT HOVER EFFECTS */
+html .contact-card-premium:hover,
+html .icon-container-premium:hover,
+body .contact-card-premium:hover,
+body .icon-container-premium:hover {
+  transform: none !important;
+  animation: none !important;
+  will-change: auto !important;
+}
