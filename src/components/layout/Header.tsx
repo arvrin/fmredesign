@@ -19,10 +19,13 @@ const navigation = [
       { name: 'Performance Marketing', href: '/services#performance' },
       { name: 'Creative Design', href: '/services#design' },
       { name: 'Digital Strategy', href: '/services#strategy' },
+      { name: '──────────', href: '#', divider: true },
+      { name: 'Partner Network', href: '/creativeminds' },
     ]
   },
   { name: 'Work', href: '/work' },
   { name: 'About', href: '/about' },
+  { name: 'CreativeMinds', href: '/creativeminds' },
   { name: 'Blog', href: '/blog' },
   { name: 'Contact', href: '/contact' },
 ];
@@ -136,20 +139,22 @@ export function Header() {
       >
         <div className="fm-container">
           <div className="flex items-center justify-between h-20">
-            {/* Brand Text */}
+            {/* Brand Logo */}
             <Link 
               href="/" 
-              className="flex-shrink-0 relative z-10"
+              className="flex-shrink-0 relative z-10 flex items-center"
               aria-label="Freaking Minds - Home"
             >
-              <span className="text-xl md:text-2xl font-bold text-fm-magenta-700">
-                Freaking Minds
-              </span>
+              <img 
+                src="/logo.png" 
+                alt="Freaking Minds" 
+                className="h-14 md:h-16 w-auto transition-all duration-200 hover:scale-105"
+              />
             </Link>
 
             {/* Desktop Navigation with dropdowns */}
             <nav 
-              className="hidden md:flex items-center space-x-6 lg:space-x-8"
+              className="hidden md:flex items-center space-x-4 lg:space-x-6 xl:space-x-8"
               role="navigation"
               aria-label="Main navigation"
             >
@@ -163,7 +168,7 @@ export function Header() {
                   <Link
                     href={item.href}
                     className={cn(
-                      'relative inline-flex items-center gap-1 px-1 py-2 text-sm lg:text-base font-medium transition-all duration-200',
+                      'relative inline-flex items-center gap-1 px-2 py-3 text-base lg:text-lg font-medium transition-all duration-200',
                       isLinkActive(item.href)
                         ? 'text-fm-magenta-700'
                         : 'text-fm-neutral-900 hover:text-fm-magenta-700',
@@ -190,15 +195,24 @@ export function Header() {
                       activeDropdown === item.name && 'opacity-100 visible translate-y-0'
                     )}>
                       <div className="py-2">
-                        {item.dropdown.map((subItem) => (
-                          <Link
-                            key={subItem.name}
-                            href={subItem.href}
-                            className="block px-4 py-2.5 text-sm text-fm-neutral-700 hover:bg-fm-magenta-50 hover:text-fm-magenta-700 transition-colors duration-150"
-                          >
-                            {subItem.name}
-                          </Link>
-                        ))}
+                        {item.dropdown.map((subItem, index) => {
+                          // Handle divider
+                          if (subItem.divider) {
+                            return (
+                              <div key={`divider-${index}`} className="mx-4 my-2 border-t border-fm-neutral-200" />
+                            );
+                          }
+                          
+                          return (
+                            <Link
+                              key={subItem.name}
+                              href={subItem.href}
+                              className="block px-4 py-2.5 text-sm text-fm-neutral-700 hover:bg-fm-magenta-50 hover:text-fm-magenta-700 transition-colors duration-150"
+                            >
+                              {subItem.name}
+                            </Link>
+                          );
+                        })}
                       </div>
                     </div>
                   )}
@@ -208,7 +222,7 @@ export function Header() {
 
             {/* Desktop CTA */}
             <div className="hidden md:flex items-center">
-              <LinkButton href="/contact" variant="primary" size="md">
+              <LinkButton href="/get-started" variant="primary" size="lg">
                 Start Project
               </LinkButton>
             </div>
@@ -258,7 +272,7 @@ export function Header() {
                   <Link
                     href={item.href}
                     className={cn(
-                      'flex items-center justify-between px-4 py-3 rounded-lg text-base font-medium transition-all duration-200',
+                      'flex items-center justify-between px-4 py-4 rounded-lg text-lg font-medium transition-all duration-200',
                       isLinkActive(item.href)
                         ? 'bg-fm-magenta-50 text-fm-magenta-700'
                         : 'text-fm-neutral-900 hover:bg-fm-neutral-100 hover:text-fm-magenta-700'
@@ -275,16 +289,25 @@ export function Header() {
                   {/* Mobile dropdown items */}
                   {item.dropdown && (
                     <div className="ml-4 mt-1 space-y-1">
-                      {item.dropdown.map((subItem) => (
-                        <Link
-                          key={subItem.name}
-                          href={subItem.href}
-                          className="block px-4 py-2 text-sm text-fm-neutral-600 hover:text-fm-magenta-700 transition-colors duration-150"
-                          onClick={() => setIsMobileMenuOpen(false)}
-                        >
-                          {subItem.name}
-                        </Link>
-                      ))}
+                      {item.dropdown.map((subItem, index) => {
+                        // Handle divider
+                        if (subItem.divider) {
+                          return (
+                            <div key={`mobile-divider-${index}`} className="mx-4 my-2 border-t border-fm-neutral-200" />
+                          );
+                        }
+                        
+                        return (
+                          <Link
+                            key={subItem.name}
+                            href={subItem.href}
+                            className="block px-4 py-2 text-sm text-fm-neutral-600 hover:text-fm-magenta-700 transition-colors duration-150"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                          >
+                            {subItem.name}
+                          </Link>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
@@ -292,7 +315,7 @@ export function Header() {
               
               {/* Mobile CTA */}
               <div className="pt-6 mt-6 border-t border-fm-neutral-200">
-                <LinkButton href="/contact" variant="primary" size="md" className="w-full">
+                <LinkButton href="/get-started" variant="primary" size="lg" fullWidth>
                   Start Project
                 </LinkButton>
               </div>

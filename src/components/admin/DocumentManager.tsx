@@ -41,7 +41,7 @@ import {
   FileAudio,
   File
 } from 'lucide-react';
-import { Button } from '@/design-system/components/atoms/Button/Button';
+import { Button } from '@/design-system/components/primitives/Button';
 import { DeliverableFile, ClientProfile } from '@/lib/admin/client-types';
 import { ClientService } from '@/lib/admin/client-service';
 

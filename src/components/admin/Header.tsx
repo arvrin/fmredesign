@@ -34,9 +34,14 @@ export function AdminHeader({ title = "Dashboard", subtitle }: AdminHeaderProps)
   return (
     <header className="bg-white border-b border-fm-neutral-200 px-4 py-4 sm:px-6 lg:px-8">
       <div className="flex h-16 justify-between items-center">
-        {/* Title and breadcrumb */}
+        {/* Logo and Title */}
         <div className="min-w-0 flex-1">
-          <div className="flex items-center">
+          <div className="flex items-center gap-4">
+            <img 
+              src="/logo.png" 
+              alt="Freaking Minds" 
+              className="h-10 w-auto flex-shrink-0"
+            />
             <div>
               <h1 className="text-2xl font-bold leading-7 text-fm-neutral-900 sm:truncate sm:text-3xl">
                 {title}

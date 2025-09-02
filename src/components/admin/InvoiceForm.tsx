@@ -7,10 +7,11 @@
 
 import { useState, useEffect } from 'react';
 import { Plus, Trash2, Download, Save, Eye, ChevronDown } from 'lucide-react';
-import { Button } from '@/design-system/components/atoms/Button/Button';
+import { LinkButton } from '@/design-system';
 import { Invoice, InvoiceLineItem, InvoiceClient, InvoiceUtils, AGENCY_SERVICES, AgencyService, SERVICE_CATEGORIES } from '@/lib/admin/types';
 import { AdminStorage } from '@/lib/admin/storage';
 import { InvoicePDF } from '@/lib/admin/pdf';
+import { ClientService } from '@/lib/admin/client-service';
 
 interface InvoiceFormProps {
   invoice?: Invoice | null;
@@ -27,7 +28,7 @@ export function InvoiceForm({ invoice, onSave, onCancel }: InvoiceFormProps) {
       invoiceNumber: InvoiceUtils.generateInvoiceNumber(),
       date: new Date().toISOString().split('T')[0],
       dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 30 days from now
-      client: AdminStorage.getClients()[0] || {
+      client: {
         id: '',
         name: '',
         email: '',
@@ -56,7 +57,19 @@ export function InvoiceForm({ invoice, onSave, onCancel }: InvoiceFormProps) {
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    setClients(AdminStorage.getClients());
+    const loadClients = async () => {
+      try {
+        const invoiceClients = await ClientService.getInvoiceClients();
+        setClients(invoiceClients);
+      } catch (error) {
+        console.error('InvoiceForm: Error loading clients:', error);
+        // Fallback to localStorage clients
+        const localClients = AdminStorage.getClients();
+        setClients(localClients);
+      }
+    };
+    
+    loadClients();
   }, []);
 
   useEffect(() => {
@@ -75,11 +88,14 @@ export function InvoiceForm({ invoice, onSave, onCancel }: InvoiceFormProps) {
 
   const handleClientChange = (clientId: string) => {
     const selectedClient = clients.find(c => c.id === clientId);
+    
     if (selectedClient) {
       setFormData(prev => ({
         ...prev,
         client: selectedClient,
       }));
+    } else {
+      console.warn('InvoiceForm: Client not found for ID:', clientId);
     }
   };
 
@@ -286,43 +302,48 @@ export function InvoiceForm({ invoice, onSave, onCancel }: InvoiceFormProps) {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
-      {/* Header */}
-      <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-6">
+    <div className="max-w-5xl mx-auto space-y-8">
+      {/* Quick Actions Bar */}
+      <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-4">
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-fm-neutral-900">
-              {invoice ? 'Edit Invoice' : 'Create Invoice'}
-            </h1>
-            <p className="text-sm text-fm-neutral-500 mt-1">
-              Generate professional invoices with Freaking Minds branding and business details
-            </p>
+          <div className="flex items-center gap-4">
+            <div>
+              <span className="text-sm font-medium text-fm-neutral-600">Invoice:</span>
+              <span className="text-sm font-bold text-fm-magenta-700 ml-1">{formData.invoiceNumber}</span>
+            </div>
+            <div className="text-sm text-fm-neutral-500">
+              {formData.client.name || 'No client selected'}
+            </div>
           </div>
-          <div className="flex items-center gap-3">
-            <Button
+          <div className="flex items-center gap-2">
+            <LinkButton
               variant="ghost"
               size="sm"
               icon={<Eye className="h-4 w-4" />}
+              iconPosition="left"
               onClick={handlePreviewPDF}
             >
               Preview
-            </Button>
-            <Button
+            </LinkButton>
+            <LinkButton
               variant="outline"
               size="sm"
               icon={<Download className="h-4 w-4" />}
+              iconPosition="left"
               onClick={handleDownloadPDF}
             >
-              Download PDF
-            </Button>
-            <Button
+              Download
+            </LinkButton>
+            <LinkButton
+              variant="primary"
               size="sm"
               icon={<Save className="h-4 w-4" />}
-              loading={isSaving}
+              iconPosition="left"
               onClick={handleSave}
+              className={isSaving ? 'opacity-50 cursor-not-allowed' : ''}
             >
-              Save Invoice
-            </Button>
+              {isSaving ? 'Saving...' : 'Save'}
+            </LinkButton>
           </div>
         </div>
       </div>
@@ -399,14 +420,15 @@ export function InvoiceForm({ invoice, onSave, onCancel }: InvoiceFormProps) {
       <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-6">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-lg font-semibold text-fm-neutral-900">Line Items</h2>
-          <Button
+          <LinkButton
             size="sm"
             variant="outline"
             icon={<Plus className="h-4 w-4" />}
+            iconPosition="left"
             onClick={addLineItem}
           >
             Add Item
-          </Button>
+          </LinkButton>
         </div>
 
         <div className="space-y-6">
@@ -437,10 +459,11 @@ export function InvoiceForm({ invoice, onSave, onCancel }: InvoiceFormProps) {
                 </div>
               </div>
 
-              <div className="grid grid-cols-12 gap-4 items-start">
-                {/* Description */}
-                <div className="col-span-12 md:col-span-5">
-                  <label className="block text-xs font-medium text-fm-neutral-600 mb-1">
+              {/* Mobile-first responsive layout */}
+              <div className="space-y-4">
+                {/* Description - Full Width */}
+                <div>
+                  <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
                     Description *
                   </label>
                   <textarea
@@ -455,67 +478,71 @@ export function InvoiceForm({ invoice, onSave, onCancel }: InvoiceFormProps) {
                   )}
                 </div>
 
-                {/* Quantity */}
-                <div className="col-span-4 md:col-span-2">
-                  <label className="block text-xs font-medium text-fm-neutral-600 mb-1">
-                    Quantity *
-                  </label>
-                  <input
-                    type="number"
-                    placeholder="1"
-                    min="0"
-                    step="0.01"
-                    value={item.quantity || ''}
-                    onChange={(e) => handleLineItemChange(index, 'quantity', e.target.value)}
-                    className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:border-transparent"
-                  />
-                  {errors[`lineItem${index}Quantity`] && (
-                    <p className="mt-1 text-sm text-red-600">{errors[`lineItem${index}Quantity`]}</p>
-                  )}
-                </div>
+                {/* Quantity, Rate, Amount - Grid Layout */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  {/* Quantity */}
+                  <div>
+                    <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
+                      Quantity *
+                    </label>
+                    <input
+                      type="number"
+                      placeholder="1"
+                      min="0"
+                      step="0.01"
+                      value={item.quantity || ''}
+                      onChange={(e) => handleLineItemChange(index, 'quantity', e.target.value)}
+                      className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:border-transparent"
+                    />
+                    {errors[`lineItem${index}Quantity`] && (
+                      <p className="mt-1 text-sm text-red-600">{errors[`lineItem${index}Quantity`]}</p>
+                    )}
+                  </div>
 
-                {/* Rate */}
-                <div className="col-span-4 md:col-span-2">
-                  <label className="block text-xs font-medium text-fm-neutral-600 mb-1">
-                    Rate (₹) *
-                  </label>
-                  <input
-                    type="number"
-                    placeholder="10000"
-                    min="0"
-                    step="0.01"
-                    value={item.rate || ''}
-                    onChange={(e) => handleLineItemChange(index, 'rate', e.target.value)}
-                    className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:border-transparent"
-                  />
-                  {errors[`lineItem${index}Rate`] && (
-                    <p className="mt-1 text-sm text-red-600">{errors[`lineItem${index}Rate`]}</p>
-                  )}
-                </div>
+                  {/* Rate */}
+                  <div>
+                    <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
+                      Rate (₹) *
+                    </label>
+                    <input
+                      type="number"
+                      placeholder="10000"
+                      min="0"
+                      step="0.01"
+                      value={item.rate || ''}
+                      onChange={(e) => handleLineItemChange(index, 'rate', e.target.value)}
+                      className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:border-transparent"
+                    />
+                    {errors[`lineItem${index}Rate`] && (
+                      <p className="mt-1 text-sm text-red-600">{errors[`lineItem${index}Rate`]}</p>
+                    )}
+                  </div>
 
-                {/* Amount */}
-                <div className="col-span-3 md:col-span-2">
-                  <label className="block text-xs font-medium text-fm-neutral-600 mb-1">
-                    Amount
-                  </label>
-                  <div className="px-3 py-2 bg-white border border-fm-neutral-200 rounded-lg text-right font-semibold text-fm-magenta-700 text-lg">
-                    {InvoiceUtils.formatCurrency(item.amount)}
+                  {/* Amount */}
+                  <div>
+                    <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
+                      Amount
+                    </label>
+                    <div className="px-3 py-2 bg-white border border-fm-neutral-200 rounded-lg text-right font-semibold text-fm-magenta-700 text-lg">
+                      {InvoiceUtils.formatCurrency(item.amount)}
+                    </div>
                   </div>
                 </div>
 
-                {/* Delete Button */}
-                <div className="col-span-1 flex items-end">
-                  {formData.lineItems.length > 1 && (
+                {/* Remove Button */}
+                {formData.lineItems.length > 1 && (
+                  <div className="flex justify-end">
                     <button
                       type="button"
                       onClick={() => removeLineItem(index)}
-                      className="p-2 text-fm-neutral-400 hover:text-red-600 transition-colors hover:bg-red-50 rounded-lg mb-1"
+                      className="flex items-center gap-2 px-3 py-2 text-sm text-fm-neutral-500 hover:text-red-600 transition-colors hover:bg-red-50 rounded-lg"
                       title="Remove item"
                     >
                       <Trash2 className="h-4 w-4" />
+                      Remove Item
                     </button>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             </div>
           ))}
@@ -613,26 +640,29 @@ export function InvoiceForm({ invoice, onSave, onCancel }: InvoiceFormProps) {
       </div>
 
       {/* Actions */}
-      <div className="flex items-center justify-end gap-4">
+      <div className="flex flex-col sm:flex-row items-center justify-end gap-4">
         {onCancel && (
-          <Button variant="ghost" onClick={onCancel}>
+          <LinkButton variant="ghost" onClick={onCancel}>
             Cancel
-          </Button>
+          </LinkButton>
         )}
-        <Button
+        <LinkButton
           variant="outline"
           icon={<Download className="h-4 w-4" />}
+          iconPosition="left"
           onClick={handleDownloadPDF}
         >
           Download PDF
-        </Button>
-        <Button
+        </LinkButton>
+        <LinkButton
+          variant="primary"
           icon={<Save className="h-4 w-4" />}
-          loading={isSaving}
+          iconPosition="left"
           onClick={handleSave}
+          className={isSaving ? 'opacity-50 cursor-not-allowed' : ''}
         >
-          Save Invoice
-        </Button>
+          {isSaving ? 'Saving Invoice...' : 'Save Invoice'}
+        </LinkButton>
       </div>
     </div>
   );

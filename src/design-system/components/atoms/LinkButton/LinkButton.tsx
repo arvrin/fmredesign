@@ -7,7 +7,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Button, ButtonProps } from '../Button/Button';
+import { Button, ButtonProps } from '../../primitives/Button';
 
 export interface LinkButtonProps extends ButtonProps {
   href?: string;

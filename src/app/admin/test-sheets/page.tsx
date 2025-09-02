@@ -6,7 +6,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Button } from '@/design-system/components/atoms/Button/Button';
+import { DashboardButton as Button } from '@/design-system';
 import { CheckCircle, XCircle, AlertTriangle, RefreshCw } from 'lucide-react';
 
 export default function TestSheetsPage() {
@@ -228,10 +228,10 @@ export default function TestSheetsPage() {
           </div>
           
           <div className="flex items-center space-x-3">
-            <Button variant="outline" onClick={clearLogs}>
+            <Button variant="admin-outline" onClick={clearLogs}>
               Clear Logs
             </Button>
-            <Button onClick={runAllTests}>
+            <Button variant="admin" onClick={runAllTests}>
               Run All Tests
             </Button>
           </div>
@@ -240,7 +240,7 @@ export default function TestSheetsPage() {
         {/* Individual Test Buttons */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <Button 
-            variant="outline" 
+            variant="admin-outline" 
             onClick={testInitializeSheets}
             disabled={testResults.initialize === 'testing'}
             className="flex items-center justify-center space-x-2"
@@ -250,7 +250,7 @@ export default function TestSheetsPage() {
           </Button>
           
           <Button 
-            variant="outline" 
+            variant="admin-outline" 
             onClick={testCreateClient}
             disabled={testResults.clientCreate === 'testing'}
             className="flex items-center justify-center space-x-2"
@@ -260,7 +260,7 @@ export default function TestSheetsPage() {
           </Button>
           
           <Button 
-            variant="outline" 
+            variant="admin-outline" 
             onClick={testReadClients}
             disabled={testResults.clientRead === 'testing'}
             className="flex items-center justify-center space-x-2"
@@ -270,7 +270,7 @@ export default function TestSheetsPage() {
           </Button>
           
           <Button 
-            variant="outline" 
+            variant="admin-outline" 
             onClick={testCreateInvoice}
             disabled={testResults.invoiceCreate === 'testing'}
             className="flex items-center justify-center space-x-2"
@@ -280,7 +280,7 @@ export default function TestSheetsPage() {
           </Button>
           
           <Button 
-            variant="outline" 
+            variant="admin-outline" 
             onClick={testReadInvoices}
             disabled={testResults.invoiceRead === 'testing'}
             className="flex items-center justify-center space-x-2"

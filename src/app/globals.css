@@ -1,4 +1,6 @@
 @import "tailwindcss";
+/* Import consolidated animations */
+@import '../styles/consolidated-animations.css';
 /* Note: performance-fixes.css is imported at the end to override component styles */
 
 /* Tailwind v4 CSS-first configuration */

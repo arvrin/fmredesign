@@ -2,14 +2,48 @@
 
 import React from 'react';
 import { LinkButton } from '@/design-system';
-import { ArrowRight, Play, Sparkles, TrendingUp, Users } from 'lucide-react';
+import { 
+  ArrowRight, 
+  Play, 
+  Sparkles, 
+  TrendingUp, 
+  Users, 
+  Zap,
+  Target,
+  Rocket,
+  Star,
+  Globe,
+  Heart,
+  Trophy,
+  Lightbulb
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
-import './hero-animations.css';
+
 
 const floatingIcons = [
-  { Icon: Sparkles, position: 'top-20 left-20', delay: '0s' },
-  { Icon: TrendingUp, position: 'top-32 right-32', delay: '1s' },
-  { Icon: Users, position: 'bottom-32 left-32', delay: '2s' },
+  // Edge icons - orbital movement
+  { Icon: Sparkles, position: 'top-10 left-10', animation: 'float-orbital-left', delay: '0s' },
+  { Icon: TrendingUp, position: 'top-10 right-10', animation: 'float-orbital-right', delay: '1s' },
+  { Icon: Users, position: 'bottom-10 left-10', animation: 'float-orbital-left', delay: '2s' },
+  { Icon: Target, position: 'bottom-10 right-10', animation: 'float-orbital-right', delay: '3s' },
+  
+  // Mid-area icons - wave movement
+  { Icon: Zap, position: 'top-1/3 left-20', animation: 'float-wave-horizontal', delay: '0.5s' },
+  { Icon: Rocket, position: 'top-1/3 right-20', animation: 'float-wave-horizontal', delay: '1.5s' },
+  { Icon: Star, position: 'bottom-1/3 left-20', animation: 'float-wave-horizontal', delay: '2.5s' },
+  { Icon: Globe, position: 'bottom-1/3 right-20', animation: 'float-wave-horizontal', delay: '3.5s' },
+  
+  // Center area icons - vertical movement
+  { Icon: Heart, position: 'top-1/4 left-1/2', animation: 'float-wave-vertical', delay: '1s' },
+  { Icon: Trophy, position: 'bottom-1/4 left-1/2', animation: 'float-wave-vertical', delay: '2s' },
+  
+  // Diagonal movement icons
+  { Icon: Lightbulb, position: 'top-1/2 left-16', animation: 'float-diagonal', delay: '1.8s' },
+  { Icon: Sparkles, position: 'top-1/2 right-16', animation: 'float-diagonal', delay: '4.2s' },
+  
+  // Additional pulse movement icons for fuller coverage
+  { Icon: Star, position: 'top-2/3 left-1/3', animation: 'float-pulse-move', delay: '0.8s' },
+  { Icon: Zap, position: 'top-1/6 right-1/3', animation: 'float-pulse-move', delay: '3.8s' },
 ];
 
 export function HeroSection() {
@@ -68,17 +102,18 @@ export function HeroSection() {
         <div className="absolute top-0 left-0 w-full h-full opacity-50 bg-[linear-gradient(45deg,transparent_48%,rgba(179,41,104,0.08)_49%,rgba(179,41,104,0.08)_51%,transparent_52%)] bg-[length:30px_30px]" />
       </div>
 
-      {/* Floating Icons */}
-      {floatingIcons.map(({ Icon, position, delay }, index) => (
+      {/* Enhanced Floating Icons - Full Hero Coverage */}
+      {floatingIcons.map(({ Icon, position, animation, delay }, index) => (
         <div
           key={index}
           className={cn(
-            'absolute w-16 h-16 text-fm-magenta-300 animate-pulse-slow hidden lg:block',
-            position
+            'absolute w-12 h-12 md:w-16 md:h-16 text-fm-magenta-300 hidden lg:block pointer-events-none',
+            position,
+            animation
           )}
           style={{ animationDelay: delay }}
         >
-          <Icon className="w-full h-full opacity-30" />
+          <Icon className="w-full h-full opacity-40 drop-shadow-sm" />
         </div>
       ))}
 
@@ -114,12 +149,24 @@ export function HeroSection() {
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in-up" style={{ marginBottom: '5rem' }}>
-            <LinkButton href="/contact" variant="primary" size="lg" className="group">
+            <LinkButton 
+              href="/get-started" 
+              variant="primary" 
+              size="lg" 
+              icon={<ArrowRight className="w-5 h-5" />}
+              iconPosition="right"
+              className="group"
+            >
               Start Your Journey
-              <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform duration-200" />
             </LinkButton>
-            <LinkButton href="/about" variant="ghost" size="lg" className="group">
-              <Play className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform duration-200" />
+            <LinkButton 
+              href="/about" 
+              variant="ghost" 
+              size="lg" 
+              icon={<Play className="w-5 h-5" />}
+              iconPosition="left"
+              className="group"
+            >
               Watch Our Story
             </LinkButton>
           </div>

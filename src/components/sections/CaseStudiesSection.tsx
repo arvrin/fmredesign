@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { LinkButton } from '@/design-system';
 import { ArrowRight, ExternalLink, TrendingUp, Star } from 'lucide-react';
-import './casestudies-animations.css';
+
 import { cn } from '@/lib/utils';
 
 const caseStudies = [

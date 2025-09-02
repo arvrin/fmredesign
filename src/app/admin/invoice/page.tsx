@@ -5,7 +5,7 @@
 
 'use client';
 
-import { InvoiceForm } from '@/components/admin/InvoiceForm';
+import { InvoiceFormNew as InvoiceForm } from '@/components/admin/InvoiceFormNew';
 import { AdminHeader } from '@/components/admin/Header';
 
 export default function InvoicePage() {

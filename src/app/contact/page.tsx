@@ -5,6 +5,7 @@ import { MapPin, Phone, Mail, Clock, Calendar, Users, MessageCircle } from "luci
 // Design System Components
 import { 
   LinkButton,
+  HeroSectionBuilder,
   SectionBuilder,
   ContactForm,
   ContactInfo,
@@ -96,17 +97,16 @@ const faqData = [
 export default function ContactPage() {
   const handleFormSubmit = async (formData: ContactFormData) => {
     // Custom form submission logic can be added here
-    console.log('Form submitted:', formData);
     await new Promise(resolve => setTimeout(resolve, 2000));
   };
 
   return (
     <div className="min-h-screen">
       {/* Hero Section - Design System Version */}
-      <SectionBuilder
+      <HeroSectionBuilder
         badge={{
           text: "Let's Start the Conversation",
-          icon: <MessageCircle className="w-4 h-4" />
+          icon: <MessageCircle className="w-4 h-4 mr-2" />
         }}
         headline={{
           text: "Ready to Transform Your Business?",
@@ -116,6 +116,7 @@ export default function ContactPage() {
         description="Get in touch with our team of digital marketing experts. We're here to help you achieve your business goals with strategic marketing solutions that deliver real results."
         background="light"
         maxWidth="xl"
+        minHeight="large"
         content={
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <LinkButton href="tel:+919833257659" variant="primary" size="lg" icon={<Calendar className="w-5 h-5" />} iconPosition="right">

@@ -18,10 +18,12 @@ import {
   CampaignType,
   ClientUtils
 } from './client-types';
+import { AdminStorage } from './storage';
+import { TeamService } from './team-service';
 
 export class ClientService {
   private static readonly STORAGE_KEYS = {
-    CLIENTS: 'fm_clients',
+    CLIENTS: 'fm_admin_clients',
     CAMPAIGNS: 'fm_campaigns', 
     ANALYTICS: 'fm_client_analytics',
     MESSAGES: 'fm_client_messages',
@@ -31,10 +33,51 @@ export class ClientService {
     DELIVERABLES: 'fm_deliverables'
   };
 
+  // ===== DATE UTILITY METHODS =====
+  
+  /**
+   * Safely validate and format date strings
+   */
+  static validateAndFormatDate(dateValue: any): string | null {
+    if (!dateValue) return null;
+    
+    try {
+      const date = new Date(dateValue);
+      if (isNaN(date.getTime())) {
+        return null; // Invalid date
+      }
+      return date.toISOString().split('T')[0];
+    } catch (error) {
+      console.warn('Invalid date value:', dateValue);
+      return null;
+    }
+  }
+  
+  /**
+   * Safely get ISO string for dates
+   */
+  static safeToISOString(dateValue: any): string {
+    if (!dateValue) return new Date().toISOString();
+    
+    try {
+      const date = new Date(dateValue);
+      if (isNaN(date.getTime())) {
+        return new Date().toISOString(); // Return current date for invalid dates
+      }
+      return date.toISOString();
+    } catch (error) {
+      console.warn('Invalid date value, using current date:', dateValue);
+      return new Date().toISOString();
+    }
+  }
+
   // ===== CLIENT PROFILE MANAGEMENT =====
 
   static getAllClients(): ClientProfile[] {
     try {
+      // Run migration first to fix any old client structures
+      this.migrateOldClients();
+      
       const clients = localStorage.getItem(this.STORAGE_KEYS.CLIENTS);
       return clients ? JSON.parse(clients) : this.getDefaultClients();
     } catch (error) {
@@ -43,9 +86,301 @@ export class ClientService {
     }
   }
 
-  static getClientById(id: string): ClientProfile | null {
-    const clients = this.getAllClients();
-    return clients.find(client => client.id === id) || null;
+  /**
+   * Get invoice-compatible clients from registered clients and manual entries
+   */
+  static async getInvoiceClients(): Promise<Array<{id: string; name: string; email: string; phone: string; address: string; city: string; state: string; zipCode: string; country: string; gstNumber?: string}>> {
+    try {
+      // Get registered clients from the clients API
+      const baseUrl = typeof window === 'undefined' 
+        ? process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3002'
+        : '';
+      const fetchUrl = `${baseUrl}/api/clients?sortBy=createdAt&sortDirection=desc`;
+      const response = await fetch(fetchUrl);
+      const result = await response.json();
+      
+      if (!result.success) {
+        console.warn('Failed to fetch clients from API, falling back to localStorage');
+        try {
+          return AdminStorage.getClients();
+        } catch (storageError) {
+          console.error('Error loading from localStorage:', storageError);
+          return [];
+        }
+      }
+
+      const clients = result.data || [];
+      
+      // Convert registered clients to invoice client format with better field mapping including GST
+      const clientsFromAPI = clients.map((client: any) => {
+        // Handle nested data structures properly
+        const primaryContact = client.primaryContact || {};
+        const headquarters = client.headquarters || {};
+        
+        const mappedClient = {
+          id: client.id, // Don't add prefix to avoid ID conflicts
+          name: client.name || 'Unknown Client',
+          email: primaryContact.email || client.email || '',
+          phone: primaryContact.phone || client.phone || '',
+          address: headquarters.street || client.address || headquarters.address || '',
+          city: headquarters.city || client.city || '',
+          state: headquarters.state || client.state || '',
+          zipCode: headquarters.zipCode || client.zipCode || '',
+          country: headquarters.country || client.country || 'India',
+          gstNumber: client.gstNumber || ''
+        };
+        
+        // Debug HARSH client specifically
+        if (client.name && client.name.includes('HARSH')) {
+        }
+        
+        return mappedClient;
+      });
+
+      // Skip localStorage clients for now - only use API clients
+      // const manualClients = AdminStorage.getClients();
+
+      // Use only API clients
+      const allClients = [...clientsFromAPI];
+
+      // Remove duplicates by ID first, then by email (but not both for same record)
+      const uniqueClients = allClients.filter((client, index, self) => {
+        // First check for ID duplicates (most important)
+        const idIndex = self.findIndex(c => c.id === client.id);
+        if (idIndex !== index) {
+          return false;
+        }
+        
+        // Only check email duplicates if ID is unique (avoid double filtering)
+        if (client.email) {
+          const emailIndex = self.findIndex(c => 
+            c.email && 
+            c.email.toLowerCase() === client.email.toLowerCase() && 
+            c.id !== client.id  // Ensure we're not comparing with the same client by ID
+          );
+          if (emailIndex !== -1 && emailIndex < index) {
+            return false;
+          }
+        }
+        
+        return true;
+      });
+
+      const sortedClients = uniqueClients.sort((a, b) => a.name.localeCompare(b.name));
+      
+      // Special check for HARSH
+      const harshClient = sortedClients.find(c => c.name.includes('HARSH'));
+      if (harshClient) {
+      } else {
+      }
+      
+      return sortedClients;
+    } catch (error) {
+      console.error('Error fetching invoice clients:', error);
+      // Fallback to localStorage only
+      try {
+        return AdminStorage.getClients();
+      } catch (storageError) {
+        console.error('Error loading from localStorage fallback:', storageError);
+        return [];
+      }
+    }
+  }
+
+  static async getClientById(id: string): Promise<ClientProfile | null> {
+    try {
+      // First check localStorage clients
+      const localClients = this.getAllClients();
+      const localClient = localClients.find(client => client.id === id);
+      if (localClient) {
+        return localClient;
+      }
+
+      // If not found in localStorage, check API clients
+      const baseUrl = typeof window !== 'undefined' 
+        ? '' 
+        : process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3002';
+      
+      const response = await fetch(`${baseUrl}/api/clients`);
+      const result = await response.json();
+      
+      if (result.success && result.data) {
+        const apiClient = result.data.find((client: any) => client.id === id);
+        if (apiClient) {
+          
+          try {
+            // Convert API client to ClientProfile format
+            return {
+            id: apiClient.id,
+            name: apiClient.name,
+            industry: apiClient.industry || 'other',
+            website: '',
+            description: `Client from ${apiClient.company}`,
+            
+            primaryContact: {
+              id: `contact-${apiClient.id}`,
+              name: apiClient.name,
+              email: apiClient.email || '',
+              phone: apiClient.phone || '',
+              role: 'Primary Contact',
+              isPrimary: true
+            },
+            additionalContacts: [],
+            
+            companySize: 'medium',
+            founded: '',
+            headquarters: {
+              street: apiClient.address || apiClient.company || '',
+              city: apiClient.city || '',
+              state: apiClient.state || '',
+              zipCode: apiClient.zipCode || '',
+              country: apiClient.country || 'India'
+            },
+            
+            accountManager: 'user-001',
+            status: apiClient.status || 'active',
+            health: apiClient.health || 'good',
+            
+            contractDetails: {
+              type: 'project',
+              startDate: this.validateAndFormatDate(apiClient.createdAt) || new Date().toISOString().split('T')[0],
+              endDate: undefined,
+              value: parseInt(apiClient.totalValue) || 0,
+              currency: 'INR',
+              billingCycle: 'monthly',
+              services: [],
+              isActive: true
+            },
+            
+            onboardedAt: this.safeToISOString(apiClient.createdAt),
+            lastActivity: new Date().toISOString(),
+            createdAt: this.safeToISOString(apiClient.createdAt),
+            updatedAt: new Date().toISOString(),
+            tags: [apiClient.industry || 'general'],
+            notes: []
+            };
+          } catch (conversionError) {
+            console.error('Error converting API client to ClientProfile:', conversionError);
+            console.error('Problematic API client data:', apiClient);
+            return null;
+          }
+        }
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Error getting client by ID:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Migrate old flat client structure to proper ClientProfile structure
+   */
+  static migrateOldClients(): void {
+    try {
+      const clients = JSON.parse(localStorage.getItem(this.STORAGE_KEYS.CLIENTS) || '[]');
+      let migrationNeeded = false;
+      
+      const migratedClients = clients.map((client: any) => {
+        // Check if client needs migration (old flat structure)
+        if (!client.primaryContact || !client.headquarters || !client.contractDetails) {
+          migrationNeeded = true;
+          
+          return {
+            id: client.id,
+            name: client.name || client.company,
+            logo: client.logo || undefined,
+            industry: client.industry || 'other',
+            website: client.website || undefined,
+            description: client.description || `Client: ${client.name || client.company}`,
+            
+            // Contact Information
+            primaryContact: {
+              id: `contact-${client.id || Date.now()}`,
+              name: client.name || 'Primary Contact',
+              email: client.email || '',
+              phone: client.phone || '',
+              role: 'Primary Contact',
+              department: client.department || undefined,
+              isPrimary: true,
+              linkedInUrl: client.linkedIn || undefined
+            },
+            additionalContacts: client.additionalContacts || [],
+            
+            // Business Details
+            companySize: client.companySize || 'medium',
+            founded: client.founded || undefined,
+            headquarters: {
+              street: client.address || '',
+              city: client.city || '',
+              state: client.state || '',
+              zipCode: client.zipCode || '',
+              country: client.country || 'India'
+            },
+            
+            // Account Management
+            accountManager: client.accountManager || 'admin',
+            status: client.status || 'active',
+            health: client.health || 'good',
+            
+            // Contract & Billing
+            contractDetails: {
+              type: client.contractType || 'project',
+              startDate: this.validateAndFormatDate(client.contractStartDate) || new Date().toISOString().split('T')[0],
+              endDate: this.validateAndFormatDate(client.contractEndDate),
+              value: parseFloat(client.totalValue) || 0,
+              currency: 'INR',
+              billingCycle: client.billingCycle || 'monthly',
+              retainerAmount: client.retainerAmount || undefined,
+              services: client.services || [],
+              terms: client.terms || undefined,
+              isActive: true
+            },
+            
+            // Tax & Legal
+            gstNumber: client.gstNumber || undefined,
+            
+            // Metadata
+            onboardedAt: this.safeToISOString(client.onboardedAt || client.createdAt),
+            lastActivity: this.safeToISOString(client.lastActivity),
+            createdAt: this.safeToISOString(client.createdAt),
+            updatedAt: new Date().toISOString(),
+            tags: client.tags || [],
+            notes: client.notes || []
+          };
+        }
+        
+        return client; // Already properly structured
+      });
+      
+      if (migrationNeeded) {
+        localStorage.setItem(this.STORAGE_KEYS.CLIENTS, JSON.stringify(migratedClients));
+      }
+    } catch (error) {
+      console.error('Error during client migration:', error);
+    }
+  }
+
+  /**
+   * Get assigned team members for a client
+   */
+  static getClientTeamMembers(clientId: string) {
+    return TeamService.getTeamMembersForClient(clientId);
+  }
+
+  /**
+   * Assign team member to client
+   */
+  static assignTeamMemberToClient(clientId: string, teamMemberId: string, hoursAllocated: number, isLead = false) {
+    return TeamService.assignTeamMemberToClient(teamMemberId, clientId, hoursAllocated, isLead);
+  }
+
+  /**
+   * Remove team member from client
+   */
+  static removeTeamMemberFromClient(clientId: string, teamMemberId: string) {
+    return TeamService.removeTeamMemberFromClient(teamMemberId, clientId);
   }
 
   static saveClient(client: ClientProfile): void {
@@ -92,11 +427,16 @@ export class ClientService {
 
   static getAllCampaigns(): Campaign[] {
     try {
+      // Check if localStorage is available (client-side only)
+      if (typeof window === 'undefined') {
+        return this.getDefaultCampaigns();
+      }
+      
       const campaigns = localStorage.getItem(this.STORAGE_KEYS.CAMPAIGNS);
       return campaigns ? JSON.parse(campaigns) : this.getDefaultCampaigns();
     } catch (error) {
       console.error('Error loading campaigns:', error);
-      return [];
+      return this.getDefaultCampaigns();
     }
   }
 
@@ -343,69 +683,120 @@ export class ClientService {
 
   // ===== DASHBOARD ANALYTICS =====
 
-  static getDashboardStats() {
-    const clients = this.getAllClients();
-    const campaigns = this.getAllCampaigns();
-    const activeClients = clients.filter(c => c.status === 'active');
-    const activeCampaigns = campaigns.filter(c => c.status === 'active');
-    
-    const totalRevenue = clients.reduce((sum, client) => sum + client.contractDetails.value, 0);
-    const avgClientValue = totalRevenue / clients.length || 0;
-    
-    const healthDistribution = {
-      excellent: clients.filter(c => c.health === 'excellent').length,
-      good: clients.filter(c => c.health === 'good').length,
-      warning: clients.filter(c => c.health === 'warning').length,
-      critical: clients.filter(c => c.health === 'critical').length
-    };
+  static async getDashboardStats() {
+    try {
+      // Determine the base URL for API calls
+      const baseUrl = typeof window !== 'undefined' 
+        ? '' 
+        : process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3002';
+      
+      // Fetch real client data from API instead of localStorage
+      const response = await fetch(`${baseUrl}/api/clients`);
+      const result = await response.json();
+      const clients = result.success ? result.data : [];
+      
+      
+      const campaigns = this.getAllCampaigns();
+      const activeClients = clients.filter((c: any) => c.status === 'active');
+      const activeCampaigns = campaigns.filter(c => c.status === 'active');
+      
+      // Calculate total revenue using the correct field name and handle string values
+      const totalRevenue = clients.reduce((sum: number, client: any) => {
+        const value = typeof client.totalValue === 'string' ? parseFloat(client.totalValue) || 0 : client.totalValue || 0;
+        return sum + value;
+      }, 0);
+      const avgClientValue = totalRevenue / (clients.length || 1);
+      
+      const healthDistribution = {
+        excellent: clients.filter((c: any) => c.health === 'excellent').length,
+        good: clients.filter((c: any) => c.health === 'good').length,
+        warning: clients.filter((c: any) => c.health === 'warning').length,
+        critical: clients.filter((c: any) => c.health === 'critical').length
+      };
 
+      return {
+        totalClients: clients.length,
+        activeClients: activeClients.length,
+        activeCampaigns: activeCampaigns.length,
+        totalRevenue,
+        avgClientValue,
+        healthDistribution,
+        recentActivity: await this.getRecentActivity()
+      };
+    } catch (error) {
+      console.error('Error getting dashboard stats:', error);
+      // Fallback to mock data if API fails
+      return this.getMockDashboardStats();
+    }
+  }
+
+  static getMockDashboardStats() {
     return {
-      totalClients: clients.length,
-      activeClients: activeClients.length,
-      activeCampaigns: activeCampaigns.length,
-      totalRevenue,
-      avgClientValue,
-      healthDistribution,
-      recentActivity: this.getRecentActivity()
+      totalClients: 0,
+      activeClients: 0,
+      activeCampaigns: 0,
+      totalRevenue: 0,
+      avgClientValue: 0,
+      healthDistribution: {
+        excellent: 0,
+        good: 0,
+        warning: 0,
+        critical: 0
+      },
+      recentActivity: []
     };
   }
 
-  static getRecentActivity() {
-    // Combine recent activities from different sources
-    const activities: Array<{type: string; description: string; timestamp: string; clientName?: string}> = [];
-    
-    // Recent client additions
-    const clients = this.getAllClients()
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-      .slice(0, 5);
-    
-    clients.forEach(client => {
-      activities.push({
-        type: 'client_added',
-        description: `New client "${client.name}" added`,
-        timestamp: client.createdAt,
-        clientName: client.name
+  static async getRecentActivity() {
+    try {
+      const activities: Array<{type: string; description: string; timestamp: string; clientName?: string}> = [];
+      
+      // Determine the base URL for API calls
+      const baseUrl = typeof window !== 'undefined' 
+        ? '' 
+        : process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3002';
+      
+      // Fetch real client data from API
+      const response = await fetch(`${baseUrl}/api/clients`);
+      const result = await response.json();
+      const clients = result.success ? result.data : [];
+      
+      // Recent client additions
+      const recentClients = clients
+        .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        .slice(0, 5);
+      
+      recentClients.forEach((client: any) => {
+        activities.push({
+          type: 'client_added',
+          description: `New client "${client.name}" added`,
+          timestamp: client.createdAt,
+          clientName: client.name
+        });
       });
-    });
 
-    // Recent campaigns
-    const campaigns = this.getAllCampaigns()
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-      .slice(0, 5);
+      // Recent campaigns (fallback to mock data for now)
+      const campaigns = this.getAllCampaigns()
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        .slice(0, 5);
 
-    campaigns.forEach(campaign => {
-      const client = this.getClientById(campaign.clientId);
-      activities.push({
-        type: 'campaign_started',
-        description: `Campaign "${campaign.name}" started`,
-        timestamp: campaign.createdAt,
-        clientName: client?.name
+      campaigns.forEach(campaign => {
+        const client = clients.find((c: any) => c.id === campaign.clientId);
+        activities.push({
+          type: 'campaign_started',
+          description: `Campaign "${campaign.name}" started`,
+          timestamp: campaign.createdAt,
+          clientName: client?.name
+        });
       });
-    });
 
-    return activities
-      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-      .slice(0, 10);
+      return activities
+        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+        .slice(0, 10);
+    } catch (error) {
+      console.error('Error getting recent activity:', error);
+      return [];
+    }
   }
 
   // ===== DEFAULT DATA GENERATORS =====

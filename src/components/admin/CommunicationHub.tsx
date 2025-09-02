@@ -32,7 +32,7 @@ import {
   Bell,
   Hash
 } from 'lucide-react';
-import { Button } from '@/design-system/components/atoms/Button/Button';
+import { Button } from '@/design-system/components/primitives/Button';
 import { 
   ClientMessage, 
   ClientMeeting, 

@@ -112,8 +112,9 @@ export class AdminStorage {
       
       // If no clients exist, return default clients and save them
       if (clients.length === 0) {
-        localStorage.setItem(CLIENTS_KEY, JSON.stringify(DEFAULT_CLIENTS));
-        return DEFAULT_CLIENTS;
+        const defaultClients = [...DEFAULT_CLIENTS];
+        localStorage.setItem(CLIENTS_KEY, JSON.stringify(defaultClients));
+        return defaultClients;
       }
       
       return clients;

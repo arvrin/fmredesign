@@ -1,10 +1,10 @@
 /**
- * Design Tokens - Single Source of Truth
- * Extracted from existing homepage design patterns
+ * FreakingMinds Design System - Enhanced Tokens
+ * Extended for Dashboard Experiences with Professional Polish
  */
 
 export const designTokens = {
-  // Color System - Based on existing Tailwind theme
+  // Enhanced Color System - Brand + Dashboard Extensions
   colors: {
     brand: {
       primary: '#b32968',      // fm-magenta-700
@@ -12,24 +12,55 @@ export const designTokens = {
       accent: '#ff7849',       // fm-orange-500
       light: '#fdf2f8',        // fm-magenta-50
       border: '#fbcfe8',       // fm-magenta-200
+      // Dashboard extensions
+      violet: '#8B5CF6',       // Professional authority
+      cyan: '#06B6D4',         // Trust and reliability
+      indigo: '#6366F1',       // Power user emphasis
     },
     neutral: {
-      50: '#ffffff',
-      100: '#f8f9fa',
-      200: '#f2f2f2',
-      300: '#e6e6e6',
-      400: '#cccccc',
-      500: '#808080',
-      600: '#666666',
-      700: '#404040',
-      800: '#2d2d2d',
-      900: '#1a1a1a',
+      0: '#ffffff',
+      50: '#f9fafb',
+      100: '#f3f4f6',
+      200: '#e5e7eb',
+      300: '#d1d5db',
+      400: '#9ca3af',
+      500: '#6b7280',
+      600: '#4b5563',
+      700: '#374151',
+      800: '#1f2937',
+      900: '#111827',
+      950: '#0f0f23',          // Ultra dark for depth
     },
     semantic: {
-      success: '#16a34a',
-      warning: '#f59e0b',
-      error: '#ef4444',
-      info: '#3b82f6',
+      success: '#10B981',      // Updated emerald
+      warning: '#F59E0B',      // Amber
+      error: '#EF4444',        // Red
+      info: '#3B82F6',         // Blue
+    },
+    // Dashboard-specific color roles using FreakingMinds brand
+    dashboard: {
+      admin: {
+        primary: '#b32968',     // FreakingMinds magenta for admin authority
+        secondary: '#e94392',   // Lighter magenta for accents
+        surface: '#fdf2f8',     // Brand light background
+        border: '#fbcfe8',      // Brand border
+        hover: '#fce7f3',       // Brand hover state
+      },
+      client: {
+        primary: '#b32968',     // FreakingMinds magenta for brand consistency
+        secondary: '#ff7849',   // FreakingMinds orange for client warmth
+        surface: '#fdf2f8',     // Brand light background
+        border: '#fed7d7',      // Softer warm border
+        hover: '#fef5f5',       // Warm hover state
+      }
+    },
+    // Glass morphism
+    glass: {
+      white: 'rgba(255, 255, 255, 0.95)',
+      light: 'rgba(255, 255, 255, 0.8)', 
+      medium: 'rgba(255, 255, 255, 0.6)',
+      dark: 'rgba(0, 0, 0, 0.05)',
+      border: 'rgba(255, 255, 255, 0.2)',
     }
   },
 

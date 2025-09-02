@@ -6,7 +6,7 @@
 import React from 'react';
 import { ExternalLink } from 'lucide-react';
 import { patterns } from '../../../patterns';
-import { Button } from '../../atoms/Button/Button';
+import { Button } from '../../primitives/Button';
 import { Badge } from '../../atoms/Badge/Badge';
 import { cn } from '@/lib/utils';
 

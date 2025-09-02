@@ -43,7 +43,7 @@ import {
   Zap,
   TrendingDown
 } from 'lucide-react';
-import { Button } from '@/design-system/components/atoms/Button/Button';
+import { Button } from '@/design-system/components/primitives/Button';
 import { 
   ClientProfile as ClientProfileType, 
   Campaign, 
@@ -55,7 +55,7 @@ import {
   CAMPAIGN_TYPES,
   ClientHealth 
 } from '@/lib/admin/client-types';
-import { ClientService } from '@/lib/admin/client-service-enhanced';
+import { ClientService } from '@/lib/admin/client-service';
 import { CommunicationHub } from './CommunicationHub';
 import { DocumentManager } from './DocumentManager';
 import { GrowthEngine } from './GrowthEngine';
@@ -73,6 +73,8 @@ export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
   const [deliverables, setDeliverables] = useState<Deliverable[]>([]);
   const [opportunities, setOpportunities] = useState<GrowthOpportunity[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editData, setEditData] = useState<any>({});
 
   useEffect(() => {
     loadClientData();
@@ -98,9 +100,226 @@ export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
       
       const opportunityData = ClientService.getGrowthOpportunities(clientId);
       setOpportunities(opportunityData);
+      
+      // Initialize edit data with comprehensive fields
+      setEditData({
+        // Basic Information
+        name: clientData.name,
+        email: clientData.primaryContact?.email || '',
+        phone: clientData.primaryContact?.phone || '',
+        website: clientData.website || '',
+        
+        // Address Information
+        street: clientData.headquarters?.street || '',
+        city: clientData.headquarters?.city || '',
+        state: clientData.headquarters?.state || '',
+        zipCode: clientData.headquarters?.zipCode || '',
+        country: clientData.headquarters?.country || 'India',
+        
+        // Business Information
+        industry: clientData.industry,
+        companySize: clientData.companySize || 'medium',
+        founded: clientData.founded || '',
+        
+        // Tax & Legal
+        gstNumber: clientData.gstNumber || '',
+        
+        // Account Management
+        status: clientData.status,
+        health: clientData.health,
+        
+        // Contract Details
+        contractType: clientData.contractDetails?.type || 'project',
+        contractValue: clientData.contractDetails?.value || 0,
+        billingCycle: clientData.contractDetails?.billingCycle || 'monthly',
+        
+        // Contact Details
+        contactRole: clientData.primaryContact?.role || 'Primary Contact',
+        linkedIn: clientData.primaryContact?.linkedInUrl || ''
+      });
     }
     
     setLoading(false);
+  };
+
+  const handleEditStart = () => {
+    setIsEditing(true);
+  };
+
+  const handleEditCancel = () => {
+    setIsEditing(false);
+    // Reset edit data to original values
+    if (client) {
+      setEditData({
+        // Basic Information
+        name: client.name,
+        email: client.primaryContact?.email || '',
+        phone: client.primaryContact?.phone || '',
+        website: client.website || '',
+        
+        // Address Information
+        street: client.headquarters?.street || '',
+        city: client.headquarters?.city || '',
+        state: client.headquarters?.state || '',
+        zipCode: client.headquarters?.zipCode || '',
+        country: client.headquarters?.country || 'India',
+        
+        // Business Information
+        industry: client.industry,
+        companySize: client.companySize || 'medium',
+        founded: client.founded || '',
+        
+        // Tax & Legal
+        gstNumber: client.gstNumber || '',
+        
+        // Account Management
+        status: client.status,
+        health: client.health,
+        
+        // Contract Details
+        contractType: client.contractDetails?.type || 'project',
+        contractValue: client.contractDetails?.value || 0,
+        billingCycle: client.contractDetails?.billingCycle || 'monthly',
+        
+        // Contact Details
+        contactRole: client.primaryContact?.role || 'Primary Contact',
+        linkedIn: client.primaryContact?.linkedInUrl || ''
+      });
+    }
+  };
+
+  const handleEditSave = async () => {
+    if (!client) return;
+    
+    try {
+      const addressData = {
+        street: editData.street,
+        city: editData.city,
+        state: editData.state,
+        zipCode: editData.zipCode,
+        country: editData.country
+      };
+      
+      // Update client data with all fields
+      const updatedClient = {
+        ...client,
+        // Basic Information
+        name: editData.name,
+        website: editData.website,
+        industry: editData.industry,
+        companySize: editData.companySize,
+        founded: editData.founded,
+        
+        // Tax & Legal
+        gstNumber: editData.gstNumber,
+        
+        // Account Management
+        status: editData.status,
+        health: editData.health,
+        
+        // Contact Information
+        primaryContact: {
+          ...client.primaryContact,
+          email: editData.email,
+          phone: editData.phone,
+          role: editData.contactRole,
+          linkedInUrl: editData.linkedIn
+        },
+        
+        // Address Information
+        headquarters: {
+          ...client.headquarters,
+          street: editData.street,
+          city: editData.city,
+          state: editData.state,
+          zipCode: editData.zipCode,
+          country: editData.country
+        },
+        
+        // Contract Details
+        contractDetails: {
+          ...client.contractDetails,
+          type: editData.contractType,
+          value: parseFloat(editData.contractValue) || 0,
+          billingCycle: editData.billingCycle
+        },
+        
+        updatedAt: new Date().toISOString()
+      };
+
+
+      // Save via API first with flat data structure
+      try {
+        const response = await fetch('/api/clients', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            id: client.id,
+            // Basic Information
+            name: editData.name,
+            email: editData.email,
+            phone: editData.phone,
+            website: editData.website,
+            industry: editData.industry,
+            companySize: editData.companySize,
+            founded: editData.founded,
+            
+            // Address Information - using flat structure like AddClientModal
+            address: editData.street,
+            city: editData.city,
+            state: editData.state,
+            zipCode: editData.zipCode,
+            country: editData.country,
+            
+            // Tax & Legal
+            gstNumber: editData.gstNumber,
+            
+            // Account Management
+            status: editData.status,
+            health: editData.health,
+            
+            // Contract Information
+            contractType: editData.contractType,
+            contractValue: editData.contractValue,
+            billingCycle: editData.billingCycle,
+            
+            // Contact Details
+            contactRole: editData.contactRole,
+            linkedIn: editData.linkedIn
+          }),
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          if (result.success && result.data) {
+            // Update localStorage with the properly structured data from API
+            try {
+              const existingClients = JSON.parse(localStorage.getItem('fm_admin_clients') || '[]');
+              const updatedClientsList = existingClients.map((c: any) => 
+                c.id === client.id ? result.data : c
+              );
+              localStorage.setItem('fm_admin_clients', JSON.stringify(updatedClientsList));
+            } catch (storageError) {
+              console.warn('Failed to save updated client to localStorage:', storageError);
+            }
+          }
+        }
+      } catch (apiError) {
+        // Fallback to local save with correct data structure
+        ClientService.saveClient(updatedClient);
+      }
+      
+      // Update local state
+      setClient(updatedClient);
+      setIsEditing(false);
+      
+      alert('Client updated successfully!');
+    } catch (error) {
+      console.error('Error updating client:', error);
+      alert('Error updating client. Please try again.');
+    }
   };
 
   if (loading) {
@@ -176,7 +395,7 @@ export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-fm-neutral-900">{client.name}</h1>
-                <p className="text-fm-neutral-600">{INDUSTRIES[client.industry]}</p>
+                <p className="text-fm-neutral-600">{(client as any).industry || 'Not specified'}</p>
                 <div className="flex items-center space-x-4 mt-2">
                   <div className={`flex items-center space-x-2 px-3 py-1 rounded-full text-sm font-medium ${getHealthColor(client.health)}`}>
                     {getHealthIcon(client.health)}
@@ -199,10 +418,21 @@ export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
               <Calendar className="h-4 w-4 mr-2" />
               Schedule
             </Button>
-            <Button variant="outline" size="sm">
-              <Edit className="h-4 w-4 mr-2" />
-              Edit
-            </Button>
+            {!isEditing ? (
+              <Button variant="outline" size="sm" onClick={handleEditStart}>
+                <Edit className="h-4 w-4 mr-2" />
+                Edit
+              </Button>
+            ) : (
+              <div className="flex gap-2">
+                <Button variant="default" size="sm" onClick={handleEditSave}>
+                  Save
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleEditCancel}>
+                  Cancel
+                </Button>
+              </div>
+            )}
             <Button variant="outline" size="sm">
               <MoreVertical className="h-4 w-4" />
             </Button>
@@ -248,23 +478,23 @@ export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
                       <Building className="h-5 w-5 text-fm-neutral-400" />
                       <div>
                         <p className="text-sm text-fm-neutral-600">Company Size</p>
-                        <p className="font-medium text-fm-neutral-900 capitalize">{client.companySize}</p>
+                        <p className="font-medium text-fm-neutral-900 capitalize">{(client as any).companySize || 'Not specified'}</p>
                       </div>
                     </div>
                     <div className="flex items-center space-x-3">
                       <Calendar className="h-5 w-5 text-fm-neutral-400" />
                       <div>
                         <p className="text-sm text-fm-neutral-600">Founded</p>
-                        <p className="font-medium text-fm-neutral-900">{client.founded || 'N/A'}</p>
+                        <p className="font-medium text-fm-neutral-900">{(client as any).founded || 'N/A'}</p>
                       </div>
                     </div>
                     <div className="flex items-center space-x-3">
                       <Globe className="h-5 w-5 text-fm-neutral-400" />
                       <div>
                         <p className="text-sm text-fm-neutral-600">Website</p>
-                        <a href={client.website} target="_blank" rel="noopener noreferrer" 
+                        <a href={(client as any).website} target="_blank" rel="noopener noreferrer" 
                            className="font-medium text-fm-magenta-700 hover:underline">
-                          {client.website}
+                          {(client as any).website || 'N/A'}
                         </a>
                       </div>
                     </div>
@@ -275,9 +505,9 @@ export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
                       <div>
                         <p className="text-sm text-fm-neutral-600">Headquarters</p>
                         <p className="font-medium text-fm-neutral-900">
-                          {client.headquarters.city}, {client.headquarters.state}
+                          {(client as any).city || 'N/A'}, {(client as any).state || 'N/A'}
                           <br />
-                          {client.headquarters.country}
+                          {(client as any).country || 'N/A'}
                         </p>
                       </div>
                     </div>
@@ -285,46 +515,301 @@ export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
                       <User className="h-5 w-5 text-fm-neutral-400" />
                       <div>
                         <p className="text-sm text-fm-neutral-600">Account Manager</p>
-                        <p className="font-medium text-fm-neutral-900">{client.accountManager}</p>
+                        <p className="font-medium text-fm-neutral-900">{(client as any).accountManager || 'Not assigned'}</p>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Contact Information */}
+              {/* Contact Information - Editable */}
               <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-6">
                 <h3 className="text-lg font-semibold text-fm-neutral-900 mb-4">Primary Contact</h3>
-                <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 bg-fm-neutral-100 rounded-full flex items-center justify-center">
-                    <User className="h-6 w-6 text-fm-neutral-600" />
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="font-semibold text-fm-neutral-900">{client.primaryContact.name}</h4>
-                    <p className="text-sm text-fm-neutral-600">{client.primaryContact.role}</p>
-                    <div className="flex items-center space-x-4 mt-2">
-                      <a href={`mailto:${client.primaryContact.email}`} 
-                         className="flex items-center text-sm text-fm-neutral-600 hover:text-fm-magenta-700">
-                        <Mail className="h-4 w-4 mr-1" />
-                        {client.primaryContact.email}
-                      </a>
-                      {client.primaryContact.phone && (
-                        <a href={`tel:${client.primaryContact.phone}`} 
+                
+                {!isEditing ? (
+                  // Display mode
+                  <div className="flex items-center space-x-4">
+                    <div className="w-12 h-12 bg-fm-neutral-100 rounded-full flex items-center justify-center">
+                      <User className="h-6 w-6 text-fm-neutral-600" />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-fm-neutral-900">{client.name || 'N/A'}</h4>
+                      <p className="text-sm text-fm-neutral-600">Primary Contact</p>
+                      <div className="flex items-center space-x-4 mt-2">
+                        <a href={`mailto:${client.primaryContact?.email}`} 
                            className="flex items-center text-sm text-fm-neutral-600 hover:text-fm-magenta-700">
-                          <Phone className="h-4 w-4 mr-1" />
-                          {client.primaryContact.phone}
+                          <Mail className="h-4 w-4 mr-1" />
+                          {client.primaryContact?.email || 'N/A'}
                         </a>
-                      )}
+                        {client.primaryContact?.phone && (
+                          <a href={`tel:${client.primaryContact?.phone}`} 
+                             className="flex items-center text-sm text-fm-neutral-600 hover:text-fm-magenta-700">
+                            <Phone className="h-4 w-4 mr-1" />
+                            {client.primaryContact?.phone}
+                          </a>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
+                ) : (
+                  // Comprehensive Edit Mode
+                  <div className="space-y-6">
+                    {/* Basic Information */}
+                    <div>
+                      <h4 className="text-sm font-semibold text-fm-neutral-900 mb-3 pb-2 border-b border-fm-neutral-200">Basic Information</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-fm-neutral-700 mb-1">Client Name *</label>
+                          <input
+                            type="text"
+                            value={editData.name || ''}
+                            onChange={(e) => setEditData({...editData, name: e.target.value})}
+                            className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-fm-neutral-700 mb-1">Email *</label>
+                          <input
+                            type="email"
+                            value={editData.email || ''}
+                            onChange={(e) => setEditData({...editData, email: e.target.value})}
+                            className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-fm-neutral-700 mb-1">Phone</label>
+                          <input
+                            type="tel"
+                            value={editData.phone || ''}
+                            onChange={(e) => setEditData({...editData, phone: e.target.value})}
+                            className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-fm-neutral-700 mb-1">Website</label>
+                          <input
+                            type="url"
+                            value={editData.website || ''}
+                            onChange={(e) => setEditData({...editData, website: e.target.value})}
+                            placeholder="https://example.com"
+                            className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-fm-neutral-700 mb-1">Contact Role</label>
+                          <input
+                            type="text"
+                            value={editData.contactRole || ''}
+                            onChange={(e) => setEditData({...editData, contactRole: e.target.value})}
+                            className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-fm-neutral-700 mb-1">LinkedIn</label>
+                          <input
+                            type="url"
+                            value={editData.linkedIn || ''}
+                            onChange={(e) => setEditData({...editData, linkedIn: e.target.value})}
+                            placeholder="https://linkedin.com/in/..."
+                            className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Address Information */}
+                    <div>
+                      <h4 className="text-sm font-semibold text-fm-neutral-900 mb-3 pb-2 border-b border-fm-neutral-200">Address Information</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="md:col-span-2">
+                          <label className="block text-sm font-medium text-fm-neutral-700 mb-1">Street Address</label>
+                          <input
+                            type="text"
+                            value={editData.street || ''}
+                            onChange={(e) => setEditData({...editData, street: e.target.value})}
+                            className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-fm-neutral-700 mb-1">City</label>
+                          <input
+                            type="text"
+                            value={editData.city || ''}
+                            onChange={(e) => setEditData({...editData, city: e.target.value})}
+                            className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-fm-neutral-700 mb-1">State</label>
+                          <input
+                            type="text"
+                            value={editData.state || ''}
+                            onChange={(e) => setEditData({...editData, state: e.target.value})}
+                            className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-fm-neutral-700 mb-1">ZIP Code</label>
+                          <input
+                            type="text"
+                            value={editData.zipCode || ''}
+                            onChange={(e) => setEditData({...editData, zipCode: e.target.value})}
+                            className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-fm-neutral-700 mb-1">Country</label>
+                          <select
+                            value={editData.country || ''}
+                            onChange={(e) => setEditData({...editData, country: e.target.value})}
+                            className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                          >
+                            <option value="India">India</option>
+                            <option value="United States">United States</option>
+                            <option value="United Kingdom">United Kingdom</option>
+                            <option value="Canada">Canada</option>
+                            <option value="Australia">Australia</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Business Information */}
+                    <div>
+                      <h4 className="text-sm font-semibold text-fm-neutral-900 mb-3 pb-2 border-b border-fm-neutral-200">Business Information</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-fm-neutral-700 mb-1">Industry</label>
+                          <select
+                            value={editData.industry || ''}
+                            onChange={(e) => setEditData({...editData, industry: e.target.value})}
+                            className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                          >
+                            <option value="">Select Industry</option>
+                            <option value="technology">Technology</option>
+                            <option value="hospitality">Hospitality</option>
+                            <option value="finance">Finance</option>
+                            <option value="healthcare">Healthcare</option>
+                            <option value="education">Education</option>
+                            <option value="retail">Retail</option>
+                            <option value="manufacturing">Manufacturing</option>
+                            <option value="other">Other</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-fm-neutral-700 mb-1">Company Size</label>
+                          <select
+                            value={editData.companySize || ''}
+                            onChange={(e) => setEditData({...editData, companySize: e.target.value})}
+                            className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                          >
+                            <option value="startup">Startup (1-10)</option>
+                            <option value="small">Small (11-50)</option>
+                            <option value="medium">Medium (51-200)</option>
+                            <option value="enterprise">Enterprise (200+)</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-fm-neutral-700 mb-1">Founded Year</label>
+                          <input
+                            type="number"
+                            value={editData.founded || ''}
+                            onChange={(e) => setEditData({...editData, founded: e.target.value})}
+                            min="1900"
+                            max="2025"
+                            className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-fm-neutral-700 mb-1">GST Number</label>
+                          <input
+                            type="text"
+                            value={editData.gstNumber || ''}
+                            onChange={(e) => setEditData({...editData, gstNumber: e.target.value})}
+                            placeholder="22AAAAA0000A1Z5"
+                            className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Account & Contract Information */}
+                    <div>
+                      <h4 className="text-sm font-semibold text-fm-neutral-900 mb-3 pb-2 border-b border-fm-neutral-200">Account Management</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-fm-neutral-700 mb-1">Status</label>
+                          <select
+                            value={editData.status || ''}
+                            onChange={(e) => setEditData({...editData, status: e.target.value})}
+                            className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                          >
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                            <option value="prospect">Prospect</option>
+                            <option value="churned">Churned</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-fm-neutral-700 mb-1">Health Status</label>
+                          <select
+                            value={editData.health || ''}
+                            onChange={(e) => setEditData({...editData, health: e.target.value})}
+                            className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                          >
+                            <option value="excellent">Excellent</option>
+                            <option value="good">Good</option>
+                            <option value="warning">Warning</option>
+                            <option value="critical">Critical</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-fm-neutral-700 mb-1">Contract Type</label>
+                          <select
+                            value={editData.contractType || ''}
+                            onChange={(e) => setEditData({...editData, contractType: e.target.value})}
+                            className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                          >
+                            <option value="project">Project</option>
+                            <option value="retainer">Retainer</option>
+                            <option value="performance">Performance</option>
+                            <option value="hybrid">Hybrid</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-fm-neutral-700 mb-1">Contract Value (₹)</label>
+                          <input
+                            type="number"
+                            value={editData.contractValue || ''}
+                            onChange={(e) => setEditData({...editData, contractValue: e.target.value})}
+                            min="0"
+                            className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-fm-neutral-700 mb-1">Billing Cycle</label>
+                          <select
+                            value={editData.billingCycle || ''}
+                            onChange={(e) => setEditData({...editData, billingCycle: e.target.value})}
+                            className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                          >
+                            <option value="monthly">Monthly</option>
+                            <option value="quarterly">Quarterly</option>
+                            <option value="annually">Annually</option>
+                            <option value="one_time">One Time</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Description */}
-              {client.description && (
+              {(client as any).description && (
                 <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-6">
                   <h3 className="text-lg font-semibold text-fm-neutral-900 mb-4">About</h3>
-                  <p className="text-fm-neutral-700 leading-relaxed">{client.description}</p>
+                  <p className="text-fm-neutral-700 leading-relaxed">{(client as any).description}</p>
                 </div>
               )}
             </div>
@@ -338,38 +823,29 @@ export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
                   <div>
                     <p className="text-sm text-fm-neutral-600">Contract Value</p>
                     <p className="text-2xl font-bold text-fm-neutral-900">
-                      {ClientUtils.formatCurrency(client.contractDetails.value)}
+                      {ClientUtils.formatCurrency(parseFloat((client as any).totalValue) || 0)}
                     </p>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-sm text-fm-neutral-600">Type</p>
                       <p className="font-medium text-fm-neutral-900 capitalize">
-                        {client.contractDetails.type.replace('_', ' ')}
+                        {((client as any).contractType || 'retainer').replace('_', ' ')}
                       </p>
                     </div>
                     <div>
                       <p className="text-sm text-fm-neutral-600">Billing</p>
                       <p className="font-medium text-fm-neutral-900 capitalize">
-                        {client.contractDetails.billingCycle.replace('_', ' ')}
+                        {((client as any).billingCycle || 'monthly').replace('_', ' ')}
                       </p>
                     </div>
                   </div>
                   <div>
                     <p className="text-sm text-fm-neutral-600">Contract Period</p>
                     <p className="font-medium text-fm-neutral-900">
-                      {new Date(client.contractDetails.startDate).toLocaleDateString()} - 
-                      {client.contractDetails.endDate ? new Date(client.contractDetails.endDate).toLocaleDateString() : 'Ongoing'}
+                      {new Date((client as any).createdAt || Date.now()).toLocaleDateString()} - Ongoing
                     </p>
                   </div>
-                  {client.contractDetails.endDate && (
-                    <div>
-                      <p className="text-sm text-fm-neutral-600">Days Remaining</p>
-                      <p className="font-medium text-fm-neutral-900">
-                        {ClientUtils.getContractTimeRemaining(client.contractDetails)} days
-                      </p>
-                    </div>
-                  )}
                 </div>
               </div>
 
@@ -403,11 +879,11 @@ export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
               </div>
 
               {/* Tags */}
-              {client.tags.length > 0 && (
+              {((client as any).tags && (client as any).tags.length > 0) && (
                 <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-6">
                   <h3 className="text-lg font-semibold text-fm-neutral-900 mb-4">Tags</h3>
                   <div className="flex flex-wrap gap-2">
-                    {client.tags.map((tag, index) => (
+                    {((client as any).tags || []).map((tag: string, index: number) => (
                       <span
                         key={index}
                         className="px-3 py-1 bg-fm-neutral-100 text-fm-neutral-700 text-sm rounded-full"

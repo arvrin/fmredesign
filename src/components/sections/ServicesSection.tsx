@@ -13,7 +13,7 @@ import {
   Star,
   CheckCircle
 } from 'lucide-react';
-import './services-animations.css';
+
 import { cn } from '@/lib/utils';
 
 const services = [

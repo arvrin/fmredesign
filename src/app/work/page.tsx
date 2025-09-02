@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
-import { ArrowRight, TrendingUp, Users, Award, Eye, MousePointer, ShoppingCart, Zap, Star } from "lucide-react";
+import { ArrowRight, TrendingUp, Users, Award, Eye, MousePointer, ShoppingCart, Zap, Star, Sparkles } from "lucide-react";
 
 // Design System Components
 import { 
   LinkButton,
   SectionBuilder,
+  HeroSectionBuilder,
   CaseStudyCard,
   PortfolioCard,
   TestimonialCard,
@@ -12,6 +13,9 @@ import {
   StatCard,
   patterns 
 } from "@/design-system";
+
+// Newsletter Component
+import { NewsletterSection } from "@/components/sections/NewsletterSection";
 
 export const metadata: Metadata = {
   title: "Our Work - Freaking Minds | Digital Marketing Case Studies & Portfolio",
@@ -167,11 +171,11 @@ export default function WorkPage() {
 
   return (
     <div className="min-h-screen">
-      {/* Hero Section - Design System Version */}
-      <SectionBuilder
+      {/* Hero Section - Enhanced Design System Version */}
+      <HeroSectionBuilder
         badge={{
           text: "Real Results, Real Success Stories",
-          icon: <Award className="w-4 h-4" />
+          icon: <Award className="w-4 h-4 mr-2" />
         }}
         headline={{
           text: "Our Work Speaks Louder Than Words",
@@ -181,9 +185,10 @@ export default function WorkPage() {
         description="Discover how we've transformed businesses across industries through innovative digital marketing strategies. Each case study represents real growth, real results, and real partnerships that drive success."
         background="light"
         maxWidth="xl"
+        minHeight="large"
         content={
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <LinkButton href="/contact" variant="primary" size="lg" icon={<ArrowRight className="w-5 h-5" />} iconPosition="right">
+            <LinkButton href="/get-started" variant="primary" size="lg" icon={<ArrowRight className="w-5 h-5" />} iconPosition="right">
               Start Your Success Story
             </LinkButton>
             <LinkButton href="#" variant="secondary" size="lg">
@@ -325,6 +330,76 @@ export default function WorkPage() {
         }
       />
 
+      {/* Newsletter Section - Strategic Placement */}
+      <NewsletterSection 
+        title="Get More Success Stories & Insights"
+        description="Loved these results? Get exclusive case studies, marketing insights, and growth strategies from our latest campaigns delivered to your inbox weekly."
+        subscriberCount="3,200+ marketers"
+        variant="default"
+      />
+
+      {/* CreativeMinds Network CTA */}
+      <SectionBuilder
+        badge={{
+          text: "Want to Be Part of These Success Stories?",
+          icon: <Sparkles className="w-4 h-4" />
+        }}
+        headline={{
+          text: "Join Our Creative Network",
+          level: "h2",
+          accent: { text: "Creative Network", position: "end" }
+        }}
+        description="Are you a creative professional inspired by these results? Join our curated network of top talent and be part of projects that make a real impact."
+        background="light"
+        content={
+          <div className="bg-white rounded-2xl border border-fm-neutral-200 p-8">
+            <div className="grid md:grid-cols-2 gap-8 mb-8">
+              <div className="text-center">
+                <div className="w-16 h-16 bg-fm-magenta-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Users className="w-8 h-8 text-fm-magenta-600" />
+                </div>
+                <h3 className="font-semibold text-fm-neutral-900 mb-2">Be Part of Award-Winning Projects</h3>
+                <p className="text-fm-neutral-600">Work on campaigns that generate real results and win industry recognition.</p>
+              </div>
+              
+              <div className="text-center">
+                <div className="w-16 h-16 bg-fm-magenta-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <TrendingUp className="w-8 h-8 text-fm-magenta-600" />
+                </div>
+                <h3 className="font-semibold text-fm-neutral-900 mb-2">Grow Your Professional Portfolio</h3>
+                <p className="text-fm-neutral-600">Add impressive case studies to your portfolio while working with top brands.</p>
+              </div>
+            </div>
+            
+            <div className="text-center">
+              <p className="text-fm-neutral-600 mb-6">
+                Whether you're a designer, developer, copywriter, or strategist, we're always looking for exceptional talent to join our network.
+              </p>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <LinkButton 
+                  href="/creativeminds" 
+                  variant="primary" 
+                  size="lg"
+                  icon={<ArrowRight className="w-5 h-5" />}
+                  iconPosition="right"
+                >
+                  Explore Creative Network
+                </LinkButton>
+                <LinkButton 
+                  href="/creativeminds#apply" 
+                  variant="outline" 
+                  size="lg"
+                  icon={<Users className="w-5 h-5" />}
+                  iconPosition="left"
+                >
+                  Apply to Join
+                </LinkButton>
+              </div>
+            </div>
+          </div>
+        }
+      />
+
       {/* CTA Section - Design System Version */}
       <SectionBuilder
         badge={{
@@ -340,14 +415,14 @@ export default function WorkPage() {
         content={
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <LinkButton 
-              href="/contact"
+              href="/get-started"
               variant="secondary" 
               size="lg" 
               className="bg-fm-neutral-50 text-fm-magenta-700 hover:bg-fm-neutral-100"
               icon={<ArrowRight className="w-5 h-5" />}
               iconPosition="right"
             >
-              Discuss Your Project
+              Start Your Project
             </LinkButton>
             <LinkButton href="/contact" variant="ghost" size="lg" theme="dark">
               Schedule Discovery Call

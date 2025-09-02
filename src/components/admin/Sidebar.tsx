@@ -10,12 +10,18 @@ import {
   LayoutDashboard, 
   FileText, 
   Users, 
+  Target,
   Settings, 
   LogOut,
   Menu,
   X,
   Shield,
-  TestTube
+  TestTube,
+  Search,
+  Sparkles,
+  Briefcase,
+  Calendar,
+  Presentation
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
@@ -43,9 +49,44 @@ const navigation: NavigationItem[] = [
     icon: FileText,
   },
   {
+    name: 'Proposals',
+    href: '/admin/proposals',
+    icon: Presentation,
+  },
+  {
+    name: 'Leads',
+    href: '/admin/leads',
+    icon: Target,
+  },
+  {
     name: 'Clients',
     href: '/admin/clients',
     icon: Users,
+  },
+  {
+    name: 'Team',
+    href: '/admin/team',
+    icon: Briefcase,
+  },
+  {
+    name: 'Projects',
+    href: '/admin/projects',
+    icon: Briefcase,
+  },
+  {
+    name: 'Content Calendar',
+    href: '/admin/content',
+    icon: Calendar,
+  },
+  {
+    name: 'Discovery',
+    href: '/admin/discovery',
+    icon: Search,
+  },
+  {
+    name: 'CreativeMinds',
+    href: '/admin/creativeminds',
+    icon: Sparkles,
   },
   {
     name: 'Admin System',
@@ -83,10 +124,12 @@ export function Sidebar({ onLogout }: SidebarProps) {
     <div className="flex h-full flex-col">
       {/* Logo */}
       <div className="flex h-16 shrink-0 items-center border-b border-fm-neutral-200 px-4">
-        <Link href="/admin" className="flex items-center space-x-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-fm-magenta-700">
-            <span className="text-sm font-bold text-white">FM</span>
-          </div>
+        <Link href="/admin" className="flex items-center space-x-3">
+          <img 
+            src="/logo.png" 
+            alt="Freaking Minds" 
+            className="h-8 w-auto flex-shrink-0"
+          />
           <span className="text-lg font-semibold text-fm-neutral-900">Admin</span>
         </Link>
       </div>

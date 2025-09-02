@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
-import { ArrowRight, Search, Megaphone, Palette, BarChart3, Globe, Video, Zap, Target } from "lucide-react";
+import { ArrowRight, Search, Megaphone, Palette, BarChart3, Globe, Video, Zap, Target, Users, Award } from "lucide-react";
 
 // Design System Components
 import { 
   LinkButton,
   SectionBuilder,
+  HeroSectionBuilder,
   ServiceCard,
   PricingCard,
   ProcessStep,
@@ -184,11 +185,11 @@ const process = [
 export default function ServicesPage() {
   return (
     <div className="min-h-screen">
-      {/* Hero Section - Design System Version */}
-      <SectionBuilder
+      {/* Hero Section - Enhanced Design System Version */}
+      <HeroSectionBuilder
         badge={{
           text: "Comprehensive Digital Marketing Solutions",
-          icon: <Zap className="w-4 h-4" />
+          icon: <Zap className="w-4 h-4 mr-2" />
         }}
         headline={{
           text: "Services That Transform Your Business",
@@ -196,8 +197,9 @@ export default function ServicesPage() {
           accent: { text: "Transform", position: "middle" }
         }}
         description="From SEO and social media to PPC and creative design, we offer comprehensive digital marketing services that drive real business growth. Every strategy is custom-crafted to achieve your unique goals."
-        background="light"
+        background="gradient"
         maxWidth="xl"
+        minHeight="large"
         content={
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <LinkButton href="/contact" variant="primary" size="lg" icon={<ArrowRight className="w-5 h-5" />} iconPosition="right">
@@ -300,6 +302,97 @@ export default function ServicesPage() {
               </LinkButton>
             </div>
           </>
+        }
+      />
+
+      {/* CreativeMinds Talent Network Section */}
+      <SectionBuilder
+        badge={{
+          text: "Need Custom Talent?",
+          icon: <Users className="w-4 h-4" />
+        }}
+        headline={{
+          text: "Access India's Top Creative Talent",
+          level: "h2",
+          accent: { text: "Creative Talent", position: "end" }
+        }}
+        description="Can't find the perfect fit for your project? Explore our curated network of 150+ verified creative professionals, from designers and developers to content creators and strategists."
+        background="none"
+        content={
+          <div className="bg-white rounded-2xl border border-fm-neutral-200 p-8">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-8">
+              {/* Talent Categories */}
+              <div className="text-center">
+                <div className="w-16 h-16 bg-fm-magenta-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Palette className="w-8 h-8 text-fm-magenta-600" />
+                </div>
+                <h3 className="font-semibold text-fm-neutral-900 mb-2">Designers</h3>
+                <p className="text-sm text-fm-neutral-600">UI/UX, Graphic Design, Branding, Illustration</p>
+              </div>
+              
+              <div className="text-center">
+                <div className="w-16 h-16 bg-fm-magenta-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Video className="w-8 h-8 text-fm-magenta-600" />
+                </div>
+                <h3 className="font-semibold text-fm-neutral-900 mb-2">Content Creators</h3>
+                <p className="text-sm text-fm-neutral-600">Video Production, Photography, Copywriting</p>
+              </div>
+              
+              <div className="text-center">
+                <div className="w-16 h-16 bg-fm-magenta-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <BarChart3 className="w-8 h-8 text-fm-magenta-600" />
+                </div>
+                <h3 className="font-semibold text-fm-neutral-900 mb-2">Strategists</h3>
+                <p className="text-sm text-fm-neutral-600">Digital Strategy, Analytics, Campaign Management</p>
+              </div>
+            </div>
+            
+            <div className="bg-fm-magenta-50 rounded-xl p-6 mb-8">
+              <div className="grid md:grid-cols-2 gap-8">
+                <div className="flex items-center gap-4">
+                  <Award className="w-8 h-8 text-fm-magenta-600" />
+                  <div>
+                    <div className="text-2xl font-bold text-fm-magenta-700">95%</div>
+                    <div className="text-sm text-fm-neutral-600">Client Satisfaction Rate</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <Users className="w-8 h-8 text-fm-magenta-600" />
+                  <div>
+                    <div className="text-2xl font-bold text-fm-magenta-700">150+</div>
+                    <div className="text-sm text-fm-neutral-600">Verified Professionals</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="text-center">
+              <p className="text-fm-neutral-600 mb-6">
+                All talent is pre-vetted, with proven track records and expertise in their respective fields. 
+                Perfect for when you need specialized skills for specific projects.
+              </p>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <LinkButton 
+                  href="/creativeminds" 
+                  variant="primary" 
+                  size="lg"
+                  icon={<ArrowRight className="w-5 h-5" />}
+                  iconPosition="right"
+                >
+                  Browse Talent Network
+                </LinkButton>
+                <LinkButton 
+                  href="/creativeminds#apply" 
+                  variant="outline" 
+                  size="lg"
+                  icon={<Users className="w-5 h-5" />}
+                  iconPosition="left"
+                >
+                  Join as Professional
+                </LinkButton>
+              </div>
+            </div>
+          </div>
         }
       />
 

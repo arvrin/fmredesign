@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/Button';
+import { Button } from '@/design-system/components/primitives/Button';
 import { 
   Phone, 
   Mail, 
@@ -12,7 +12,7 @@ import {
   ArrowRight,
   Star
 } from 'lucide-react';
-import './contact-animations.css';
+
 
 // Critical performance override styles
 const performanceOverrideStyles = `

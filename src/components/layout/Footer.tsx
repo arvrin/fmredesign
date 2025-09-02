@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { Button } from '@/components/ui/Button';
+import { LinkButton } from '@/design-system';
 import { 
   Mail, 
   Phone, 
@@ -10,11 +10,11 @@ import {
   Instagram, 
   Linkedin,
   Youtube,
-  ArrowRight,
-  Star,
-  Heart
+  Heart,
+  Users,
+  Zap
 } from 'lucide-react';
-import './footer-animations.css';
+
 
 const navigation = {
   services: [
@@ -33,13 +33,19 @@ const navigation = {
     { name: 'Careers', href: '/careers' },
     { name: 'Contact', href: '/contact' },
   ],
-  resources: [
-    { name: 'Free Resources', href: '/resources' },
-    { name: 'Digital Marketing Guide', href: '/resources/guide' },
-    { name: 'Industry Reports', href: '/resources/reports' },
-    { name: 'Webinars', href: '/resources/webinars' },
-    { name: 'Tools', href: '/resources/tools' },
-    { name: 'Templates', href: '/resources/templates' },
+  creatives: [
+    { name: 'Join Network', href: '/creativeminds' },
+    { name: 'Apply Now', href: '/creativeminds#apply' },
+    { name: 'Talent Portal', href: '/creativeminds#portal' },
+    { name: 'Success Stories', href: '/creativeminds#stories' },
+    { name: 'Resources', href: '/creativeminds#resources' },
+    { name: 'Community', href: '/creativeminds#community' },
+  ],
+  quickActions: [
+    { name: 'Get Started', href: '/get-started' },
+    { name: 'Join CreativeMinds', href: '/creativeminds' },
+    { name: 'Schedule Call', href: '/contact#schedule' },
+    { name: 'View Portfolio', href: '/work' },
   ],
   legal: [
     { name: 'Privacy Policy', href: '/privacy' },
@@ -60,88 +66,6 @@ const socialLinks = [
 export function Footer() {
   return (
     <footer className="relative bg-fm-neutral-900 text-fm-neutral-300 overflow-hidden">
-      {/* Premium Newsletter Section - Light Theme */}
-      <div className="relative py-0 bg-gradient-to-b from-fm-neutral-50 to-fm-neutral-100 overflow-visible border-b border-fm-neutral-200/50">
-        {/* Ambient Background Pattern */}
-        <div className="absolute inset-0 opacity-40">
-          <div className="absolute inset-0"
-            style={{
-              background: `radial-gradient(ellipse at 30% 20%, rgba(179,41,104,0.08) 0%, transparent 50%),
-                          radial-gradient(ellipse at 70% 80%, rgba(255,107,53,0.05) 0%, transparent 50%)`
-            }}
-          />
-        </div>
-        
-        <div className="relative z-10 px-4 md:px-8 lg:px-16" style={{ paddingTop: '5rem', paddingBottom: '5rem', maxWidth: '1440px', margin: '0 auto' }}>
-          {/* Enhanced Newsletter Container - Matching CTA Section Style */}
-          <div className="relative" style={{ marginTop: '0', marginBottom: '0' }}>
-            {/* Signature Magenta Glow Effects */}
-            <div className="absolute -inset-4 bg-gradient-to-r from-fm-magenta-400/20 via-fm-magenta-300/10 to-fm-magenta-400/20 rounded-3xl blur-2xl opacity-60" />
-            <div className="absolute -inset-2 bg-fm-magenta-500/10 rounded-3xl blur-xl" />
-            
-            {/* Glass Container with Enhanced Styling */}
-            <div className="relative bg-white/90 backdrop-blur-md rounded-3xl shadow-2xl border border-white/40" style={{ padding: '3rem 2rem' }}>
-              <div className="max-w-2xl mx-auto text-center">
-                {/* Badge - Consistent with project standard */}
-                <div className="flex justify-center mb-8">
-                  <div className="inline-flex items-center px-4 py-2 bg-fm-magenta-50/80 backdrop-blur-sm border border-fm-magenta-200 rounded-full text-fm-magenta-700 text-sm font-medium footer-animate-fade-in badge-glow">
-                    <Star className="w-4 h-4 mr-2 animate-pulse-slow" />
-                    Newsletter
-                  </div>
-                </div>
-              
-                <h2 className="font-bold text-fm-neutral-900 footer-animate-fade-in-up mb-8" 
-                    style={{ 
-                      fontSize: 'clamp(2rem, 4vw, 2.75rem)',
-                      lineHeight: '1.15',
-                      animationDelay: '100ms',
-                      marginBottom: '2rem'
-                    }}>
-                  Stay{' '}
-                  <span className="text-fm-magenta-700 relative inline-block">
-                    Ahead
-                    <svg
-                      className="absolute -bottom-2 left-0 w-full h-3 text-fm-magenta-700"
-                      viewBox="0 0 200 12"
-                      fill="currentColor"
-                    >
-                      <path d="M2 8c40-6 80-6 120 0s80 6 120 0" stroke="currentColor" strokeWidth="3" fill="none" />
-                    </svg>
-                  </span>{' '}
-                  of the Curve
-                </h2>
-              
-                <div className="flex justify-center mb-10">
-                  <p className="text-lg text-fm-neutral-600 leading-relaxed footer-animate-fade-in-up text-center" 
-                     style={{ maxWidth: '520px', animationDelay: '200ms', lineHeight: '1.6' }}>
-                    Get the latest digital marketing insights, trends, and strategies delivered 
-                    straight to your inbox. No spam, just valuable content.
-                  </p>
-                </div>
-              
-                <div className="footer-animate-scale-in" style={{ animationDelay: '300ms' }}>
-                  <div className="flex flex-col sm:flex-row items-stretch justify-center gap-4 max-w-xl mx-auto mb-8">
-                    <input
-                      type="email"
-                      placeholder="Enter your email"
-                      className="flex-1 bg-fm-neutral-100/80 border border-fm-neutral-300 px-6 py-4 rounded-xl text-fm-neutral-900 placeholder-fm-neutral-500 focus:ring-2 focus:ring-fm-magenta-700 focus:border-fm-magenta-700 focus:bg-white transition-all duration-300 shadow-lg text-base"
-                      style={{ minHeight: '56px' }}
-                    />
-                    <Button variant="primary" size="lg" className="sm:flex-shrink-0 group shadow-lg hover:shadow-xl transform transition-all duration-300 hover:scale-105" style={{ minHeight: '56px', paddingLeft: '2rem', paddingRight: '2rem' }}>
-                      <span className="mr-2">Subscribe</span>
-                      <ArrowRight className="w-5 h-5 inline-block transform transition-transform duration-300 group-hover:translate-x-1" />
-                    </Button>
-                  </div>
-                  
-                  <p className="text-sm text-fm-neutral-600 font-medium">
-                    Join 2,500+ marketers getting weekly insights
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
 
       {/* Premium Main Footer Content */}
       <div className="relative overflow-hidden">
@@ -204,7 +128,7 @@ export function Footer() {
             </div>
 
             {/* Premium Navigation Links */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 lg:col-span-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 lg:col-span-3">
               <div className="footer-animate-fade-in-up" style={{ animationDelay: '200ms' }}>
                 <h3 className="text-fm-neutral-50 font-bold mb-8 text-lg">Services</h3>
                 <ul className="space-y-4">
@@ -240,9 +164,12 @@ export function Footer() {
               </div>
 
               <div className="footer-animate-fade-in-up" style={{ animationDelay: '400ms' }}>
-                <h3 className="text-fm-neutral-50 font-bold mb-8 text-lg">Resources</h3>
-                <ul className="space-y-4 mb-8">
-                  {navigation.resources.map((item, index) => (
+                <h3 className="text-fm-neutral-50 font-bold mb-8 text-lg flex items-center gap-2">
+                  <Users className="w-5 h-5 text-fm-magenta-400" />
+                  For Creatives
+                </h3>
+                <ul className="space-y-4">
+                  {navigation.creatives.map((item, index) => (
                     <li key={item.name}>
                       <Link 
                         href={item.href}
@@ -254,6 +181,30 @@ export function Footer() {
                     </li>
                   ))}
                 </ul>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Actions Section */}
+          <div className="mt-16 pt-12 border-t border-fm-neutral-800/50">
+            <div className="footer-animate-fade-in-up" style={{ animationDelay: '600ms' }}>
+              <h3 className="text-fm-neutral-50 font-bold mb-8 text-lg flex items-center gap-2">
+                <Zap className="w-5 h-5 text-fm-magenta-400" />
+                Quick Actions
+              </h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {navigation.quickActions.map((item, index) => (
+                  <LinkButton
+                    key={item.name}
+                    href={item.href}
+                    variant="outline"
+                    size="md"
+                    className="border-fm-neutral-700 text-fm-neutral-300 hover:bg-fm-magenta-600 hover:border-fm-magenta-600 hover:text-white transition-all duration-300"
+                    style={{ animationDelay: `${index * 100 + 700}ms` }}
+                  >
+                    {item.name}
+                  </LinkButton>
+                ))}
               </div>
             </div>
           </div>

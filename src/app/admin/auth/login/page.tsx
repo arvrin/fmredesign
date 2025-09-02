@@ -9,7 +9,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Eye, EyeOff, Lock, Shield } from 'lucide-react';
 import { AdminAuth } from '@/lib/admin/auth';
-import { Button } from '@/design-system/components/atoms/Button/Button';
+import { Button } from '@/design-system/components/primitives/Button';
 
 export default function AdminLoginPage() {
   const router = useRouter();

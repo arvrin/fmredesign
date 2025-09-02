@@ -11,7 +11,7 @@ export interface AdminSession {
   expiresAt: number;
 }
 
-const ADMIN_PASSWORD = "freakingminds2025";
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "FreakingMinds2024!";
 const SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 hours
 const SESSION_KEY = "fm_admin_session";
 

@@ -47,7 +47,7 @@ import {
   ShieldCheck,
   UserCheck
 } from 'lucide-react';
-import { Button } from '@/design-system/components/atoms/Button/Button';
+import { Button } from '@/design-system/components/primitives/Button';
 
 interface AdminUser {
   id: string;

@@ -6,7 +6,7 @@
 import React from 'react';
 import { Phone, Mail, MessageCircle } from 'lucide-react';
 import { patterns } from '../../../patterns';
-import { Button } from '../../atoms/Button/Button';
+import { Button } from '../../primitives/Button';
 import { cn } from '@/lib/utils';
 
 export interface ContactInfoItem {

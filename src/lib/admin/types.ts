@@ -21,6 +21,7 @@ export interface InvoiceClient {
   state?: string;
   zipCode?: string;
   country?: string;
+  gstNumber?: string;
 }
 
 export interface Invoice {
@@ -262,6 +263,198 @@ export const AGENCY_SERVICES: AgencyService[] = [
   }
 ];
 
+// Team Management Types
+export interface TeamMember {
+  // Basic Info
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  avatar?: string;
+  
+  // Employment Details  
+  type: 'employee' | 'freelancer' | 'contractor';
+  status: 'active' | 'inactive' | 'on-leave' | 'terminated';
+  startDate: string;
+  endDate?: string;
+  
+  // Role & Skills
+  role: TeamRole;
+  department: TeamDepartment;
+  seniority: 'junior' | 'mid' | 'senior' | 'lead' | 'director';
+  
+  // Skills & Expertise
+  skills: string[];
+  certifications: Certification[];
+  
+  // Financial
+  compensation: {
+    type: 'salary' | 'hourly' | 'project-based';
+    amount: number;
+    currency: string;
+    billingRate?: number; // What clients are charged
+  };
+  
+  // Work Details
+  workType: 'full-time' | 'part-time' | 'contract' | 'freelance';
+  location: 'office' | 'remote' | 'hybrid';
+  capacity: number; // Hours per week
+  
+  // Client Assignments
+  assignedClients: string[];
+  currentProjects: string[];
+  workload: number; // Current utilization %
+  
+  // Performance
+  clientRatings: number;
+  tasksCompleted: number;
+  efficiency: number;
+  
+  // Administrative
+  documents: TeamDocument[];
+  notes: string;
+  emergencyContact?: {
+    name: string;
+    relationship: string;
+    phone: string;
+  };
+  
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type TeamRole = 
+  | 'creative-director' 
+  | 'account-manager' 
+  | 'content-writer' 
+  | 'graphic-designer' 
+  | 'social-media-manager' 
+  | 'web-developer'
+  | 'seo-specialist' 
+  | 'paid-ads-manager' 
+  | 'video-editor'
+  | 'ui-ux-designer'
+  | 'copywriter'
+  | 'project-manager'
+  | 'business-analyst'
+  | 'data-analyst';
+
+export type TeamDepartment = 
+  | 'creative' 
+  | 'strategy' 
+  | 'technology' 
+  | 'accounts' 
+  | 'management'
+  | 'operations';
+
+export interface Certification {
+  id: string;
+  name: string;
+  issuer: string;
+  dateObtained: string;
+  expiryDate?: string;
+  credentialUrl?: string;
+}
+
+export interface TeamDocument {
+  id: string;
+  type: 'contract' | 'nda' | 'certificate' | 'resume' | 'other';
+  name: string;
+  url?: string;
+  uploadedAt: string;
+}
+
+export interface TimeSlot {
+  start: string; // HH:mm format
+  end: string;
+  available: boolean;
+}
+
+export interface TeamAssignment {
+  id: string;
+  teamMemberId: string;
+  clientId: string;
+  projectId?: string;
+  role: string;
+  startDate: string;
+  endDate?: string;
+  hoursAllocated: number;
+  isLead: boolean;
+  status: 'active' | 'completed' | 'paused';
+  createdAt: string;
+}
+
+export interface TeamMetrics {
+  totalMembers: number;
+  activeMembers: number;
+  employees: number;
+  freelancers: number;
+  avgUtilization: number;
+  totalCapacity: number;
+  departmentBreakdown: Record<TeamDepartment, number>;
+  skillsBreakdown: Record<string, number>;
+}
+
+export const TEAM_ROLES: Record<TeamRole, string> = {
+  'creative-director': 'Creative Director',
+  'account-manager': 'Account Manager',
+  'content-writer': 'Content Writer',
+  'graphic-designer': 'Graphic Designer',
+  'social-media-manager': 'Social Media Manager',
+  'web-developer': 'Web Developer',
+  'seo-specialist': 'SEO Specialist',
+  'paid-ads-manager': 'Paid Ads Manager',
+  'video-editor': 'Video Editor',
+  'ui-ux-designer': 'UI/UX Designer',
+  'copywriter': 'Copywriter',
+  'project-manager': 'Project Manager',
+  'business-analyst': 'Business Analyst',
+  'data-analyst': 'Data Analyst'
+};
+
+export const TEAM_DEPARTMENTS: Record<TeamDepartment, string> = {
+  creative: 'Creative',
+  strategy: 'Strategy',
+  technology: 'Technology',
+  accounts: 'Accounts',
+  management: 'Management',
+  operations: 'Operations'
+};
+
+export const COMMON_SKILLS = [
+  'Adobe Photoshop',
+  'Adobe Illustrator',
+  'Adobe After Effects',
+  'Figma',
+  'React',
+  'Next.js',
+  'WordPress',
+  'Google Analytics',
+  'Google Ads',
+  'Facebook Ads',
+  'Instagram Marketing',
+  'Content Strategy',
+  'SEO',
+  'SEM',
+  'Email Marketing',
+  'Marketing Automation',
+  'Project Management',
+  'Client Communication',
+  'Brand Strategy',
+  'Video Editing',
+  'Photography',
+  'Copywriting',
+  'Social Media Strategy',
+  'Digital Marketing',
+  'Web Development',
+  'Mobile App Development',
+  'Database Management',
+  'API Integration',
+  'UI/UX Design',
+  'Wireframing',
+  'Prototyping'
+];
+
 export const SERVICE_CATEGORIES = {
   digital_marketing: 'Digital Marketing',
   web_development: 'Web Development',
@@ -273,7 +466,7 @@ export const SERVICE_CATEGORIES = {
   maintenance: 'Maintenance & Support'
 } as const;
 
-// Default clients
+// Default clients with GST numbers
 export const DEFAULT_CLIENTS: InvoiceClient[] = [
   {
     id: "1",
@@ -285,6 +478,7 @@ export const DEFAULT_CLIENTS: InvoiceClient[] = [
     state: "Delhi",
     zipCode: "110001",
     country: "India",
+    gstNumber: "07ABCDE1234F1Z5",
   },
   {
     id: "2",
@@ -296,6 +490,7 @@ export const DEFAULT_CLIENTS: InvoiceClient[] = [
     state: "Maharashtra",
     zipCode: "400001",
     country: "India",
+    gstNumber: "27XYZAB5678G2H9",
   },
 ];
 

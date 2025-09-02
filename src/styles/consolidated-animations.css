@@ -1,0 +1,149 @@
+/* FreakingMinds - Consolidated Animations */
+/* All section animations consolidated for better performance */
+
+/* Hero Section Animations */
+@keyframes heroFadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes heroSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.hero-fade-in-up {
+  animation: heroFadeInUp 0.8s ease-out forwards;
+}
+
+.hero-slide-in {
+  animation: heroSlideIn 0.6s ease-out forwards;
+}
+
+/* Services Section Animations */
+@keyframes serviceCardFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.service-card:hover {
+  animation: serviceCardFloat 2s ease-in-out infinite;
+}
+
+/* Case Studies Section Animations */
+@keyframes caseStudyReveal {
+  from {
+    opacity: 0;
+    transform: scale(0.95) rotateY(10deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotateY(0deg);
+  }
+}
+
+.case-study-card {
+  animation: caseStudyReveal 0.7s ease-out forwards;
+}
+
+/* Contact Section Animations */
+@keyframes contactPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(179, 41, 106, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 20px rgba(179, 41, 106, 0);
+  }
+}
+
+.contact-button:hover {
+  animation: contactPulse 1.5s infinite;
+}
+
+/* Creative Network Animations */
+@keyframes networkFloat {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  33% {
+    transform: translateY(-15px) rotate(2deg);
+  }
+  66% {
+    transform: translateY(-5px) rotate(-1deg);
+  }
+}
+
+.creative-network-item {
+  animation: networkFloat 6s ease-in-out infinite;
+}
+
+/* Footer Animations */
+@keyframes footerSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(60px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.footer-content {
+  animation: footerSlideUp 0.8s ease-out forwards;
+}
+
+/* Background Animations */
+@keyframes backgroundGradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animated-background {
+  background: linear-gradient(-45deg, #B3296A, #FF855D, #8B5CF6, #06B6D4);
+  background-size: 400% 400%;
+  animation: backgroundGradient 15s ease infinite;
+}
+
+/* Performance Optimizations */
+.will-change-transform {
+  will-change: transform;
+}
+
+.will-change-opacity {
+  will-change: opacity;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

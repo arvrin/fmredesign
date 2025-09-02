@@ -9,6 +9,7 @@ import { google } from 'googleapis';
 const SHEETS_CONFIG = {
   SPREADSHEET_ID: process.env.NEXT_PUBLIC_GOOGLE_SPREADSHEET_ID || '',
   SHEETS: {
+    LEADS: 'Leads',
     CLIENTS: 'Clients',
     INVOICES: 'Invoices', 
     CAMPAIGNS: 'Campaigns',
@@ -82,14 +83,19 @@ class GoogleSheetsService {
     await this.ensureInitialized();
     
     try {
+      // Sanitize sheet name to handle special characters
+      const sanitizedSheetName = sheetName.replace(/[^a-zA-Z0-9_]/g, '_');
+      const sheetRange = range || `${sanitizedSheetName}!A1:Z1000`;
+      
       const response = await this.sheets.spreadsheets.values.get({
         spreadsheetId: SHEETS_CONFIG.SPREADSHEET_ID,
-        range: range || `${sheetName}!A:Z`,
+        range: sheetRange,
       });
       
       return response.data.values || [];
     } catch (error) {
       console.error(`Error reading sheet ${sheetName}:`, error);
+      // If the sheet doesn't exist or has parsing errors, return empty array
       return [];
     }
   }
@@ -163,8 +169,28 @@ class GoogleSheetsService {
   // Client-specific methods
   async getClients(): Promise<SheetRow[]> {
     try {
+      // Check if we can initialize Google Sheets
+      if (!this.isInitialized) {
+        return this.getMockClients();
+      }
+      
       const data = await this.readSheet(SHEETS_CONFIG.SHEETS.CLIENTS);
-      return this.arrayToObjects(data);
+      if (data && data.length > 0) {
+        const clients = this.arrayToObjects(data);
+        
+        // Deduplicate clients at the source to prevent downstream issues
+        const uniqueClients = clients.filter((client, index, self) => {
+          const firstIndex = self.findIndex(c => c.id === client.id);
+          return firstIndex === index;
+        });
+        
+        if (clients.length !== uniqueClients.length) {
+        }
+        
+        return uniqueClients;
+      } else {
+        return this.getMockClients();
+      }
     } catch (error) {
       console.error('Error fetching clients:', error);
       return this.getMockClients(); // Fallback to mock data
@@ -173,17 +199,43 @@ class GoogleSheetsService {
 
   async addClient(client: SheetRow): Promise<boolean> {
     try {
+      // Helper function to safely convert values to strings for Google Sheets
+      const safeString = (value: any): string => {
+        if (value === null || value === undefined) return '';
+        if (Array.isArray(value)) return value.join(', ');
+        if (typeof value === 'object') return JSON.stringify(value);
+        return String(value);
+      };
+
+      // Ensure all invoice-required fields are included with GST and complete address
       const clientData = [
-        client.id,
-        client.name,
-        client.email,
-        client.phone,
-        client.company,
-        client.industry,
-        client.status,
-        client.createdAt,
-        client.totalValue,
-        client.health
+        safeString(client.id),
+        safeString(client.name),
+        safeString(client.email),
+        safeString(client.phone),
+        safeString(client.address || client.company), // Address field
+        safeString(client.city),
+        safeString(client.state),
+        safeString(client.zipCode),
+        safeString(client.country || 'India'),
+        safeString(client.gstNumber), // GST Number field
+        safeString(client.industry || 'Other'),
+        safeString(client.companySize || 'medium'),
+        safeString(client.website),
+        safeString(client.status || 'active'),
+        safeString(client.health || 'good'),
+        safeString(client.accountManager || 'admin'),
+        safeString(client.contractType || 'project'),
+        safeString(client.contractValue || client.totalValue || 0),
+        safeString(client.contractStartDate || new Date().toISOString().split('T')[0]),
+        safeString(client.contractEndDate),
+        safeString(client.billingCycle || 'monthly'),
+        safeString(client.services),
+        safeString(client.createdAt || new Date().toISOString()),
+        safeString(client.updatedAt || new Date().toISOString()),
+        safeString(client.totalValue || 0),
+        safeString(client.tags),
+        safeString(client.notes)
       ];
       
       return await this.appendToSheet(SHEETS_CONFIG.SHEETS.CLIENTS, [clientData]);
@@ -208,6 +260,32 @@ class GoogleSheetsService {
       return await this.writeSheet(SHEETS_CONFIG.SHEETS.CLIENTS, arrayData);
     } catch (error) {
       console.error('Error updating client:', error);
+      return false;
+    }
+  }
+
+  async deleteClient(clientId: string): Promise<boolean> {
+    try {
+      const clients = await this.getClients();
+      const clientIndex = clients.findIndex(c => c.id === clientId);
+      
+      if (clientIndex === -1) {
+        return false;
+      }
+      
+      // Remove the client from the array
+      clients.splice(clientIndex, 1);
+      
+      // Convert back to array format and update the sheet
+      const arrayData = this.objectsToArray(clients);
+      const success = await this.writeSheet(SHEETS_CONFIG.SHEETS.CLIENTS, arrayData);
+      
+      if (success) {
+      }
+      
+      return success;
+    } catch (error) {
+      console.error('Error deleting client:', error);
       return false;
     }
   }
@@ -309,10 +387,27 @@ class GoogleSheetsService {
   // Initialize spreadsheet with headers (call this once to set up the sheets)
   async initializeSpreadsheet(): Promise<boolean> {
     try {
-      // Client headers
+      await this.ensureInitialized();
+
+      // First, try to create the sheets if they don't exist
+      await this.createSheetsIfNeeded();
+
+      // Leads headers
+      const leadsHeaders = [
+        'id', 'createdAt', 'name', 'email', 'phone', 'company', 'website',
+        'jobTitle', 'companySize', 'industry', 'projectType', 'projectDescription',
+        'budgetRange', 'timeline', 'primaryChallenge', 'additionalChallenges', 
+        'specificRequirements', 'status', 'priority', 'source', 'leadScore',
+        'assignedTo', 'nextAction', 'followUpDate', 'notes', 'tags', 'updatedAt'
+      ];
+      
+      // Client headers - updated to match invoice client structure with GST
       const clientHeaders = [
-        'id', 'name', 'email', 'phone', 'company', 'industry', 
-        'status', 'createdAt', 'totalValue', 'health'
+        'id', 'name', 'email', 'phone', 'address', 'city', 'state', 
+        'zipCode', 'country', 'gstNumber', 'industry', 'companySize', 'website',
+        'status', 'health', 'accountManager', 'contractType', 'contractValue',
+        'contractStartDate', 'contractEndDate', 'billingCycle', 'services',
+        'createdAt', 'updatedAt', 'totalValue', 'tags', 'notes'
       ];
       
       // Invoice headers
@@ -328,6 +423,7 @@ class GoogleSheetsService {
       ];
 
       // Write headers to sheets
+      await this.writeSheet(SHEETS_CONFIG.SHEETS.LEADS, [leadsHeaders]);
       await this.writeSheet(SHEETS_CONFIG.SHEETS.CLIENTS, [clientHeaders]);
       await this.writeSheet(SHEETS_CONFIG.SHEETS.INVOICES, [invoiceHeaders]);
       await this.writeSheet(SHEETS_CONFIG.SHEETS.CAMPAIGNS, [campaignHeaders]);
@@ -339,7 +435,40 @@ class GoogleSheetsService {
     }
   }
 
-  // Mock data fallbacks for development
+  // Create sheets if they don't exist
+  private async createSheetsIfNeeded(): Promise<void> {
+    try {
+      const sheetNames = Object.values(SHEETS_CONFIG.SHEETS);
+      
+      for (const sheetName of sheetNames) {
+        try {
+          // Try to read from sheet to check if it exists
+          await this.sheets.spreadsheets.values.get({
+            spreadsheetId: SHEETS_CONFIG.SPREADSHEET_ID,
+            range: `${sheetName}!A1`,
+          });
+        } catch (error) {
+          // Sheet doesn't exist, create it
+          await this.sheets.spreadsheets.batchUpdate({
+            spreadsheetId: SHEETS_CONFIG.SPREADSHEET_ID,
+            requestBody: {
+              requests: [{
+                addSheet: {
+                  properties: {
+                    title: sheetName
+                  }
+                }
+              }]
+            }
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error creating sheets:', error);
+    }
+  }
+
+  // Mock data fallbacks for development with GST and complete address fields
   private getMockClients(): SheetRow[] {
     return [
       {
@@ -347,24 +476,74 @@ class GoogleSheetsService {
         name: 'TechStart Inc',
         email: 'contact@techstart.com',
         phone: '+91 98765 43210',
-        company: 'TechStart Inc',
+        address: '123 Tech Park, Sector 5',
+        city: 'Bangalore',
+        state: 'Karnataka',
+        zipCode: '560001',
+        country: 'India',
+        gstNumber: '29ABCDE1234F1Z5',
         industry: 'Technology',
+        companySize: 'medium',
+        website: 'https://techstart.com',
         status: 'active',
+        health: 'excellent',
+        accountManager: 'admin',
+        contractType: 'retainer',
+        contractValue: 150000,
+        contractStartDate: '2024-01-15',
+        contractEndDate: '2024-12-31',
+        billingCycle: 'monthly',
+        services: 'social-media-management,paid-advertising',
         createdAt: '2024-01-15T00:00:00Z',
+        updatedAt: '2024-01-15T00:00:00Z',
         totalValue: 150000,
-        health: 'excellent'
+        tags: 'technology,high-value',
+        notes: 'Premium client with excellent payment history'
       },
       {
         id: 'client-002',
         name: 'GreenLeaf Ventures',
         email: 'info@greenleaf.com',
         phone: '+91 87654 32109',
-        company: 'GreenLeaf Ventures',
+        address: '456 Eco Street, Green Valley',
+        city: 'Pune',
+        state: 'Maharashtra',
+        zipCode: '411001',
+        country: 'India',
+        gstNumber: '27XYZAB5678G2H9',
         industry: 'Sustainability',
+        companySize: 'small',
+        website: 'https://greenleaf.com',
         status: 'active',
+        health: 'good',
+        accountManager: 'admin',
+        contractType: 'project',
+        contractValue: 95000,
+        contractStartDate: '2024-02-20',
+        contractEndDate: '2024-08-20',
+        billingCycle: 'one_time',
+        services: 'brand-identity-design,website-development',
         createdAt: '2024-02-20T00:00:00Z',
+        updatedAt: '2024-02-20T00:00:00Z',
         totalValue: 95000,
-        health: 'good'
+        tags: 'sustainability,eco-friendly',
+        notes: 'Focus on sustainable marketing practices'
+      },
+      {
+        id: 'client-003',
+        name: 'FinSecure Solutions',
+        email: 'hello@finsecure.com',
+        phone: '+91 76543 21098',
+        address: '789 Financial District, Tower B',
+        city: 'Mumbai',
+        state: 'Maharashtra', 
+        zipCode: '400001',
+        country: 'India',
+        industry: 'Finance',
+        status: 'active',
+        createdAt: '2024-03-01T00:00:00Z',
+        totalValue: 200000,
+        health: 'excellent'
       }
     ];
   }
@@ -393,6 +572,7 @@ class GoogleSheetsService {
 // Export singleton instance
 export const googleSheetsService = new GoogleSheetsService();
 
-// Export types
+// Export class and types
+export { GoogleSheetsService };
 export type { SheetRow };
 export { SHEETS_CONFIG };

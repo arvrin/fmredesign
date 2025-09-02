@@ -3,8 +3,8 @@ import { ArrowRight, Search, TrendingUp, Lightbulb, Target, BookOpen } from "luc
 
 // Design System Components
 import { 
-  Button,
   LinkButton,
+  HeroSectionBuilder,
   SectionBuilder,
   ArticleCard,
   SidebarWidget,
@@ -124,10 +124,10 @@ export default function BlogPage() {
   return (
     <div className="min-h-screen">
       {/* Hero Section - Design System Version with Search */}
-      <SectionBuilder
+      <HeroSectionBuilder
         badge={{
           text: "Expert Insights & Industry Knowledge",
-          icon: <BookOpen className="w-4 h-4" />
+          icon: <BookOpen className="w-4 h-4 mr-2" />
         }}
         headline={{
           text: "Digital Marketing Insights That Drive Results",
@@ -137,6 +137,7 @@ export default function BlogPage() {
         description="Stay ahead of the curve with expert insights, proven strategies, and actionable tips from our team of digital marketing professionals. Learn what works, avoid what doesn't, and transform your marketing approach."
         background="light"
         maxWidth="xl"
+        minHeight="large"
         content={
           <div className="max-w-md mx-auto relative">
             <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-fm-neutral-500" />
@@ -220,9 +221,9 @@ export default function BlogPage() {
 
               {/* Load More Button - Design System Version */}
               <div className="text-center mt-12">
-                <Button variant="secondary" size="lg">
+                <LinkButton variant="secondary" size="lg">
                   Load More Articles
-                </Button>
+                </LinkButton>
               </div>
             </div>
 
@@ -240,9 +241,9 @@ export default function BlogPage() {
                     placeholder="Your email address"
                     className="w-full px-3 py-2 rounded-lg text-fm-neutral-900 placeholder-fm-neutral-500"
                   />
-                  <Button variant="secondary" size="sm" className="w-full bg-fm-neutral-50 text-fm-magenta-700 hover:bg-fm-neutral-100">
+                  <LinkButton variant="secondary" size="sm" className="w-full bg-fm-neutral-50 text-fm-magenta-700 hover:bg-fm-neutral-100" fullWidth>
                     Subscribe
-                  </Button>
+                  </LinkButton>
                 </div>
               </div>
 

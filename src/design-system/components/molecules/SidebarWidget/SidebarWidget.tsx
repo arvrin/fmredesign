@@ -6,7 +6,7 @@
 'use client';
 
 import React from 'react';
-import { Button } from '../../atoms/Button/Button';
+import { Button } from '../../primitives/Button';
 import { cn } from '@/lib/utils';
 
 export interface SidebarWidgetProps {

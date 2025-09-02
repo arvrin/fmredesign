@@ -5,7 +5,7 @@
 
 import React from 'react';
 import { ArrowRight, Calendar, Clock, User } from 'lucide-react';
-import { Button } from '../../atoms/Button/Button';
+import { Button } from '../../primitives/Button';
 import { Badge } from '../../atoms/Badge/Badge';
 import { cn } from '@/lib/utils';
 
