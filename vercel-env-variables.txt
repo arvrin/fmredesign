@@ -1,0 +1,40 @@
+# VERCEL ENVIRONMENT VARIABLES FOR FREAKINGMINDS
+# Copy and paste these into Vercel Dashboard → Settings → Environment Variables
+
+# 🔧 Google Sheets Integration
+NEXT_PUBLIC_GOOGLE_SPREADSHEET_ID=1HFG8UsWVErAqennUnmKHsIaBgWVB4JeULKKTl-fvqBU
+GOOGLE_PROJECT_ID=fm-admin-469817
+GOOGLE_PRIVATE_KEY_ID=575a41fd148864cab732f9f78a4c223bc15b62b3
+GOOGLE_CLIENT_EMAIL=freakingminds-sheetsapi@fm-admin-469817.iam.gserviceaccount.com
+GOOGLE_CLIENT_ID=105868785875002980726
+
+# 🔑 Google Private Key (IMPORTANT: Copy as single line with \n for line breaks)
+GOOGLE_PRIVATE_KEY=-----BEGIN PRIVATE KEY-----\nMIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQC7dikdSx9rigcK\nr2s9VIfZozEFwxcF8KHjZTiAQX1VerCm4u1aQ9EJbxbBgwGFcJ2ReOLHW2mVKNOW\no9P1GSmbZzuAvn1WdU9mv8uh0kBow2kX4JcdqhANF9/9rd1Y/oPta6o5o8yrD/4W\nd4WfDd6wmir8Ee5sf9uk9SspaB3/yRhZRwct7N6ZHzZaWnG5a65bWRYejzmZrcK5\nOGdUVKKWPyRMjk/tXQVQy50IW0O04QCfk5TMY3y51q0/Q0Y2Ucpc3HgtEbM6Box9\noCvIXWy/z3cGDZrtJWsYwY6Sk1wr3gtJLGSygVTfgCBrNuxhmBFkgDK3m0VfCD9K\nQ7E6MZT1AgMBAAECggEAT6i5deo7Us5XibHbRzeJdvFC3qj1Op/zmxajONUbdlxp\nfrFFnSreRD0BlX+fAN5HBs8wxvhQWIL9zrCVXDyyEoh+n4nS5w94izgLRxt6JUqM\neQoGDSP8KCQyGbFtMukMlLJApre1PCfSmCd4D4usSq1ogK75+v8mDeXkznag8NUA\nGR1EEy/Lh/1Csnud5TifOvyAsA6WZoV8lb5ZAL/+S4SzSUOn06/VSxiUPxqZkexo\nE/ANqn9IAWFoCCwveD79gBwCg0cQcDpLO7rtue1eT6X1vqYCqrvp1SeRNRucOWXg\nnDE0b2tWP3jW3uvtmo5s2kb/lAaaEkfKtImYXObdbQKBgQDgTOWPDcYAlmG4kBwR\neCP2M+ry+mIuKApGvzGAMCbQTlm4cPrwFlJ49bDZReUsbYBAGtxyejiTtwCr4k3y\nUJU14WcUft4ZnQBxFPcamORztcPnFzxPH3R1ifmUxN54DnBWYH9rQdXcwcRSgwJ8\nHofjkdUk/Of5Aa7QVhmZv3ablwKBgQDV9HMSLWiTywInCxyb1SdubzBUkrQFq4iY\nby9jgTvnX23InBMtB8FI5whsMgf/Bj2XSYYrbPRwv+bvGgRcUqmntj+nZgIS56HQ\nO6AN6gzp4Xn6ZN53STkVr0XRHJRPX0Xijs/rEQ1fJF6nfnwK8ERHJpsKr7a55xlj\nzzxUlgxVUwKBgQCxECL7Xb0bg5sazjBKHhQNbAihzMQqeZM7K/0Qm3JYaDFtZ0rA\nsm5ibFkx+3ohK0Pd1xaFDDSTbxiJl3k+uxw+z3PG+yuq/oR1wD4c8esN6MQALhh+\nwW72xneOWCbikUte9IhBjFQeE5w+IouYnaVaISooK7mXmRt9/Snyc/FWewKBgQCa\nssdJC2AkDJMf297xpet+5BJT9EcKGn8HiM0A635+yvc8J+2Nj5/nsHTclkhF0yNR\nci361CriIz88/tjMUFCvHQ1lYlJ5jNXpFFOj++keapOhwrFAGseVsEeQ7VMnGMIV\nECGx24CJnGh8Pu49koAr2fQcg/Rg8oHfMwZyOpPsVQKBgQDd8IJZgNsEo/EYEMCS\nyBLKeYbd9epj0/0Pka7+7EcLfdRPYxOk7RPzzJaAJoxZ4i9ypxqp+k113JURvr1b\nW8kMXPEy10WhCk2E/zsZRRH34Yumdh0X8R02Ty6NTdK03WuyY+ZPHw+/TZlCP5zc\nsgBrPvLp+52tBvbfv8MfEog+Ng==\n-----END PRIVATE KEY-----
+
+# 🛡️ Admin Authentication
+ADMIN_PASSWORD=FreakingMinds2024!
+JWT_SECRET=64207f2ed1e5f7f283a52afe26cb0eb3270578112c268a4e94b8bf1a20e5c6cf
+
+# 🌍 Next.js Configuration (UPDATE THE URL TO YOUR VERCEL DOMAIN)
+NEXTAUTH_URL=https://your-project-name.vercel.app
+NEXTAUTH_SECRET=64207f2ed1e5f7f283a52afe26cb0eb3270578112c268a4e94b8bf1a20e5c6cf
+NODE_ENV=production
+
+# 🏢 Company Information (Optional - for completeness)
+COMPANY_NAME=Freaking Minds
+COMPANY_EMAIL=hello@freakingminds.in
+COMPANY_PHONE=+91 XXXXX XXXXX
+COMPANY_WEBSITE=https://freakingminds.in
+COMPANY_ADDRESS=Your Company Address
+COMPANY_CITY=Your City
+COMPANY_STATE=Your State
+COMPANY_COUNTRY=India
+COMPANY_ZIP=XXXXXX
+COMPANY_GST=YOUR_GST_NUMBER
+
+# 📧 Email Configuration (Leave empty if not used)
+SMTP_HOST=
+SMTP_PORT=
+SMTP_USER=
+SMTP_PASSWORD=
+FROM_EMAIL=admin@freakingminds.in

@@ -14,7 +14,8 @@ const SHEETS_CONFIG = {
     INVOICES: 'Invoices', 
     CAMPAIGNS: 'Campaigns',
     COMMUNICATIONS: 'Communications',
-    OPPORTUNITIES: 'Opportunities'
+    OPPORTUNITIES: 'Opportunities',
+    AUTHORIZED_USERS: 'Authorized_Users'
   }
 };
 
@@ -384,6 +385,114 @@ class GoogleSheetsService {
     }
   }
 
+  // Authorized Users methods
+  async getAuthorizedUsers(): Promise<SheetRow[]> {
+    try {
+      const data = await this.readSheet(SHEETS_CONFIG.SHEETS.AUTHORIZED_USERS);
+      return this.arrayToObjects(data);
+    } catch (error) {
+      console.error('Error fetching authorized users:', error);
+      return this.getMockAuthorizedUsers();
+    }
+  }
+
+  async addAuthorizedUser(user: SheetRow): Promise<boolean> {
+    try {
+      const userData = [
+        user.id,
+        user.mobileNumber,
+        user.name,
+        user.email,
+        user.role,
+        user.permissions,
+        user.status,
+        user.createdBy,
+        user.createdAt,
+        user.updatedAt,
+        user.lastLogin,
+        user.notes
+      ];
+      
+      return await this.appendToSheet(SHEETS_CONFIG.SHEETS.AUTHORIZED_USERS, [userData]);
+    } catch (error) {
+      console.error('Error adding authorized user:', error);
+      return false;
+    }
+  }
+
+  async updateAuthorizedUser(userId: string, updates: Partial<SheetRow>): Promise<boolean> {
+    try {
+      const users = await this.getAuthorizedUsers();
+      const userIndex = users.findIndex(u => u.id === userId);
+      
+      if (userIndex === -1) return false;
+      
+      users[userIndex] = { ...users[userIndex], ...updates, updatedAt: new Date().toISOString() };
+      
+      const arrayData = this.objectsToArray(users);
+      return await this.writeSheet(SHEETS_CONFIG.SHEETS.AUTHORIZED_USERS, arrayData);
+    } catch (error) {
+      console.error('Error updating authorized user:', error);
+      return false;
+    }
+  }
+
+  async deleteAuthorizedUser(userId: string): Promise<boolean> {
+    try {
+      const users = await this.getAuthorizedUsers();
+      const userIndex = users.findIndex(u => u.id === userId);
+      
+      if (userIndex === -1) return false;
+      
+      users.splice(userIndex, 1);
+      
+      const arrayData = this.objectsToArray(users);
+      return await this.writeSheet(SHEETS_CONFIG.SHEETS.AUTHORIZED_USERS, arrayData);
+    } catch (error) {
+      console.error('Error deleting authorized user:', error);
+      return false;
+    }
+  }
+
+  async findUserByMobile(mobileNumber: string): Promise<SheetRow | null> {
+    try {
+      const users = await this.getAuthorizedUsers();
+      const normalizedMobile = this.normalizeMobileNumber(mobileNumber);
+      
+      return users.find(user => 
+        this.normalizeMobileNumber(user.mobileNumber as string) === normalizedMobile &&
+        user.status === 'active'
+      ) || null;
+    } catch (error) {
+      console.error('Error finding user by mobile:', error);
+      return null;
+    }
+  }
+
+  private normalizeMobileNumber(mobile: string): string {
+    if (!mobile) return '';
+    
+    // Remove all non-digit characters except +
+    let normalized = mobile.replace(/[^\d+]/g, '');
+    
+    // If starts with +91, keep it
+    if (normalized.startsWith('+91')) {
+      return normalized;
+    }
+    
+    // If starts with 91 but no +, add +
+    if (normalized.startsWith('91') && normalized.length === 12) {
+      return `+${normalized}`;
+    }
+    
+    // If 10 digits, add +91 prefix
+    if (normalized.length === 10 && !normalized.startsWith('0')) {
+      return `+91${normalized}`;
+    }
+    
+    return normalized;
+  }
+
   // Initialize spreadsheet with headers (call this once to set up the sheets)
   async initializeSpreadsheet(): Promise<boolean> {
     try {
@@ -422,11 +531,18 @@ class GoogleSheetsService {
         'startDate', 'endDate', 'description', 'createdAt'
       ];
 
+      // Authorized Users headers
+      const authorizedUsersHeaders = [
+        'id', 'mobileNumber', 'name', 'email', 'role', 'permissions', 
+        'status', 'createdBy', 'createdAt', 'updatedAt', 'lastLogin', 'notes'
+      ];
+
       // Write headers to sheets
       await this.writeSheet(SHEETS_CONFIG.SHEETS.LEADS, [leadsHeaders]);
       await this.writeSheet(SHEETS_CONFIG.SHEETS.CLIENTS, [clientHeaders]);
       await this.writeSheet(SHEETS_CONFIG.SHEETS.INVOICES, [invoiceHeaders]);
       await this.writeSheet(SHEETS_CONFIG.SHEETS.CAMPAIGNS, [campaignHeaders]);
+      await this.writeSheet(SHEETS_CONFIG.SHEETS.AUTHORIZED_USERS, [authorizedUsersHeaders]);
       
       return true;
     } catch (error) {
@@ -564,6 +680,39 @@ class GoogleSheetsService {
         createdAt: '2024-08-01T00:00:00Z',
         lineItems: '[]',
         notes: 'Q3 Digital Marketing Services'
+      }
+    ];
+  }
+
+  private getMockAuthorizedUsers(): SheetRow[] {
+    return [
+      {
+        id: 'user-001',
+        mobileNumber: '+919876543210',
+        name: 'Admin User',
+        email: 'admin@freakingminds.in',
+        role: 'admin',
+        permissions: 'full_access',
+        status: 'active',
+        createdBy: 'system',
+        createdAt: '2024-08-22T00:00:00Z',
+        updatedAt: '2024-08-22T00:00:00Z',
+        lastLogin: null,
+        notes: 'System admin with full access'
+      },
+      {
+        id: 'user-002', 
+        mobileNumber: '+918765432109',
+        name: 'Manager User',
+        email: 'manager@freakingminds.in',
+        role: 'manager',
+        permissions: 'read,write,clients,projects',
+        status: 'active',
+        createdBy: 'admin',
+        createdAt: '2024-08-22T00:00:00Z',
+        updatedAt: '2024-08-22T00:00:00Z',
+        lastLogin: null,
+        notes: 'Manager with client and project access'
       }
     ];
   }
