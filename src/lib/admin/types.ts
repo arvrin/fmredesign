@@ -74,7 +74,7 @@ export const DEFAULT_COMPANY_INFO: CompanyInfo = {
   state: "Madhya Pradesh",
   zipCode: "462002",
   phone: "+91 98332 57659",
-  email: "hello@freakingminds.in",
+  email: "freakingmindsdigital@gmail.com",
   website: "https://freakingminds.in",
   taxId: "GST123456789",
 };

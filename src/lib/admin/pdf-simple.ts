@@ -156,8 +156,8 @@ export class SimplePDFGenerator {
     // Contact info (right aligned) with better spacing
     this.doc.setFontSize(8);
     this.doc.setTextColor(102, 102, 102);
-    this.doc.text('hello@freakingminds.in', 190, 18, { align: 'right' });
-    this.doc.text('+91 98765 43210', 190, 23, { align: 'right' });
+    this.doc.text('freakingmindsdigital@gmail.com', 190, 18, { align: 'right' });
+    this.doc.text('+91 98332 57659', 190, 23, { align: 'right' });
     this.doc.text('www.freakingminds.in', 190, 28, { align: 'right' });
     this.doc.text('Bhopal, Madhya Pradesh', 190, 33, { align: 'right' });
   }
