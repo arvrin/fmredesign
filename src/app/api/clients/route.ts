@@ -9,11 +9,18 @@ import { googleSheetsService } from '@/lib/google-sheets';
 export async function GET(request: NextRequest) {
   try {
     const clients = await googleSheetsService.getClients();
-    
-    return NextResponse.json({ 
-      success: true, 
-      data: clients 
+
+    const response = NextResponse.json({
+      success: true,
+      data: clients
     });
+
+    // Prevent caching to ensure fresh data
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    response.headers.set('Pragma', 'no-cache');
+    response.headers.set('Expires', '0');
+
+    return response;
   } catch (error) {
     console.error('Error fetching clients:', error);
     return NextResponse.json(
