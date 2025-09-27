@@ -55,6 +55,18 @@ class GoogleSheetsService {
         return;
       }
 
+      // Debug: Log environment variables (without exposing sensitive data)
+      console.log('Initializing Google Sheets with:', {
+        hasProjectId: !!process.env.GOOGLE_PROJECT_ID,
+        hasPrivateKeyId: !!process.env.GOOGLE_PRIVATE_KEY_ID,
+        hasPrivateKey: !!process.env.GOOGLE_PRIVATE_KEY,
+        hasClientEmail: !!process.env.GOOGLE_CLIENT_EMAIL,
+        hasClientId: !!process.env.GOOGLE_CLIENT_ID,
+        privateKeyLength: process.env.GOOGLE_PRIVATE_KEY?.length || 0,
+        projectId: process.env.GOOGLE_PROJECT_ID,
+        clientEmail: process.env.GOOGLE_CLIENT_EMAIL,
+      });
+
       // Server-side: Use service account
       const auth = new google.auth.GoogleAuth({
         credentials: GOOGLE_CREDENTIALS,
@@ -63,8 +75,14 @@ class GoogleSheetsService {
 
       this.sheets = google.sheets({ version: 'v4', auth });
       this.isInitialized = true;
+      console.log('Google Sheets initialized successfully');
     } catch (error) {
-      console.error('Failed to initialize Google Sheets:', error);
+      console.error('Failed to initialize Google Sheets - Full error:', error);
+      console.error('Error details:', {
+        message: (error as any)?.message,
+        code: (error as any)?.code,
+        stack: (error as any)?.stack,
+      });
       this.isInitialized = false;
     }
   }
@@ -172,9 +190,11 @@ class GoogleSheetsService {
     try {
       // Check if we can initialize Google Sheets
       if (!this.isInitialized) {
+        console.log('Google Sheets not initialized, falling back to mock clients');
         return this.getMockClients();
       }
-      
+
+      console.log('Attempting to read Clients sheet from Google Sheets');
       const data = await this.readSheet(SHEETS_CONFIG.SHEETS.CLIENTS);
       if (data && data.length > 0) {
         const clients = this.arrayToObjects(data);
