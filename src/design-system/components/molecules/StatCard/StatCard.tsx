@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { patterns } from '../../../patterns';
+import { patterns } from '@/design-system/patterns';
 import { cn } from '@/lib/utils';
 
 export interface StatCardProps {
@@ -68,8 +68,8 @@ export function StatCard({
     'text-center transition-all duration-300',
     variantConfig.card,
     sizeConfig.card,
-    variant !== 'minimal' && patterns.card.hover,
-    variant !== 'minimal' && patterns.animation.hover.scale,
+    variant !== 'minimal' && patterns.card?.hover,
+    variant !== 'minimal' && patterns.animation?.hover?.scale,
     className
   );
 

@@ -9,6 +9,11 @@ const inter = Inter({
   display: "swap",
 });
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+};
+
 export const metadata: Metadata = {
   metadataBase: new URL('https://freakingminds.in'),
   title: "Freaking Minds - Digital Marketing Agency in Bhopal | We Don't Just Market, We Create Movements",
@@ -24,6 +29,9 @@ export const metadata: Metadata = {
   authors: [{ name: "Freaking Minds" }],
   creator: "Freaking Minds",
   publisher: "Freaking Minds",
+  icons: {
+    icon: "/favicon.ico",
+  },
   openGraph: {
     type: "website",
     locale: "en_US",
@@ -66,10 +74,6 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={inter.variable}>
-      <head>
-        <link rel="icon" href="/favicon.ico" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-      </head>
       <body className="font-sans antialiased">
         <ConditionalLayout>{children}</ConditionalLayout>
       </body>

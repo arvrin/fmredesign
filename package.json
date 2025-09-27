@@ -13,6 +13,7 @@
   "dependencies": {
     "@types/jspdf": "^2.0.0",
     "clsx": "^2.1.1",
+    "dotenv": "^17.2.2",
     "googleapis": "^157.0.0",
     "jspdf": "^3.0.1",
     "jspdf-autotable": "^5.0.2",
