@@ -54,6 +54,7 @@ export interface CompanyInfo {
   website?: string;
   logo?: string;
   taxId?: string;
+  msmeUdyamNumber?: string;
 }
 
 // Bank Account Information
@@ -76,7 +77,8 @@ export const DEFAULT_COMPANY_INFO: CompanyInfo = {
   phone: "+91 98332 57659",
   email: "freakingmindsdigital@gmail.com",
   website: "https://freakingminds.in",
-  taxId: "GST123456789",
+  taxId: "23BQNPM3447F1ZT",
+  msmeUdyamNumber: "UDYAM-MP-10-0032670",
 };
 
 // Default bank account info (placeholder - will be updated with actual details)

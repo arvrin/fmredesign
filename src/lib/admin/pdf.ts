@@ -533,17 +533,27 @@ export class InvoicePDF {
     this.doc.setTextColor(26, 26, 26);
     this.doc.text(`${companyInfo.email} | ${companyInfo.phone}`, this.margin + 65, bottomFooterY + 15);
     
-    // Right side - Company info and GST
+    // Right side - Company info and registrations
+    let rightYOffset = 8;
+
     if (companyInfo.website) {
       this.doc.setFontSize(9);
       this.doc.setTextColor(199, 50, 118);
-      this.doc.text(companyInfo.website, this.pageWidth - this.margin, bottomFooterY + 8, { align: 'right' });
+      this.doc.text(companyInfo.website, this.pageWidth - this.margin, bottomFooterY + rightYOffset, { align: 'right' });
+      rightYOffset += 5;
     }
-    
+
     if (companyInfo.taxId) {
       this.doc.setFontSize(8);
       this.doc.setTextColor(64, 64, 64);
-      this.doc.text(`GST No: ${companyInfo.taxId}`, this.pageWidth - this.margin, bottomFooterY + 15, { align: 'right' });
+      this.doc.text(`GST No: ${companyInfo.taxId}`, this.pageWidth - this.margin, bottomFooterY + rightYOffset, { align: 'right' });
+      rightYOffset += 4;
+    }
+
+    if (companyInfo.msmeUdyamNumber) {
+      this.doc.setFontSize(8);
+      this.doc.setTextColor(64, 64, 64);
+      this.doc.text(`MSME Udyam: ${companyInfo.msmeUdyamNumber}`, this.pageWidth - this.margin, bottomFooterY + rightYOffset, { align: 'right' });
     }
     
     // Signature section

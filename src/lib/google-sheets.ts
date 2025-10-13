@@ -55,6 +55,25 @@ class GoogleSheetsService {
         return;
       }
 
+      // Validate required environment variables
+      const requiredEnvVars = {
+        GOOGLE_PROJECT_ID: process.env.GOOGLE_PROJECT_ID,
+        GOOGLE_PRIVATE_KEY_ID: process.env.GOOGLE_PRIVATE_KEY_ID,
+        GOOGLE_PRIVATE_KEY: process.env.GOOGLE_PRIVATE_KEY,
+        GOOGLE_CLIENT_EMAIL: process.env.GOOGLE_CLIENT_EMAIL,
+        GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
+        NEXT_PUBLIC_GOOGLE_SPREADSHEET_ID: process.env.NEXT_PUBLIC_GOOGLE_SPREADSHEET_ID
+      };
+
+      const missingVars = Object.entries(requiredEnvVars)
+        .filter(([_, value]) => !value)
+        .map(([key]) => key);
+
+      if (missingVars.length > 0) {
+        console.error('CRITICAL: Missing required environment variables:', missingVars);
+        throw new Error(`Missing environment variables: ${missingVars.join(', ')}`);
+      }
+
       // Debug: Log environment variables (without exposing sensitive data)
       console.log('Initializing Google Sheets with:', {
         hasProjectId: !!process.env.GOOGLE_PROJECT_ID,
@@ -65,6 +84,7 @@ class GoogleSheetsService {
         privateKeyLength: process.env.GOOGLE_PRIVATE_KEY?.length || 0,
         projectId: process.env.GOOGLE_PROJECT_ID,
         clientEmail: process.env.GOOGLE_CLIENT_EMAIL,
+        spreadsheetId: process.env.NEXT_PUBLIC_GOOGLE_SPREADSHEET_ID,
       });
 
       // Server-side: Use service account
@@ -75,15 +95,16 @@ class GoogleSheetsService {
 
       this.sheets = google.sheets({ version: 'v4', auth });
       this.isInitialized = true;
-      console.log('Google Sheets initialized successfully');
+      console.log('✓ Google Sheets initialized successfully');
     } catch (error) {
-      console.error('Failed to initialize Google Sheets - Full error:', error);
+      console.error('✗ CRITICAL: Failed to initialize Google Sheets - Full error:', error);
       console.error('Error details:', {
         message: (error as any)?.message,
         code: (error as any)?.code,
         stack: (error as any)?.stack,
       });
       this.isInitialized = false;
+      throw error; // Re-throw to ensure callers know initialization failed
     }
   }
 
@@ -188,33 +209,41 @@ class GoogleSheetsService {
   // Client-specific methods
   async getClients(): Promise<SheetRow[]> {
     try {
-      // Check if we can initialize Google Sheets
-      if (!this.isInitialized) {
-        console.log('Google Sheets not initialized, falling back to mock clients');
-        return this.getMockClients();
-      }
+      // Try to ensure initialization first (this will retry if not initialized)
+      await this.ensureInitialized();
 
       console.log('Attempting to read Clients sheet from Google Sheets');
       const data = await this.readSheet(SHEETS_CONFIG.SHEETS.CLIENTS);
-      if (data && data.length > 0) {
+
+      if (data && data.length > 1) { // Check for more than just headers
         const clients = this.arrayToObjects(data);
-        
+
         // Deduplicate clients at the source to prevent downstream issues
         const uniqueClients = clients.filter((client, index, self) => {
           const firstIndex = self.findIndex(c => c.id === client.id);
           return firstIndex === index;
         });
-        
+
         if (clients.length !== uniqueClients.length) {
+          console.log(`Removed ${clients.length - uniqueClients.length} duplicate clients`);
         }
-        
+
+        console.log(`Successfully loaded ${uniqueClients.length} clients from Google Sheets`);
         return uniqueClients;
       } else {
-        return this.getMockClients();
+        console.warn('Google Sheets returned empty data or only headers. Sheet may be empty.');
+        // Return empty array instead of mock data - this forces proper error handling
+        return [];
       }
     } catch (error) {
-      console.error('Error fetching clients:', error);
-      return this.getMockClients(); // Fallback to mock data
+      console.error('CRITICAL: Error fetching clients from Google Sheets:', error);
+      console.error('Error details:', {
+        message: (error as any)?.message,
+        code: (error as any)?.code,
+        isInitialized: this.isInitialized
+      });
+      // Return empty array instead of mock data - clients should come from sheets only
+      return [];
     }
   }
 
