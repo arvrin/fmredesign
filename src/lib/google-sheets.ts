@@ -7,11 +7,11 @@ import { google } from 'googleapis';
 
 // Google Sheets configuration
 const SHEETS_CONFIG = {
-  SPREADSHEET_ID: process.env.NEXT_PUBLIC_GOOGLE_SPREADSHEET_ID || '',
+  SPREADSHEET_ID: (process.env.NEXT_PUBLIC_GOOGLE_SPREADSHEET_ID || '').trim(),
   SHEETS: {
     LEADS: 'Leads',
     CLIENTS: 'Clients',
-    INVOICES: 'Invoices', 
+    INVOICES: 'Invoices',
     CAMPAIGNS: 'Campaigns',
     COMMUNICATIONS: 'Communications',
     OPPORTUNITIES: 'Opportunities',
