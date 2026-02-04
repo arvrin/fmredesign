@@ -429,7 +429,7 @@ export class SimplePDFGenerator {
     this.doc.setFontSize(9);
     this.doc.setTextColor(102, 102, 102);
     this.doc.text('Bank Name: HDFC Bank', 20, startY + 6);
-    this.doc.text('Bank A/C: 50200046588390', 20, startY + 11);
+    this.doc.text('Bank A/C: 50200046586390', 20, startY + 11);
     this.doc.text('Bank IFSC: HDFC0000062', 20, startY + 16);
     this.doc.text('Branch - Arera Colony', 20, startY + 21);
   }
