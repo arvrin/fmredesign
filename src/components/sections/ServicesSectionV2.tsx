@@ -213,8 +213,9 @@ export function ServicesSectionV2() {
   const ctaRef = useRef<HTMLDivElement>(null);
   const mobileScrollRef = useRef<HTMLDivElement>(null);
 
-  const [scrollProgress, setScrollProgress] = useState(0);
-  const [isScrolling, setIsScrolling] = useState(false);
+  const progressBarRef = useRef<HTMLDivElement>(null);
+  const progressWrapperRef = useRef<HTMLDivElement>(null);
+  const progressCountRef = useRef<HTMLSpanElement>(null);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -265,11 +266,20 @@ export function ServicesSectionV2() {
           pin: true,
           anticipatePin: 1,
           invalidateOnRefresh: true,
-          onUpdate: (self) => setScrollProgress(self.progress),
-          onEnter: () => setIsScrolling(true),
-          onLeave: () => setIsScrolling(false),
-          onEnterBack: () => setIsScrolling(true),
-          onLeaveBack: () => setIsScrolling(false),
+          onUpdate: (self) => {
+            // Direct DOM update — no React re-render
+            if (progressBarRef.current) {
+              progressBarRef.current.style.width = `${self.progress * 100}%`;
+            }
+            if (progressCountRef.current) {
+              const count = Math.min(Math.round(self.progress * services.length) + 1, services.length);
+              progressCountRef.current.textContent = `${count}/${services.length}`;
+            }
+          },
+          onEnter: () => { if (progressWrapperRef.current) progressWrapperRef.current.style.opacity = '1'; },
+          onLeave: () => { if (progressWrapperRef.current) progressWrapperRef.current.style.opacity = '0'; },
+          onEnterBack: () => { if (progressWrapperRef.current) progressWrapperRef.current.style.opacity = '1'; },
+          onLeaveBack: () => { if (progressWrapperRef.current) progressWrapperRef.current.style.opacity = '0'; },
         },
       });
 
@@ -445,25 +455,27 @@ export function ServicesSectionV2() {
 
           {/* Minimal progress track — sits at bottom of pinned viewport */}
           <div
+            ref={progressWrapperRef}
             className="pb-8 pt-4 transition-opacity duration-500"
             style={{
               paddingLeft: 'max(3rem, calc((100vw - 1280px) / 2 + 3rem))',
               paddingRight: 'max(3rem, calc((100vw - 1280px) / 2 + 3rem))',
-              opacity: isScrolling ? 1 : 0,
+              opacity: 0,
             }}
           >
             <div className="flex items-center gap-4">
               <div className="flex-1 h-[2px] rounded-full overflow-hidden" style={{ background: 'rgba(201, 50, 93, 0.15)' }}>
                 <div
-                  className="h-full rounded-full transition-[width] duration-100 ease-linear"
+                  ref={progressBarRef}
+                  className="h-full rounded-full"
                   style={{
-                    width: `${scrollProgress * 100}%`,
+                    width: '0%',
                     background: 'linear-gradient(90deg, rgba(201,50,93,0.8), rgba(255,150,100,0.8))',
                   }}
                 />
               </div>
-              <span className="text-xs v2-text-muted tabular-nums font-medium min-w-[3ch]">
-                {Math.min(Math.round(scrollProgress * services.length) + 1, services.length)}/{services.length}
+              <span ref={progressCountRef} className="text-xs v2-text-muted tabular-nums font-medium min-w-[3ch]">
+                1/{services.length}
               </span>
             </div>
           </div>

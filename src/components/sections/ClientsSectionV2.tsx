@@ -163,14 +163,14 @@ export function ClientsSectionV2() {
       <GradientOrb
         color="rgba(201, 50, 93, 0.2)"
         size={600}
-        blur={80}
+        blur={50}
         position={{ top: '-200px', right: '-200px' }}
         drift={20}
       />
       <GradientOrb
         color="rgba(160, 30, 70, 0.15)"
         size={500}
-        blur={60}
+        blur={40}
         position={{ bottom: '-100px', left: '-150px' }}
         drift={15}
       />

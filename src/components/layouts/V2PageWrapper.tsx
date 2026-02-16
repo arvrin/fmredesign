@@ -56,32 +56,30 @@ const generateStars = (count: number): Star[] => {
   }));
 };
 
-// Generate mid-ground shapes (6 large blurred ellipses)
+// Generate mid-ground shapes (4 large blurred ellipses — reduced from 6 for GPU perf)
 const generateMidGroundShapes = (): MidGroundShape[] => {
   const colors = [
     'rgba(180, 40, 80, 0.10)',
     'rgba(200, 60, 90, 0.08)',
     'rgba(160, 30, 70, 0.12)',
     'rgba(220, 80, 100, 0.09)',
-    'rgba(140, 25, 65, 0.11)',
-    'rgba(190, 50, 85, 0.10)',
   ];
-  return Array.from({ length: 6 }, (_, i) => ({
+  return Array.from({ length: 4 }, (_, i) => ({
     id: i,
     left: 5 + Math.random() * 80,
-    top: 5 + (i * 16) + Math.random() * 8,
+    top: 5 + (i * 22) + Math.random() * 10,
     width: 250 + Math.random() * 200,
     height: 180 + Math.random() * 150,
     rotation: Math.random() * 40 - 20,
     opacity: 1,
-    blur: 40 + Math.random() * 20,
+    blur: 30 + Math.random() * 15,
     color: colors[i],
   }));
 };
 
-// Generate foreground particles (10 small bokeh circles)
+// Generate foreground particles (6 small bokeh circles — reduced from 10 for GPU perf)
 const generateForegroundParticles = (): ForegroundParticle[] => {
-  return Array.from({ length: 10 }, (_, i) => ({
+  return Array.from({ length: 6 }, (_, i) => ({
     id: i,
     left: Math.random() * 100,
     top: Math.random() * 100,
@@ -100,7 +98,7 @@ interface V2PageWrapperProps {
 
 export function V2PageWrapper({
   children,
-  starCount = 80,
+  starCount = 60,
   showAccentStars = true
 }: V2PageWrapperProps) {
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -127,13 +125,13 @@ export function V2PageWrapper({
       // Mid-ground shapes scroll slower (appear deeper)
       if (midGroundRef.current) {
         gsap.to(midGroundRef.current, {
-          yPercent: 25,
+          yPercent: 12,
           ease: 'none',
           scrollTrigger: {
             trigger: wrapperRef.current,
             start: 'top top',
             end: 'bottom bottom',
-            scrub: 1,
+            scrub: 0.5,
           },
         });
       }
@@ -141,19 +139,31 @@ export function V2PageWrapper({
       // Foreground particles scroll faster (appear closer)
       if (foregroundRef.current) {
         gsap.to(foregroundRef.current, {
-          yPercent: -12,
+          yPercent: -5,
           ease: 'none',
           scrollTrigger: {
             trigger: wrapperRef.current,
             start: 'top top',
             end: 'bottom bottom',
-            scrub: 1,
+            scrub: 0.5,
           },
         });
       }
     }, wrapperRef);
 
-    return () => ctx.revert();
+    // Debounced ScrollTrigger.refresh() on resize
+    let resizeTimer: ReturnType<typeof setTimeout>;
+    const handleResize = () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => ScrollTrigger.refresh(), 200);
+    };
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      clearTimeout(resizeTimer);
+      ctx.revert();
+    };
   }, [midShapes, particles]);
 
   return (
@@ -264,8 +274,8 @@ export function V2PageWrapper({
       {/* Layer 3: Mid-Ground Shapes — absolute, parallax slower (deeper) */}
       <div
         ref={midGroundRef}
-        className="absolute inset-0 pointer-events-none overflow-hidden"
-        style={{ zIndex: -5, contain: 'layout style paint' }}
+        className="absolute inset-0 pointer-events-none"
+        style={{ zIndex: -5 }}
       >
         {midShapes.map((shape) => (
           <div
@@ -292,8 +302,8 @@ export function V2PageWrapper({
       {/* Layer 6: Foreground Particles — absolute, parallax faster (closer) */}
       <div
         ref={foregroundRef}
-        className="absolute inset-0 pointer-events-none overflow-hidden"
-        style={{ zIndex: 5, contain: 'layout style paint' }}
+        className="absolute inset-0 pointer-events-none"
+        style={{ zIndex: 5 }}
       >
         {particles.map((p) => (
           <div

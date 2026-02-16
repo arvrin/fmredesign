@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import { ArrowRight, ChevronDown } from 'lucide-react';
 import { gsap } from 'gsap';
@@ -25,7 +25,6 @@ const rotatingPhrases = [
 ];
 
 export function HeroSectionV2() {
-  const [mousePos, setMousePos] = useState({ x: 0.5, y: 0.5 });
   const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
@@ -37,6 +36,8 @@ export function HeroSectionV2() {
   const ctaRef = useRef<HTMLDivElement>(null);
   const mascotRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const mousePosRef = useRef({ x: 0.5, y: 0.5 });
+  const rafRef = useRef<number>(0);
 
   // Check for reduced motion
   useEffect(() => {
@@ -130,26 +131,41 @@ export function HeroSectionV2() {
     return () => clearInterval(interval);
   }, [prefersReducedMotion]);
 
-  // Mouse parallax for mascot
-  const handleMouseMove = useCallback(
-    (e: MouseEvent) => {
-      if (prefersReducedMotion) return;
-      if (sectionRef.current) {
-        const rect = sectionRef.current.getBoundingClientRect();
-        setMousePos({
-          x: (e.clientX - rect.left) / rect.width,
-          y: (e.clientY - rect.top) / rect.height,
-        });
-      }
-    },
-    [prefersReducedMotion]
-  );
-
+  // Mouse parallax for mascot — ref-based direct DOM update (zero re-renders)
   useEffect(() => {
     if (prefersReducedMotion) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!sectionRef.current) return;
+      const rect = sectionRef.current.getBoundingClientRect();
+      mousePosRef.current = {
+        x: (e.clientX - rect.left) / rect.width,
+        y: (e.clientY - rect.top) / rect.height,
+      };
+
+      if (!rafRef.current) {
+        rafRef.current = requestAnimationFrame(() => {
+          if (mascotRef.current) {
+            const { x, y } = mousePosRef.current;
+            mascotRef.current.style.transform = `
+              perspective(800px)
+              rotateY(${(x - 0.5) * 12}deg)
+              rotateX(${(y - 0.5) * -8}deg)
+              translateX(${(x - 0.5) * 15}px)
+              translateY(${(y - 0.5) * 10}px)
+            `;
+          }
+          rafRef.current = 0;
+        });
+      }
+    };
+
     window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, [handleMouseMove, prefersReducedMotion]);
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, [prefersReducedMotion]);
 
   return (
     <section
@@ -161,13 +177,13 @@ export function HeroSectionV2() {
         <GradientOrb
           color="rgba(201, 50, 93, 0.2)"
           size={650}
-          blur={100}
+          blur={60}
           position={{ top: '5%', left: '-12%' }}
         />
         <GradientOrb
           color="rgba(160, 30, 70, 0.15)"
           size={500}
-          blur={80}
+          blur={50}
           position={{ bottom: '10%', right: '-10%' }}
         />
       </div>
@@ -256,15 +272,6 @@ export function HeroSectionV2() {
               className="relative"
               style={{
                 opacity: 0,
-                transform: prefersReducedMotion
-                  ? 'none'
-                  : `
-                    perspective(800px)
-                    rotateY(${(mousePos.x - 0.5) * 12}deg)
-                    rotateX(${(mousePos.y - 0.5) * -8}deg)
-                    translateX(${(mousePos.x - 0.5) * 15}px)
-                    translateY(${(mousePos.y - 0.5) * 10}px)
-                  `,
                 transition: 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
               }}
             >

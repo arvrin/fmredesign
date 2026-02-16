@@ -63,21 +63,14 @@ export const metadata: Metadata = {
     title: "Freaking Minds - Creative Marketing Agency",
     description: "Full-service creative marketing agency. Strategy, design, and performance under one roof.",
     siteName: "Freaking Minds",
-    images: [
-      {
-        url: "/logo.png",
-        width: 1200,
-        height: 630,
-        alt: "Freaking Minds Creative Marketing Agency",
-      },
-    ],
+    // images auto-injected from src/app/opengraph-image.tsx
   },
   twitter: {
     card: "summary_large_image",
     site: "@freakingminds",
     title: "Freaking Minds - Creative Marketing Agency",
     description: "Full-service creative marketing. Strategy, design, and performance under one roof.",
-    images: ["/logo.png"],
+    // images auto-injected from src/app/twitter-image.tsx
   },
   robots: {
     index: true,

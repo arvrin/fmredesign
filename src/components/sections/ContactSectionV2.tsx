@@ -82,61 +82,51 @@ export function ContactSectionV2() {
         }, '-=0.3');
       }
 
-      // Mascot with 3D entrance
-      if (mascotRef.current) {
-        gsap.from(mascotRef.current, {
+      // Mascot + contact bar consolidated timeline
+      if (mascotRef.current && contactBarRef.current) {
+        const icons = contactBarRef.current.querySelectorAll('.contact-icon');
+
+        const entranceTl = gsap.timeline({
+          scrollTrigger: {
+            trigger: sectionRef.current,
+            start: 'top 85%',
+            toggleActions: 'play none none reverse',
+          },
+        });
+
+        // Mascot entrance
+        entranceTl.from(mascotRef.current, {
           x: 100,
           opacity: 0,
           scale: 0.8,
           rotation: 10,
           duration: 1.2,
           ease: 'back.out(1.5)',
-          scrollTrigger: {
-            trigger: mascotRef.current,
-            start: 'top 85%',
-            toggleActions: 'play none none reverse',
-          },
-        });
+        })
+        // Contact bar slides up
+        .from(contactBarRef.current, {
+          y: 60,
+          opacity: 0,
+          scale: 0.95,
+          duration: 0.9,
+          ease: 'power3.out',
+        }, '-=0.6')
+        // Icons bounce in
+        .from(icons, {
+          scale: 0,
+          rotation: -180,
+          duration: 0.7,
+          stagger: 0.15,
+          ease: 'back.out(1.7)',
+        }, '-=0.4');
 
-        // Continuous floating animation
+        // Continuous floating animation (not scroll-triggered)
         gsap.to(mascotRef.current, {
           y: -20,
           duration: 3,
           repeat: -1,
           yoyo: true,
           ease: 'sine.inOut',
-        });
-      }
-
-      // Contact bar with staggered icons
-      if (contactBarRef.current) {
-        const icons = contactBarRef.current.querySelectorAll('.contact-icon');
-
-        gsap.from(contactBarRef.current, {
-          y: 60,
-          opacity: 0,
-          scale: 0.95,
-          duration: 0.9,
-          ease: 'power3.out',
-          scrollTrigger: {
-            trigger: contactBarRef.current,
-            start: 'top 90%',
-            toggleActions: 'play none none reverse',
-          },
-        });
-
-        // Icons with bounce
-        gsap.from(icons, {
-          scale: 0,
-          rotation: -180,
-          duration: 0.7,
-          stagger: 0.15,
-          ease: 'back.out(1.7)',
-          scrollTrigger: {
-            trigger: contactBarRef.current,
-            start: 'top 85%',
-            toggleActions: 'play none none reverse',
-          },
         });
       }
     }, sectionRef);
@@ -171,14 +161,14 @@ export function ContactSectionV2() {
       <GradientOrb
         color="rgba(160, 30, 70, 0.22)"
         size={700}
-        blur={100}
+        blur={60}
         position={{ top: '-300px', right: '-200px' }}
         drift={30}
       />
       <GradientOrb
         color="rgba(140, 25, 60, 0.18)"
         size={500}
-        blur={80}
+        blur={50}
         position={{ bottom: '-150px', left: '-100px' }}
         drift={20}
       />

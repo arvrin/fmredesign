@@ -9,7 +9,7 @@ import { PageLoader } from "@/components/ui/PageLoader";
 
 export default function Home() {
   return (
-    <V2PageWrapper starCount={100}>
+    <V2PageWrapper starCount={60}>
       <PageLoader />
       <HeroSectionV2 />
       <ServicesSectionV2 />

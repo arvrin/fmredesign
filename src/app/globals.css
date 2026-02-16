@@ -265,16 +265,7 @@
 }
 
 html {
-  scroll-behavior: smooth;
-  /* Refined scroll for editorial feel */
   scroll-padding-top: 5rem; /* Match header height (h-20 = 80px = 5rem) */
-}
-
-/* Smooth scroll with easing - editorial luxury feel */
-@supports (scroll-behavior: smooth) {
-  html {
-    scroll-behavior: smooth;
-  }
 }
 
 /* Selection styling - brand colors */
@@ -1868,7 +1859,11 @@ button.v2-btn-outline {
   .brain-animate-bounce,
   .brain-animate-wiggle,
   .brain-animate-glow,
-  .brain-animate-float-glow {
+  .brain-animate-float-glow,
+  [style*="v2BloomBreathe"],
+  [style*="v2ParticleDrift"],
+  [style*="v2StarTwinkle"],
+  [style*="v2StarPulse"] {
     animation: none !important;
   }
 
@@ -2177,12 +2172,14 @@ button.v2-btn-outline {
   display: flex;
   width: max-content;
   animation: logoMarqueeLeft 120s linear infinite;
+  will-change: transform;
 }
 
 .logo-marquee-track-reverse {
   display: flex;
   width: max-content;
   animation: logoMarqueeRight 120s linear infinite;
+  will-change: transform;
 }
 
 .logo-marquee-item {
