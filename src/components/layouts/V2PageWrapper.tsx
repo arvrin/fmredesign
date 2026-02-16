@@ -116,42 +116,8 @@ export function V2PageWrapper({
     setParticles(generateForegroundParticles());
   }, [starCount]);
 
-  // GSAP parallax for mid-ground and foreground layers
+  // Debounced ScrollTrigger.refresh() on resize (for section-level ScrollTriggers)
   useEffect(() => {
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (prefersReducedMotion || !wrapperRef.current) return;
-
-    const ctx = gsap.context(() => {
-      // Mid-ground shapes scroll slower (appear deeper)
-      if (midGroundRef.current) {
-        gsap.to(midGroundRef.current, {
-          yPercent: 12,
-          ease: 'none',
-          scrollTrigger: {
-            trigger: wrapperRef.current,
-            start: 'top top',
-            end: 'bottom bottom',
-            scrub: 0.5,
-          },
-        });
-      }
-
-      // Foreground particles scroll faster (appear closer)
-      if (foregroundRef.current) {
-        gsap.to(foregroundRef.current, {
-          yPercent: -5,
-          ease: 'none',
-          scrollTrigger: {
-            trigger: wrapperRef.current,
-            start: 'top top',
-            end: 'bottom bottom',
-            scrub: 0.5,
-          },
-        });
-      }
-    }, wrapperRef);
-
-    // Debounced ScrollTrigger.refresh() on resize
     let resizeTimer: ReturnType<typeof setTimeout>;
     const handleResize = () => {
       clearTimeout(resizeTimer);
@@ -162,9 +128,8 @@ export function V2PageWrapper({
     return () => {
       window.removeEventListener('resize', handleResize);
       clearTimeout(resizeTimer);
-      ctx.revert();
     };
-  }, [midShapes, particles]);
+  }, []);
 
   return (
     <div ref={wrapperRef} className="relative min-h-screen overflow-x-hidden">

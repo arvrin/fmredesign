@@ -404,7 +404,7 @@ export function FeaturesSectionV2() {
 
   // Desktop Layout - Stacking Cards with JS-controlled transforms
   return (
-    <section className="relative z-10" aria-labelledby="features-heading" style={{ contain: 'layout style' }}>
+    <section className="relative z-10" aria-labelledby="features-heading">
       {/* Section Header */}
       <div className="v2-container" style={{ paddingTop: 'var(--v2-section-padding)', paddingBottom: 'var(--v2-section-padding)' }}>
         <div className="max-w-3xl mx-auto" style={{ textAlign: 'center' }}>
