@@ -91,13 +91,13 @@ export class ProposalPDFGenerator {
     this.doc.setFont('helvetica', 'normal');
     this.doc.setFontSize(12);
     this.setColor(this.brandColors.textLight);
-    this.doc.text('Creative Digital Marketing Agency', this.leftMargin, 70);
+    this.doc.text('Creative Marketing Agency', this.leftMargin, 70);
     
     // Proposal Title and Number
     this.doc.setFont('helvetica', 'bold');
     this.doc.setFontSize(24);
     this.setColor(this.brandColors.dark);
-    this.doc.text('DIGITAL MARKETING PROPOSAL', this.pageWidth - 300, 45, { align: 'right' });
+    this.doc.text('MARKETING PROPOSAL', this.pageWidth - 300, 45, { align: 'right' });
     
     this.doc.setFont('helvetica', 'normal');
     this.doc.setFontSize(14);
@@ -483,8 +483,8 @@ export class ProposalPDFGenerator {
     this.doc.setFont('helvetica', 'normal');
     this.doc.setFontSize(10);
     this.doc.setTextColor(200, 200, 200);
-    this.doc.text('Digital Marketing Agency • Bhopal, Madhya Pradesh', this.leftMargin, this.currentY + 30);
-    this.doc.text('Email: hello@freakingminds.in • Phone: +91 98765 43210', this.leftMargin, this.currentY + 45);
+    this.doc.text('Creative Marketing Agency • India', this.leftMargin, this.currentY + 30);
+    this.doc.text('Email: freakingmindsdigital@gmail.com • Phone: +91 98332 57659', this.leftMargin, this.currentY + 45);
     this.doc.text('Website: www.freakingminds.in', this.leftMargin, this.currentY + 60);
     
     // Valid until notice

@@ -230,10 +230,10 @@ export function HeaderV3() {
 
               <div className="mt-12 space-y-2 text-sm text-fm-neutral-500">
                 <a
-                  href="mailto:hello@freakingminds.in"
+                  href="mailto:freakingmindsdigital@gmail.com"
                   className="block hover:text-fm-ink transition-colors"
                 >
-                  hello@freakingminds.in
+                  freakingmindsdigital@gmail.com
                 </a>
                 <a
                   href="tel:+919833257659"

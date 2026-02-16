@@ -243,10 +243,10 @@ export function CaseStudiesSectionV2() {
 
                   {/* Large Metric Display */}
                   <div className="relative text-center">
-                    <div className="metric-item font-display text-8xl lg:text-9xl font-bold v2-text-primary mb-2">
+                    <div className="metric-item font-display text-8xl lg:text-9xl font-bold text-white mb-2">
                       {featuredStudy.metrics[0].value}
                     </div>
-                    <div className="v2-text-secondary text-lg font-medium uppercase tracking-wide">
+                    <div className="text-white/85 text-lg font-medium uppercase tracking-wide">
                       {featuredStudy.metrics[0].label} Growth
                     </div>
                   </div>
@@ -337,10 +337,10 @@ export function CaseStudiesSectionV2() {
                 >
                   {/* Metric Display */}
                   <div className="text-center">
-                    <div className="font-display text-5xl font-bold v2-text-primary mb-1">
+                    <div className="font-display text-5xl font-bold text-white mb-1">
                       {study.metrics[0].value}
                     </div>
-                    <div className="v2-text-secondary text-sm font-medium">{study.metrics[0].label}</div>
+                    <div className="text-white/85 text-sm font-medium">{study.metrics[0].label}</div>
                   </div>
 
                   {/* Category */}

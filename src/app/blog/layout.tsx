@@ -3,9 +3,9 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
   title: 'Blog',
   description:
-    'Stay ahead with digital marketing insights, SEO tips, social media strategies, and industry trends from the FreakingMinds team.',
+    'Stay ahead with marketing insights, SEO tips, social media strategies, and industry trends from the Freaking Minds team.',
   keywords: [
-    'digital marketing blog',
+    'marketing blog',
     'seo tips',
     'social media strategy',
     'marketing insights',
@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Blog | Freaking Minds',
     description:
-      'Expert digital marketing tips, SEO guides, and industry insights.',
+      'Expert marketing tips, SEO guides, and industry insights.',
     url: 'https://freakingminds.in/blog',
   },
   alternates: {

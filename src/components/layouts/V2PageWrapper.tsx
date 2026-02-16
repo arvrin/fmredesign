@@ -1,6 +1,12 @@
 'use client';
 
-import { useState, useEffect, ReactNode } from 'react';
+import { useState, useEffect, useRef, ReactNode } from 'react';
+import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+if (typeof window !== 'undefined') {
+  gsap.registerPlugin(ScrollTrigger);
+}
 
 // Star type for TypeScript
 interface Star {
@@ -11,6 +17,30 @@ interface Star {
   delay: number;
   duration: number;
   brightness: number;
+}
+
+// Mid-ground shape type
+interface MidGroundShape {
+  id: number;
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+  rotation: number;
+  opacity: number;
+  blur: number;
+  color: string;
+}
+
+// Foreground particle type
+interface ForegroundParticle {
+  id: number;
+  left: number;
+  top: number;
+  size: number;
+  opacity: number;
+  driftDuration: number;
+  driftDelay: number;
 }
 
 // Generate random stars - only called on client side
@@ -26,6 +56,42 @@ const generateStars = (count: number): Star[] => {
   }));
 };
 
+// Generate mid-ground shapes (6 large blurred ellipses)
+const generateMidGroundShapes = (): MidGroundShape[] => {
+  const colors = [
+    'rgba(180, 40, 80, 0.10)',
+    'rgba(200, 60, 90, 0.08)',
+    'rgba(160, 30, 70, 0.12)',
+    'rgba(220, 80, 100, 0.09)',
+    'rgba(140, 25, 65, 0.11)',
+    'rgba(190, 50, 85, 0.10)',
+  ];
+  return Array.from({ length: 6 }, (_, i) => ({
+    id: i,
+    left: 5 + Math.random() * 80,
+    top: 5 + (i * 16) + Math.random() * 8,
+    width: 250 + Math.random() * 200,
+    height: 180 + Math.random() * 150,
+    rotation: Math.random() * 40 - 20,
+    opacity: 1,
+    blur: 40 + Math.random() * 20,
+    color: colors[i],
+  }));
+};
+
+// Generate foreground particles (10 small bokeh circles)
+const generateForegroundParticles = (): ForegroundParticle[] => {
+  return Array.from({ length: 10 }, (_, i) => ({
+    id: i,
+    left: Math.random() * 100,
+    top: Math.random() * 100,
+    size: 4 + Math.random() * 6,
+    opacity: 0.04 + Math.random() * 0.04,
+    driftDuration: 8 + Math.random() * 4,
+    driftDelay: Math.random() * 6,
+  }));
+};
+
 interface V2PageWrapperProps {
   children: ReactNode;
   starCount?: number;
@@ -37,16 +103,62 @@ export function V2PageWrapper({
   starCount = 80,
   showAccentStars = true
 }: V2PageWrapperProps) {
-  // Generate stars only on the client side to avoid hydration mismatch
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const midGroundRef = useRef<HTMLDivElement>(null);
+  const foregroundRef = useRef<HTMLDivElement>(null);
+
+  // Generate elements only on the client side to avoid hydration mismatch
   const [stars, setStars] = useState<Star[]>([]);
+  const [midShapes, setMidShapes] = useState<MidGroundShape[]>([]);
+  const [particles, setParticles] = useState<ForegroundParticle[]>([]);
 
   useEffect(() => {
     setStars(generateStars(starCount));
+    setMidShapes(generateMidGroundShapes());
+    setParticles(generateForegroundParticles());
   }, [starCount]);
 
+  // GSAP parallax for mid-ground and foreground layers
+  useEffect(() => {
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion || !wrapperRef.current) return;
+
+    const ctx = gsap.context(() => {
+      // Mid-ground shapes scroll slower (appear deeper)
+      if (midGroundRef.current) {
+        gsap.to(midGroundRef.current, {
+          yPercent: 25,
+          ease: 'none',
+          scrollTrigger: {
+            trigger: wrapperRef.current,
+            start: 'top top',
+            end: 'bottom bottom',
+            scrub: 1,
+          },
+        });
+      }
+
+      // Foreground particles scroll faster (appear closer)
+      if (foregroundRef.current) {
+        gsap.to(foregroundRef.current, {
+          yPercent: -12,
+          ease: 'none',
+          scrollTrigger: {
+            trigger: wrapperRef.current,
+            start: 'top top',
+            end: 'bottom bottom',
+            scrub: 1,
+          },
+        });
+      }
+    }, wrapperRef);
+
+    return () => ctx.revert();
+  }, [midShapes, particles]);
+
   return (
-    <div className="relative min-h-screen overflow-x-hidden">
-      {/* UNIFIED BACKGROUND - Light magenta-infused gradient */}
+    <div ref={wrapperRef} className="relative min-h-screen overflow-x-hidden">
+      {/* Layer 0: Base Gradient — fixed, deepest */}
       <div
         className="fixed inset-0 pointer-events-none"
         style={{
@@ -69,30 +181,31 @@ export function V2PageWrapper({
         }}
       />
 
-      {/* Atmospheric Layer - Soft magenta blooms */}
+      {/* Layer 1: Atmospheric Blooms — fixed with CSS breathing animation */}
       <div
         className="fixed inset-0 pointer-events-none"
         style={{
           zIndex: -10,
+          animation: 'v2BloomBreathe 60s ease-in-out infinite',
           background: `
-            radial-gradient(ellipse 100% 80% at 20% 10%, rgba(201, 50, 93, 0.08) 0%, transparent 50%),
-            radial-gradient(ellipse 80% 60% at 85% 30%, rgba(180, 40, 80, 0.06) 0%, transparent 45%),
-            radial-gradient(ellipse 90% 70% at 50% 90%, rgba(160, 30, 70, 0.1) 0%, transparent 50%),
-            radial-gradient(ellipse 60% 50% at 10% 70%, rgba(201, 50, 93, 0.05) 0%, transparent 40%)
+            radial-gradient(ellipse 100% 80% at 20% 10%, rgba(120, 20, 60, 0.25) 0%, transparent 50%),
+            radial-gradient(ellipse 80% 60% at 85% 30%, rgba(90, 15, 50, 0.2) 0%, transparent 45%),
+            radial-gradient(ellipse 90% 70% at 50% 90%, rgba(100, 10, 55, 0.28) 0%, transparent 50%),
+            radial-gradient(ellipse 60% 50% at 10% 70%, rgba(130, 25, 65, 0.18) 0%, transparent 40%)
           `,
         }}
       />
 
-      {/* Vignette - Soft edge warmth */}
+      {/* Layer 2: Vignette — fixed */}
       <div
         className="fixed inset-0 pointer-events-none"
         style={{
           zIndex: -10,
-          background: 'radial-gradient(ellipse 80% 80% at 50% 50%, transparent 0%, rgba(201, 50, 93, 0.06) 100%)',
+          background: 'radial-gradient(ellipse 80% 80% at 50% 50%, transparent 0%, rgba(100, 15, 50, 0.16) 100%)',
         }}
       />
 
-      {/* BLINKING STARS - Magical night sky effect */}
+      {/* Layer 2: Stars — fixed */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden" style={{ zIndex: -10 }}>
         {stars.map((star) => (
           <div
@@ -103,8 +216,8 @@ export function V2PageWrapper({
               top: `${star.top}%`,
               width: `${star.size}px`,
               height: `${star.size}px`,
-              background: `radial-gradient(circle, rgba(201,50,93,${star.brightness * 0.5}) 0%, rgba(201,50,93,${star.brightness * 0.25}) 50%, transparent 100%)`,
-              boxShadow: `0 0 ${star.size * 2}px rgba(201,50,93,${star.brightness * 0.3})`,
+              background: `radial-gradient(circle, rgba(140,20,65,${star.brightness}) 0%, rgba(140,20,65,${star.brightness * 0.6}) 50%, transparent 100%)`,
+              boxShadow: `0 0 ${star.size * 4}px rgba(140,20,65,${star.brightness * 0.7})`,
               animation: `v2StarTwinkle ${star.duration}s ease-in-out infinite`,
               animationDelay: `${star.delay}s`,
             }}
@@ -138,18 +251,66 @@ export function V2PageWrapper({
             <div
               className="absolute inset-0"
               style={{
-                background: 'rgba(201,50,93,0.35)',
+                background: 'rgba(140,20,65,0.75)',
                 clipPath: 'polygon(50% 0%, 60% 40%, 100% 50%, 60% 60%, 50% 100%, 40% 60%, 0% 50%, 40% 40%)',
                 filter: 'blur(0.5px)',
-                boxShadow: '0 0 10px rgba(201,50,93,0.3), 0 0 20px rgba(201,50,93,0.15)',
+                boxShadow: '0 0 12px rgba(140,20,65,0.6), 0 0 24px rgba(140,20,65,0.35)',
               }}
             />
           </div>
         ))}
       </div>
 
-      {/* Page Content */}
-      {children}
+      {/* Layer 3: Mid-Ground Shapes — absolute, parallax slower (deeper) */}
+      <div
+        ref={midGroundRef}
+        className="absolute inset-0 pointer-events-none overflow-hidden"
+        style={{ zIndex: -5, contain: 'layout style paint' }}
+      >
+        {midShapes.map((shape) => (
+          <div
+            key={`mid-${shape.id}`}
+            className="absolute rounded-full"
+            style={{
+              left: `${shape.left}%`,
+              top: `${shape.top}%`,
+              width: `${shape.width}px`,
+              height: `${shape.height}px`,
+              background: `radial-gradient(ellipse, ${shape.color} 0%, transparent 70%)`,
+              filter: `blur(${shape.blur}px)`,
+              transform: `rotate(${shape.rotation}deg)`,
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Layer 5: Content (children) — relative, normal scroll */}
+      <div className="relative" style={{ zIndex: 10 }}>
+        {children}
+      </div>
+
+      {/* Layer 6: Foreground Particles — absolute, parallax faster (closer) */}
+      <div
+        ref={foregroundRef}
+        className="absolute inset-0 pointer-events-none overflow-hidden"
+        style={{ zIndex: 5, contain: 'layout style paint' }}
+      >
+        {particles.map((p) => (
+          <div
+            key={`particle-${p.id}`}
+            className="absolute rounded-full"
+            style={{
+              left: `${p.left}%`,
+              top: `${p.top}%`,
+              width: `${p.size}px`,
+              height: `${p.size}px`,
+              background: `radial-gradient(circle, rgba(180, 50, 90, ${p.opacity}) 0%, transparent 70%)`,
+              animation: `v2ParticleDrift ${p.driftDuration}s ease-in-out infinite`,
+              animationDelay: `${p.driftDelay}s`,
+            }}
+          />
+        ))}
+      </div>
     </div>
   );
 }

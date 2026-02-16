@@ -151,7 +151,7 @@ export class SimplePDFGenerator {
     this.doc.setFontSize(9);
     this.doc.setTextColor(179, 41, 104);
     this.doc.setFont('helvetica', 'normal');
-    this.doc.text('Creative Digital Marketing Agency', 55, 30);
+    this.doc.text('Creative Marketing Agency', 55, 30);
     
     // Contact info (right aligned) with better spacing
     this.doc.setFontSize(8);
@@ -159,7 +159,7 @@ export class SimplePDFGenerator {
     this.doc.text('freakingmindsdigital@gmail.com', 190, 18, { align: 'right' });
     this.doc.text('+91 98332 57659', 190, 23, { align: 'right' });
     this.doc.text('www.freakingminds.in', 190, 28, { align: 'right' });
-    this.doc.text('Bhopal, Madhya Pradesh', 190, 33, { align: 'right' });
+    this.doc.text('India', 190, 33, { align: 'right' });
   }
 
   private addFallbackLogo(): void {

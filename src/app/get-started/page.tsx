@@ -17,7 +17,6 @@ import {
   Phone,
   Globe,
   Building,
-  X,
   BarChart3,
   Gift
 } from 'lucide-react';
@@ -65,8 +64,56 @@ const COMPANY_SIZES: { value: CompanySize; label: string; icon: string }[] = [
   { value: 'individual', label: 'Individual/Freelancer', icon: '👤' }
 ];
 
+// Modern input styling (inline to avoid Tailwind v4 cascade issues)
+const inputBase: React.CSSProperties = {
+  padding: '14px 16px',
+  background: '#faf9f9',
+  border: '1.5px solid #e5e2e2',
+  outline: 'none',
+  fontSize: '15px',
+  color: '#0f0f0f',
+  width: '100%',
+  borderRadius: '12px',
+  transition: 'all 0.2s ease',
+};
+
+const inputWithIcon: React.CSSProperties = { ...inputBase, paddingLeft: '48px' };
+
+const selectStyle: React.CSSProperties = {
+  ...inputBase,
+  appearance: 'none' as const,
+  cursor: 'pointer',
+  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`,
+  backgroundRepeat: 'no-repeat',
+  backgroundPosition: 'right 16px center',
+  paddingRight: '44px',
+};
+
+const handleFocus = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  e.target.style.border = '1.5px solid #c9325d';
+  e.target.style.boxShadow = '0 0 0 4px rgba(201,50,93,0.08)';
+  e.target.style.background = '#fff';
+};
+
+const handleBlur = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  e.target.style.border = '1.5px solid #e5e2e2';
+  e.target.style.boxShadow = 'none';
+  e.target.style.background = '#faf9f9';
+};
+
+const handleErrorFocus = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  e.target.style.border = '1.5px solid #c9325d';
+  e.target.style.boxShadow = '0 0 0 4px rgba(201,50,93,0.08)';
+  e.target.style.background = '#fff';
+};
+
+const handleErrorBlur = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  e.target.style.border = '1.5px solid #dc2626';
+  e.target.style.boxShadow = 'none';
+  e.target.style.background = '#faf9f9';
+};
+
 export default function GetStartedPage() {
-  const [showModal, setShowModal] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<Partial<LeadInput>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -97,18 +144,6 @@ export default function GetStartedPage() {
       }));
     }
   }, [formData, currentStep]);
-
-  // Prevent body scroll when modal is open
-  useEffect(() => {
-    if (showModal) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, [showModal]);
 
   const updateFormData = (updates: Partial<LeadInput>) => {
     setFormData(prev => ({ ...prev, ...updates }));
@@ -160,11 +195,13 @@ export default function GetStartedPage() {
   const nextStep = () => {
     if (validateStep(currentStep)) {
       setCurrentStep(prev => Math.min(5, prev + 1));
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
   const prevStep = () => {
     setCurrentStep(prev => Math.max(1, prev - 1));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const submitForm = async () => {
@@ -207,105 +244,47 @@ export default function GetStartedPage() {
   };
 
   if (submitted) {
-    return <ThankYouStep formData={formData} onClose={() => setShowModal(false)} />;
+    return <ThankYouStep formData={formData} />;
   }
 
   return (
     <V2PageWrapper>
-      {/* Hero Section */}
-      <section className="relative z-10 v2-section pt-32 lg:pt-40 min-h-screen flex items-center">
+      <section className="relative z-10 v2-section pt-32 lg:pt-40 pb-32">
         <div className="v2-container">
-          <div className="max-w-4xl mx-auto" style={{ textAlign: 'center' }}>
-            {/* Badge */}
-            <div className="v2-badge v2-badge-glass mb-8">
-              <Sparkles className="w-4 h-4 v2-text-primary" />
-              <span className="v2-text-primary">Start Your Digital Transformation Journey</span>
-            </div>
-
-            {/* Headline */}
-            <h1 className="font-display text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold v2-text-primary mb-8 leading-tight">
-              Let's Build Something{' '}
-              <span className="v2-accent">Amazing</span> Together
-            </h1>
-
-            {/* Description */}
-            <p className="text-lg md:text-xl v2-text-secondary leading-relaxed" style={{ marginBottom: '48px' }}>
-              Tell us about your project in just a few steps. Our team will get back to you within 24 hours
-              with a customized proposal tailored to your needs.
-            </p>
-
-            {/* CTA Button */}
-            <div className="mb-16">
-              <button
-                onClick={() => setShowModal(true)}
-                className="v2-btn v2-btn-primary v2-btn-lg"
-              >
-                Get Started Now
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </button>
-            </div>
-
-            {/* Trust Indicators */}
-            <div className="v2-paper rounded-2xl p-6 md:p-8 max-w-3xl mx-auto">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
-                {[
-                  { icon: Zap, label: "24hr Response" },
-                  { icon: Target, label: "Custom Strategy" },
-                  { icon: BarChart3, label: "Data-Driven" },
-                  { icon: Gift, label: "Free Consultation" }
-                ].map((item) => {
-                  const Icon = item.icon;
-                  return (
-                    <div key={item.label} className="flex flex-col items-center">
-                      <Icon className="w-6 h-6 text-fm-magenta-600 mb-1.5" />
-                      <div className="text-sm text-fm-neutral-600 font-medium">{item.label}</div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+          {/* 3D Brain Decoration */}
+          <div className="absolute right-8 lg:right-20 top-36 hidden lg:block" style={{ zIndex: 10 }}>
+            <img
+              src="/3dasset/brain-rocket.png"
+              alt="Launch Your Project"
+              className="h-auto animate-v2-hero-float"
+              style={{
+                width: 'min(180px, 30vw)',
+                filter: 'drop-shadow(0 20px 40px rgba(140,25,60,0.2))',
+              }}
+            />
           </div>
-        </div>
 
-        {/* Floating Brain Decoration */}
-        <div className="absolute right-8 lg:right-24 top-1/3 hidden lg:block z-10">
-          <img
-            src="/3dasset/brain-learning.png"
-            alt="Innovation"
-            className="w-32 lg:w-44 h-auto animate-v2-hero-float drop-shadow-2xl"
-            style={{ filter: 'drop-shadow(0 20px 40px rgba(0,0,0,0.3))' }}
-          />
-        </div>
-      </section>
+          <div className="max-w-4xl mx-auto">
+            {/* Page Header */}
+            <div style={{ textAlign: 'center', marginBottom: '48px' }}>
+              <div className="v2-badge v2-badge-glass" style={{ marginBottom: '24px' }}>
+                <Sparkles className="w-4 h-4 v2-text-primary" />
+                <span className="v2-text-primary">Start Your Project</span>
+              </div>
+              <h1 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold v2-text-primary leading-tight" style={{ marginBottom: '16px' }}>
+                Let&apos;s Grow Your <span className="v2-accent">Brand</span>
+              </h1>
+              <p className="text-base md:text-lg v2-text-secondary leading-relaxed max-w-2xl mx-auto">
+                Tell us about your project. We&apos;ll get back within 24 hours with a customized proposal.
+              </p>
+            </div>
 
-      {/* Bottom Spacer */}
-      <div className="pb-32" />
-
-      {/* Modal Form Container */}
-      {showModal && (
-        <div className="fixed inset-0 z-50 overflow-hidden">
-          {/* Backdrop */}
-          <div
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            onClick={() => setShowModal(false)}
-          />
-
-          {/* Modal */}
-          <div className="relative z-10 h-full flex items-center justify-center p-3 sm:p-4">
-            <div className="w-full max-w-4xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto bg-white rounded-2xl sm:rounded-3xl shadow-2xl">
-              {/* Close Button */}
-              <button
-                onClick={() => setShowModal(false)}
-                className="absolute top-4 right-4 sm:top-6 sm:right-6 z-20 w-10 h-10 bg-fm-neutral-100 hover:bg-fm-neutral-200 rounded-full flex items-center justify-center transition-all duration-200"
-              >
-                <X className="w-5 h-5 text-fm-neutral-600" />
-              </button>
-
-              {/* Form Content */}
+            {/* Form Card */}
+            <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl" style={{ marginBottom: '48px' }}>
               <div className="p-5 sm:p-8 md:p-12">
                 {/* Progress Bar */}
-                <div className="mb-8 sm:mb-12">
-                  <div className="flex items-center justify-between mb-4 sm:mb-6">
+                <div style={{ marginBottom: '40px' }}>
+                  <div className="flex items-center justify-between" style={{ marginBottom: '20px' }}>
                     {[1, 2, 3, 4].map((step) => (
                       <div key={step} className="flex flex-col items-center">
                         <div
@@ -331,25 +310,25 @@ export default function GetStartedPage() {
                       </div>
                     ))}
                   </div>
-                  <div className="w-full bg-fm-neutral-200 rounded-full h-1.5 sm:h-2">
+                  <div className="w-full bg-fm-neutral-200 rounded-full" style={{ height: '6px' }}>
                     <div
-                      className="bg-gradient-to-r from-fm-magenta-700 to-fm-magenta-400 h-1.5 sm:h-2 rounded-full transition-all duration-500 ease-out"
-                      style={{ width: `${((currentStep - 1) / 3) * 100}%` }}
+                      className="bg-gradient-to-r from-fm-magenta-700 to-fm-magenta-400 rounded-full transition-all duration-500 ease-out"
+                      style={{ width: `${((currentStep - 1) / 3) * 100}%`, height: '6px' }}
                     />
                   </div>
                 </div>
 
                 {/* Step Content */}
-                <div className="min-h-[320px] sm:min-h-[500px]">
+                <div style={{ minHeight: '400px' }}>
                   {/* Step 1: Contact Information */}
                   {currentStep === 1 && (
                     <div className="space-y-8">
-                      <div className="text-center mb-10">
-                        <div className="w-16 h-16 bg-fm-magenta-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                      <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+                        <div className="w-16 h-16 bg-fm-magenta-100 rounded-full flex items-center justify-center mx-auto" style={{ marginBottom: '24px' }}>
                           <Users className="w-8 h-8 text-fm-magenta-700" />
                         </div>
-                        <h2 className="text-3xl font-bold text-fm-neutral-900 mb-3">
-                          Let's get to know you
+                        <h2 className="text-2xl sm:text-3xl font-bold text-fm-neutral-900" style={{ marginBottom: '12px' }}>
+                          Let&apos;s get to know you
                         </h2>
                         <p className="text-lg text-fm-neutral-600">
                           Share your contact details so we can connect
@@ -358,22 +337,23 @@ export default function GetStartedPage() {
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                          <label className="block text-sm font-semibold text-fm-neutral-800 mb-3">
+                          <label className="block text-sm font-semibold text-fm-neutral-800" style={{ marginBottom: '12px' }}>
                             Your Name *
                           </label>
                           <input
                             type="text"
                             value={formData.name || ''}
                             onChange={(e) => updateFormData({ name: e.target.value })}
-                            className={`w-full px-4 py-4 border-2 rounded-xl focus:ring-4 focus:ring-fm-magenta-100 focus:border-fm-magenta-700 transition-all duration-300 outline-none
-                              ${errors.name ? 'border-red-500' : 'border-fm-neutral-200'}`}
+                            style={{ ...inputBase, ...(errors.name ? { borderColor: '#dc2626' } : {}) }}
+                            onFocus={errors.name ? handleErrorFocus : handleFocus}
+                            onBlur={errors.name ? handleErrorBlur : handleBlur}
                             placeholder="Enter your full name"
                           />
                           {errors.name && <p className="text-red-500 text-sm mt-2 font-medium">{errors.name}</p>}
                         </div>
 
                         <div>
-                          <label className="block text-sm font-semibold text-fm-neutral-800 mb-3">
+                          <label className="block text-sm font-semibold text-fm-neutral-800" style={{ marginBottom: '12px' }}>
                             Email Address *
                           </label>
                           <div className="relative">
@@ -382,8 +362,9 @@ export default function GetStartedPage() {
                               type="email"
                               value={formData.email || ''}
                               onChange={(e) => updateFormData({ email: e.target.value })}
-                              className={`w-full pl-12 pr-4 py-4 border-2 rounded-xl focus:ring-4 focus:ring-fm-magenta-100 focus:border-fm-magenta-700 transition-all duration-300 outline-none
-                                ${errors.email ? 'border-red-500' : 'border-fm-neutral-200'}`}
+                              style={{ ...inputWithIcon, ...(errors.email ? { borderColor: '#dc2626' } : {}) }}
+                              onFocus={errors.email ? handleErrorFocus : handleFocus}
+                              onBlur={errors.email ? handleErrorBlur : handleBlur}
                               placeholder="your@email.com"
                             />
                           </div>
@@ -391,7 +372,7 @@ export default function GetStartedPage() {
                         </div>
 
                         <div>
-                          <label className="block text-sm font-semibold text-fm-neutral-800 mb-3">
+                          <label className="block text-sm font-semibold text-fm-neutral-800" style={{ marginBottom: '12px' }}>
                             Company Name *
                           </label>
                           <div className="relative">
@@ -400,8 +381,9 @@ export default function GetStartedPage() {
                               type="text"
                               value={formData.company || ''}
                               onChange={(e) => updateFormData({ company: e.target.value })}
-                              className={`w-full pl-12 pr-4 py-4 border-2 rounded-xl focus:ring-4 focus:ring-fm-magenta-100 focus:border-fm-magenta-700 transition-all duration-300 outline-none
-                                ${errors.company ? 'border-red-500' : 'border-fm-neutral-200'}`}
+                              style={{ ...inputWithIcon, ...(errors.company ? { borderColor: '#dc2626' } : {}) }}
+                              onFocus={errors.company ? handleErrorFocus : handleFocus}
+                              onBlur={errors.company ? handleErrorBlur : handleBlur}
                               placeholder="Your company name"
                             />
                           </div>
@@ -409,7 +391,7 @@ export default function GetStartedPage() {
                         </div>
 
                         <div>
-                          <label className="block text-sm font-semibold text-fm-neutral-800 mb-3">
+                          <label className="block text-sm font-semibold text-fm-neutral-800" style={{ marginBottom: '12px' }}>
                             Phone Number
                           </label>
                           <div className="relative">
@@ -418,7 +400,9 @@ export default function GetStartedPage() {
                               type="tel"
                               value={formData.phone || ''}
                               onChange={(e) => updateFormData({ phone: e.target.value })}
-                              className="w-full pl-12 pr-4 py-4 border-2 border-fm-neutral-200 rounded-xl focus:ring-4 focus:ring-fm-magenta-100 focus:border-fm-magenta-700 transition-all duration-300 outline-none"
+                              style={inputWithIcon}
+                              onFocus={handleFocus}
+                              onBlur={handleBlur}
                               placeholder="+91 XXXXX XXXXX"
                             />
                           </div>
@@ -426,7 +410,7 @@ export default function GetStartedPage() {
                       </div>
 
                       <div>
-                        <label className="block text-sm font-semibold text-fm-neutral-800 mb-3">
+                        <label className="block text-sm font-semibold text-fm-neutral-800" style={{ marginBottom: '12px' }}>
                           Website (Optional)
                         </label>
                         <div className="relative">
@@ -435,7 +419,9 @@ export default function GetStartedPage() {
                             type="url"
                             value={formData.website || ''}
                             onChange={(e) => updateFormData({ website: e.target.value })}
-                            className="w-full pl-12 pr-4 py-4 border-2 border-fm-neutral-200 rounded-xl focus:ring-4 focus:ring-fm-magenta-100 focus:border-fm-magenta-700 transition-all duration-300 outline-none"
+                            style={inputWithIcon}
+                            onFocus={handleFocus}
+                            onBlur={handleBlur}
                             placeholder="https://yourwebsite.com"
                           />
                         </div>
@@ -446,11 +432,11 @@ export default function GetStartedPage() {
                   {/* Step 2: Project Details */}
                   {currentStep === 2 && (
                     <div className="space-y-8">
-                      <div className="text-center mb-10">
-                        <div className="w-16 h-16 bg-fm-magenta-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                      <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+                        <div className="w-16 h-16 bg-fm-magenta-100 rounded-full flex items-center justify-center mx-auto" style={{ marginBottom: '24px' }}>
                           <Target className="w-8 h-8 text-fm-magenta-700" />
                         </div>
-                        <h2 className="text-3xl font-bold text-fm-neutral-900 mb-3">
+                        <h2 className="text-2xl sm:text-3xl font-bold text-fm-neutral-900" style={{ marginBottom: '12px' }}>
                           What do you need?
                         </h2>
                         <p className="text-lg text-fm-neutral-600">
@@ -459,7 +445,7 @@ export default function GetStartedPage() {
                       </div>
 
                       <div>
-                        <label className="block text-sm font-semibold text-fm-neutral-800 mb-6">
+                        <label className="block text-sm font-semibold text-fm-neutral-800" style={{ marginBottom: '24px' }}>
                           Project Type *
                         </label>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -487,15 +473,16 @@ export default function GetStartedPage() {
                       </div>
 
                       <div>
-                        <label className="block text-sm font-semibold text-fm-neutral-800 mb-3">
+                        <label className="block text-sm font-semibold text-fm-neutral-800" style={{ marginBottom: '12px' }}>
                           Project Description *
                         </label>
                         <textarea
                           value={formData.projectDescription || ''}
                           onChange={(e) => updateFormData({ projectDescription: e.target.value })}
                           rows={5}
-                          className={`w-full px-4 py-4 border-2 rounded-xl focus:ring-4 focus:ring-fm-magenta-100 focus:border-fm-magenta-700 transition-all duration-300 resize-none outline-none
-                            ${errors.projectDescription ? 'border-red-500' : 'border-fm-neutral-200'}`}
+                          style={{ ...inputBase, resize: 'none' as const, ...(errors.projectDescription ? { borderColor: '#dc2626' } : {}) }}
+                          onFocus={errors.projectDescription ? handleErrorFocus : handleFocus}
+                          onBlur={errors.projectDescription ? handleErrorBlur : handleBlur}
                           placeholder="Describe your project in detail. What are you looking to build or improve?"
                         />
                         <div className="flex justify-between text-sm mt-2">
@@ -507,13 +494,15 @@ export default function GetStartedPage() {
                       </div>
 
                       <div>
-                        <label className="block text-sm font-semibold text-fm-neutral-800 mb-3">
+                        <label className="block text-sm font-semibold text-fm-neutral-800" style={{ marginBottom: '12px' }}>
                           Industry (Optional)
                         </label>
                         <select
                           value={formData.industry || ''}
                           onChange={(e) => updateFormData({ industry: e.target.value as Industry })}
-                          className="w-full px-4 py-4 border-2 border-fm-neutral-200 rounded-xl focus:ring-4 focus:ring-fm-magenta-100 focus:border-fm-magenta-700 transition-all duration-300 outline-none"
+                          style={selectStyle}
+                          onFocus={handleFocus}
+                          onBlur={handleBlur}
                         >
                           <option value="">Select your industry</option>
                           {INDUSTRIES.map((industry) => (
@@ -529,11 +518,11 @@ export default function GetStartedPage() {
                   {/* Step 3: Budget & Timeline */}
                   {currentStep === 3 && (
                     <div className="space-y-8">
-                      <div className="text-center mb-10">
-                        <div className="w-16 h-16 bg-fm-magenta-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                      <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+                        <div className="w-16 h-16 bg-fm-magenta-100 rounded-full flex items-center justify-center mx-auto" style={{ marginBottom: '24px' }}>
                           <DollarSign className="w-8 h-8 text-fm-magenta-700" />
                         </div>
-                        <h2 className="text-3xl font-bold text-fm-neutral-900 mb-3">
+                        <h2 className="text-2xl sm:text-3xl font-bold text-fm-neutral-900" style={{ marginBottom: '12px' }}>
                           Budget & Timeline
                         </h2>
                         <p className="text-lg text-fm-neutral-600">
@@ -542,7 +531,7 @@ export default function GetStartedPage() {
                       </div>
 
                       <div>
-                        <label className="block text-sm font-semibold text-fm-neutral-800 mb-6">
+                        <label className="block text-sm font-semibold text-fm-neutral-800" style={{ marginBottom: '24px' }}>
                           Budget Range *
                         </label>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -569,7 +558,7 @@ export default function GetStartedPage() {
                       </div>
 
                       <div>
-                        <label className="block text-sm font-semibold text-fm-neutral-800 mb-6">
+                        <label className="block text-sm font-semibold text-fm-neutral-800" style={{ marginBottom: '24px' }}>
                           Timeline *
                         </label>
                         <div className="space-y-3">
@@ -603,11 +592,11 @@ export default function GetStartedPage() {
                   {/* Step 4: Challenges & Company Info */}
                   {currentStep === 4 && (
                     <div className="space-y-8">
-                      <div className="text-center mb-10">
-                        <div className="w-16 h-16 bg-fm-magenta-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                      <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+                        <div className="w-16 h-16 bg-fm-magenta-100 rounded-full flex items-center justify-center mx-auto" style={{ marginBottom: '24px' }}>
                           <AlertCircle className="w-8 h-8 text-fm-magenta-700" />
                         </div>
-                        <h2 className="text-3xl font-bold text-fm-neutral-900 mb-3">
+                        <h2 className="text-2xl sm:text-3xl font-bold text-fm-neutral-900" style={{ marginBottom: '12px' }}>
                           Tell us your challenges
                         </h2>
                         <p className="text-lg text-fm-neutral-600">
@@ -616,35 +605,38 @@ export default function GetStartedPage() {
                       </div>
 
                       <div>
-                        <label className="block text-sm font-semibold text-fm-neutral-800 mb-3">
-                          What's your biggest challenge right now? *
+                        <label className="block text-sm font-semibold text-fm-neutral-800" style={{ marginBottom: '12px' }}>
+                          What&apos;s your biggest challenge right now? *
                         </label>
                         <textarea
                           value={formData.primaryChallenge || ''}
                           onChange={(e) => updateFormData({ primaryChallenge: e.target.value })}
                           rows={4}
-                          className={`w-full px-4 py-4 border-2 rounded-xl focus:ring-4 focus:ring-fm-magenta-100 focus:border-fm-magenta-700 transition-all duration-300 resize-none outline-none
-                            ${errors.primaryChallenge ? 'border-red-500' : 'border-fm-neutral-200'}`}
+                          style={{ ...inputBase, resize: 'none' as const, ...(errors.primaryChallenge ? { borderColor: '#dc2626' } : {}) }}
+                          onFocus={errors.primaryChallenge ? handleErrorFocus : handleFocus}
+                          onBlur={errors.primaryChallenge ? handleErrorBlur : handleBlur}
                           placeholder="What problem are you trying to solve?"
                         />
                         {errors.primaryChallenge && <p className="text-red-500 text-sm mt-2 font-medium">{errors.primaryChallenge}</p>}
                       </div>
 
                       <div>
-                        <label className="block text-sm font-semibold text-fm-neutral-800 mb-3">
+                        <label className="block text-sm font-semibold text-fm-neutral-800" style={{ marginBottom: '12px' }}>
                           Any specific requirements? (Optional)
                         </label>
                         <textarea
                           value={formData.specificRequirements || ''}
                           onChange={(e) => updateFormData({ specificRequirements: e.target.value })}
                           rows={3}
-                          className="w-full px-4 py-4 border-2 border-fm-neutral-200 rounded-xl focus:ring-4 focus:ring-fm-magenta-100 focus:border-fm-magenta-700 transition-all duration-300 resize-none outline-none"
+                          style={{ ...inputBase, resize: 'none' as const }}
+                          onFocus={handleFocus}
+                          onBlur={handleBlur}
                           placeholder="Any specific features, integrations, or technical requirements?"
                         />
                       </div>
 
                       <div>
-                        <label className="block text-sm font-semibold text-fm-neutral-800 mb-6">
+                        <label className="block text-sm font-semibold text-fm-neutral-800" style={{ marginBottom: '24px' }}>
                           Company Size *
                         </label>
                         <div className="space-y-3">
@@ -669,14 +661,16 @@ export default function GetStartedPage() {
                       </div>
 
                       <div>
-                        <label className="block text-sm font-semibold text-fm-neutral-800 mb-3">
+                        <label className="block text-sm font-semibold text-fm-neutral-800" style={{ marginBottom: '12px' }}>
                           Your Role at the Company (Optional)
                         </label>
                         <input
                           type="text"
                           value={formData.jobTitle || ''}
                           onChange={(e) => updateFormData({ jobTitle: e.target.value })}
-                          className="w-full px-4 py-4 border-2 border-fm-neutral-200 rounded-xl focus:ring-4 focus:ring-fm-magenta-100 focus:border-fm-magenta-700 transition-all duration-300 outline-none"
+                          style={inputBase}
+                          onFocus={handleFocus}
+                          onBlur={handleBlur}
                           placeholder="e.g., CEO, Marketing Manager, Founder"
                         />
                       </div>
@@ -685,7 +679,7 @@ export default function GetStartedPage() {
                 </div>
 
                 {/* Navigation Buttons */}
-                <div className="flex justify-between items-center mt-12 pt-8 border-t border-fm-neutral-200">
+                <div className="flex justify-between items-center border-t border-fm-neutral-200" style={{ marginTop: '48px', paddingTop: '32px' }}>
                   <button
                     onClick={prevStep}
                     disabled={currentStep === 1}
@@ -729,15 +723,35 @@ export default function GetStartedPage() {
                 </div>
               </div>
             </div>
+
+            {/* Trust Indicators */}
+            <div className="v2-paper rounded-2xl p-6 md:p-8 max-w-3xl mx-auto" style={{ marginBottom: '64px' }}>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
+                {[
+                  { icon: Zap, label: "24hr Response" },
+                  { icon: Target, label: "Custom Strategy" },
+                  { icon: BarChart3, label: "Data-Driven" },
+                  { icon: Gift, label: "Free Consultation" }
+                ].map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <div key={item.label} className="flex flex-col items-center">
+                      <Icon className="w-6 h-6 text-fm-magenta-600 mb-1.5" />
+                      <div className="text-sm text-fm-neutral-600 font-medium">{item.label}</div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </div>
-      )}
+      </section>
     </V2PageWrapper>
   );
 }
 
 // Thank You Step Component
-function ThankYouStep({ formData, onClose }: { formData: Partial<LeadInput>; onClose: () => void }) {
+function ThankYouStep({ formData }: { formData: Partial<LeadInput> }) {
   return (
     <V2PageWrapper>
       <section className="relative z-10 min-h-screen flex items-center justify-center v2-section">
@@ -753,7 +767,7 @@ function ThankYouStep({ formData, onClose }: { formData: Partial<LeadInput>; onC
             </h1>
 
             <p className="text-xl text-fm-neutral-600 mb-10 leading-relaxed">
-              We've received your project details and our expert team will get back to you within
+              We&apos;ve received your project details and our expert team will get back to you within
               <span className="font-semibold text-fm-magenta-700"> 24 hours </span>
               with a customized proposal.
             </p>
@@ -793,8 +807,8 @@ function ThankYouStep({ formData, onClose }: { formData: Partial<LeadInput>; onC
 
               <p className="text-sm text-fm-neutral-500">
                 Questions? Email us at{' '}
-                <a href="mailto:hello@freakingminds.in" className="text-fm-magenta-700 hover:underline font-medium">
-                  hello@freakingminds.in
+                <a href="mailto:freakingmindsdigital@gmail.com" className="text-fm-magenta-700 hover:underline font-medium">
+                  freakingmindsdigital@gmail.com
                 </a>{' '}
                 or call us at{' '}
                 <a href="tel:+919833257659" className="text-fm-magenta-700 hover:underline font-medium">

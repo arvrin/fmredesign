@@ -25,8 +25,12 @@ export default function Error({
             <img
               src="/3dasset/brain-confused.png"
               alt="Something went wrong"
-              className="w-40 h-auto mx-auto mb-8 drop-shadow-2xl"
-              style={{ filter: 'drop-shadow(0 20px 40px rgba(0,0,0,0.3))' }}
+              className="mx-auto mb-8"
+              style={{
+                width: 'min(160px, 40vw)',
+                height: 'auto',
+                filter: 'drop-shadow(0 20px 40px rgba(140,25,60,0.2))',
+              }}
             />
 
             <h1 className="font-display text-3xl md:text-4xl font-bold v2-text-primary mb-6">

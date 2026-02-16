@@ -9,7 +9,7 @@ export const metadata: Metadata = {
     'freelance creative jobs india',
     'digital marketing talent',
     'creative community',
-    'freelancer network bhopal',
+    'freelancer network India',
   ],
   openGraph: {
     title: 'CreativeMinds Talent Network | Freaking Minds',

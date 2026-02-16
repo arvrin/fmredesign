@@ -39,7 +39,7 @@ export default function HeadingStylesShowcase() {
             <span
               style={{
                 color: '#ff6b9d',
-                textShadow: '0 0.03em 0 #e8456d, 0 0.06em 0 #c9325d, 0 0.09em 0 #a82548, 0 0.12em 0 #7c1a3a',
+                textShadow: '0 0.03em 0 #e8456d, 0 0.06em 0 #8c1d4a, 0 0.09em 0 #a82548, 0 0.12em 0 #7c1a3a',
               }}
             >
               {samplePhrase}
@@ -51,7 +51,7 @@ export default function HeadingStylesShowcase() {
             <span
               style={{
                 color: '#ff6b9d',
-                textShadow: '0 0.03em 0 #c9325d, 0 0.06em 0 #8c213d, 0 0.09em 0 #5c1530, 0 0.12em 0 #2a0a18',
+                textShadow: '0 0.03em 0 #8c1d4a, 0 0.06em 0 #8c213d, 0 0.09em 0 #5c1530, 0 0.12em 0 #2a0a18',
               }}
             >
               {samplePhrase}
@@ -87,7 +87,7 @@ export default function HeadingStylesShowcase() {
             <span
               style={{
                 color: '#ff6b9d',
-                textShadow: '0 0.015em 0 #e8456d, 0 0.03em 0 #c9325d, 0 0.045em 0 #a82548',
+                textShadow: '0 0.015em 0 #e8456d, 0 0.03em 0 #8c1d4a, 0 0.045em 0 #a82548',
               }}
             >
               {samplePhrase}
@@ -99,7 +99,7 @@ export default function HeadingStylesShowcase() {
             <span
               style={{
                 color: '#ff6b9d',
-                textShadow: '0 0.05em 0 #e8456d, 0 0.10em 0 #c9325d, 0 0.15em 0 #a82548, 0 0.20em 0 #7c1a3a',
+                textShadow: '0 0.05em 0 #e8456d, 0 0.10em 0 #8c1d4a, 0 0.15em 0 #a82548, 0 0.20em 0 #7c1a3a',
               }}
             >
               {samplePhrase}
@@ -111,7 +111,7 @@ export default function HeadingStylesShowcase() {
             <span
               style={{
                 color: '#ff6b9d',
-                textShadow: '0.02em 0.03em 0 #e8456d, 0.04em 0.06em 0 #c9325d, 0.06em 0.09em 0 #a82548, 0.08em 0.12em 0 #7c1a3a',
+                textShadow: '0.02em 0.03em 0 #e8456d, 0.04em 0.06em 0 #8c1d4a, 0.06em 0.09em 0 #a82548, 0.08em 0.12em 0 #7c1a3a',
               }}
             >
               {samplePhrase}
@@ -123,7 +123,7 @@ export default function HeadingStylesShowcase() {
             <span
               style={{
                 color: '#ffffff',
-                textShadow: '0.02em 0.03em 0 #ff6b9d, 0.04em 0.06em 0 #c9325d, 0.06em 0.09em 0 #1a0a10',
+                textShadow: '0.02em 0.03em 0 #ff6b9d, 0.04em 0.06em 0 #8c1d4a, 0.06em 0.09em 0 #1a0a10',
                 WebkitTextStroke: '1px rgba(201,50,93,0.5)',
               }}
             >
@@ -153,7 +153,7 @@ export default function HeadingStylesShowcase() {
             <span
               style={{
                 color: '#ff8db5',
-                textShadow: '0 0 7px #ff6b9d, 0 0 15px #ff6b9d, 0 0 30px #c9325d, 0 0 50px #c9325d, 0 0 80px rgba(201,50,93,0.4)',
+                textShadow: '0 0 7px #ff6b9d, 0 0 15px #ff6b9d, 0 0 30px #8c1d4a, 0 0 50px #8c1d4a, 0 0 80px rgba(201,50,93,0.4)',
               }}
             >
               {samplePhrase}
@@ -208,7 +208,7 @@ export default function HeadingStylesShowcase() {
             <span
               style={{
                 color: '#ff6b9d',
-                textShadow: '0 0.03em 0 #e8456d, 0 0.06em 0 #c9325d, 0 0.09em 0 #a82548, 0 0 20px rgba(255,107,157,0.3), 0 0 40px rgba(201,50,93,0.15)',
+                textShadow: '0 0.03em 0 #e8456d, 0 0.06em 0 #8c1d4a, 0 0.09em 0 #a82548, 0 0 20px rgba(255,107,157,0.3), 0 0 40px rgba(201,50,93,0.15)',
               }}
             >
               {samplePhrase}
@@ -220,7 +220,7 @@ export default function HeadingStylesShowcase() {
             <span
               style={{
                 color: '#ff8db5',
-                textShadow: '0.02em 0.03em 0 #e8456d, 0.04em 0.06em 0 #c9325d, 0.06em 0.09em 0 #a82548, 0 0 15px rgba(255,107,157,0.5), 0 0 40px rgba(201,50,93,0.25)',
+                textShadow: '0.02em 0.03em 0 #e8456d, 0.04em 0.06em 0 #8c1d4a, 0.06em 0.09em 0 #a82548, 0 0 15px rgba(255,107,157,0.5), 0 0 40px rgba(201,50,93,0.25)',
               }}
             >
               {samplePhrase}
@@ -232,7 +232,7 @@ export default function HeadingStylesShowcase() {
             <span
               style={{
                 color: '#ffffff',
-                textShadow: '0 0.03em 0 #ff6b9d, 0 0.06em 0 #c9325d, 0 0.09em 0 #a82548, 0 0 15px rgba(255,107,157,0.4), 0 0 50px rgba(201,50,93,0.2)',
+                textShadow: '0 0.03em 0 #ff6b9d, 0 0.06em 0 #8c1d4a, 0 0.09em 0 #a82548, 0 0 15px rgba(255,107,157,0.4), 0 0 50px rgba(201,50,93,0.2)',
               }}
             >
               {samplePhrase}
@@ -244,7 +244,7 @@ export default function HeadingStylesShowcase() {
             <span
               style={{
                 color: '#ff6b9d',
-                textShadow: '0 0.02em 0 #e8456d, 0 0.04em 0 #c9325d, 0 0 12px rgba(232,115,74,0.4), 0 0 35px rgba(255,107,157,0.2)',
+                textShadow: '0 0.02em 0 #e8456d, 0 0.04em 0 #8c1d4a, 0 0 12px rgba(232,115,74,0.4), 0 0 35px rgba(255,107,157,0.2)',
               }}
             >
               {samplePhrase}
@@ -275,7 +275,7 @@ export default function HeadingStylesShowcase() {
               style={{
                 color: 'transparent',
                 WebkitTextStroke: '1.5px rgba(255,255,255,0.9)',
-                textShadow: '0 0.03em 0 #ff6b9d, 0 0.06em 0 #c9325d, 0 0.09em 0 #a82548',
+                textShadow: '0 0.03em 0 #ff6b9d, 0 0.06em 0 #8c1d4a, 0 0.09em 0 #a82548',
               }}
             >
               {samplePhrase}
@@ -288,7 +288,7 @@ export default function HeadingStylesShowcase() {
               style={{
                 color: '#ff6b9d',
                 WebkitTextStroke: '0.5px rgba(255,255,255,0.3)',
-                textShadow: '0 0 0 #c9325d, 0.03em 0.03em 0 rgba(168,37,72,0.6)',
+                textShadow: '0 0 0 #8c1d4a, 0.03em 0.03em 0 rgba(168,37,72,0.6)',
               }}
             >
               {samplePhrase}
@@ -301,7 +301,7 @@ export default function HeadingStylesShowcase() {
               style={{
                 color: 'transparent',
                 WebkitTextStroke: '2px #ff6b9d',
-                textShadow: '0 0 7px #ff6b9d, 0 0 20px #ff6b9d, 0 0 40px #c9325d, 0 0 80px rgba(201,50,93,0.4)',
+                textShadow: '0 0 7px #ff6b9d, 0 0 20px #ff6b9d, 0 0 40px #8c1d4a, 0 0 80px rgba(201,50,93,0.4)',
               }}
             >
               {samplePhrase}
@@ -357,7 +357,7 @@ export default function HeadingStylesShowcase() {
           <Card id="F2" title="v2-accent + Shadow Wrapper">
             <span
               style={{
-                textShadow: '0 0.03em 0 #e8456d, 0 0.06em 0 #c9325d, 0 0.09em 0 #a82548, 0 0.12em 0 #7c1a3a',
+                textShadow: '0 0.03em 0 #e8456d, 0 0.06em 0 #8c1d4a, 0 0.09em 0 #a82548, 0 0.12em 0 #7c1a3a',
               }}
             >
               <span className="v2-accent" style={{ filter: 'none' }}>
@@ -374,7 +374,7 @@ export default function HeadingStylesShowcase() {
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text',
-                filter: 'drop-shadow(0 0.03em 0 #c9325d) drop-shadow(0 0.06em 0 #a82548)',
+                filter: 'drop-shadow(0 0.03em 0 #8c1d4a) drop-shadow(0 0.06em 0 #a82548)',
               }}
             >
               {samplePhrase}
@@ -406,7 +406,7 @@ export default function HeadingStylesShowcase() {
               Why Brands Choose{' '}
               <span style={{
                 color: '#ff6b9d',
-                textShadow: '0 0.03em 0 #e8456d, 0 0.06em 0 #c9325d, 0 0.09em 0 #a82548, 0 0 20px rgba(255,107,157,0.3)',
+                textShadow: '0 0.03em 0 #e8456d, 0 0.06em 0 #8c1d4a, 0 0.09em 0 #a82548, 0 0 20px rgba(255,107,157,0.3)',
               }}>
                 FreakingMinds
               </span>
@@ -430,7 +430,7 @@ export default function HeadingStylesShowcase() {
               Why Brands Choose{' '}
               <span style={{
                 color: '#ffffff',
-                textShadow: '0 0.03em 0 #ff6b9d, 0 0.06em 0 #c9325d, 0 0.09em 0 #a82548, 0 0 15px rgba(255,107,157,0.4)',
+                textShadow: '0 0.03em 0 #ff6b9d, 0 0.06em 0 #8c1d4a, 0 0.09em 0 #a82548, 0 0 15px rgba(255,107,157,0.4)',
               }}>
                 FreakingMinds
               </span>
@@ -442,7 +442,7 @@ export default function HeadingStylesShowcase() {
               Why Brands Choose{' '}
               <span style={{
                 color: '#ff6b9d',
-                textShadow: '0 0.015em 0 #e8456d, 0 0.03em 0 #c9325d, 0 0.045em 0 #a82548',
+                textShadow: '0 0.015em 0 #e8456d, 0 0.03em 0 #8c1d4a, 0 0.045em 0 #a82548',
               }}>
                 FreakingMinds
               </span>
@@ -476,7 +476,7 @@ export default function HeadingStylesShowcase() {
               Why Brands Choose{' '}
               <span style={{
                 color: '#ff6b9d',
-                textShadow: '0.02em 0.03em 0 #e8456d, 0.04em 0.06em 0 #c9325d, 0.06em 0.09em 0 #a82548',
+                textShadow: '0.02em 0.03em 0 #e8456d, 0.04em 0.06em 0 #8c1d4a, 0.06em 0.09em 0 #a82548',
               }}>
                 FreakingMinds
               </span>
@@ -517,12 +517,12 @@ export default function HeadingStylesShowcase() {
 
         .showcase-flicker-neon {
           color: #ff8db5;
-          text-shadow: 0 0 7px #ff6b9d, 0 0 15px #ff6b9d, 0 0 30px #c9325d, 0 0 50px #c9325d;
+          text-shadow: 0 0 7px #ff6b9d, 0 0 15px #ff6b9d, 0 0 30px #8c1d4a, 0 0 50px #8c1d4a;
           animation: showcase-flicker 3s linear infinite;
         }
         @keyframes showcase-flicker {
           0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
-            text-shadow: 0 0 7px #ff6b9d, 0 0 15px #ff6b9d, 0 0 30px #c9325d, 0 0 50px #c9325d;
+            text-shadow: 0 0 7px #ff6b9d, 0 0 15px #ff6b9d, 0 0 30px #8c1d4a, 0 0 50px #8c1d4a;
             opacity: 1;
           }
           20%, 24%, 55% {
@@ -551,15 +551,15 @@ export default function HeadingStylesShowcase() {
           }
           36% {
             transform: translateY(-0.12em);
-            text-shadow: 0 0.04em 0 #ff6b9d, 0 0.08em 0 #e8456d, 0 0.12em 0 #c9325d, 0 0 0 transparent;
+            text-shadow: 0 0.04em 0 #ff6b9d, 0 0.08em 0 #e8456d, 0 0.12em 0 #8c1d4a, 0 0 0 transparent;
           }
           48%, 55% {
             transform: translateY(-0.16em);
-            text-shadow: 0 0.04em 0 #ff6b9d, 0 0.08em 0 #e8456d, 0 0.12em 0 #c9325d, 0 0.16em 0 #a82548;
+            text-shadow: 0 0.04em 0 #ff6b9d, 0 0.08em 0 #e8456d, 0 0.12em 0 #8c1d4a, 0 0.16em 0 #a82548;
           }
           68% {
             transform: translateY(-0.12em);
-            text-shadow: 0 0.04em 0 #ff6b9d, 0 0.08em 0 #e8456d, 0 0.12em 0 #c9325d, 0 0 0 transparent;
+            text-shadow: 0 0.04em 0 #ff6b9d, 0 0.08em 0 #e8456d, 0 0.12em 0 #8c1d4a, 0 0 0 transparent;
           }
           80% {
             transform: translateY(-0.08em);
@@ -578,10 +578,10 @@ export default function HeadingStylesShowcase() {
         }
         @keyframes showcase-breathe {
           0%, 100% {
-            text-shadow: 0 0.01em 0 #e8456d, 0 0.02em 0 #c9325d;
+            text-shadow: 0 0.01em 0 #e8456d, 0 0.02em 0 #8c1d4a;
           }
           50% {
-            text-shadow: 0 0.04em 0 #e8456d, 0 0.08em 0 #c9325d, 0 0.12em 0 #a82548, 0 0.16em 0 #7c1a3a;
+            text-shadow: 0 0.04em 0 #e8456d, 0 0.08em 0 #8c1d4a, 0 0.12em 0 #a82548, 0 0.16em 0 #7c1a3a;
           }
         }
 
@@ -592,10 +592,10 @@ export default function HeadingStylesShowcase() {
         }
         @keyframes showcase-wave {
           0%, 100% {
-            text-shadow: -0.06em 0.03em 0 #e8456d, -0.1em 0.06em 0 #c9325d, -0.14em 0.09em 0 #a82548;
+            text-shadow: -0.06em 0.03em 0 #e8456d, -0.1em 0.06em 0 #8c1d4a, -0.14em 0.09em 0 #a82548;
           }
           50% {
-            text-shadow: 0.06em 0.03em 0 #e8456d, 0.1em 0.06em 0 #c9325d, 0.14em 0.09em 0 #a82548;
+            text-shadow: 0.06em 0.03em 0 #e8456d, 0.1em 0.06em 0 #8c1d4a, 0.14em 0.09em 0 #a82548;
           }
         }
 
@@ -606,19 +606,19 @@ export default function HeadingStylesShowcase() {
         }
         @keyframes showcase-orbit {
           0% {
-            text-shadow: 0 0.06em 0 #e8456d, 0 0.1em 0 #c9325d, 0 0.14em 0 #a82548;
+            text-shadow: 0 0.06em 0 #e8456d, 0 0.1em 0 #8c1d4a, 0 0.14em 0 #a82548;
           }
           25% {
-            text-shadow: 0.06em 0 0 #e8456d, 0.1em 0 0 #c9325d, 0.14em 0 0 #a82548;
+            text-shadow: 0.06em 0 0 #e8456d, 0.1em 0 0 #8c1d4a, 0.14em 0 0 #a82548;
           }
           50% {
-            text-shadow: 0 -0.06em 0 #e8456d, 0 -0.1em 0 #c9325d, 0 -0.14em 0 #a82548;
+            text-shadow: 0 -0.06em 0 #e8456d, 0 -0.1em 0 #8c1d4a, 0 -0.14em 0 #a82548;
           }
           75% {
-            text-shadow: -0.06em 0 0 #e8456d, -0.1em 0 0 #c9325d, -0.14em 0 0 #a82548;
+            text-shadow: -0.06em 0 0 #e8456d, -0.1em 0 0 #8c1d4a, -0.14em 0 0 #a82548;
           }
           100% {
-            text-shadow: 0 0.06em 0 #e8456d, 0 0.1em 0 #c9325d, 0 0.14em 0 #a82548;
+            text-shadow: 0 0.06em 0 #e8456d, 0 0.1em 0 #8c1d4a, 0 0.14em 0 #a82548;
           }
         }
       `}</style>

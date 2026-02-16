@@ -61,7 +61,7 @@ export function HeroSectionV3() {
       <div
         className="absolute w-[800px] h-[800px] opacity-[0.07] pointer-events-none blur-3xl transition-all duration-1000 ease-out"
         style={{
-          background: 'radial-gradient(circle, #c9325d 0%, transparent 70%)',
+          background: 'radial-gradient(circle, #8c1d4a 0%, transparent 70%)',
           left: `${mousePosition.x}%`,
           top: `${mousePosition.y}%`,
           transform: 'translate(-50%, -50%)',

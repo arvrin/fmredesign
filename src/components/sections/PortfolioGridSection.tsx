@@ -72,7 +72,7 @@ export function PortfolioGridSection() {
   const currentItems = portfolioItems[activeTab];
 
   return (
-    <section ref={sectionRef} className="relative bg-white py-20 lg:py-28 overflow-hidden">
+    <section ref={sectionRef} className="relative bg-white overflow-hidden" style={{ paddingTop: 'var(--v2-section-padding)', paddingBottom: 'var(--v2-section-padding)' }}>
       <div className="max-w-[1400px] mx-auto px-6 md:px-12 lg:px-20 relative z-10">
         {/* Section header */}
         <div

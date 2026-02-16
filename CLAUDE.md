@@ -16,37 +16,52 @@ FreakingMinds is a digital marketing agency website built with Next.js 15 and Ta
 - **Icons**: Lucide React
 - **Backend**: Google Sheets API (for data storage)
 
-## Critical: Text Centering Fix
+## Critical: Tailwind v4 Cascade Layer Fix (globals.css)
 
-**IMPORTANT**: Tailwind's `text-center` class has issues at larger screen widths due to CSS Cascade Layers in Tailwind v4.
+**IMPORTANT**: Tailwind v4 puts utility classes inside `@layer utilities`, which has **lower priority** than unlayered CSS. This means any bare element selector in globals.css (e.g., `p { margin: 0 }`) will silently override Tailwind utilities like `mx-auto`, `mb-4`, `h-8` on those elements.
 
-### The Problem
-- `text-center` class works at smaller viewports but fails at fullscreen/larger widths
-- Computed styles show `center` but visual output is `left-aligned`
-- Root cause: CSS Cascade Layer conflicts in Tailwind v4
-
-### The Solution
-**Always use inline styles for text-align on V2 pages:**
-
-```tsx
-// BAD - Don't do this
-<div className="text-center mb-16">
-  <h2 className="v2-text-primary text-center mb-8">Title</h2>
-  <p className="v2-text-secondary text-center max-w-2xl mx-auto">Description</p>
-</div>
-
-// GOOD - Do this instead
-<div className="max-w-3xl mx-auto" style={{ textAlign: 'center', marginBottom: '64px' }}>
-  <h2 className="v2-text-primary mb-8 leading-tight">Title</h2>
-  <p className="v2-text-secondary leading-relaxed">Description</p>
-</div>
+### The Root Cause
+Unlayered CSS resets on elements (`p`, `h1-h6`, `img`, `input`) in `globals.css` were overriding Tailwind utility classes because CSS cascade layers work like this:
+```
+@layer base     → lowest priority
+@layer utilities → higher, but still lower than unlayered
+unlayered CSS   → HIGHEST priority (wins over all layers)
 ```
 
-### Key Pattern
-1. Put `textAlign: 'center'` as inline style on parent container
-2. Remove redundant `text-center` classes from children
-3. Use inline style for `marginBottom` on section headers
-4. Child elements inherit text-align from parent
+### The Fix Applied
+All element-level resets in `globals.css` have been moved into `@layer base` so Tailwind utilities properly override them:
+
+```css
+/* BEFORE (broken) — unlayered, beats Tailwind utilities */
+p { margin: 0; }
+img { height: auto; display: block; }
+
+/* AFTER (fixed) — in @layer base, Tailwind utilities win */
+@layer base {
+  p { margin: 0; }
+  img { height: auto; display: block; }
+}
+```
+
+**Elements fixed**: `p`, `h1-h6`, `img`, `input`, `select`, `textarea`
+
+### What This Means for Development
+- `mx-auto` on `<p>` elements now works (previously silently failed)
+- `mb-4`, `mb-8`, etc. on `<p>` and headings now work
+- `h-8`, `h-12`, etc. on `<img>` elements now work
+- Height utilities on `<input>` elements now work
+- If you add new element-level resets to globals.css, **always put them inside `@layer base`**
+
+### Text Centering (Still Use Inline Styles)
+`text-center` still has issues due to other unlayered CSS conflicts. Continue using inline styles for text-align:
+
+```tsx
+// Still use inline style for textAlign
+<div style={{ textAlign: 'center' }}>
+  <h2 className="v2-text-primary mb-8">Title</h2>
+  <p className="v2-text-secondary max-w-2xl mx-auto">Description</p>
+</div>
+```
 
 ## V2 Design System
 
@@ -231,9 +246,11 @@ npm run lint         # Run ESLint
 
 ## Known Issues & Solutions
 
-### 1. CSS Not Applying
-- **Symptom**: Tailwind classes not working as expected
-- **Solution**: Use inline styles for critical properties (especially `text-align`)
+### 1. CSS Not Applying / Tailwind Utilities Silently Failing (FIXED)
+- **Symptom**: Tailwind classes like `mx-auto`, `mb-4`, `h-8` not working on `<p>`, headings, `<img>`, or form elements
+- **Root Cause**: Unlayered element resets in `globals.css` (`p { margin: 0 }`, `img { height: auto }`, etc.) had higher cascade priority than `@layer utilities`
+- **Solution**: All element resets moved into `@layer base` in `globals.css`. If you add new element-level CSS, always wrap it in `@layer base`
+- **Note**: `text-center` still needs inline `style={{ textAlign: 'center' }}` due to separate unlayered conflicts
 
 ### 2. Hydration Mismatch with Stars
 - **Symptom**: Console errors about hydration
@@ -285,6 +302,7 @@ NEXT_PUBLIC_SITE_URL=...
 - Mix V1 and V2 design patterns
 - Add `!important` rules to fix CSS issues (find root cause instead)
 - Modify globals.css cascade layers without understanding Tailwind v4
+- Add element-level CSS (`p {}`, `img {}`, etc.) outside of `@layer base` — it will override Tailwind utilities
 - Use lighter neutral colors (400, 500) for body text - they lack contrast
 - Use plain `text-fm-neutral-500` for important text - too light
 

@@ -188,7 +188,8 @@ export default function BlogPostPage() {
             {post.tags.map((tag) => (
               <span
                 key={tag}
-                className="px-3 py-1 rounded-full text-xs font-medium bg-white/10 v2-text-secondary"
+                className="px-3 py-1 rounded-full text-xs font-medium v2-text-secondary"
+                style={{ background: 'rgba(201, 50, 93, 0.08)' }}
               >
                 #{tag}
               </span>

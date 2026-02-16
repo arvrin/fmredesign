@@ -29,6 +29,7 @@ const services = [
       'Dominate search results with data-driven SEO strategies that put you where customers are looking.',
     features: ['Keyword Strategy', 'Technical SEO', 'Content Authority', 'Local Search'],
     colorClass: 'v2-gradient-seo',
+    bgImage: '/3dasset/seo-bg.png',
   },
   {
     icon: Megaphone,
@@ -38,6 +39,7 @@ const services = [
       'Build engaged communities with thumb-stopping content that turns followers into customers.',
     features: ['Content Strategy', 'Community Building', 'Paid Campaigns', 'Influencer Marketing'],
     colorClass: 'v2-gradient-social',
+    bgImage: '/3dasset/social-media-bg.png',
   },
   {
     icon: BarChart3,
@@ -47,6 +49,7 @@ const services = [
       'Laser-focused PPC campaigns that deliver qualified leads while maximizing your ROI.',
     features: ['Google Ads', 'Meta Ads', 'Retargeting', 'Conversion Optimization'],
     colorClass: 'v2-gradient-performance',
+    bgImage: '/3dasset/performance-marketing-bg.png',
   },
   {
     icon: Palette,
@@ -56,6 +59,7 @@ const services = [
       'Visual identities that capture attention, build trust, and make competitors jealous.',
     features: ['Logo Design', 'Brand Guidelines', 'Visual Systems', 'Packaging'],
     colorClass: 'v2-gradient-brand',
+    bgImage: '/3dasset/brand-identity-bg.png',
   },
   {
     icon: Globe,
@@ -64,6 +68,7 @@ const services = [
     description: "Lightning-fast websites that don't just look good—they close deals 24/7.",
     features: ['Custom Development', 'E-commerce', 'CMS Solutions', 'Speed Optimization'],
     colorClass: 'v2-gradient-web',
+    bgImage: '/3dasset/web-development-bg.png',
   },
   {
     icon: Video,
@@ -72,6 +77,7 @@ const services = [
     description: 'From scroll-stopping videos to blogs that rank, content that drives real action.',
     features: ['Video Production', 'Copywriting', 'Photography', 'Email Campaigns'],
     colorClass: 'v2-gradient-content',
+    bgImage: '/3dasset/content-production-bg.png',
   },
 ];
 
@@ -85,15 +91,38 @@ function ServiceCard({
 }) {
   const Icon = service.icon;
   const isMobile = variant === 'mobile';
+  const hasBgImage = !!service.bgImage;
 
   return (
     <div className="relative v2-paper-static rounded-2xl h-full flex flex-col overflow-hidden">
       {/* Gradient header with icon */}
       <div
         className={`relative ${service.colorClass} ${
-          isMobile ? 'px-5 pt-5 pb-4 sm:px-6 sm:pt-6' : 'px-7 pt-7 pb-6 lg:px-8 lg:pt-8'
+          isMobile
+            ? hasBgImage ? 'px-5 pt-5 pb-4 sm:px-6 sm:pt-6' : 'px-5 pt-5 pb-4 sm:px-6 sm:pt-6'
+            : hasBgImage ? 'px-7 pt-7 pb-6 lg:px-8 lg:pt-8' : 'px-7 pt-7 pb-6 lg:px-8 lg:pt-8'
         }`}
+        style={hasBgImage ? { minHeight: isMobile ? '160px' : '200px' } : undefined}
       >
+        {/* Background image (if provided) */}
+        {service.bgImage && (
+          <div className="absolute inset-0 pointer-events-none overflow-hidden">
+            <img
+              src={service.bgImage}
+              alt=""
+              style={{
+                opacity: 0.25,
+                mixBlendMode: 'luminosity',
+                width: isMobile ? '70%' : '65%',
+                height: 'auto',
+                position: 'absolute',
+                right: '-5%',
+                top: '50%',
+                transform: 'translateY(-50%)',
+              }}
+            />
+          </div>
+        )}
         {/* Decorative circles */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div
@@ -303,13 +332,13 @@ export function ServicesSectionV2() {
           <div className="max-w-3xl mx-auto" style={{ textAlign: 'center' }}>
             <div className="reveal-item v2-badge v2-badge-glass mb-6">
               <Sparkles className="w-4 h-4 v2-text-primary" />
-              <span className="v2-text-primary">What We Do Best</span>
+              <span className="v2-text-primary">Our Core Services</span>
             </div>
             <h2 className="reveal-item font-display text-3xl sm:text-4xl md:text-5xl font-bold v2-text-primary mb-6 leading-tight">
-              Services That <span className="v2-accent">Actually Deliver</span>
+              Full-Service Marketing That <span className="v2-accent">Drives Growth</span>
             </h2>
             <p className="reveal-item text-base md:text-lg lg:text-xl v2-text-secondary leading-relaxed">
-              Battle-tested strategies that drive real business growth for ambitious brands.
+              From brand strategy to performance marketing, everything your brand needs to grow — under one roof.
             </p>
           </div>
         </div>
@@ -357,7 +386,7 @@ export function ServicesSectionV2() {
                 Ready to see what we can do for you?
               </h3>
               <p className="text-fm-neutral-600 text-lg max-w-xl mx-auto leading-relaxed" style={{ marginBottom: '36px' }}>
-                Get a free strategy session and discover how we can transform your digital presence.
+                Get a free strategy session and discover how we can accelerate your business growth.
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 <MagneticButton as="a" href="/get-started" strength={0.3} className="v2-btn v2-btn-magenta group">
@@ -381,13 +410,13 @@ export function ServicesSectionV2() {
         <div className="max-w-3xl mx-auto" style={{ textAlign: 'center' }}>
           <div className="reveal-item v2-badge v2-badge-glass mb-6">
             <Sparkles className="w-4 h-4 v2-text-primary" />
-            <span className="v2-text-primary">What We Do Best</span>
+            <span className="v2-text-primary">Our Core Services</span>
           </div>
           <h2 className="reveal-item font-display text-4xl md:text-5xl lg:text-6xl font-bold v2-text-primary mb-6 leading-tight">
-            Services That <span className="v2-accent">Actually Deliver</span>
+            Full-Service Marketing That <span className="v2-accent">Drives Growth</span>
           </h2>
           <p className="reveal-item text-lg md:text-xl v2-text-secondary leading-relaxed max-w-2xl mx-auto">
-            Battle-tested strategies that drive real business growth for ambitious brands.
+            From brand strategy to performance marketing, everything your brand needs to grow — under one roof.
           </p>
         </div>
       </div>
@@ -424,7 +453,7 @@ export function ServicesSectionV2() {
             }}
           >
             <div className="flex items-center gap-4">
-              <div className="flex-1 h-[2px] bg-white/10 rounded-full overflow-hidden">
+              <div className="flex-1 h-[2px] rounded-full overflow-hidden" style={{ background: 'rgba(201, 50, 93, 0.15)' }}>
                 <div
                   className="h-full rounded-full transition-[width] duration-100 ease-linear"
                   style={{
@@ -433,7 +462,7 @@ export function ServicesSectionV2() {
                   }}
                 />
               </div>
-              <span className="text-xs text-white/40 tabular-nums font-medium min-w-[3ch]">
+              <span className="text-xs v2-text-muted tabular-nums font-medium min-w-[3ch]">
                 {Math.min(Math.round(scrollProgress * services.length) + 1, services.length)}/{services.length}
               </span>
             </div>
@@ -456,7 +485,7 @@ export function ServicesSectionV2() {
               Ready to see what we can do for you?
             </h3>
             <p className="text-fm-neutral-600 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed" style={{ marginBottom: '48px' }}>
-              Get a free strategy session and discover how we can transform your digital presence.
+              Get a free strategy session and discover how we can accelerate your business growth.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-5">
               <MagneticButton as="a" href="/get-started" strength={0.3} className="v2-btn v2-btn-magenta group">

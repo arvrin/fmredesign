@@ -33,7 +33,7 @@ export function ContactInfo({
   contactInfo,
   quickActions = {
     phone: "+91 99999 99999",
-    email: "hello@freakingminds.in",
+    email: "freakingmindsdigital@gmail.com",
     whatsapp: "+91 99999 99999"
   },
   title = "Get in Touch",

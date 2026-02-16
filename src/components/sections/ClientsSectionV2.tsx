@@ -208,19 +208,19 @@ export function ClientsSectionV2() {
             </div>
 
             <h2 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold v2-text-primary mb-6 leading-tight">
-              Join 100+ Brands{' '}
-              <span className="v2-accent">Growing With Us</span>
+              Trusted by 100+ Brands{' '}
+              <span className="v2-accent">Worldwide</span>
             </h2>
 
             <p className="text-lg md:text-xl v2-text-secondary leading-relaxed">
-              From ambitious startups to established enterprises, we help brands
+              From ambitious startups to global enterprises, we help brands
               achieve extraordinary results.
             </p>
           </div>
 
           {/* Stats Row */}
           <div ref={statsRef} className="mb-16 max-w-3xl mx-auto">
-            <div className="rounded-2xl p-4 md:p-5" style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
+            <div className="rounded-2xl p-4 md:p-5" style={{ background: 'rgba(255,255,255,0.6)', border: '1px solid rgba(201, 50, 93, 0.1)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
                 {stats.map((stat) => {
                   const Icon = stat.icon;
@@ -304,11 +304,13 @@ export function ClientsSectionV2() {
         style={{ bottom: '-120px' }}
       >
         <img
-          src="/3dasset/brain-celebrating.png"
-          alt="Success Stories"
-          className="w-56 lg:w-72 drop-shadow-2xl animate-v2-clients-float"
+          src="/3dasset/brain-creative.png"
+          alt="Creative Energy"
+          className="animate-v2-clients-float"
           style={{
-            filter: 'drop-shadow(0 30px 60px rgba(0,0,0,0.4))',
+            width: 'min(288px, 45vw)',
+            height: 'auto',
+            filter: 'drop-shadow(0 30px 60px rgba(140,25,60,0.25))',
           }}
         />
       </div>

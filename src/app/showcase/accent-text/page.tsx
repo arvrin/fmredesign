@@ -320,12 +320,12 @@ export default function AccentTextShowcase() {
             0 0 60px rgba(0,255,255,0.15);
         }
         /* ═══════════════════════════════════════════════════════
-           BRAND MAGENTA CORE (#c9325d) VARIATIONS
+           BRAND MAGENTA CORE (#8c1d4a) VARIATIONS
            ═══════════════════════════════════════════════════════ */
 
         /* 17. Brand magenta core, cyan left, black right */
         .g17 {
-          color: #c9325d;
+          color: #8c1d4a;
           text-shadow:
             -4px 0 rgba(0,255,255,0.9),
             4px 0 rgba(0,0,0,0.8),
@@ -341,7 +341,7 @@ export default function AccentTextShowcase() {
 
         /* 18. Brand magenta core, neon white halo */
         .g18 {
-          color: #c9325d;
+          color: #8c1d4a;
           text-shadow:
             0 0 10px rgba(255,255,255,0.9),
             0 0 30px rgba(255,255,255,0.5),
@@ -357,7 +357,7 @@ export default function AccentTextShowcase() {
 
         /* 19. Brand magenta core, lime left, violet right */
         .g19 {
-          color: #c9325d;
+          color: #8c1d4a;
           text-shadow:
             -4px 0 rgba(0,255,65,0.9),
             4px 0 rgba(140,0,255,0.85),
@@ -372,7 +372,7 @@ export default function AccentTextShowcase() {
 
         /* 20. Brand magenta core, cyan neon glow + black edge */
         .g20 {
-          color: #c9325d;
+          color: #8c1d4a;
           text-shadow:
             -3px 0 rgba(0,0,0,0.7),
             0 0 12px rgba(0,255,255,0.8),
@@ -389,7 +389,7 @@ export default function AccentTextShowcase() {
 
         /* 21. Brand magenta core, yellow + cyan stutter burst */
         .g21 {
-          color: #c9325d;
+          color: #8c1d4a;
           text-shadow:
             -3px 0 rgba(255,255,0,0.8),
             3px 0 rgba(0,255,255,0.7),
@@ -407,7 +407,7 @@ export default function AccentTextShowcase() {
 
         /* 22. Brand magenta core, double vision white */
         .g22 {
-          color: #c9325d;
+          color: #8c1d4a;
           text-shadow:
             5px 4px 5px rgba(255,255,255,0.5),
             -3px -3px 0 rgba(255,255,255,0.3),
@@ -417,7 +417,7 @@ export default function AccentTextShowcase() {
 
         /* 23. Brand magenta core, diagonal red + blue */
         .g23 {
-          color: #c9325d;
+          color: #8c1d4a;
           text-shadow:
             -4px -3px rgba(255,0,0,0.85),
             4px 3px rgba(0,120,255,0.85),
@@ -433,7 +433,7 @@ export default function AccentTextShowcase() {
 
         /* 24. Brand magenta core, chromatic aberration: white left, cyan right */
         .g24 {
-          color: #c9325d;
+          color: #8c1d4a;
           text-shadow:
             -5px 0 rgba(255,255,255,0.8),
             5px 0 rgba(0,255,255,0.85),
@@ -449,7 +449,7 @@ export default function AccentTextShowcase() {
 
         /* 25. Brand magenta core, VHS scanlines with yellow + black */
         .g25 {
-          color: #c9325d;
+          color: #8c1d4a;
           background:
             repeating-linear-gradient(0deg, transparent 0px, transparent 2px, rgba(0,0,0,0.2) 2px, rgba(0,0,0,0.2) 4px);
           -webkit-background-clip: text;
@@ -469,7 +469,7 @@ export default function AccentTextShowcase() {
 
         /* 26. Brand magenta core, ultra violet halo + cyan edge */
         .g26 {
-          color: #c9325d;
+          color: #8c1d4a;
           text-shadow:
             -3px 0 rgba(0,255,255,0.7),
             0 0 12px rgba(140,0,255,0.9),
@@ -486,7 +486,7 @@ export default function AccentTextShowcase() {
 
         /* 27. Brand magenta core, rapid flicker white + black */
         .g27 {
-          color: #c9325d;
+          color: #8c1d4a;
           text-shadow:
             -3px 0 rgba(255,255,255,0.85),
             3px 0 rgba(0,0,0,0.8),
@@ -502,7 +502,7 @@ export default function AccentTextShowcase() {
 
         /* 28. Brand magenta core, static tri-glow — no animation */
         .g28 {
-          color: #c9325d;
+          color: #8c1d4a;
           text-shadow:
             -5px 0 rgba(0,255,255,0.85),
             5px 0 rgba(255,255,0,0.8),

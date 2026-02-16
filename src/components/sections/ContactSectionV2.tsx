@@ -110,7 +110,6 @@ export function ContactSectionV2() {
 
       // Contact bar with staggered icons
       if (contactBarRef.current) {
-        const contactItems = contactBarRef.current.querySelectorAll('.contact-item');
         const icons = contactBarRef.current.querySelectorAll('.contact-icon');
 
         gsap.from(contactBarRef.current, {
@@ -148,22 +147,36 @@ export function ContactSectionV2() {
   return (
     <section
       ref={sectionRef}
-      className="relative overflow-hidden"
+      className="relative"
       style={{
         transformStyle: 'preserve-3d',
         perspective: '1000px',
+        overflowX: 'clip',
       }}
     >
-      {/* Ambient Gradient Orbs */}
+      {/* Subtle top divider */}
+      <div
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: '10%',
+          right: '10%',
+          height: '1px',
+          background: 'linear-gradient(90deg, transparent, rgba(201,50,93,0.15), transparent)',
+          pointerEvents: 'none',
+        }}
+      />
+
+      {/* Ambient Gradient Orbs — tuned for light bg */}
       <GradientOrb
-        color="rgba(201, 50, 93, 0.2)"
+        color="rgba(160, 30, 70, 0.22)"
         size={700}
         blur={100}
         position={{ top: '-300px', right: '-200px' }}
         drift={30}
       />
       <GradientOrb
-        color="rgba(160, 30, 70, 0.15)"
+        color="rgba(140, 25, 60, 0.18)"
         size={500}
         blur={80}
         position={{ bottom: '-150px', left: '-100px' }}
@@ -180,35 +193,45 @@ export function ContactSectionV2() {
             {/* Left: Content */}
             <div ref={contentRef}>
               {/* Badge */}
-              <div className="contact-badge v2-badge v2-badge-glass mb-8">
-                <Sparkles className="w-4 h-4 v2-text-primary" />
-                <span className="v2-text-primary">
-                  Ready to Transform Your Brand?
-                </span>
+              <div
+                className="contact-badge v2-badge v2-badge-light"
+                style={{ marginBottom: '32px' }}
+              >
+                <Sparkles className="w-4 h-4 text-fm-magenta-600" />
+                <span>Ready to Grow Your Brand?</span>
               </div>
 
               {/* Main Headline */}
-              <h2 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold v2-text-primary mb-6 leading-tight">
-                Let's Create{' '}
+              <h2
+                className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-fm-neutral-900 leading-tight"
+                style={{ marginBottom: '24px' }}
+              >
+                Let&apos;s Build Your{' '}
                 <span className="relative inline-block">
-                  <span className="relative z-10">Magic</span>
-                  <span className="absolute inset-0 bg-white/20 -skew-y-2 rounded-lg -z-0" />
+                  <span className="relative z-10 text-fm-magenta-600">Next Chapter</span>
+                  <span
+                    className="absolute inset-0 -skew-y-2 rounded-lg"
+                    style={{ background: 'rgba(201, 50, 93, 0.18)', zIndex: 0 }}
+                  />
                 </span>{' '}
                 Together
               </h2>
 
-              <p className="subtitle text-lg md:text-xl v2-text-secondary mb-10 leading-relaxed">
-                Whether you're launching a startup or scaling an enterprise,
-                we're here to make your brand unforgettable. No pressure, just possibilities.
+              <p
+                className="subtitle text-lg md:text-xl text-fm-neutral-600 leading-relaxed"
+                style={{ marginBottom: '40px' }}
+              >
+                Whether you&apos;re launching a startup or scaling an enterprise,
+                we&apos;re here to drive real, measurable growth. No pressure, just possibilities.
               </p>
 
-              {/* CTAs */}
-              <div className="flex flex-col sm:flex-row gap-4 mb-10">
+              {/* CTAs — light background variants */}
+              <div className="flex flex-col sm:flex-row gap-4" style={{ marginBottom: '40px' }}>
                 <MagneticButton
                   as="a"
                   href="/get-started"
                   strength={0.3}
-                  className="cta-btn v2-btn v2-btn-primary group"
+                  className="cta-btn v2-btn v2-btn-magenta group"
                 >
                   Start Your Project
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -218,7 +241,7 @@ export function ContactSectionV2() {
                   as="a"
                   href="tel:+919833257659"
                   strength={0.25}
-                  className="cta-btn v2-btn v2-btn-secondary"
+                  className="cta-btn v2-btn v2-btn-outline"
                 >
                   <Phone className="w-5 h-5" />
                   Call Us Now
@@ -230,8 +253,8 @@ export function ContactSectionV2() {
                 {quickFacts.map((fact) => {
                   const Icon = fact.icon;
                   return (
-                    <div key={fact.text} className="quick-fact flex items-center gap-2 v2-text-secondary">
-                      <Icon className="w-4 h-4" />
+                    <div key={fact.text} className="quick-fact flex items-center gap-2 text-fm-neutral-600">
+                      <Icon className="w-4 h-4 text-fm-magenta-600" />
                       <span className="text-sm font-medium">{fact.text}</span>
                     </div>
                   );
@@ -244,12 +267,12 @@ export function ContactSectionV2() {
               ref={mascotRef}
               className="relative flex items-center justify-center"
             >
-              {/* Glow Effect Behind Mascot */}
+              {/* Glow Effect Behind Mascot — magenta tint for light bg */}
               <div
-                className="absolute w-[400px] h-[400px] rounded-full opacity-40"
+                className="absolute w-[400px] h-[400px] rounded-full"
                 style={{
-                  background: 'radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%)',
-                  filter: 'blur(40px)',
+                  background: 'radial-gradient(circle, rgba(180,35,75,0.2) 0%, rgba(201,50,93,0.08) 50%, transparent 70%)',
+                  filter: 'blur(25px)',
                 }}
               />
 
@@ -258,10 +281,11 @@ export function ContactSectionV2() {
                 <img
                   src="/3dasset/brain-support.png"
                   alt="We're Here to Help"
-                  loading="lazy"
-                  className="relative w-48 sm:w-64 md:w-80 lg:w-[420px] max-w-full drop-shadow-2xl"
+                  className="relative max-w-full"
                   style={{
-                    filter: 'drop-shadow(0 40px 80px rgba(0,0,0,0.4))',
+                    width: 'min(420px, 80vw)',
+                    height: 'auto',
+                    filter: 'drop-shadow(0 25px 50px rgba(140,25,60,0.25))',
                   }}
                 />
               </FloatingElement>
@@ -271,7 +295,8 @@ export function ContactSectionV2() {
           {/* Contact Info Bar */}
           <div
             ref={contactBarRef}
-            className="mt-20 v2-paper rounded-2xl p-6"
+            className="v2-paper rounded-2xl p-6"
+            style={{ marginTop: '80px' }}
           >
             <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6 text-center sm:text-left">
               {/* Email */}
@@ -281,8 +306,8 @@ export function ContactSectionV2() {
                 </div>
                 <div>
                   <div className="text-fm-neutral-400 text-xs uppercase tracking-wide">Email</div>
-                  <a href="mailto:hello@freakingminds.in" className="text-fm-neutral-900 font-medium hover:text-fm-magenta-600 transition-colors">
-                    hello@freakingminds.in
+                  <a href="mailto:freakingmindsdigital@gmail.com" className="text-fm-neutral-900 font-medium hover:text-fm-magenta-600 transition-colors">
+                    freakingmindsdigital@gmail.com
                   </a>
                 </div>
               </div>
@@ -307,7 +332,7 @@ export function ContactSectionV2() {
                 </div>
                 <div>
                   <div className="text-fm-neutral-400 text-xs uppercase tracking-wide">Location</div>
-                  <span className="text-fm-neutral-900 font-medium">Bhopal, India</span>
+                  <span className="text-fm-neutral-900 font-medium">India & Worldwide</span>
                 </div>
               </div>
             </div>

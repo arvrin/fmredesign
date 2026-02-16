@@ -50,14 +50,14 @@ const contactInfo = [
   {
     icon: Mail,
     title: 'Email',
-    details: 'hello@freakingminds.in',
+    details: 'freakingmindsdigital@gmail.com',
     subtitle: 'We reply within 24 hours',
   },
   {
     icon: MapPin,
     title: 'Office',
-    details: 'Bhopal, Madhya Pradesh',
-    subtitle: 'Available for meetings',
+    details: 'India & Worldwide',
+    subtitle: 'Remote & in-person',
   },
   {
     icon: Clock,

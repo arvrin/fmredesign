@@ -20,12 +20,12 @@ const extendedContent: Record<number, string[]> = {
   3: ['Logo design', 'Brand guidelines', 'Marketing collateral', 'Digital asset creation'],
 };
 
-// Feature-specific shadow colors
+// Feature-specific shadow colors (updated to new brand #8c1d4a)
 const shadowColors: Record<string, string> = {
   'v2-gradient-seo': 'rgba(255, 127, 80, 0.3)',
-  'v2-gradient-social': 'rgba(201, 50, 93, 0.3)',
-  'v2-gradient-performance': 'rgba(168, 37, 72, 0.3)',
-  'v2-gradient-brand': 'rgba(201, 50, 93, 0.3)',
+  'v2-gradient-social': 'rgba(140, 29, 74, 0.3)',
+  'v2-gradient-performance': 'rgba(140, 29, 74, 0.25)',
+  'v2-gradient-brand': 'rgba(140, 29, 74, 0.3)',
 };
 
 const features = [
@@ -41,7 +41,7 @@ const features = [
     gradientClass: 'v2-gradient-seo',
     accentClass: 'text-fm-orange-400',
     ctaLink: '/services#seo',
-    bgColor: '#1a0f24',
+    bgColor: '#1c0e16',
   },
   {
     icon: Megaphone,
@@ -55,7 +55,7 @@ const features = [
     gradientClass: 'v2-gradient-social',
     accentClass: 'text-fm-magenta-400',
     ctaLink: '/services#social',
-    bgColor: '#2d1a3d',
+    bgColor: '#22101a',
   },
   {
     icon: BarChart3,
@@ -69,7 +69,7 @@ const features = [
     gradientClass: 'v2-gradient-performance',
     accentClass: 'text-fm-magenta-400',
     ctaLink: '/services#performance',
-    bgColor: '#3d2249',
+    bgColor: '#2a1220',
   },
   {
     icon: Palette,
@@ -83,7 +83,7 @@ const features = [
     gradientClass: 'v2-gradient-brand',
     accentClass: 'text-fm-magenta-400',
     ctaLink: '/services#branding',
-    bgColor: '#2a1735',
+    bgColor: '#1f0f18',
   },
 ];
 
@@ -92,8 +92,8 @@ const isMetricHighlight = (text: string): boolean => {
   return /\d+%|\d+x/i.test(text);
 };
 
-// Animated metric component
-function AnimatedMetric({ text, isVisible }: { text: string; isVisible: boolean; index: number }) {
+// Animated metric component — Fix #2: removed unused `index` from type
+function AnimatedMetric({ text, isVisible }: { text: string; isVisible: boolean }) {
   const parsed = parseMetric(text);
   const count = useCountUp(parsed?.number || 0, 2000, true, isVisible);
 
@@ -107,17 +107,22 @@ function AnimatedMetric({ text, isVisible }: { text: string; isVisible: boolean;
 }
 
 export function FeaturesSectionV2() {
-  const [activeCard, setActiveCard] = useState(0);
   const [visibleFeatures, setVisibleFeatures] = useState<number[]>([0]);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
   const [imagesLoaded, setImagesLoaded] = useState<Set<number>>(new Set());
   const [expandedFeature, setExpandedFeature] = useState<number | null>(null);
   const [clickedMascot, setClickedMascot] = useState<number | null>(null);
   const [isMobile, setIsMobile] = useState(true);
-  const [cardOffsets, setCardOffsets] = useState<number[]>(features.map((_, i) => i === 0 ? 0 : 100));
+  const [sectionState, setSectionState] = useState<'before' | 'during' | 'after'>('before');
+  const [mobileActiveIndex, setMobileActiveIndex] = useState(0);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const mobileSectionRef = useRef<HTMLElement>(null);
+  const mobileScrollRef = useRef<HTMLDivElement>(null);
+  // Refs for direct DOM manipulation (bypass React re-renders during scroll)
+  const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const sectionStateRef = useRef<'before' | 'during' | 'after'>('before');
+  const visibleFeaturesRef = useRef<Set<number>>(new Set([0]));
 
   // Detect mobile
   useEffect(() => {
@@ -136,10 +141,25 @@ export function FeaturesSectionV2() {
     return () => mediaQuery.removeEventListener('change', handler);
   }, []);
 
-  // Position state: 'before' | 'during' | 'after'
-  const [sectionState, setSectionState] = useState<'before' | 'during' | 'after'>('before');
+  // Fix #7: Track mobile scroll position for dot indicators
+  useEffect(() => {
+    if (!isMobile || !mobileScrollRef.current) return;
 
-  // Main scroll handler for stacking effect
+    const scrollEl = mobileScrollRef.current;
+    const handleScroll = () => {
+      const scrollLeft = scrollEl.scrollLeft;
+      const cardWidth = scrollEl.firstElementChild
+        ? (scrollEl.firstElementChild as HTMLElement).offsetWidth + 20 // 20 = gap
+        : 340;
+      const index = Math.round(scrollLeft / cardWidth);
+      setMobileActiveIndex(Math.min(index, features.length - 1));
+    };
+
+    scrollEl.addEventListener('scroll', handleScroll, { passive: true });
+    return () => scrollEl.removeEventListener('scroll', handleScroll);
+  }, [isMobile]);
+
+  // Main scroll handler — direct DOM manipulation to avoid React re-renders per frame
   useEffect(() => {
     if (isMobile || prefersReducedMotion || !containerRef.current) return;
 
@@ -151,70 +171,76 @@ export function FeaturesSectionV2() {
       const windowHeight = window.innerHeight;
       const containerHeight = container.offsetHeight;
 
-      // Calculate scroll progress through the section
-      // scrollProgress = 0 when top of container hits top of viewport
-      // scrollProgress = containerHeight - windowHeight when bottom of container hits bottom of viewport
       const scrollProgress = -rect.top;
       const maxScroll = containerHeight - windowHeight;
 
       // Determine section state
+      let newState: 'before' | 'during' | 'after';
       if (scrollProgress < 0) {
-        // Haven't reached the section yet
-        setSectionState('before');
-        setCardOffsets(features.map((_, i) => i === 0 ? 0 : 100));
-        return;
+        newState = 'before';
       } else if (scrollProgress > maxScroll) {
-        // Scrolled past the section
-        setSectionState('after');
-        setCardOffsets(features.map(() => 0)); // All cards visible
-        return;
+        newState = 'after';
+      } else {
+        newState = 'during';
       }
 
-      // We're IN the section
-      setSectionState('during');
+      // Only trigger React re-render when state actually changes
+      if (newState !== sectionStateRef.current) {
+        sectionStateRef.current = newState;
+        setSectionState(newState);
+      }
 
-      // Divide scroll distance among cards (excluding first card which is always visible)
+      // Calculate and apply card transforms directly to DOM (no React re-render)
       const scrollPerCard = maxScroll / (features.length - 1);
 
-      // Calculate card offsets
-      const newOffsets = features.map((_, index) => {
-        if (index === 0) return 0; // First card always at 0
+      features.forEach((_, index) => {
+        const card = cardRefs.current[index];
+        if (!card) return;
 
-        const cardScrollStart = (index - 1) * scrollPerCard;
-        const cardScrollEnd = index * scrollPerCard;
-
-        if (scrollProgress <= cardScrollStart) {
-          return 100; // Card is below viewport
-        } else if (scrollProgress >= cardScrollEnd) {
-          return 0; // Card is fully in view
+        let offset: number;
+        if (newState === 'before') {
+          offset = index === 0 ? 0 : 100;
+        } else if (newState === 'after') {
+          offset = 0;
         } else {
-          // Card is animating
-          const progress = (scrollProgress - cardScrollStart) / scrollPerCard;
-          return Math.round((1 - progress) * 100);
+          if (index === 0) {
+            offset = 0;
+          } else {
+            const cardScrollStart = (index - 1) * scrollPerCard;
+            const cardScrollEnd = index * scrollPerCard;
+            if (scrollProgress <= cardScrollStart) {
+              offset = 100;
+            } else if (scrollProgress >= cardScrollEnd) {
+              offset = 0;
+            } else {
+              const progress = (scrollProgress - cardScrollStart) / scrollPerCard;
+              offset = Math.round((1 - progress) * 100);
+            }
+          }
+        }
+
+        card.style.transform = `translateY(${offset}%)`;
+        card.style.willChange = newState === 'during' ? 'transform' : 'auto';
+
+        // Track visible features via ref — only setState when a genuinely new card appears
+        if (offset < 50 && !visibleFeaturesRef.current.has(index)) {
+          visibleFeaturesRef.current.add(index);
+          setVisibleFeatures(Array.from(visibleFeaturesRef.current));
         }
       });
-
-      setCardOffsets(newOffsets);
-
-      // Track visible features for animations
-      const currentCard = Math.min(features.length - 1, Math.floor(scrollProgress / scrollPerCard) + 1);
-      setActiveCard(currentCard);
-      if (!visibleFeatures.includes(currentCard)) {
-        setVisibleFeatures(prev => [...prev, currentCard]);
-      }
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     handleScroll();
 
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [isMobile, prefersReducedMotion, visibleFeatures]);
+  }, [isMobile, prefersReducedMotion]);
 
-  // Handle mascot click animation
+  // Fix #8: Enhanced mascot click with wobble
   const handleMascotClick = useCallback((index: number) => {
     if (prefersReducedMotion) return;
     setClickedMascot(index);
-    setTimeout(() => setClickedMascot(null), 500);
+    setTimeout(() => setClickedMascot(null), 600);
   }, [prefersReducedMotion]);
 
   // Handle image load
@@ -244,20 +270,21 @@ export function FeaturesSectionV2() {
   // Mobile Layout - Horizontal scroll cards
   if (isMobile || prefersReducedMotion) {
     return (
-      <section ref={mobileSectionRef} className="relative z-10 py-16 md:py-24" aria-labelledby="features-heading">
+      <section ref={mobileSectionRef} className="relative z-10 v2-section" aria-labelledby="features-heading">
         <div className="v2-container mb-10">
           <div className="max-w-3xl mx-auto" style={{ textAlign: 'center' }}>
             <h2 id="features-heading" className="font-display text-3xl md:text-4xl font-bold v2-text-primary mb-4 leading-tight">
-              How We <span className="v2-accent">Make It Happen</span>
+              Why Brands <span className="v2-accent">Choose Us</span>
             </h2>
             <p className="text-base v2-text-secondary leading-relaxed">
-              Every service is designed to deliver real, measurable impact for your business.
+              Every engagement is designed to deliver real, measurable impact for your business.
             </p>
           </div>
         </div>
 
         <div className="pb-20 mobile-scroll-track">
           <div
+            ref={mobileScrollRef}
             className="flex gap-5 overflow-x-auto hide-scrollbar pb-4"
             style={{
               paddingLeft: 'max(1rem, calc((100vw - 1280px) / 2 + 1.5rem))',
@@ -275,11 +302,12 @@ export function FeaturesSectionV2() {
               return (
                 <article
                   key={feature.title}
-                  className="feature-card-mobile flex-shrink-0 relative rounded-2xl border border-white/10 overflow-hidden flex flex-col"
+                  className="feature-card-mobile flex-shrink-0 relative rounded-2xl border overflow-hidden flex flex-col"
                   style={{
                     width: 'min(320px, 85vw)',
                     scrollSnapAlign: 'start',
                     backgroundColor: feature.bgColor,
+                    borderColor: 'rgba(140, 29, 74, 0.2)',
                   }}
                 >
                   {/* Brain mascot */}
@@ -310,23 +338,23 @@ export function FeaturesSectionV2() {
                       <div className={`w-5 h-5 rounded ${feature.gradientClass} flex items-center justify-center`}>
                         <Icon className={`w-3 h-3 ${feature.accentClass}`} />
                       </div>
-                      <span className="v2-text-secondary text-xs font-medium">{feature.tagline}</span>
+                      <span className="text-white/70 text-xs font-medium">{feature.tagline}</span>
                     </div>
 
                     {/* Title */}
-                    <h3 className="font-display text-xl font-bold v2-text-primary leading-tight" style={{ marginBottom: '8px' }}>
+                    <h3 className="font-display text-xl font-bold text-white leading-tight" style={{ marginBottom: '8px' }}>
                       {feature.title}
                     </h3>
 
                     {/* Description - 3 line clamp */}
-                    <p className="text-sm v2-text-tertiary leading-relaxed line-clamp-3" style={{ marginBottom: '12px' }}>
+                    <p className="text-sm text-white/60 leading-relaxed line-clamp-3" style={{ marginBottom: '12px' }}>
                       {feature.description}
                     </p>
 
                     {/* Highlight pills */}
                     <div className="flex flex-wrap gap-2" style={{ marginBottom: '16px' }}>
                       {feature.highlights.map((highlight) => (
-                        <div key={highlight} className="px-3 py-1 rounded-full bg-white/10 border border-white/15 text-xs font-medium v2-text-primary">
+                        <div key={highlight} className="px-3 py-1 rounded-full bg-white/10 border border-white/15 text-xs font-medium text-white">
                           {highlight}
                         </div>
                       ))}
@@ -348,6 +376,27 @@ export function FeaturesSectionV2() {
               );
             })}
           </div>
+
+          {/* Fix #7: Mobile scroll dot indicators */}
+          <div className="flex justify-center gap-2 mt-5">
+            {features.map((_, i) => (
+              <button
+                key={i}
+                className="w-2 h-2 rounded-full transition-all duration-300"
+                style={{
+                  backgroundColor: i === mobileActiveIndex ? '#8c1d4a' : 'rgba(140, 29, 74, 0.25)',
+                  transform: i === mobileActiveIndex ? 'scale(1.3)' : 'scale(1)',
+                }}
+                onClick={() => {
+                  if (mobileScrollRef.current) {
+                    const cardEl = mobileScrollRef.current.children[i] as HTMLElement;
+                    cardEl?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' });
+                  }
+                }}
+                aria-label={`Go to card ${i + 1}: ${features[i].tagline}`}
+              />
+            ))}
+          </div>
         </div>
       </section>
     );
@@ -355,24 +404,24 @@ export function FeaturesSectionV2() {
 
   // Desktop Layout - Stacking Cards with JS-controlled transforms
   return (
-    <section className="relative z-10" aria-labelledby="features-heading">
+    <section className="relative z-10" aria-labelledby="features-heading" style={{ contain: 'layout style' }}>
       {/* Section Header */}
-      <div className="v2-container py-20 lg:py-28">
+      <div className="v2-container" style={{ paddingTop: 'var(--v2-section-padding)', paddingBottom: 'var(--v2-section-padding)' }}>
         <div className="max-w-3xl mx-auto" style={{ textAlign: 'center' }}>
           <h2 id="features-heading" className="font-display text-4xl md:text-5xl lg:text-6xl font-bold v2-text-primary mb-6 leading-tight">
-            How We <span className="v2-accent">Make It Happen</span>
+            Why Brands <span className="v2-accent">Choose Us</span>
           </h2>
           <p className="text-lg md:text-xl v2-text-secondary leading-relaxed">
-            Every service is designed to deliver real, measurable impact for your business.
+            Every engagement is designed to deliver real, measurable impact for your business.
           </p>
         </div>
       </div>
 
-      {/* Stacking Cards Container */}
+      {/* Fix #4: Reduced from 100vh to 80vh per card — less scroll fatigue */}
       <div
         ref={containerRef}
         className="relative"
-        style={{ height: `${features.length * 100}vh` }}
+        style={{ height: `${features.length * 80}vh` }}
       >
         {/* Cards viewport - fixed during scroll, absolute at start/end */}
         <div
@@ -391,19 +440,18 @@ export function FeaturesSectionV2() {
             const isEven = index % 2 === 0;
             const Icon = feature.icon;
             const shadowColor = shadowColors[feature.gradientClass] || 'rgba(0,0,0,0.4)';
-            const offset = cardOffsets[index];
 
             return (
               <div
                 key={feature.title}
+                ref={(el) => { cardRefs.current[index] = el; }}
                 className="absolute inset-x-4 md:inset-x-8 lg:inset-x-16 top-8 bottom-8 rounded-3xl lg:rounded-[2.5rem] overflow-hidden"
                 style={{
                   backgroundColor: feature.bgColor,
                   zIndex: index + 1,
-                  transform: `translateY(${offset}%)`,
-                  transition: 'transform 0.05s linear',
-                  boxShadow: '0 25px 80px rgba(0,0,0,0.4), 0 10px 30px rgba(0,0,0,0.3), 0 0 0 1.5px rgba(201, 50, 93, 0.35)',
-                  border: '1px solid rgba(201, 50, 93, 0.25)',
+                  transform: `translateY(${index === 0 ? 0 : 100}%)`,
+                  boxShadow: '0 25px 80px rgba(0,0,0,0.4), 0 10px 30px rgba(0,0,0,0.3), 0 0 0 1.5px rgba(140, 29, 74, 0.35)',
+                  border: '1px solid rgba(140, 29, 74, 0.25)',
                 }}
               >
                 {/* Dot pattern */}
@@ -430,7 +478,7 @@ export function FeaturesSectionV2() {
                       <div className={`order-1 lg:order-none relative flex items-center justify-center py-4 lg:py-0 ${isEven ? '' : 'lg:col-start-1 lg:row-start-1'}`}>
                         <div
                           className={`absolute w-[200px] h-[200px] md:w-[280px] md:h-[280px] lg:w-[350px] lg:h-[350px] rounded-full opacity-40 ${feature.gradientClass}`}
-                          style={{ filter: 'blur(60px)' }}
+                          style={{ filter: 'blur(40px)' }}
                         />
                         <div
                           className="mascot-wrapper relative cursor-pointer"
@@ -440,16 +488,19 @@ export function FeaturesSectionV2() {
                           aria-label={`Click to interact with ${feature.mascotAlt}`}
                           onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleMascotClick(index); }}
                         >
+                          {/* Fix #8: Enhanced mascot click with wobble + scale */}
                           <Image
                             src={feature.mascot}
                             alt={feature.mascotAlt}
                             width={320}
                             height={320}
-                            className={`w-48 sm:w-56 md:w-64 lg:w-80 transition-all duration-300 ${imagesLoaded.has(index) ? 'opacity-100' : 'opacity-0'} ${clickedMascot === index ? 'scale-110' : ''}`}
+                            className={`w-48 sm:w-56 md:w-64 lg:w-80 transition-all duration-300 ${imagesLoaded.has(index) ? 'opacity-100' : 'opacity-0'}`}
                             style={{
                               filter: `drop-shadow(0 20px 40px ${shadowColor})`,
-                              animation: 'featureFloat 6s ease-in-out infinite',
-                              animationDelay: `${index * 0.5}s`,
+                              animation: clickedMascot === index
+                                ? 'mascotWobble 0.6s ease-out'
+                                : 'featureFloat 6s ease-in-out infinite',
+                              animationDelay: clickedMascot === index ? '0s' : `${index * 0.5}s`,
                             }}
                             onLoad={() => handleImageLoad(index)}
                             loading="eager"
@@ -479,24 +530,26 @@ export function FeaturesSectionV2() {
                           {feature.highlights.map((highlight, hIdx) => (
                             <div key={highlight} className="px-3 py-1.5 rounded-full bg-white/10 border border-white/20 hover:bg-white/15 transition-colors">
                               <span className="text-xs font-medium text-white">
-                                {isMetricHighlight(highlight) ? <AnimatedMetric text={highlight} isVisible={isVisible} index={hIdx} /> : highlight}
+                                {isMetricHighlight(highlight) ? <AnimatedMetric text={highlight} isVisible={isVisible} /> : highlight}
                               </span>
                             </div>
                           ))}
                         </div>
 
                         <div className="mb-5">
+                          {/* Fix #6: Added aria-controls linking button to expanded content */}
                           <button
                             onClick={() => setExpandedFeature(expandedFeature === index ? null : index)}
                             className="text-sm text-white/50 hover:text-white/70 flex items-center gap-2 mx-auto lg:mx-0 transition-colors p-2 -m-2"
                             aria-expanded={expandedFeature === index}
+                            aria-controls={`feature-details-${index}`}
                           >
                             {expandedFeature === index ? 'Show less' : "See what's included"}
                             <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${expandedFeature === index ? 'rotate-180' : ''}`} />
                           </button>
 
                           {expandedFeature === index && (
-                            <ul className="mt-3 space-y-1.5">
+                            <ul id={`feature-details-${index}`} className="mt-3 space-y-1.5">
                               {extendedContent[index]?.map((item, i) => (
                                 <li key={i} className="flex items-center gap-2 text-white/60 text-sm justify-center lg:justify-start">
                                   <Check className="w-4 h-4 text-fm-orange-400 flex-shrink-0" />

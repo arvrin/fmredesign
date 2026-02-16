@@ -415,6 +415,38 @@
   animation: scrollIndicatorMouse 1.5s ease-in-out infinite;
 }
 
+/* V2 Depth System — Bloom breathing animation (60s cycle) */
+@keyframes v2BloomBreathe {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  25% {
+    transform: translate(1.5%, -1%) scale(1.03);
+  }
+  50% {
+    transform: translate(-1%, 1.5%) scale(0.97);
+  }
+  75% {
+    transform: translate(-1.5%, -0.5%) scale(1.02);
+  }
+}
+
+/* V2 Depth System — Foreground particle drift (gentle xy movement) */
+@keyframes v2ParticleDrift {
+  0%, 100% {
+    transform: translate(0, 0);
+  }
+  25% {
+    transform: translate(6px, -8px);
+  }
+  50% {
+    transform: translate(-4px, 4px);
+  }
+  75% {
+    transform: translate(3px, -3px);
+  }
+}
+
 /* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
   *,

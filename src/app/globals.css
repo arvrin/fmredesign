@@ -17,7 +17,7 @@
   --color-fm-magenta-300: #f4a9c4;
   --color-fm-magenta-400: #ec75a0;
   --color-fm-magenta-500: #e04d7d;
-  --color-fm-magenta-600: #c9325d;
+  --color-fm-magenta-600: #8c1d4a;
   --color-fm-magenta-700: #a82548;
   --color-fm-magenta-800: #8c213d;
   --color-fm-magenta-900: #761f36;
@@ -320,17 +320,18 @@ body {
   }
 }
 
-/* Base Typography Styles */
-/* NOTE: Removed aggressive global heading/paragraph styles that were
-   overriding Tailwind classes. Only set minimal resets here. */
-h1, h2, h3, h4, h5, h6 {
-  margin: 0;
-  /* font-weight, line-height, color now controlled by Tailwind classes */
-}
+/* Base Typography Styles — inside @layer base so Tailwind utilities
+   (mx-auto, mb-4, etc.) in @layer utilities can override them.
+   Previously unlayered, which caused mx-auto on <p> and heading
+   margin utilities to silently fail in Tailwind v4. */
+@layer base {
+  h1, h2, h3, h4, h5, h6 {
+    margin: 0;
+  }
 
-p {
-  margin: 0;
-  /* line-height now controlled by Tailwind classes like leading-relaxed */
+  p {
+    margin: 0;
+  }
 }
 
 
@@ -460,11 +461,13 @@ section:not(.v2-section):not([class*="v2-"]):not([class*="pt-"]):not([class*="py
   }
 }
 
-/* Mobile Touch Targets (selective, not breaking badges) */
-input,
-select,
-textarea {
-  min-height: 44px;
+/* Mobile Touch Targets — in @layer base so Tailwind utilities can override */
+@layer base {
+  input,
+  select,
+  textarea {
+    min-height: 44px;
+  }
 }
 
 /* Mobile Navigation Improvements */
@@ -504,62 +507,55 @@ textarea {
   }
 }
 
-/* Essential Form Improvements Only */
-input:focus,
-select:focus,
-textarea:focus {
-  outline: 2px solid theme(colors.fm.magenta.700);
-  outline-offset: 2px;
+/* Form styles — in @layer base so Tailwind utilities can override */
+@layer base {
+  /* Default focus ring — overridden by component-level focus:ring/focus:border */
+  input:focus,
+  select:focus,
+  textarea:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(201, 50, 93, 0.15);
+    border-color: #c9325d;
+  }
+
+  /* Required field indicator */
+  label[data-required]::after,
+  .required::after {
+    content: " *";
+    color: theme(colors.fm.error);
+  }
+
+  /* Form error messaging */
+  .form-error {
+    color: theme(colors.fm.error);
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+    display: block;
+  }
+
+  .form-success {
+    color: theme(colors.fm.success);
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+    display: block;
+  }
+
+  /* Checkbox and radio */
+  input[type="checkbox"],
+  input[type="radio"] {
+    width: 1.25rem;
+    height: 1.25rem;
+    accent-color: #c9325d;
+  }
 }
 
-/* Form validation states */
-input:invalid,
-select:invalid,
-textarea:invalid {
-  border-color: theme(colors.fm.error);
-}
-
-input:valid,
-select:valid,
-textarea:valid {
-  border-color: theme(colors.fm.success);
-}
-
-/* Required field indicator */
-label[data-required]::after,
-.required::after {
-  content: " *";
-  color: theme(colors.fm.error);
-}
-
-/* Form error messaging */
-.form-error {
-  color: theme(colors.fm.error);
-  font-size: 0.875rem;
-  margin-top: 0.25rem;
-  display: block;
-}
-
-.form-success {
-  color: theme(colors.fm.success);
-  font-size: 0.875rem;
-  margin-top: 0.25rem;
-  display: block;
-}
-
-/* Improve checkbox and radio accessibility */
-input[type="checkbox"],
-input[type="radio"] {
-  width: 1.25rem;
-  height: 1.25rem;
-  accent-color: theme(colors.fm.magenta.700);
-}
-
-/* Image rendering improvements */
-img {
-  max-width: 100%;
-  height: auto;
-  display: block;
+/* Image rendering — in @layer base so Tailwind h-8, h-auto etc. can override */
+@layer base {
+  img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+  }
 }
 
 /* Logo images - let component classes control sizing */
@@ -664,6 +660,15 @@ img {
 @keyframes featureSparkle {
   0%, 100% { opacity: 0.3; transform: scale(0.8); }
   50% { opacity: 0.8; transform: scale(1.2); }
+}
+
+@keyframes mascotWobble {
+  0% { transform: scale(1) rotate(0deg); }
+  20% { transform: scale(1.12) rotate(-6deg); }
+  40% { transform: scale(1.08) rotate(5deg); }
+  60% { transform: scale(1.1) rotate(-3deg); }
+  80% { transform: scale(1.04) rotate(2deg); }
+  100% { transform: scale(1) rotate(0deg); }
 }
 
 .animate-featureFloat {
@@ -1013,18 +1018,20 @@ img:not([loading="lazy"]) {
   --v2-paper-bg: #FFFFFF;
   --v2-paper-bg-warm: #FFFBF8;
 
-  /* Magenta-tinted ambient shadow system */
+  /* Magenta-tinted ambient shadow system — extra ground-plane layer for depth */
   --v2-shadow-paper:
     0 1px 2px rgba(0, 0, 0, 0.03),
     0 4px 8px rgba(0, 0, 0, 0.04),
     0 12px 24px rgba(139, 34, 82, 0.06),
-    0 24px 48px rgba(139, 34, 82, 0.08);
+    0 24px 48px rgba(139, 34, 82, 0.08),
+    0 48px 80px rgba(100, 15, 50, 0.05);
 
   --v2-shadow-paper-hover:
     0 2px 4px rgba(0, 0, 0, 0.04),
     0 8px 16px rgba(0, 0, 0, 0.05),
     0 16px 32px rgba(139, 34, 82, 0.08),
-    0 32px 64px rgba(139, 34, 82, 0.12);
+    0 32px 64px rgba(139, 34, 82, 0.12),
+    0 56px 96px rgba(100, 15, 50, 0.07);
 
   --v2-shadow-paper-sm:
     0 1px 2px rgba(0, 0, 0, 0.04),
@@ -1121,7 +1128,30 @@ img:not([loading="lazy"]) {
     background: var(--v2-card-bg-hover);
   }
 
-  /* V2 Paper Card - White floating cards with magenta ambient shadows */
+  /* V2 Paper Card - White floating cards with magenta ambient shadows + grain */
+  .v2-paper,
+  .v2-paper-sm,
+  .v2-paper-lg,
+  .v2-paper-static {
+    position: relative;
+    isolation: isolate;
+  }
+
+  .v2-paper::before,
+  .v2-paper-sm::before,
+  .v2-paper-lg::before,
+  .v2-paper-static::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    opacity: 0.03;
+    pointer-events: none;
+    z-index: 1;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 128px 128px;
+  }
+
   .v2-paper {
     background: var(--v2-paper-bg);
     box-shadow: var(--v2-shadow-paper);
@@ -1159,6 +1189,38 @@ img:not([loading="lazy"]) {
   .v2-paper-static {
     background: var(--v2-paper-bg);
     box-shadow: var(--v2-shadow-paper);
+  }
+
+  /* Texture utilities */
+  .v2-texture-dots {
+    position: relative;
+  }
+  .v2-texture-dots::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url('/textures/dot-grid-pattern.svg');
+    background-size: 24px 24px;
+    opacity: 0.4;
+    pointer-events: none;
+    z-index: 0;
+    border-radius: inherit;
+  }
+
+  .v2-texture-mesh {
+    position: relative;
+  }
+  .v2-texture-mesh::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url('/textures/abstract-mesh-magenta.svg');
+    background-size: cover;
+    background-position: center;
+    opacity: 0.06;
+    pointer-events: none;
+    z-index: 0;
+    border-radius: inherit;
   }
 
 /* Hide scrollbar for horizontal scroll containers */
@@ -1281,7 +1343,7 @@ img:not([loading="lazy"]) {
 
   /* V2 Accent Text - Magenta gradient on light background */
   .v2-accent {
-    background: linear-gradient(135deg, #c9325d 0%, #a82548 50%, #8c213d 100%);
+    background: linear-gradient(135deg, #8c1d4a 0%, #a82548 50%, #8c213d 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -1289,7 +1351,7 @@ img:not([loading="lazy"]) {
 
   /* Stacked 3D text-shadow bounce for hero rotating phrases */
   .hero-stacked-text {
-    color: #c9325d;
+    color: #8c1d4a;
     display: inline-block;
     animation: stacked-shadow 2s ease-in-out infinite;
   }
@@ -1306,7 +1368,7 @@ img:not([loading="lazy"]) {
     12% {
       transform: translateY(-0.04em);
       text-shadow:
-        0 0.04em 0 #ff6b9d,
+        0 0.04em 0 #ffffff,
         0 0 0 transparent,
         0 0 0 transparent,
         0 0 0 transparent;
@@ -1314,47 +1376,47 @@ img:not([loading="lazy"]) {
     24% {
       transform: translateY(-0.08em);
       text-shadow:
-        0 0.04em 0 #ff6b9d,
-        0 0.08em 0 #e8456d,
+        0 0.04em 0 #ffffff,
+        0 0.08em 0 #a82548,
         0 0 0 transparent,
         0 0 0 transparent;
     }
     36% {
       transform: translateY(-0.12em);
       text-shadow:
-        0 0.04em 0 #ff6b9d,
-        0 0.08em 0 #e8456d,
-        0 0.12em 0 #c9325d,
+        0 0.04em 0 #ffffff,
+        0 0.08em 0 #a82548,
+        0 0.12em 0 #4a1230,
         0 0 0 transparent;
     }
     48%, 55% {
       transform: translateY(-0.16em);
       text-shadow:
-        0 0.04em 0 #ff6b9d,
-        0 0.08em 0 #e8456d,
-        0 0.12em 0 #c9325d,
-        0 0.16em 0 #a82548;
+        0 0.04em 0 #ffffff,
+        0 0.08em 0 #a82548,
+        0 0.12em 0 #4a1230,
+        0 0.16em 0 #2a0a1c;
     }
     68% {
       transform: translateY(-0.12em);
       text-shadow:
-        0 0.04em 0 #ff6b9d,
-        0 0.08em 0 #e8456d,
-        0 0.12em 0 #c9325d,
+        0 0.04em 0 #ffffff,
+        0 0.08em 0 #a82548,
+        0 0.12em 0 #4a1230,
         0 0 0 transparent;
     }
     80% {
       transform: translateY(-0.08em);
       text-shadow:
-        0 0.04em 0 #ff6b9d,
-        0 0.08em 0 #e8456d,
+        0 0.04em 0 #ffffff,
+        0 0.08em 0 #a82548,
         0 0 0 transparent,
         0 0 0 transparent;
     }
     90% {
       transform: translateY(-0.04em);
       text-shadow:
-        0 0.04em 0 #ff6b9d,
+        0 0.04em 0 #ffffff,
         0 0 0 transparent,
         0 0 0 transparent,
         0 0 0 transparent;
@@ -1426,6 +1488,7 @@ img:not([loading="lazy"]) {
 /* Light badge for white card CTA sections */
 .v2-badge-light {
   background: var(--color-fm-magenta-50);
+  border: 1px solid rgba(201, 50, 93, 0.15);
   color: var(--color-fm-magenta-700);
 }
 
@@ -1541,9 +1604,9 @@ img:not([loading="lazy"]) {
 
 /* Ensure button elements get correct backgrounds from variants */
 button.v2-btn-primary {
-  background: linear-gradient(135deg, #c9325d 0%, #a82548 100%) !important;
+  background: linear-gradient(135deg, #8c1d4a 0%, #a82548 100%) !important;
   color: white !important;
-  border-color: #c9325d !important;
+  border-color: #8c1d4a !important;
 }
 
 button.v2-btn-secondary {
@@ -1583,9 +1646,9 @@ button.v2-btn-outline {
 
 /* Primary: Magenta button on light background - MAIN CTA */
 .v2-btn-primary {
-  background: linear-gradient(135deg, #c9325d 0%, #a82548 100%);
+  background: linear-gradient(135deg, #8c1d4a 0%, #a82548 100%);
   color: white;
-  border-color: #c9325d;
+  border-color: #8c1d4a;
   box-shadow: 0 10px 40px rgba(201, 50, 93, 0.25);
 }
 
@@ -1823,7 +1886,7 @@ button.v2-btn-outline {
 
 /* Service icon gradients - brand-aligned warm tones */
 .v2-gradient-seo {
-  background: linear-gradient(135deg, var(--color-fm-orange-500) 0%, var(--color-fm-orange-700) 100%);
+  background: linear-gradient(135deg, var(--color-fm-magenta-500) 0%, var(--color-fm-purple-700) 100%);
 }
 
 .v2-gradient-social {
@@ -2130,8 +2193,8 @@ button.v2-btn-outline {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.92);
-  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(201, 50, 93, 0.08);
   border-radius: 12px;
   padding: 12px;
   transition: all 0.3s ease;
@@ -2139,7 +2202,7 @@ button.v2-btn-outline {
 
 .logo-marquee-item:hover {
   background: rgba(255, 255, 255, 1);
-  border-color: rgba(255, 255, 255, 0.6);
+  border-color: rgba(201, 50, 93, 0.15);
   transform: scale(1.05);
 }
 

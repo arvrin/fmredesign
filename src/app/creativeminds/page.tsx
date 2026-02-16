@@ -151,18 +151,18 @@ export default function CreativeMindsPage() {
             {/* Badge */}
             <div className="v2-badge v2-badge-glass mb-8">
               <Sparkles className="w-4 h-4 v2-text-primary" />
-              <span className="v2-text-primary">Join India's Premium Talent Network</span>
+              <span className="v2-text-primary">Join the Premium Creative Talent Network</span>
             </div>
 
             {/* Headline */}
             <h1 className="font-display text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold v2-text-primary mb-8 leading-tight">
-              Welcome to{' '}
-              <span className="v2-accent">CreativeMinds</span>
+              The{' '}
+              <span className="v2-accent">CreativeMinds</span>{' '}Network
             </h1>
 
             {/* Description */}
             <p className="text-lg md:text-xl v2-text-secondary leading-relaxed" style={{ marginBottom: '48px' }}>
-              Connect with premium brands, earn consistently, and grow your career with India's most trusted creative talent network. Join a curated community of verified professionals.
+              Connect with premium brands, earn consistently, and grow your career with a trusted creative talent network serving clients worldwide. Join a curated community of verified professionals.
             </p>
 
             {/* CTAs */}
@@ -182,18 +182,21 @@ export default function CreativeMindsPage() {
         </div>
 
         {/* Floating Brain Decoration */}
-        <div className="absolute left-8 lg:left-24 top-1/3 hidden lg:block z-10">
+        <div className="absolute left-8 lg:left-24 top-1/3 hidden lg:block" style={{ zIndex: 10 }}>
           <img
             src="/3dasset/brain-celebrating.png"
             alt="Success"
-            className="w-32 lg:w-40 h-auto animate-v2-hero-float drop-shadow-2xl"
-            style={{ filter: 'drop-shadow(0 20px 40px rgba(0,0,0,0.3))' }}
+            className="h-auto animate-v2-hero-float"
+            style={{
+              width: 'min(180px, 30vw)',
+              filter: 'drop-shadow(0 20px 40px rgba(140,25,60,0.2))',
+            }}
           />
         </div>
       </section>
 
       {/* Benefits Section */}
-      <section id="benefits" className="relative z-10 v2-section">
+      <section id="benefits" className="relative z-10 v2-section v2-texture-dots">
         <div className="v2-container">
           <div className="max-w-3xl mx-auto" style={{ textAlign: 'center', marginBottom: '64px' }}>
             <div className="v2-badge v2-badge-glass mb-6">

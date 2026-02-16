@@ -217,8 +217,8 @@ export function Header() {
               </Link>
 
               <div className="mt-8 text-sm text-fm-neutral-500">
-                <a href="mailto:hello@freakingminds.in" className="hover:text-fm-magenta-600 transition-colors">
-                  hello@freakingminds.in
+                <a href="mailto:freakingmindsdigital@gmail.com" className="hover:text-fm-magenta-600 transition-colors">
+                  freakingmindsdigital@gmail.com
                 </a>
               </div>
             </div>

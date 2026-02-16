@@ -3,12 +3,12 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
   title: 'Get Started',
   description:
-    'Start your digital marketing journey with FreakingMinds. Tell us about your project and get a free, no-obligation consultation within 24 hours.',
+    'Start your project with Freaking Minds. Tell us about your goals and get a free, no-obligation consultation within 24 hours.',
   keywords: [
-    'get started digital marketing',
+    'get started marketing',
     'free marketing consultation',
     'start a project',
-    'digital marketing quote',
+    'marketing quote',
   ],
   openGraph: {
     title: 'Get Started | Freaking Minds',

@@ -4,8 +4,21 @@ import { Shield } from "lucide-react";
 export default function PrivacyPolicyPage() {
   return (
     <V2PageWrapper>
-      <section className="relative z-10 v2-section pt-32 lg:pt-40 pb-20">
+      <section className="relative z-10 v2-section pt-32 lg:pt-40 pb-32">
         <div className="v2-container v2-container-narrow">
+          {/* 3D Brain Decoration */}
+          <div className="absolute left-8 lg:left-20 top-36 hidden lg:block" style={{ zIndex: 10 }}>
+            <img
+              src="/3dasset/brain-learning.png"
+              alt="Your Privacy Matters"
+              className="h-auto animate-v2-hero-float"
+              style={{
+                width: 'min(160px, 25vw)',
+                filter: 'drop-shadow(0 20px 40px rgba(140,25,60,0.2))',
+              }}
+            />
+          </div>
+
           <div className="max-w-3xl mx-auto" style={{ textAlign: 'center', marginBottom: '48px' }}>
             <div className="v2-badge v2-badge-glass mb-6">
               <Shield className="w-4 h-4 v2-text-primary" />
@@ -125,9 +138,9 @@ export default function PrivacyPolicyPage() {
               </p>
               <div className="mt-4 p-6 bg-fm-neutral-50 rounded-xl">
                 <p className="text-fm-neutral-800 font-semibold">Freaking Minds</p>
-                <p className="text-fm-neutral-600">Email: hello@freakingminds.in</p>
+                <p className="text-fm-neutral-600">Email: freakingmindsdigital@gmail.com</p>
                 <p className="text-fm-neutral-600">Phone: +91 98332 57659</p>
-                <p className="text-fm-neutral-600">Address: Bhopal, Madhya Pradesh, India</p>
+                <p className="text-fm-neutral-600">Address: India</p>
               </div>
             </section>
           </div>

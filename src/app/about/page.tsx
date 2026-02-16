@@ -56,24 +56,24 @@ export default function AboutPage() {
             {/* Badge */}
             <div className="v2-badge v2-badge-glass mb-8">
               <Users className="w-4 h-4 v2-text-primary" />
-              <span className="v2-text-primary">Meet the Minds Behind the Magic</span>
+              <span className="v2-text-primary">Meet the Minds Behind the Work</span>
             </div>
 
             {/* Headline */}
             <h1 className="font-display text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold v2-text-primary mb-8 leading-tight">
-              We're Not Just a Team, We're Your{' '}
-              <span className="v2-accent">Partners in Growth</span>
+              Your Growth Is{' '}
+              <span className="v2-accent">Our Mission</span>
             </h1>
 
             {/* Description */}
             <p className="text-lg md:text-xl v2-text-secondary leading-relaxed" style={{ marginBottom: '48px' }}>
-              Founded in the heart of Bhopal, Freaking Minds has been revolutionizing digital marketing for over a decade. We combine strategic thinking with creative excellence to deliver campaigns that don't just look good—they drive real business results.
+              Freaking Minds is a full-service creative marketing agency that has been revolutionizing brand growth for over a decade. We combine strategic thinking with creative excellence to deliver campaigns that don't just look good—they drive real business results.
             </p>
 
             {/* CTAs */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link href="/get-started" className="v2-btn v2-btn-primary">
-                Start Your Journey
+                Work With Us
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Link>
               <Link href="/work" className="v2-btn v2-btn-secondary">
@@ -84,16 +84,24 @@ export default function AboutPage() {
         </div>
       </section>
 
+      {/* Wave Divider */}
+      <div className="relative" style={{ zIndex: 10, marginTop: '-1px' }}>
+        <img src="/textures/wave-divider.svg" alt="" className="w-full" style={{ height: '60px', display: 'block' }} />
+      </div>
+
       {/* Values Section */}
-      <section className="relative z-10 v2-section">
+      <section className="relative z-10 v2-section v2-texture-mesh">
         <div className="v2-container">
           {/* Floating Brain Decoration */}
-          <div className="absolute left-4 lg:left-16 top-8 hidden lg:block z-10">
+          <div className="absolute left-4 lg:left-16 top-8 hidden lg:block" style={{ zIndex: 10 }}>
             <img
               src="/3dasset/brain-strategy.png"
               alt="Strategic Innovation"
-              className="w-28 lg:w-36 h-auto animate-v2-hero-float drop-shadow-2xl"
-              style={{ filter: 'drop-shadow(0 20px 40px rgba(0,0,0,0.3))' }}
+              className="h-auto animate-v2-hero-float"
+              style={{
+                width: 'min(180px, 30vw)',
+                filter: 'drop-shadow(0 20px 40px rgba(140,25,60,0.2))',
+              }}
             />
           </div>
 
@@ -107,7 +115,7 @@ export default function AboutPage() {
               <span className="v2-accent">Excellence</span>
             </h2>
             <p className="text-lg md:text-xl v2-text-secondary leading-relaxed">
-              These fundamental principles guide every decision we make and every campaign we create.
+              These core commitments guide every decision we make and every campaign we create.
             </p>
           </div>
 
@@ -137,7 +145,7 @@ export default function AboutPage() {
               The <span className="v2-accent">Creative Minds</span> Behind Your Success
             </h2>
             <p className="text-lg md:text-xl v2-text-secondary leading-relaxed">
-              Our diverse team brings together decades of experience in digital marketing, creative design, and strategic consulting.
+              Our diverse team brings together decades of experience in marketing strategy, creative design, and strategic consulting.
             </p>
           </div>
 
@@ -159,6 +167,11 @@ export default function AboutPage() {
         </div>
       </section>
 
+      {/* Wave Divider */}
+      <div className="relative" style={{ zIndex: 10, marginTop: '-1px' }}>
+        <img src="/textures/wave-divider.svg" alt="" className="w-full" style={{ height: '60px', display: 'block', transform: 'scaleX(-1)' }} />
+      </div>
+
       {/* CTA Section */}
       <section className="relative z-10 v2-section pb-32">
         <div className="v2-container v2-container-narrow">
@@ -168,14 +181,14 @@ export default function AboutPage() {
               <span>Ready to Get Started?</span>
             </div>
             <h2 className="font-display text-3xl md:text-4xl font-bold text-fm-neutral-900 mb-6 leading-tight">
-              Let's Create Something <span className="text-fm-magenta-600">Amazing</span> Together
+              Let's Create Something <span className="text-fm-magenta-600">Great</span> Together
             </h2>
             <p className="text-fm-neutral-600 mb-8 max-w-xl mx-auto">
-              Join the growing list of successful brands that trust Freaking Minds with their digital marketing success.
+              Join the growing list of successful brands that trust Freaking Minds as their creative marketing partner.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link href="/get-started" className="v2-btn v2-btn-magenta">
-                Let's Create Magic Together
+                Start a Conversation
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Link>
               <Link href="/contact" className="v2-btn v2-btn-outline">

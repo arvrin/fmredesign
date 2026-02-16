@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Contact Us",
-  description: "Get in touch with Freaking Minds. Contact our digital marketing team in Bhopal for a free consultation and custom strategy proposal.",
+  description: "Get in touch with Freaking Minds. Contact our marketing and creative team for a free consultation and custom strategy proposal. We respond within 24 hours.",
   openGraph: {
     title: "Contact Us | Freaking Minds",
     description: "Get in touch with Freaking Minds for a free consultation and custom strategy proposal.",

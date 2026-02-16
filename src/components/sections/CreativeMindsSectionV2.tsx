@@ -61,22 +61,22 @@ export function CreativeMindsSectionV2() {
   return (
     <section
       ref={sectionRef}
-      className="relative py-16 md:py-24 lg:py-32 xl:py-40 overflow-hidden"
+      className="relative v2-section overflow-hidden"
     >
       {/* Ambient background effects */}
-      <div className="absolute inset-0 pointer-events-none">
+      <div className="absolute inset-0 pointer-events-none" style={{ contain: 'layout style paint' }}>
         <div
           className="absolute -left-1/4 top-1/4 w-[600px] h-[600px] rounded-full opacity-30"
           style={{
             background: 'radial-gradient(circle, rgba(201, 50, 93, 0.15) 0%, transparent 70%)',
-            filter: 'blur(80px)',
+            filter: 'blur(50px)',
           }}
         />
         <div
           className="absolute -right-1/4 bottom-1/4 w-[400px] h-[400px] rounded-full opacity-20"
           style={{
             background: 'radial-gradient(circle, rgba(160, 30, 70, 0.1) 0%, transparent 70%)',
-            filter: 'blur(60px)',
+            filter: 'blur(40px)',
           }}
         />
       </div>
@@ -92,19 +92,19 @@ export function CreativeMindsSectionV2() {
               <span className="v2-text-primary">CreativeMinds Network</span>
             </div>
 
-            <h2 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-[1.1]">
+            <h2 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold v2-text-primary mb-6 leading-[1.1]">
               Your projects,{' '}
               <span className="v2-accent">powered by experts</span>
             </h2>
 
-            <p className="text-lg md:text-xl text-white/70 mb-10 leading-relaxed max-w-xl">
-              Every FreakingMinds project is backed by our curated network of verified creative professionals.
+            <p className="text-lg md:text-xl v2-text-secondary mb-10 leading-relaxed max-w-xl">
+              Every Freaking Minds project is backed by our curated network of verified creative professionals.
               Vetted talent, ready to execute.
             </p>
 
             <div className="flex flex-wrap gap-x-6 gap-y-3 mb-10">
               {['Verified Profiles', 'Quality Assured', 'Fast Matching'].map((item) => (
-                <div key={item} className="flex items-center gap-2 text-sm text-white/70">
+                <div key={item} className="flex items-center gap-2 text-sm v2-text-secondary">
                   <Check className="w-4 h-4 text-fm-magenta-400" />
                   <span>{item}</span>
                 </div>
@@ -140,7 +140,7 @@ export function CreativeMindsSectionV2() {
                       transform: isVisible ? 'translateY(0)' : 'translateY(20px)',
                       transitionDelay: `${index * 80 + 300}ms`,
                       background: `linear-gradient(145deg, rgba(255,255,255,0.95) 0%, rgba(245,243,248,0.92) 100%)`,
-                      border: '1px solid rgba(255, 255, 255, 0.15)',
+                      border: '1px solid rgba(201, 50, 93, 0.08)',
                     }}
                   >
                     {/* Top gradient accent line */}
@@ -185,7 +185,7 @@ export function CreativeMindsSectionV2() {
                       transform: isVisible ? 'translateY(0) scale(1)' : 'translateY(24px) scale(0.96)',
                       transitionDelay: `${index * 100 + 300}ms`,
                       background: `linear-gradient(145deg, rgba(255,255,255,0.95) 0%, rgba(245,243,248,0.92) 100%)`,
-                      border: '1px solid rgba(255, 255, 255, 0.15)',
+                      border: '1px solid rgba(201, 50, 93, 0.08)',
                     }}
                   >
                     {/* Top gradient accent line */}
@@ -227,8 +227,8 @@ export function CreativeMindsSectionV2() {
             </div>
 
             {/* Decorative circles */}
-            <div className="absolute -top-10 -right-10 w-32 h-32 border border-white/5 rounded-full pointer-events-none" />
-            <div className="absolute -bottom-5 -left-5 w-20 h-20 border border-white/5 rounded-full pointer-events-none" />
+            <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full pointer-events-none" style={{ border: '1px solid rgba(201, 50, 93, 0.08)' }} />
+            <div className="absolute -bottom-5 -left-5 w-20 h-20 rounded-full pointer-events-none" style={{ border: '1px solid rgba(201, 50, 93, 0.08)' }} />
           </div>
         </div>
       </div>

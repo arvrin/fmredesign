@@ -67,7 +67,7 @@ export function ContactSectionV3() {
         <div
           className="absolute top-1/2 right-0 w-1/2 h-full -translate-y-1/2 opacity-[0.04]"
           style={{
-            background: 'radial-gradient(ellipse at 80% 50%, #c9325d 0%, transparent 60%)',
+            background: 'radial-gradient(ellipse at 80% 50%, #8c1d4a 0%, transparent 60%)',
           }}
         />
       </div>
@@ -177,7 +177,7 @@ export function ContactSectionV3() {
 
               <div className="space-y-6">
                 <a
-                  href="mailto:hello@freakingminds.in"
+                  href="mailto:freakingmindsdigital@gmail.com"
                   className="group flex items-start gap-4 p-4 -m-4 rounded-xl hover:bg-fm-neutral-50 transition-colors duration-300"
                 >
                   <div className="w-12 h-12 rounded-xl bg-fm-magenta-50 flex items-center justify-center flex-shrink-0 group-hover:bg-fm-magenta-100 transition-colors">
@@ -186,7 +186,7 @@ export function ContactSectionV3() {
                   <div>
                     <p className="text-sm text-fm-neutral-500 mb-1">Email us</p>
                     <p className="text-fm-ink font-semibold group-hover:text-fm-magenta-600 transition-colors">
-                      hello@freakingminds.in
+                      freakingmindsdigital@gmail.com
                     </p>
                   </div>
                 </a>
@@ -211,9 +211,9 @@ export function ContactSectionV3() {
                     <MapPin className="w-5 h-5 text-fm-neutral-400" />
                   </div>
                   <div>
-                    <p className="text-sm text-fm-neutral-500 mb-1">Visit us</p>
+                    <p className="text-sm text-fm-neutral-500 mb-1">Based in</p>
                     <p className="text-fm-neutral-700 font-medium">
-                      Bhopal, Madhya Pradesh, India
+                      India & Worldwide
                     </p>
                   </div>
                 </div>

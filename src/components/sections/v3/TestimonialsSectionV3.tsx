@@ -95,7 +95,7 @@ export function TestimonialsSectionV3() {
       <div
         className="absolute top-0 right-0 w-1/2 h-full opacity-[0.03] pointer-events-none"
         style={{
-          background: 'radial-gradient(ellipse at 80% 20%, #c9325d 0%, transparent 60%)',
+          background: 'radial-gradient(ellipse at 80% 20%, #8c1d4a 0%, transparent 60%)',
         }}
       />
 
@@ -143,7 +143,7 @@ export function TestimonialsSectionV3() {
               <div
                 className="absolute bottom-0 left-0 w-full h-1/2 opacity-20 pointer-events-none"
                 style={{
-                  background: 'linear-gradient(to top, #c9325d, transparent)',
+                  background: 'linear-gradient(to top, #8c1d4a, transparent)',
                 }}
               />
 

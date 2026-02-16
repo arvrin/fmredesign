@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Services",
-  description: "Comprehensive digital marketing services including SEO, social media, PPC, branding, web development, and content marketing. Custom strategies for your business.",
+  title: "Services - Brand Strategy, Design & Performance Marketing",
+  description: "Full-service marketing solutions: brand strategy, creative design, performance marketing, SEO, social media, and web development. Custom strategies for your business.",
   openGraph: {
-    title: "Services | Freaking Minds",
-    description: "Comprehensive digital marketing services including SEO, social media, PPC, branding, and web development.",
+    title: "Services - Brand Strategy, Design & Performance Marketing | Freaking Minds",
+    description: "Full-service marketing solutions: brand strategy, creative design, performance marketing, SEO, and web development.",
   },
   alternates: {
     canonical: "https://freakingminds.in/services",

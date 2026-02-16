@@ -223,8 +223,8 @@ export function HeroSectionV2() {
               className="v2-text-secondary text-base md:text-lg lg:text-xl leading-relaxed max-w-full lg:max-w-lg"
               style={{ opacity: 0, marginBottom: '40px' }}
             >
-              Strategic creativity that transforms ambitious brands into market leaders.
-              Data-informed. Design-led. Results-driven.
+              Full-service creative marketing for ambitious brands.
+              100+ brands grown. 300% average traffic lift. Strategy, design, and performance under one roof.
             </p>
 
             {/* CTA Buttons */}
@@ -237,14 +237,14 @@ export function HeroSectionV2() {
                 href="/get-started"
                 className="v2-btn v2-btn-primary v2-btn-lg group"
               >
-                Start a Project
+                Get a Free Strategy Call
                 <ArrowRight className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" />
               </Link>
               <Link
                 href="/work"
                 className="v2-btn v2-btn-secondary v2-btn-lg"
               >
-                View Our Work
+                See Our Results
               </Link>
             </div>
           </div>
@@ -280,9 +280,11 @@ export function HeroSectionV2() {
               <img
                 src="/3dasset/brain-rocket.png"
                 alt="Launch Your Brand"
-                className="w-52 sm:w-64 md:w-80 lg:w-[360px] xl:w-[420px] max-w-full drop-shadow-2xl"
+                className="max-w-full"
                 style={{
-                  filter: 'drop-shadow(0 30px 60px rgba(0,0,0,0.45))',
+                  width: 'min(420px, 80vw)',
+                  height: 'auto',
+                  filter: 'drop-shadow(0 30px 60px rgba(140,25,60,0.3))',
                   animation: prefersReducedMotion ? 'none' : 'v2HeroFloat 6s ease-in-out infinite',
                 }}
               />

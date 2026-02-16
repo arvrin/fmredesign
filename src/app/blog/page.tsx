@@ -65,13 +65,13 @@ export default function BlogPage() {
 
             {/* Headline */}
             <h1 className="font-display text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold v2-text-primary mb-8 leading-tight">
-              Digital Marketing{' '}
+              Marketing{' '}
               <span className="v2-accent">Insights</span> That Drive Results
             </h1>
 
             {/* Description */}
             <p className="text-lg md:text-xl v2-text-secondary leading-relaxed" style={{ marginBottom: '48px' }}>
-              Stay ahead of the curve with expert insights, proven strategies, and actionable tips from our team of digital marketing professionals.
+              Stay ahead of the curve with expert insights, proven strategies, and actionable tips from our team of marketing and creative professionals.
             </p>
 
             {/* Search Bar */}
@@ -84,7 +84,18 @@ export default function BlogPage() {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search articles..."
-                    className="w-full pl-12 pr-4 py-4 bg-fm-neutral-50 border border-fm-neutral-200 rounded-xl text-fm-neutral-900 placeholder-fm-neutral-400 focus:outline-none focus:ring-2 focus:ring-fm-magenta-200 focus:border-fm-magenta-300 transition-all"
+                    className="w-full transition-all duration-200"
+                    style={{
+                      padding: '14px 16px 14px 48px',
+                      background: '#faf9f9',
+                      border: '1.5px solid #e5e2e2',
+                      borderRadius: '12px',
+                      outline: 'none',
+                      fontSize: '15px',
+                      color: '#0f0f0f',
+                    }}
+                    onFocus={(e) => { e.target.style.border = '1.5px solid #c9325d'; e.target.style.boxShadow = '0 0 0 4px rgba(201,50,93,0.08)'; e.target.style.background = '#fff'; }}
+                    onBlur={(e) => { e.target.style.border = '1.5px solid #e5e2e2'; e.target.style.boxShadow = 'none'; e.target.style.background = '#faf9f9'; }}
                   />
                 </div>
               </div>
@@ -104,12 +115,15 @@ export default function BlogPage() {
         </div>
 
         {/* 3D Brain Decoration */}
-        <div className="absolute left-8 lg:left-20 top-1/3 hidden lg:block z-10">
+        <div className="absolute left-8 lg:left-20 top-1/3 hidden lg:block" style={{ zIndex: 10 }}>
           <img
             src="/3dasset/brain-learning.png"
             alt="Learning & Insights"
-            className="w-28 lg:w-36 h-auto animate-v2-hero-float drop-shadow-2xl"
-            style={{ filter: 'drop-shadow(0 20px 40px rgba(0,0,0,0.3))' }}
+            className="h-auto animate-v2-hero-float"
+            style={{
+              width: 'min(180px, 30vw)',
+              filter: 'drop-shadow(0 20px 40px rgba(140,25,60,0.2))',
+            }}
           />
         </div>
       </section>
@@ -366,7 +380,7 @@ export default function BlogPage() {
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link href="/get-started" className="v2-btn v2-btn-magenta">
-                Start Your Marketing Journey
+                Get Expert Marketing Help
                 <ArrowRight className="w-5 h-5" />
               </Link>
               <Link href="/contact" className="v2-btn v2-btn-outline">

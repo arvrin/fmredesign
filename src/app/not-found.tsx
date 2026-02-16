@@ -12,8 +12,12 @@ export default function NotFound() {
             <img
               src="/3dasset/brain-confused.png"
               alt="Page not found"
-              className="w-32 sm:w-40 h-auto mx-auto mb-8 drop-shadow-2xl"
-              style={{ filter: 'drop-shadow(0 20px 40px rgba(0,0,0,0.3))' }}
+              className="mx-auto mb-8"
+              style={{
+                width: 'min(160px, 40vw)',
+                height: 'auto',
+                filter: 'drop-shadow(0 20px 40px rgba(140,25,60,0.2))',
+              }}
             />
 
             {/* 404 */}

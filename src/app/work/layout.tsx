@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Our Work",
-  description: "Explore our portfolio of successful digital marketing campaigns, brand transformations, and web development projects for clients across India.",
+  title: "Our Work - Case Studies & Results",
+  description: "Explore our portfolio of successful marketing campaigns, brand transformations, and web development projects for clients worldwide.",
   openGraph: {
-    title: "Our Work | Freaking Minds",
-    description: "Explore our portfolio of successful digital marketing campaigns and brand transformations.",
+    title: "Our Work - Case Studies & Results | Freaking Minds",
+    description: "Explore our portfolio of successful marketing campaigns and brand transformations.",
   },
   alternates: {
     canonical: "https://freakingminds.in/work",

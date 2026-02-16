@@ -541,8 +541,8 @@ export function HeaderV2() {
                 </Link>
 
                 <div className="mt-6 text-sm" style={{ textAlign: 'center', color: '#9a7888' }}>
-                  <a href="mailto:hello@freakingminds.in" className="hover:text-fm-magenta-600 transition-colors">
-                    hello@freakingminds.in
+                  <a href="mailto:freakingmindsdigital@gmail.com" className="hover:text-fm-magenta-600 transition-colors">
+                    freakingmindsdigital@gmail.com
                   </a>
                 </div>
               </div>

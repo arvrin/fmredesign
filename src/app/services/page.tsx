@@ -1,8 +1,10 @@
 'use client';
 
+import { useState } from "react";
 import { ArrowRight, Search, Megaphone, Palette, BarChart3, Globe, Video, Zap, Target, Award, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import { V2PageWrapper } from "@/components/layouts/V2PageWrapper";
+import { ServiceDeepDiveModal } from "@/components/services/ServiceDeepDiveModal";
 
 const services = [
   {
@@ -106,7 +108,9 @@ const process = [
 ];
 
 export default function ServicesPage() {
-  return (
+  const [modalServiceId, setModalServiceId] = useState<string | null>(null);
+
+  return (<>
     <V2PageWrapper>
       {/* Hero Section */}
       <section className="relative z-10 v2-section pt-32 lg:pt-40">
@@ -115,19 +119,19 @@ export default function ServicesPage() {
             {/* Badge */}
             <div className="v2-badge v2-badge-glass mb-8">
               <Zap className="w-4 h-4 v2-text-primary" />
-              <span className="v2-text-primary">Comprehensive Digital Marketing Solutions</span>
+              <span className="v2-text-primary">Full-Service Marketing Solutions</span>
             </div>
 
             {/* Headline */}
             <h1 className="font-display text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold v2-text-primary mb-8 leading-tight">
-              Services That{' '}
-              <span className="v2-accent">Transform</span>{' '}
-              Your Business
+              Marketing Services That{' '}
+              <span className="v2-accent">Drive</span>{' '}
+              Growth
             </h1>
 
             {/* Description */}
             <p className="text-lg md:text-xl v2-text-secondary leading-relaxed" style={{ marginBottom: '48px' }}>
-              From SEO and social media to PPC and creative design, we offer comprehensive digital marketing services that drive real business growth. Every strategy is custom-crafted to achieve your unique goals.
+              From brand strategy and creative design to SEO and performance marketing, we offer full-service marketing solutions that drive real business growth. Every strategy is custom-crafted to achieve your unique goals.
             </p>
 
             {/* CTAs */}
@@ -156,7 +160,7 @@ export default function ServicesPage() {
               Our <span className="v2-accent">Core Services</span>
             </h2>
             <p className="text-lg md:text-xl v2-text-secondary leading-relaxed">
-              End-to-end digital marketing solutions designed to accelerate your business growth.
+              End-to-end marketing solutions designed to accelerate your business growth.
             </p>
           </div>
 
@@ -164,7 +168,21 @@ export default function ServicesPage() {
             {services.map((service) => {
               const Icon = service.icon;
               return (
-                <div key={service.title} id={service.id} className="relative v2-paper rounded-2xl p-8 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 scroll-mt-24">
+                <div
+                  key={service.title}
+                  id={service.id}
+                  className="relative v2-paper rounded-2xl p-5 sm:p-6 md:p-8 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 scroll-mt-24 cursor-pointer"
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`Learn more about ${service.title}`}
+                  onClick={() => setModalServiceId(service.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      setModalServiceId(service.id);
+                    }
+                  }}
+                >
                   {/* Alt anchor IDs for footer links */}
                   {service.altIds?.map((altId) => (
                     <div key={altId} id={altId} style={{ position: 'absolute', top: '-6rem' }} />
@@ -191,9 +209,12 @@ export default function ServicesPage() {
                     ))}
                   </div>
 
-                  {/* Results Badge */}
-                  <div className="pt-4 border-t border-fm-neutral-100">
+                  {/* Results Badge + Learn More */}
+                  <div className="pt-4 border-t border-fm-neutral-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                     <p className="text-sm text-fm-magenta-600 font-semibold">{service.results}</p>
+                    <span className="text-sm text-fm-magenta-500 font-medium flex items-center gap-1 flex-shrink-0">
+                      Learn More <ArrowRight className="w-3.5 h-3.5" />
+                    </span>
                   </div>
                 </div>
               );
@@ -202,16 +223,24 @@ export default function ServicesPage() {
         </div>
       </section>
 
+      {/* Wave Divider */}
+      <div className="relative" style={{ zIndex: 10, marginTop: '-1px' }}>
+        <img src="/textures/wave-divider.svg" alt="" className="w-full" style={{ height: '60px', display: 'block', transform: 'scaleX(-1)' }} />
+      </div>
+
       {/* Process Section */}
-      <section id="process" className="relative z-10 v2-section">
+      <section id="process" className="relative z-10 v2-section v2-texture-mesh">
         <div className="v2-container">
           {/* Floating Brain */}
-          <div className="absolute right-8 lg:right-20 top-0 hidden lg:block z-10">
+          <div className="absolute right-8 lg:right-20 top-0 hidden lg:block" style={{ zIndex: 10 }}>
             <img
-              src="/3dasset/brain-strategy.png"
-              alt="Strategic Thinking"
-              className="w-32 lg:w-44 h-auto animate-v2-hero-float drop-shadow-2xl"
-              style={{ filter: 'drop-shadow(0 20px 40px rgba(0,0,0,0.3))' }}
+              src="/3dasset/brain-teaching.png"
+              alt="Our Proven Process"
+              className="h-auto animate-v2-hero-float"
+              style={{
+                width: 'min(180px, 30vw)',
+                filter: 'drop-shadow(0 20px 40px rgba(140,25,60,0.2))',
+              }}
             />
           </div>
 
@@ -246,8 +275,13 @@ export default function ServicesPage() {
         </div>
       </section>
 
+      {/* Wave Divider */}
+      <div className="relative" style={{ zIndex: 10, marginTop: '-1px' }}>
+        <img src="/textures/wave-divider.svg" alt="" className="w-full" style={{ height: '60px', display: 'block' }} />
+      </div>
+
       {/* Pricing Section */}
-      <section className="relative z-10 v2-section">
+      <section className="relative z-10 v2-section v2-texture-dots">
         <div className="v2-container">
           <div className="max-w-3xl mx-auto" style={{ textAlign: 'center', marginBottom: '64px' }}>
             <div className="v2-badge v2-badge-glass mb-6">
@@ -315,16 +349,16 @@ export default function ServicesPage() {
       {/* CTA Section */}
       <section className="relative z-10 v2-section pb-32">
         <div className="v2-container v2-container-narrow">
-          <div className="v2-paper rounded-3xl p-10 lg:p-14" style={{ textAlign: 'center' }}>
+          <div className="v2-paper rounded-3xl p-6 sm:p-8 md:p-10 lg:p-14" style={{ textAlign: 'center' }}>
             <div className="v2-badge v2-badge-light mb-6">
               <Target className="w-4 h-4" />
               <span>Ready to Get Started?</span>
             </div>
             <h2 className="font-display text-3xl md:text-4xl font-bold text-fm-neutral-900 mb-6 leading-tight">
-              Ready to Transform Your Business?
+              Ready to Accelerate Your Growth?
             </h2>
             <p className="text-fm-neutral-600 mb-8 max-w-xl mx-auto">
-              Let's discuss your goals and create a custom digital marketing strategy that drives real results for your business.
+              Let's discuss your goals and create a custom marketing strategy that drives real results for your business.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link href="/contact" className="v2-btn v2-btn-magenta">
@@ -339,5 +373,12 @@ export default function ServicesPage() {
         </div>
       </section>
     </V2PageWrapper>
+
+    <ServiceDeepDiveModal
+      isOpen={!!modalServiceId}
+      onClose={() => setModalServiceId(null)}
+      serviceId={modalServiceId}
+    />
+  </>
   );
 }

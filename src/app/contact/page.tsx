@@ -8,8 +8,8 @@ import { V2PageWrapper } from "@/components/layouts/V2PageWrapper";
 const contactInfo = [
   {
     icon: MapPin,
-    title: "Visit Our Office",
-    details: ["House No. 5, Maheshwari Bhawan", "Near Qutbi Masjid, MP Nagar", "Professors Colony, Bhopal - 462002", "Madhya Pradesh, India"]
+    title: "Our Location",
+    details: ["India-based, serving brands worldwide"]
   },
   {
     icon: Phone,
@@ -19,7 +19,7 @@ const contactInfo = [
   {
     icon: Mail,
     title: "Email Us",
-    details: ["hello@freakingminds.in", "business@freakingminds.in", "careers@freakingminds.in"]
+    details: ["freakingmindsdigital@gmail.com"]
   },
   {
     icon: Clock,
@@ -53,8 +53,8 @@ const faqData = [
     answer: "Results vary by service, but typically you'll see initial improvements in 3-6 months for SEO, immediate results for PPC, and 1-3 months for social media marketing."
   },
   {
-    question: "Do you work with businesses outside of Bhopal?",
-    answer: "Yes! While we're based in Bhopal, we work with clients across India and internationally through digital collaboration."
+    question: "Do you work with businesses outside of India?",
+    answer: "Yes! We work with clients across India and internationally. Our team collaborates seamlessly across time zones through digital tools."
   },
   {
     question: "What's included in your monthly reporting?",
@@ -129,14 +129,13 @@ export default function ContactPage() {
 
             {/* Headline */}
             <h1 className="font-display text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold v2-text-primary mb-8 leading-tight">
-              Ready to{' '}
-              <span className="v2-accent">Transform</span>{' '}
-              Your Business?
+              Let's Talk About{' '}
+              <span className="v2-accent">Your Growth</span>
             </h1>
 
             {/* Description */}
             <p className="text-lg md:text-xl v2-text-secondary leading-relaxed" style={{ marginBottom: '48px' }}>
-              Get in touch with our team of digital marketing experts. We're here to help you achieve your business goals with strategic marketing solutions that deliver real results.
+              Get in touch with our team of marketing and creative experts. We're here to help you achieve your business goals with strategic marketing solutions that deliver real results.
             </p>
 
             {/* CTAs */}
@@ -153,12 +152,15 @@ export default function ContactPage() {
         </div>
 
         {/* 3D Brain Decoration */}
-        <div className="absolute left-8 lg:left-20 top-1/3 hidden lg:block z-10">
+        <div className="absolute left-8 lg:left-20 top-1/3 hidden lg:block" style={{ zIndex: 10 }}>
           <img
             src="/3dasset/brain-creative.png"
             alt="Creative Solutions"
-            className="w-28 lg:w-36 h-auto animate-v2-hero-float drop-shadow-2xl"
-            style={{ filter: 'drop-shadow(0 20px 40px rgba(0,0,0,0.3))' }}
+            className="h-auto animate-v2-hero-float"
+            style={{
+              width: 'min(180px, 30vw)',
+              filter: 'drop-shadow(0 20px 40px rgba(140,25,60,0.2))',
+            }}
           />
         </div>
       </section>
@@ -179,24 +181,44 @@ export default function ContactPage() {
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-sm font-medium text-fm-neutral-700 mb-2">Your Name *</label>
+                    <label className="block text-sm font-semibold text-fm-neutral-700 mb-2">Your Name *</label>
                     <input
                       type="text"
                       required
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full px-4 py-3 bg-fm-neutral-50 border border-fm-neutral-200 rounded-xl focus:ring-2 focus:ring-fm-magenta-200 focus:border-fm-magenta-300 transition-all"
+                      className="w-full rounded-xl transition-all duration-200"
+                      style={{
+                        padding: '14px 16px',
+                        background: '#faf9f9',
+                        border: '1.5px solid #e5e2e2',
+                        outline: 'none',
+                        fontSize: '15px',
+                        color: '#0f0f0f',
+                      }}
+                      onFocus={(e) => { e.target.style.border = '1.5px solid #c9325d'; e.target.style.boxShadow = '0 0 0 4px rgba(201,50,93,0.08)'; e.target.style.background = '#fff'; }}
+                      onBlur={(e) => { e.target.style.border = '1.5px solid #e5e2e2'; e.target.style.boxShadow = 'none'; e.target.style.background = '#faf9f9'; }}
                       placeholder="John Doe"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-fm-neutral-700 mb-2">Email Address *</label>
+                    <label className="block text-sm font-semibold text-fm-neutral-700 mb-2">Email Address *</label>
                     <input
                       type="email"
                       required
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full px-4 py-3 bg-fm-neutral-50 border border-fm-neutral-200 rounded-xl focus:ring-2 focus:ring-fm-magenta-200 focus:border-fm-magenta-300 transition-all"
+                      className="w-full rounded-xl transition-all duration-200"
+                      style={{
+                        padding: '14px 16px',
+                        background: '#faf9f9',
+                        border: '1.5px solid #e5e2e2',
+                        outline: 'none',
+                        fontSize: '15px',
+                        color: '#0f0f0f',
+                      }}
+                      onFocus={(e) => { e.target.style.border = '1.5px solid #c9325d'; e.target.style.boxShadow = '0 0 0 4px rgba(201,50,93,0.08)'; e.target.style.background = '#fff'; }}
+                      onBlur={(e) => { e.target.style.border = '1.5px solid #e5e2e2'; e.target.style.boxShadow = 'none'; e.target.style.background = '#faf9f9'; }}
                       placeholder="john@company.com"
                     />
                   </div>
@@ -204,22 +226,42 @@ export default function ContactPage() {
 
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-sm font-medium text-fm-neutral-700 mb-2">Phone Number</label>
+                    <label className="block text-sm font-semibold text-fm-neutral-700 mb-2">Phone Number</label>
                     <input
                       type="tel"
                       value={formData.phone}
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      className="w-full px-4 py-3 bg-fm-neutral-50 border border-fm-neutral-200 rounded-xl focus:ring-2 focus:ring-fm-magenta-200 focus:border-fm-magenta-300 transition-all"
+                      className="w-full rounded-xl transition-all duration-200"
+                      style={{
+                        padding: '14px 16px',
+                        background: '#faf9f9',
+                        border: '1.5px solid #e5e2e2',
+                        outline: 'none',
+                        fontSize: '15px',
+                        color: '#0f0f0f',
+                      }}
+                      onFocus={(e) => { e.target.style.border = '1.5px solid #c9325d'; e.target.style.boxShadow = '0 0 0 4px rgba(201,50,93,0.08)'; e.target.style.background = '#fff'; }}
+                      onBlur={(e) => { e.target.style.border = '1.5px solid #e5e2e2'; e.target.style.boxShadow = 'none'; e.target.style.background = '#faf9f9'; }}
                       placeholder="+91 XXXXX XXXXX"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-fm-neutral-700 mb-2">Company Name</label>
+                    <label className="block text-sm font-semibold text-fm-neutral-700 mb-2">Company Name</label>
                     <input
                       type="text"
                       value={formData.company}
                       onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-                      className="w-full px-4 py-3 bg-fm-neutral-50 border border-fm-neutral-200 rounded-xl focus:ring-2 focus:ring-fm-magenta-200 focus:border-fm-magenta-300 transition-all"
+                      className="w-full rounded-xl transition-all duration-200"
+                      style={{
+                        padding: '14px 16px',
+                        background: '#faf9f9',
+                        border: '1.5px solid #e5e2e2',
+                        outline: 'none',
+                        fontSize: '15px',
+                        color: '#0f0f0f',
+                      }}
+                      onFocus={(e) => { e.target.style.border = '1.5px solid #c9325d'; e.target.style.boxShadow = '0 0 0 4px rgba(201,50,93,0.08)'; e.target.style.background = '#fff'; }}
+                      onBlur={(e) => { e.target.style.border = '1.5px solid #e5e2e2'; e.target.style.boxShadow = 'none'; e.target.style.background = '#faf9f9'; }}
                       placeholder="Your Company"
                     />
                   </div>
@@ -227,12 +269,27 @@ export default function ContactPage() {
 
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-sm font-medium text-fm-neutral-700 mb-2">Service Required *</label>
+                    <label className="block text-sm font-semibold text-fm-neutral-700 mb-2">Service Required *</label>
                     <select
                       required
                       value={formData.service}
                       onChange={(e) => setFormData({ ...formData, service: e.target.value })}
-                      className="w-full px-4 py-3 bg-fm-neutral-50 border border-fm-neutral-200 rounded-xl focus:ring-2 focus:ring-fm-magenta-200 focus:border-fm-magenta-300 transition-all"
+                      className="w-full rounded-xl transition-all duration-200 cursor-pointer"
+                      style={{
+                        padding: '14px 16px',
+                        background: '#faf9f9',
+                        border: '1.5px solid #e5e2e2',
+                        outline: 'none',
+                        fontSize: '15px',
+                        color: '#0f0f0f',
+                        appearance: 'none',
+                        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`,
+                        backgroundRepeat: 'no-repeat',
+                        backgroundPosition: 'right 16px center',
+                        paddingRight: '44px',
+                      }}
+                      onFocus={(e) => { e.target.style.border = '1.5px solid #c9325d'; e.target.style.boxShadow = '0 0 0 4px rgba(201,50,93,0.08)'; e.target.style.background = '#fff'; }}
+                      onBlur={(e) => { e.target.style.border = '1.5px solid #e5e2e2'; e.target.style.boxShadow = 'none'; e.target.style.background = '#faf9f9'; }}
                     >
                       <option value="">Select a service</option>
                       {services.map((service) => (
@@ -241,11 +298,26 @@ export default function ContactPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-fm-neutral-700 mb-2">Budget Range</label>
+                    <label className="block text-sm font-semibold text-fm-neutral-700 mb-2">Budget Range</label>
                     <select
                       value={formData.budget}
                       onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
-                      className="w-full px-4 py-3 bg-fm-neutral-50 border border-fm-neutral-200 rounded-xl focus:ring-2 focus:ring-fm-magenta-200 focus:border-fm-magenta-300 transition-all"
+                      className="w-full rounded-xl transition-all duration-200 cursor-pointer"
+                      style={{
+                        padding: '14px 16px',
+                        background: '#faf9f9',
+                        border: '1.5px solid #e5e2e2',
+                        outline: 'none',
+                        fontSize: '15px',
+                        color: '#0f0f0f',
+                        appearance: 'none',
+                        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`,
+                        backgroundRepeat: 'no-repeat',
+                        backgroundPosition: 'right 16px center',
+                        paddingRight: '44px',
+                      }}
+                      onFocus={(e) => { e.target.style.border = '1.5px solid #c9325d'; e.target.style.boxShadow = '0 0 0 4px rgba(201,50,93,0.08)'; e.target.style.background = '#fff'; }}
+                      onBlur={(e) => { e.target.style.border = '1.5px solid #e5e2e2'; e.target.style.boxShadow = 'none'; e.target.style.background = '#faf9f9'; }}
                     >
                       <option value="">Select budget range</option>
                       {budgetRanges.map((budget) => (
@@ -256,13 +328,24 @@ export default function ContactPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-fm-neutral-700 mb-2">Project Details *</label>
+                  <label className="block text-sm font-semibold text-fm-neutral-700 mb-2">Project Details *</label>
                   <textarea
                     required
                     value={formData.message}
                     onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                     rows={6}
-                    className="w-full px-4 py-3 bg-fm-neutral-50 border border-fm-neutral-200 rounded-xl focus:ring-2 focus:ring-fm-magenta-200 focus:border-fm-magenta-300 transition-all resize-none"
+                    className="w-full rounded-xl transition-all duration-200"
+                    style={{
+                      padding: '14px 16px',
+                      background: '#faf9f9',
+                      border: '1.5px solid #e5e2e2',
+                      outline: 'none',
+                      fontSize: '15px',
+                      color: '#0f0f0f',
+                      resize: 'none',
+                    }}
+                    onFocus={(e) => { e.target.style.border = '1.5px solid #c9325d'; e.target.style.boxShadow = '0 0 0 4px rgba(201,50,93,0.08)'; e.target.style.background = '#fff'; }}
+                    onBlur={(e) => { e.target.style.border = '1.5px solid #e5e2e2'; e.target.style.boxShadow = 'none'; e.target.style.background = '#faf9f9'; }}
                     placeholder="Tell us about your project..."
                   />
                 </div>
@@ -298,7 +381,7 @@ export default function ContactPage() {
                   <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-xl">
                     <Send className="w-5 h-5 text-red-600 flex-shrink-0" />
                     <p className="text-red-800 text-sm font-medium">
-                      Something went wrong. Please try again or email us directly at hello@freakingminds.in
+                      Something went wrong. Please try again or email us directly at freakingmindsdigital@gmail.com
                     </p>
                   </div>
                 )}
@@ -345,7 +428,7 @@ export default function ContactPage() {
                     Call Now
                   </a>
                   <a
-                    href="mailto:hello@freakingminds.in"
+                    href="mailto:freakingmindsdigital@gmail.com"
                     className="v2-btn v2-btn-outline v2-btn-full"
                   >
                     <Mail className="w-5 h-5" />
@@ -372,10 +455,10 @@ export default function ContactPage() {
         <div className="v2-container">
           <div className="max-w-2xl mx-auto" style={{ textAlign: 'center', marginBottom: '48px' }}>
             <h2 className="font-display text-3xl md:text-4xl font-bold v2-text-primary mb-6 leading-tight">
-              Visit Our <span className="v2-accent">Office</span>
+              Find <span className="v2-accent">Us</span>
             </h2>
             <p className="v2-text-secondary">
-              Located in the heart of Bhopal's MP Nagar, we're easily accessible and always ready to welcome you.
+              Based in Central India, we serve brands across the country and worldwide.
             </p>
           </div>
 
@@ -388,14 +471,14 @@ export default function ContactPage() {
               allowFullScreen
               loading="lazy"
               referrerPolicy="no-referrer-when-downgrade"
-              title="FreakingMinds Office Location - MP Nagar, Bhopal"
+              title="FreakingMinds Office Location - India"
             />
           </div>
         </div>
       </section>
 
       {/* FAQ Section */}
-      <section className="relative z-10 v2-section">
+      <section className="relative z-10 v2-section pb-32">
         <div className="v2-container v2-container-narrow">
           <div className="max-w-2xl mx-auto" style={{ textAlign: 'center', marginBottom: '48px' }}>
             <h2 className="font-display text-3xl md:text-4xl font-bold v2-text-primary leading-tight">
