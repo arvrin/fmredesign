@@ -1,229 +1,248 @@
 'use client';
 
-import React from 'react';
-import { LinkButton } from '@/design-system';
-import { 
-  ArrowRight, 
-  Play, 
-  Sparkles, 
-  TrendingUp, 
-  Users, 
-  Zap,
-  Target,
-  Rocket,
-  Star,
-  Globe,
-  Heart,
-  Trophy,
-  Lightbulb
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
-
-
-const floatingIcons = [
-  // Edge icons - orbital movement
-  { Icon: Sparkles, position: 'top-10 left-10', animation: 'float-orbital-left', delay: '0s' },
-  { Icon: TrendingUp, position: 'top-10 right-10', animation: 'float-orbital-right', delay: '1s' },
-  { Icon: Users, position: 'bottom-10 left-10', animation: 'float-orbital-left', delay: '2s' },
-  { Icon: Target, position: 'bottom-10 right-10', animation: 'float-orbital-right', delay: '3s' },
-  
-  // Mid-area icons - wave movement
-  { Icon: Zap, position: 'top-1/3 left-20', animation: 'float-wave-horizontal', delay: '0.5s' },
-  { Icon: Rocket, position: 'top-1/3 right-20', animation: 'float-wave-horizontal', delay: '1.5s' },
-  { Icon: Star, position: 'bottom-1/3 left-20', animation: 'float-wave-horizontal', delay: '2.5s' },
-  { Icon: Globe, position: 'bottom-1/3 right-20', animation: 'float-wave-horizontal', delay: '3.5s' },
-  
-  // Center area icons - vertical movement
-  { Icon: Heart, position: 'top-1/4 left-1/2', animation: 'float-wave-vertical', delay: '1s' },
-  { Icon: Trophy, position: 'bottom-1/4 left-1/2', animation: 'float-wave-vertical', delay: '2s' },
-  
-  // Diagonal movement icons
-  { Icon: Lightbulb, position: 'top-1/2 left-16', animation: 'float-diagonal', delay: '1.8s' },
-  { Icon: Sparkles, position: 'top-1/2 right-16', animation: 'float-diagonal', delay: '4.2s' },
-  
-  // Additional pulse movement icons for fuller coverage
-  { Icon: Star, position: 'top-2/3 left-1/3', animation: 'float-pulse-move', delay: '0.8s' },
-  { Icon: Zap, position: 'top-1/6 right-1/3', animation: 'float-pulse-move', delay: '3.8s' },
-];
+import React, { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { ArrowRight, ArrowUpRight, Sparkles, Palette, TrendingUp, Code, Globe } from 'lucide-react';
 
 export function HeroSection() {
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [mousePos, setMousePos] = useState({ x: 0.5, y: 0.5 });
+
+  useEffect(() => {
+    const timer = setTimeout(() => setIsLoaded(true), 100);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      setMousePos({
+        x: e.clientX / window.innerWidth,
+        y: e.clientY / window.innerHeight,
+      });
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
+
+  const services = [
+    {
+      icon: Palette,
+      title: 'Brand Strategy',
+      desc: 'Define your unique position in the market.',
+      color: 'bg-fm-magenta-100',
+      iconColor: 'text-fm-magenta-600',
+    },
+    {
+      icon: TrendingUp,
+      title: 'Digital Marketing',
+      desc: 'Data-driven campaigns that convert.',
+      color: 'bg-fm-magenta-50',
+      iconColor: 'text-fm-magenta-500',
+    },
+    {
+      icon: Code,
+      title: 'Web Development',
+      desc: 'Beautiful, fast, converting websites.',
+      color: 'bg-fm-magenta-100',
+      iconColor: 'text-fm-magenta-600',
+    },
+    {
+      icon: Globe,
+      title: 'Social Media',
+      desc: 'Build community and engagement.',
+      color: 'bg-fm-neutral-100',
+      iconColor: 'text-fm-neutral-700',
+    },
+  ];
 
   return (
-    <section 
-      className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-fm-neutral-50 to-fm-neutral-100 py-0"
-    >
-      {/* Premium Background Pattern with Smooth Continuous Flowing Gradient */}
-      <div className="absolute inset-0 opacity-70 overflow-hidden">
-        {/* Primary gradient - continuous smooth flow */}
-        <div 
-          className="absolute inset-0 gradient-flow-primary"
-          style={{
-            background: `radial-gradient(600px circle at 50% 50%, 
-              rgba(179,41,104,0.5) 0%, 
-              rgba(179,41,104,0.3) 25%,
-              rgba(110,24,69,0.2) 50%,
-              transparent 70%)`
-          }}
-        />
-        
-        {/* Secondary gradient - flows in different pattern for depth */}
-        <div 
-          className="absolute inset-0 opacity-60 gradient-flow-secondary"
-          style={{
-            background: `radial-gradient(800px circle at 50% 50%, 
-              rgba(255,133,93,0.2) 0%,
-              rgba(255,107,53,0.1) 40%,
-              transparent 70%)`
-          }}
-        />
-        
-        {/* Tertiary gradient - subtle outer glow with its own flow */}
-        <div 
-          className="absolute inset-0 opacity-40 gradient-flow-tertiary"
-          style={{
-            background: `radial-gradient(1000px circle at 50% 50%, 
-              rgba(179,41,104,0.3) 0%,
-              transparent 60%)`
-          }}
-        />
-        
-        {/* Premium mesh gradient overlay */}
-        <div className="absolute inset-0 opacity-50 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(179,41,104,0.25),transparent_50%)]" />
-        
-        {/* Subtle noise texture for luxury feel */}
-        <div 
-          className="absolute inset-0 opacity-[0.02]"
-          style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
-          }}
-        />
-        
-        {/* Diagonal lines pattern - more subtle */}
-        <div className="absolute top-0 left-0 w-full h-full opacity-50 bg-[linear-gradient(45deg,transparent_48%,rgba(179,41,104,0.08)_49%,rgba(179,41,104,0.08)_51%,transparent_52%)] bg-[length:30px_30px]" />
+    <section className="relative min-h-screen overflow-hidden bg-[#FAFAFA] pt-28 md:pt-32 pb-12 md:pb-16">
+      {/* Animated gradient mesh background */}
+      <div
+        className="absolute inset-0 opacity-60 pointer-events-none"
+        style={{
+          background: `
+            radial-gradient(ellipse 60% 40% at ${20 + mousePos.x * 20}% ${30 + mousePos.y * 20}%, rgba(168, 37, 72, 0.14) 0%, transparent 50%),
+            radial-gradient(ellipse 50% 30% at ${70 - mousePos.x * 15}% ${60 - mousePos.y * 15}%, rgba(236, 117, 160, 0.10) 0%, transparent 50%),
+            radial-gradient(ellipse 40% 40% at ${50 + mousePos.x * 10}% ${80 - mousePos.y * 10}%, rgba(168, 37, 72, 0.06) 0%, transparent 50%)
+          `,
+          transition: 'background 0.3s ease-out',
+        }}
+      />
+
+      {/* Subtle grid pattern */}
+      <div className="absolute inset-0 opacity-[0.03] pointer-events-none">
+        <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <pattern id="heroGrid" width="60" height="60" patternUnits="userSpaceOnUse">
+              <path d="M 60 0 L 0 0 0 60" fill="none" stroke="#a82548" strokeWidth="1"/>
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#heroGrid)" />
+        </svg>
       </div>
 
-      {/* Enhanced Floating Icons - Full Hero Coverage */}
-      {floatingIcons.map(({ Icon, position, animation, delay }, index) => (
-        <div
-          key={index}
-          className={cn(
-            'absolute w-12 h-12 md:w-16 md:h-16 text-fm-magenta-300 hidden lg:block pointer-events-none',
-            position,
-            animation
-          )}
-          style={{ animationDelay: delay }}
-        >
-          <Icon className="w-full h-full opacity-40 drop-shadow-sm" />
-        </div>
-      ))}
+      <div className="max-w-[1400px] mx-auto px-6 md:px-12 relative z-10">
+        {/* Bento Grid */}
+        <div className={`grid grid-cols-12 gap-4 transition-all duration-1000 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
 
-      <div className="fm-container relative z-10">
-        <div className="max-w-4xl mx-auto text-center">
-          {/* Badge */}
-          <div className="inline-flex items-center px-4 py-2 bg-fm-magenta-50 border border-fm-magenta-200 rounded-full text-fm-magenta-700 text-sm font-medium mb-8 animate-fade-in">
-            <Sparkles className="w-4 h-4 mr-2" />
-            Leading Digital Marketing Agency in Bhopal
-          </div>
+          {/* Hero Card - Large */}
+          <div className="col-span-12 lg:col-span-8 bg-white/80 backdrop-blur-xl rounded-3xl p-8 md:p-12 border border-white/50 shadow-xl min-h-[420px] flex flex-col justify-between">
+            <div>
+              {/* Badge */}
+              <div className="flex items-center gap-2 mb-6">
+                <span className="w-2 h-2 rounded-full bg-fm-magenta-500 animate-pulse" />
+                <span
+                  className="text-sm font-medium"
+                  style={{
+                    background: 'linear-gradient(135deg, #a82548 0%, #ec75a0 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text',
+                  }}
+                >
+                  Digital Marketing Agency
+                </span>
+              </div>
 
-          {/* Main Headline */}
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-fm-neutral-900 animate-fade-in-up text-center max-w-4xl mx-auto" style={{ marginBottom: '3rem', lineHeight: '1.1' }}>
-            We Don&apos;t Just Market,{' '}
-            <span className="text-fm-magenta-700 relative inline-block">
-              We Create
-              <svg
-                className="absolute -bottom-2 left-0 w-full h-4 text-fm-magenta-700"
-                viewBox="0 0 200 12"
-                fill="currentColor"
+              {/* Headline with animated gradient */}
+              <h1
+                className="text-[clamp(2.5rem,6vw,4.5rem)] font-bold leading-[1.05] tracking-[-0.03em]"
+                style={{
+                  fontFamily: 'var(--font-display)',
+                  background: 'linear-gradient(135deg, #18181b 0%, #a82548 50%, #ec75a0 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                  backgroundSize: '200% 200%',
+                  animation: 'gradientMove 8s ease infinite',
+                }}
               >
-                <path d="M2 8c40-6 80-6 120 0s80 6 120 0" stroke="currentColor" strokeWidth="4" fill="none" />
-              </svg>
-            </span>{' '}
-            Movements
-          </h1>
+                Ideas that
+                <br />
+                move markets.
+              </h1>
 
-          {/* Subtitle */}
-          <p className="text-lg md:text-xl text-fm-neutral-600 max-w-4xl mx-auto animate-fade-in-up text-center" style={{ marginBottom: '3.5rem', lineHeight: '1.8' }}>
-            Data-driven creative solutions that transform ambitious brands into market leaders. 
-            We combine strategic thinking with creative excellence to deliver measurable results.
-          </p>
+              {/* Subheadline */}
+              <p className="mt-6 text-fm-neutral-600 text-lg leading-relaxed max-w-xl">
+                Strategic creativity that transforms ambitious brands into market leaders.
+                Data-informed. Design-led. Results-driven.
+              </p>
+            </div>
 
-          {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in-up" style={{ marginBottom: '5rem' }}>
-            <LinkButton 
-              href="/get-started" 
-              variant="primary" 
-              size="lg" 
-              icon={<ArrowRight className="w-5 h-5" />}
-              iconPosition="right"
-              className="group"
-            >
-              Start Your Journey
-            </LinkButton>
-            <LinkButton 
-              href="/about" 
-              variant="ghost" 
-              size="lg" 
-              icon={<Play className="w-5 h-5" />}
-              iconPosition="left"
-              className="group"
-            >
-              Watch Our Story
-            </LinkButton>
+            {/* CTAs */}
+            <div className="flex flex-wrap items-center gap-4 mt-8">
+              <Link
+                href="/get-started"
+                className="group px-7 py-3.5 text-sm font-medium rounded-full transition-all hover:scale-105 flex items-center gap-2 shadow-lg shadow-fm-magenta-200/50"
+                style={{ background: 'linear-gradient(135deg, #a82548 0%, #7c1d3e 100%)', color: '#ffffff' }}
+              >
+                Start a Project
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </Link>
+              <Link
+                href="/work"
+                className="px-7 py-3.5 border border-fm-neutral-300 text-fm-neutral-700 text-sm font-medium rounded-full hover:border-fm-magenta-300 hover:text-fm-magenta-600 hover:bg-fm-magenta-50 transition-all"
+              >
+                View Our Work
+              </Link>
+            </div>
           </div>
 
-          {/* Social Proof */}
-          <div className="animate-fade-in">
-            <p className="text-sm text-fm-neutral-500 mb-8 text-center">
-              Trusted by 250+ brands across India
-            </p>
-            
-            {/* Stats Container */}
-            <div className="bg-fm-magenta-50/80 backdrop-blur-sm border border-fm-magenta-200/60 rounded-xl shadow-fm-lg p-6 md:p-8 max-w-3xl mx-auto">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
-                <div className="text-center">
-                  <div className="text-2xl md:text-3xl font-bold text-fm-magenta-700 mb-1">
-                    10+
-                  </div>
-                  <div className="text-sm text-fm-neutral-700 font-medium">
-                    Years Experience
-                  </div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl md:text-3xl font-bold text-fm-magenta-700 mb-1">
-                    250+
-                  </div>
-                  <div className="text-sm text-fm-neutral-700 font-medium">
-                    Campaigns
-                  </div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl md:text-3xl font-bold text-fm-magenta-700 mb-1">
-                    95%
-                  </div>
-                  <div className="text-sm text-fm-neutral-700 font-medium">
-                    Client Satisfaction
-                  </div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl md:text-3xl font-bold text-fm-magenta-700 mb-1">
-                    300%
-                  </div>
-                  <div className="text-sm text-fm-neutral-700 font-medium">
-                    Avg. ROI Increase
-                  </div>
-                </div>
+          {/* Stats Card */}
+          <div className="col-span-12 lg:col-span-4 bg-fm-neutral-900 rounded-3xl p-8 text-white flex flex-col justify-between min-h-[420px]">
+            <div>
+              <span className="text-fm-neutral-400 text-xs uppercase tracking-widest">Our Impact</span>
+              <div
+                className="text-[4rem] md:text-[5rem] font-bold leading-none mt-4"
+                style={{
+                  fontFamily: 'var(--font-display)',
+                  background: 'linear-gradient(135deg, #ec75a0 0%, #ffffff 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                }}
+              >
+                250+
+              </div>
+              <p className="text-fm-neutral-400 mt-2">Projects delivered with excellence</p>
+            </div>
+
+            {/* Brain mascot - Meditating zen brain (3D) */}
+            <div className="flex justify-center my-6">
+              <img
+                src="/3dasset/medibrain.png"
+                alt="Freaking Minds - Thoughtful Strategy"
+                className="w-44 h-auto hover:scale-110 transition-transform duration-500 drop-shadow-lg rounded-2xl brain-animate-float"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <div className="text-2xl font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>95%</div>
+                <div className="text-fm-neutral-500 text-xs mt-1">Client Retention</div>
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>10+</div>
+                <div className="text-fm-neutral-500 text-xs mt-1">Years Experience</div>
               </div>
             </div>
           </div>
+
+          {/* Service Cards Row */}
+          {services.map((service, index) => (
+            <div
+              key={service.title}
+              className={`col-span-12 md:col-span-6 lg:col-span-3 bg-white/80 backdrop-blur-sm rounded-3xl p-6 border border-white/50 shadow-lg group hover:border-fm-magenta-300 hover:shadow-xl hover:shadow-fm-magenta-100/50 transition-all duration-300 cursor-pointer ${
+                isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+              }`}
+              style={{ transitionDelay: `${200 + index * 100}ms` }}
+            >
+              <div className={`w-12 h-12 ${service.color} rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
+                <service.icon className={`w-6 h-6 ${service.iconColor}`} />
+              </div>
+              <h3 className="text-fm-neutral-900 font-semibold text-lg mb-2 group-hover:text-fm-magenta-700 transition-colors">
+                {service.title}
+              </h3>
+              <p className="text-fm-neutral-500 text-sm">{service.desc}</p>
+              <ArrowUpRight className="w-5 h-5 text-fm-neutral-300 group-hover:text-fm-magenta-600 mt-4 transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+            </div>
+          ))}
+
+          {/* Bottom CTA Bar */}
+          <div
+            className={`col-span-12 rounded-3xl p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 transition-all duration-1000 ${
+              isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+            }`}
+            style={{
+              transitionDelay: '600ms',
+              background: 'linear-gradient(135deg, #a82548 0%, #7c1d3e 50%, #a82548 100%)',
+            }}
+          >
+            <div className="text-center md:text-left">
+              <h3 className="text-xl md:text-2xl font-bold" style={{ fontFamily: 'var(--font-display)', color: '#ffffff' }}>
+                Ready to transform your brand?
+              </h3>
+              <p className="text-sm mt-1" style={{ color: 'rgba(255, 255, 255, 0.85)' }}>Let's create something extraordinary together.</p>
+            </div>
+            <Link
+              href="/get-started"
+              className="group px-8 py-4 bg-white text-sm font-semibold rounded-full hover:bg-fm-neutral-100 transition-all flex items-center gap-2 shadow-lg"
+              style={{ color: '#a82548' }}
+            >
+              Get Started Today
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </div>
         </div>
       </div>
 
-      {/* Scroll Indicator */}
-      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
-        <div className="w-6 h-10 border-2 border-fm-magenta-700 rounded-full flex justify-center">
-          <div className="w-1 h-3 bg-fm-magenta-700 rounded-full mt-2 animate-pulse" />
-        </div>
-      </div>
+      <style jsx>{`
+        @keyframes gradientMove {
+          0%, 100% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+        }
+      `}</style>
     </section>
   );
 }

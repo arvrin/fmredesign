@@ -337,7 +337,7 @@ class LeadService {
 
       // Average lead value (based on budget midpoint)
       const averageLeadValue = leads.reduce((sum, lead) => {
-        const budgetRange = BUDGET_VALUES[lead.budgetRange];
+        const budgetRange = BUDGET_VALUES[lead.budgetRange] || BUDGET_VALUES['not_disclosed'];
         const midpoint = (budgetRange.min + budgetRange.max) / 2;
         return sum + midpoint;
       }, 0) / (leads.length || 1);
@@ -364,7 +364,7 @@ class LeadService {
     let score = 0;
 
     // Budget Score (40% weight)
-    const budgetRange = BUDGET_VALUES[lead.budgetRange];
+    const budgetRange = BUDGET_VALUES[lead.budgetRange] || BUDGET_VALUES['not_disclosed'];
     const budgetScore = this.getBudgetScore(budgetRange);
     score += budgetScore * LEAD_SCORE_WEIGHTS.BUDGET;
 

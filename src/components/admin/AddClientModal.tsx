@@ -66,7 +66,8 @@ export function AddClientModal({ isOpen, onClose, onClientAdded }: AddClientModa
     status: 'active',
     health: 'good',
     totalValue: '0',
-    gstNumber: ''
+    gstNumber: '',
+    portalPassword: ''
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -115,7 +116,8 @@ export function AddClientModal({ isOpen, onClose, onClientAdded }: AddClientModa
           status: 'active',
           health: 'good',
           totalValue: '0',
-          gstNumber: ''
+          gstNumber: '',
+          portalPassword: ''
         });
         
         onClientAdded();
@@ -351,6 +353,23 @@ export function AddClientModal({ isOpen, onClose, onClientAdded }: AddClientModa
                 placeholder="22AAAAA0000A1Z5"
                 className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
+                Portal Password
+              </label>
+              <input
+                type="text"
+                name="portalPassword"
+                value={formData.portalPassword}
+                onChange={handleInputChange}
+                placeholder="Password for client portal login"
+                className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+              />
+              <p className="text-xs text-fm-neutral-500 mt-1">
+                Client will use this password to log into their portal
+              </p>
             </div>
 
             <div>

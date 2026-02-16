@@ -1,31 +1,27 @@
-/**
- * Get Started - Brand-Aligned Lead Capture Form
- * Enhanced Modal Experience with Non-Scrollable Container
- */
-
 'use client';
 
 import { useState, useEffect } from 'react';
-import { 
-  ChevronLeft, 
-  ChevronRight, 
-  CheckCircle, 
-  AlertCircle, 
-  Zap, 
-  Target, 
-  Users, 
+import Link from 'next/link';
+import {
+  ChevronLeft,
+  ChevronRight,
+  CheckCircle,
+  AlertCircle,
+  Zap,
+  Target,
+  Users,
   DollarSign,
   Sparkles,
-  TrendingUp,
   ArrowRight,
-  Play,
   Mail,
   Phone,
   Globe,
   Building,
-  X
+  X,
+  BarChart3,
+  Gift
 } from 'lucide-react';
-import { LinkButton } from '@/design-system';
+import { V2PageWrapper } from "@/components/layouts/V2PageWrapper";
 import type { LeadInput, ProjectType, BudgetRange, Timeline, CompanySize, Industry } from '@/lib/admin/lead-types';
 import { INDUSTRIES } from '@/lib/admin/lead-types';
 
@@ -109,7 +105,6 @@ export default function GetStartedPage() {
     } else {
       document.body.style.overflow = 'unset';
     }
-
     return () => {
       document.body.style.overflow = 'unset';
     };
@@ -137,19 +132,19 @@ export default function GetStartedPage() {
         }
         if (!formData.company?.trim()) newErrors.company = 'Company is required';
         break;
-      
+
       case 2:
         if (!formData.projectType) newErrors.projectType = 'Please select a project type';
         if (!formData.projectDescription?.trim() || formData.projectDescription.length < 10) {
           newErrors.projectDescription = 'Please provide at least 10 characters';
         }
         break;
-      
+
       case 3:
         if (!formData.budgetRange) newErrors.budgetRange = 'Please select a budget range';
         if (!formData.timeline) newErrors.timeline = 'Please select a timeline';
         break;
-      
+
       case 4:
         if (!formData.primaryChallenge?.trim() || formData.primaryChallenge.length < 5) {
           newErrors.primaryChallenge = 'Please describe your main challenge (at least 5 characters)';
@@ -192,15 +187,12 @@ export default function GetStartedPage() {
         throw new Error('Failed to submit form');
       }
 
-      // Clear saved progress
       localStorage.removeItem('fm_lead_progress');
-      
       setSubmitted(true);
       setCurrentStep(5);
-      
-      // Track conversion
-      if (typeof gtag !== 'undefined') {
-        gtag('event', 'generate_lead', {
+
+      if (typeof window !== 'undefined' && typeof (window as any).gtag === 'function') {
+        (window as any).gtag('event', 'generate_lead', {
           event_category: 'form',
           event_label: formData.projectType,
           value: 1
@@ -219,164 +211,116 @@ export default function GetStartedPage() {
   }
 
   return (
-    <>
-      {/* Hero Landing Section */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-fm-neutral-50 to-fm-neutral-100">
-        {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-70 overflow-hidden">
-          <div 
-            className="absolute inset-0"
-            style={{
-              background: `radial-gradient(600px circle at 50% 50%, 
-                rgba(179,41,104,0.3) 0%, 
-                rgba(179,41,104,0.2) 25%,
-                rgba(110,24,69,0.1) 50%,
-                transparent 70%)`
-            }}
-          />
-          <div 
-            className="absolute inset-0 opacity-60"
-            style={{
-              background: `radial-gradient(800px circle at 50% 50%, 
-                rgba(255,133,93,0.15) 0%,
-                rgba(255,107,53,0.08) 40%,
-                transparent 70%)`
-            }}
-          />
-          <div className="absolute top-0 left-0 w-full h-full opacity-30 bg-[linear-gradient(45deg,transparent_48%,rgba(179,41,104,0.05)_49%,rgba(179,41,104,0.05)_51%,transparent_52%)] bg-[length:30px_30px]" />
-        </div>
-
-        {/* Floating Icons */}
-        <div className="absolute top-20 left-20 opacity-20 animate-pulse">
-          <Sparkles className="w-8 h-8 text-fm-magenta-700" />
-        </div>
-        <div className="absolute top-32 right-32 opacity-20 animate-pulse" style={{ animationDelay: '1s' }}>
-          <TrendingUp className="w-8 h-8 text-fm-magenta-700" />
-        </div>
-        <div className="absolute bottom-32 left-32 opacity-20 animate-pulse" style={{ animationDelay: '2s' }}>
-          <Target className="w-8 h-8 text-fm-magenta-700" />
-        </div>
-
-        <div className="relative z-10 fm-container">
-          <div className="max-w-4xl mx-auto text-center">
+    <V2PageWrapper>
+      {/* Hero Section */}
+      <section className="relative z-10 v2-section pt-32 lg:pt-40 min-h-screen flex items-center">
+        <div className="v2-container">
+          <div className="max-w-4xl mx-auto" style={{ textAlign: 'center' }}>
             {/* Badge */}
-            <div className="inline-flex items-center px-4 py-2 bg-fm-magenta-50 border border-fm-magenta-200 rounded-full text-fm-magenta-700 text-sm font-medium mb-8">
-              <Sparkles className="w-4 h-4 mr-2" />
-              Start Your Digital Transformation Journey
+            <div className="v2-badge v2-badge-glass mb-8">
+              <Sparkles className="w-4 h-4 v2-text-primary" />
+              <span className="v2-text-primary">Start Your Digital Transformation Journey</span>
             </div>
 
             {/* Headline */}
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-fm-neutral-900 mb-8" style={{ lineHeight: '1.1' }}>
+            <h1 className="font-display text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold v2-text-primary mb-8 leading-tight">
               Let's Build Something{' '}
-              <span className="text-fm-magenta-700 relative inline-block">
-                Amazing
-                <svg
-                  className="absolute -bottom-2 left-0 w-full h-4 text-fm-magenta-700"
-                  viewBox="0 0 200 12"
-                  fill="currentColor"
-                >
-                  <path d="M2 8c40-6 80-6 120 0s80 6 120 0" stroke="currentColor" strokeWidth="4" fill="none" />
-                </svg>
-              </span>
-              {' '}Together
+              <span className="v2-accent">Amazing</span> Together
             </h1>
-            
+
             {/* Description */}
-            <p className="text-lg md:text-xl text-fm-neutral-600 max-w-3xl mx-auto mb-12 leading-relaxed">
-              Tell us about your project in just a few steps. Our team will get back to you within 24 hours 
+            <p className="text-lg md:text-xl v2-text-secondary leading-relaxed" style={{ marginBottom: '48px' }}>
+              Tell us about your project in just a few steps. Our team will get back to you within 24 hours
               with a customized proposal tailored to your needs.
             </p>
 
             {/* CTA Button */}
             <div className="mb-16">
-              <LinkButton 
-                href="#"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setShowModal(true);
-                }}
-                variant="primary" 
-                size="lg" 
-                icon={<ArrowRight className="w-5 h-5" />}
-                iconPosition="right"
-                className="group text-lg px-8 py-4"
+              <button
+                onClick={() => setShowModal(true)}
+                className="v2-btn v2-btn-primary v2-btn-lg"
               >
                 Get Started Now
-              </LinkButton>
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </button>
             </div>
 
             {/* Trust Indicators */}
-            <div className="bg-fm-magenta-50/80 backdrop-blur-sm border border-fm-magenta-200/60 rounded-xl shadow-fm-lg p-6 md:p-8 max-w-3xl mx-auto">
+            <div className="v2-paper rounded-2xl p-6 md:p-8 max-w-3xl mx-auto">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
-                <div className="text-center">
-                  <div className="text-2xl md:text-3xl font-bold text-fm-magenta-700 mb-1">24 hrs</div>
-                  <div className="text-sm text-fm-neutral-700 font-medium">Response Time</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl md:text-3xl font-bold text-fm-magenta-700 mb-1">250+</div>
-                  <div className="text-sm text-fm-neutral-700 font-medium">Projects Completed</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl md:text-3xl font-bold text-fm-magenta-700 mb-1">95%</div>
-                  <div className="text-sm text-fm-neutral-700 font-medium">Client Satisfaction</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl md:text-3xl font-bold text-fm-magenta-700 mb-1">FREE</div>
-                  <div className="text-sm text-fm-neutral-700 font-medium">Initial Consultation</div>
-                </div>
+                {[
+                  { icon: Zap, label: "24hr Response" },
+                  { icon: Target, label: "Custom Strategy" },
+                  { icon: BarChart3, label: "Data-Driven" },
+                  { icon: Gift, label: "Free Consultation" }
+                ].map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <div key={item.label} className="flex flex-col items-center">
+                      <Icon className="w-6 h-6 text-fm-magenta-600 mb-1.5" />
+                      <div className="text-sm text-fm-neutral-600 font-medium">{item.label}</div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
         </div>
 
-        {/* Scroll Indicator */}
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
-          <div className="w-6 h-10 border-2 border-fm-magenta-700 rounded-full flex justify-center">
-            <div className="w-1 h-3 bg-fm-magenta-700 rounded-full mt-2 animate-pulse" />
-          </div>
+        {/* Floating Brain Decoration */}
+        <div className="absolute right-8 lg:right-24 top-1/3 hidden lg:block z-10">
+          <img
+            src="/3dasset/brain-learning.png"
+            alt="Innovation"
+            className="w-32 lg:w-44 h-auto animate-v2-hero-float drop-shadow-2xl"
+            style={{ filter: 'drop-shadow(0 20px 40px rgba(0,0,0,0.3))' }}
+          />
         </div>
       </section>
+
+      {/* Bottom Spacer */}
+      <div className="pb-32" />
 
       {/* Modal Form Container */}
       {showModal && (
         <div className="fixed inset-0 z-50 overflow-hidden">
           {/* Backdrop */}
-          <div 
+          <div
             className="absolute inset-0 bg-black/60 backdrop-blur-sm"
             onClick={() => setShowModal(false)}
           />
-          
+
           {/* Modal */}
-          <div className="relative z-10 h-full flex items-center justify-center p-4">
-            <div className="w-full max-w-4xl max-h-[90vh] overflow-y-auto bg-white rounded-3xl shadow-2xl">
+          <div className="relative z-10 h-full flex items-center justify-center p-3 sm:p-4">
+            <div className="w-full max-w-4xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto bg-white rounded-2xl sm:rounded-3xl shadow-2xl">
               {/* Close Button */}
               <button
                 onClick={() => setShowModal(false)}
-                className="absolute top-6 right-6 z-20 w-10 h-10 bg-fm-neutral-100 hover:bg-fm-neutral-200 rounded-full flex items-center justify-center transition-all duration-200"
+                className="absolute top-4 right-4 sm:top-6 sm:right-6 z-20 w-10 h-10 bg-fm-neutral-100 hover:bg-fm-neutral-200 rounded-full flex items-center justify-center transition-all duration-200"
               >
                 <X className="w-5 h-5 text-fm-neutral-600" />
               </button>
 
               {/* Form Content */}
-              <div className="p-8 md:p-12">
+              <div className="p-5 sm:p-8 md:p-12">
                 {/* Progress Bar */}
-                <div className="mb-12">
-                  <div className="flex items-center justify-between mb-6">
+                <div className="mb-8 sm:mb-12">
+                  <div className="flex items-center justify-between mb-4 sm:mb-6">
                     {[1, 2, 3, 4].map((step) => (
                       <div key={step} className="flex flex-col items-center">
-                        <div 
-                          className={`flex items-center justify-center w-12 h-12 rounded-full border-2 transition-all duration-300 font-semibold
-                            ${currentStep >= step 
-                              ? 'bg-fm-magenta-700 border-fm-magenta-700 text-white shadow-lg' 
+                        <div
+                          className={`flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 transition-all duration-300 font-semibold
+                            ${currentStep >= step
+                              ? 'bg-fm-magenta-700 border-fm-magenta-700 text-white shadow-lg'
                               : 'border-fm-neutral-300 text-fm-neutral-500 bg-white'}`}
                         >
                           {currentStep > step ? (
-                            <CheckCircle className="w-5 h-5" />
+                            <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5" />
                           ) : (
-                            <span className="text-sm">{step}</span>
+                            <span className="text-xs sm:text-sm">{step}</span>
                           )}
                         </div>
-                        <span className={`text-xs mt-2 font-medium ${
+                        <span className={`text-[11px] sm:text-xs mt-1 sm:mt-2 font-medium ${
                           currentStep >= step ? 'text-fm-magenta-700' : 'text-fm-neutral-500'
                         }`}>
                           {step === 1 && 'Contact'}
@@ -387,16 +331,16 @@ export default function GetStartedPage() {
                       </div>
                     ))}
                   </div>
-                  <div className="w-full bg-fm-neutral-200 rounded-full h-2">
-                    <div 
-                      className="bg-gradient-to-r from-fm-magenta-700 to-fm-magenta-400 h-2 rounded-full transition-all duration-500 ease-out"
+                  <div className="w-full bg-fm-neutral-200 rounded-full h-1.5 sm:h-2">
+                    <div
+                      className="bg-gradient-to-r from-fm-magenta-700 to-fm-magenta-400 h-1.5 sm:h-2 rounded-full transition-all duration-500 ease-out"
                       style={{ width: `${((currentStep - 1) / 3) * 100}%` }}
                     />
                   </div>
                 </div>
 
                 {/* Step Content */}
-                <div className="min-h-[500px]">
+                <div className="min-h-[320px] sm:min-h-[500px]">
                   {/* Step 1: Contact Information */}
                   {currentStep === 1 && (
                     <div className="space-y-8">
@@ -525,8 +469,8 @@ export default function GetStartedPage() {
                               type="button"
                               onClick={() => updateFormData({ projectType: type.value })}
                               className={`p-6 border-2 rounded-xl text-left hover:bg-fm-magenta-50 hover:border-fm-magenta-300 transition-all duration-300 group
-                                ${formData.projectType === type.value 
-                                  ? 'border-fm-magenta-700 bg-fm-magenta-50 shadow-lg' 
+                                ${formData.projectType === type.value
+                                  ? 'border-fm-magenta-700 bg-fm-magenta-50 shadow-lg'
                                   : 'border-fm-neutral-200'}`}
                             >
                               <div className="flex items-start space-x-4">
@@ -552,7 +496,7 @@ export default function GetStartedPage() {
                           rows={5}
                           className={`w-full px-4 py-4 border-2 rounded-xl focus:ring-4 focus:ring-fm-magenta-100 focus:border-fm-magenta-700 transition-all duration-300 resize-none outline-none
                             ${errors.projectDescription ? 'border-red-500' : 'border-fm-neutral-200'}`}
-                          placeholder="Describe your project in detail. What are you looking to build or improve? What specific features or outcomes do you need?"
+                          placeholder="Describe your project in detail. What are you looking to build or improve?"
                         />
                         <div className="flex justify-between text-sm mt-2">
                           <span className={errors.projectDescription ? 'text-red-500 font-medium' : 'text-fm-neutral-500'}>
@@ -608,8 +552,8 @@ export default function GetStartedPage() {
                               type="button"
                               onClick={() => updateFormData({ budgetRange: budget.value })}
                               className={`p-6 border-2 rounded-xl text-left hover:bg-fm-magenta-50 hover:border-fm-magenta-300 transition-all duration-300 relative
-                                ${formData.budgetRange === budget.value 
-                                  ? 'border-fm-magenta-700 bg-fm-magenta-50 shadow-lg' 
+                                ${formData.budgetRange === budget.value
+                                  ? 'border-fm-magenta-700 bg-fm-magenta-50 shadow-lg'
                                   : 'border-fm-neutral-200'}`}
                             >
                               <div className="font-semibold text-fm-neutral-900">{budget.label}</div>
@@ -635,14 +579,14 @@ export default function GetStartedPage() {
                               type="button"
                               onClick={() => updateFormData({ timeline: timeline.value })}
                               className={`w-full p-6 border-2 rounded-xl text-left hover:bg-fm-magenta-50 hover:border-fm-magenta-300 transition-all duration-300
-                                ${formData.timeline === timeline.value 
-                                  ? 'border-fm-magenta-700 bg-fm-magenta-50 shadow-lg' 
+                                ${formData.timeline === timeline.value
+                                  ? 'border-fm-magenta-700 bg-fm-magenta-50 shadow-lg'
                                   : 'border-fm-neutral-200'}`}
                             >
                               <div className="flex items-center justify-between">
                                 <span className="font-semibold text-fm-neutral-900">{timeline.label}</span>
                                 {timeline.urgent && (
-                                  <span className="flex items-center text-fm-orange-600 font-medium">
+                                  <span className="flex items-center text-fm-magenta-600 font-medium">
                                     <Zap className="w-4 h-4 mr-1" />
                                     Urgent
                                   </span>
@@ -681,7 +625,7 @@ export default function GetStartedPage() {
                           rows={4}
                           className={`w-full px-4 py-4 border-2 rounded-xl focus:ring-4 focus:ring-fm-magenta-100 focus:border-fm-magenta-700 transition-all duration-300 resize-none outline-none
                             ${errors.primaryChallenge ? 'border-red-500' : 'border-fm-neutral-200'}`}
-                          placeholder="What problem are you trying to solve? What's not working with your current situation? Be specific about your pain points..."
+                          placeholder="What problem are you trying to solve?"
                         />
                         {errors.primaryChallenge && <p className="text-red-500 text-sm mt-2 font-medium">{errors.primaryChallenge}</p>}
                       </div>
@@ -710,8 +654,8 @@ export default function GetStartedPage() {
                               type="button"
                               onClick={() => updateFormData({ companySize: size.value })}
                               className={`w-full p-6 border-2 rounded-xl text-left hover:bg-fm-magenta-50 hover:border-fm-magenta-300 transition-all duration-300
-                                ${formData.companySize === size.value 
-                                  ? 'border-fm-magenta-700 bg-fm-magenta-50 shadow-lg' 
+                                ${formData.companySize === size.value
+                                  ? 'border-fm-magenta-700 bg-fm-magenta-50 shadow-lg'
                                   : 'border-fm-neutral-200'}`}
                             >
                               <div className="flex items-center space-x-4">
@@ -742,54 +686,45 @@ export default function GetStartedPage() {
 
                 {/* Navigation Buttons */}
                 <div className="flex justify-between items-center mt-12 pt-8 border-t border-fm-neutral-200">
-                  <LinkButton
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      prevStep();
-                    }}
-                    variant="ghost"
+                  <button
+                    onClick={prevStep}
                     disabled={currentStep === 1}
-                    icon={<ChevronLeft className="w-5 h-5" />}
-                    iconPosition="left"
-                    className="px-8 py-4 text-lg"
+                    className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
+                      currentStep === 1
+                        ? 'text-fm-neutral-400 cursor-not-allowed'
+                        : 'text-fm-neutral-700 hover:bg-fm-neutral-100'
+                    }`}
                   >
+                    <ChevronLeft className="w-5 h-5" />
                     Back
-                  </LinkButton>
+                  </button>
 
                   {currentStep < 4 ? (
-                    <LinkButton
-                      href="#"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        nextStep();
-                      }}
-                      variant="primary"
-                      icon={<ChevronRight className="w-5 h-5" />}
-                      iconPosition="right"
-                      className="px-8 py-4 text-lg bg-gradient-to-r from-fm-magenta-700 to-fm-magenta-600 hover:from-fm-magenta-800 hover:to-fm-magenta-700 shadow-lg hover:shadow-xl"
+                    <button
+                      onClick={nextStep}
+                      className="v2-btn v2-btn-magenta v2-btn-lg"
                     >
                       Continue
-                    </LinkButton>
+                      <ChevronRight className="w-5 h-5" />
+                    </button>
                   ) : (
-                    <LinkButton
-                      href="#"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        submitForm();
-                      }}
-                      variant="primary"
+                    <button
+                      onClick={submitForm}
                       disabled={isSubmitting}
-                      icon={isSubmitting ? (
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
-                      ) : (
-                        <ArrowRight className="w-5 h-5" />
-                      )}
-                      iconPosition="right"
-                      className="px-8 py-4 text-lg bg-gradient-to-r from-fm-magenta-700 to-fm-magenta-600 hover:from-fm-magenta-800 hover:to-fm-magenta-700 shadow-lg hover:shadow-xl"
+                      className="v2-btn v2-btn-magenta v2-btn-lg disabled:opacity-50"
                     >
-                      {isSubmitting ? 'Submitting...' : 'Submit Request'}
-                    </LinkButton>
+                      {isSubmitting ? (
+                        <>
+                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
+                          Submitting...
+                        </>
+                      ) : (
+                        <>
+                          Submit Request
+                          <ArrowRight className="w-5 h-5" />
+                        </>
+                      )}
+                    </button>
                   )}
                 </div>
               </div>
@@ -797,111 +732,79 @@ export default function GetStartedPage() {
           </div>
         </div>
       )}
-    </>
+    </V2PageWrapper>
   );
 }
 
 // Thank You Step Component
 function ThankYouStep({ formData, onClose }: { formData: Partial<LeadInput>; onClose: () => void }) {
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden">
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-      
-      {/* Modal */}
-      <div className="relative z-10 h-full flex items-center justify-center p-4">
-        <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto bg-white rounded-3xl shadow-2xl">
-          {/* Close Button */}
-          <button
-            onClick={onClose}
-            className="absolute top-6 right-6 z-20 w-10 h-10 bg-fm-neutral-100 hover:bg-fm-neutral-200 rounded-full flex items-center justify-center transition-all duration-200"
-          >
-            <X className="w-5 h-5 text-fm-neutral-600" />
-          </button>
-
-          <div className="p-12 md:p-16 text-center">
+    <V2PageWrapper>
+      <section className="relative z-10 min-h-screen flex items-center justify-center v2-section">
+        <div className="v2-container">
+          <div className="max-w-3xl mx-auto bg-white rounded-3xl shadow-2xl p-6 sm:p-8 md:p-12 lg:p-16 text-center">
             {/* Success Icon */}
             <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-8">
               <CheckCircle className="w-12 h-12 text-green-600" />
             </div>
-            
+
             <h1 className="text-4xl md:text-5xl font-bold text-fm-neutral-900 mb-6">
               Thank You, {formData.name}!
             </h1>
-            
+
             <p className="text-xl text-fm-neutral-600 mb-10 leading-relaxed">
-              We've received your project details and our expert team will get back to you within 
+              We've received your project details and our expert team will get back to you within
               <span className="font-semibold text-fm-magenta-700"> 24 hours </span>
               with a customized proposal.
             </p>
-            
+
             {/* What's Next Section */}
             <div className="bg-fm-magenta-50 rounded-2xl p-8 mb-10 text-left">
               <h3 className="font-bold text-fm-neutral-900 mb-6 text-xl text-center">What happens next?</h3>
               <ul className="space-y-4">
-                <li className="flex items-start space-x-4">
-                  <div className="w-8 h-8 bg-fm-magenta-700 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                    <span className="text-white font-semibold text-sm">1</span>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-fm-neutral-900">Expert Review</h4>
-                    <p className="text-fm-neutral-600">Our team will carefully analyze your requirements and challenges</p>
-                  </div>
-                </li>
-                <li className="flex items-start space-x-4">
-                  <div className="w-8 h-8 bg-fm-magenta-700 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                    <span className="text-white font-semibold text-sm">2</span>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-fm-neutral-900">Custom Proposal</h4>
-                    <p className="text-fm-neutral-600">We'll create a detailed proposal with timeline, strategy, and transparent pricing</p>
-                  </div>
-                </li>
-                <li className="flex items-start space-x-4">
-                  <div className="w-8 h-8 bg-fm-magenta-700 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                    <span className="text-white font-semibold text-sm">3</span>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-fm-neutral-900">Discovery Call</h4>
-                    <p className="text-fm-neutral-600">Schedule a call to discuss your project in detail and answer any questions</p>
-                  </div>
-                </li>
-                <li className="flex items-start space-x-4">
-                  <div className="w-8 h-8 bg-fm-magenta-700 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                    <span className="text-white font-semibold text-sm">4</span>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-fm-neutral-900">Project Kickoff</h4>
-                    <p className="text-fm-neutral-600">Start building your amazing project with our expert team!</p>
-                  </div>
-                </li>
+                {[
+                  { step: 1, title: "Expert Review", desc: "Our team will carefully analyze your requirements and challenges" },
+                  { step: 2, title: "Custom Proposal", desc: "We'll create a detailed proposal with timeline, strategy, and transparent pricing" },
+                  { step: 3, title: "Discovery Call", desc: "Schedule a call to discuss your project in detail and answer any questions" },
+                  { step: 4, title: "Project Kickoff", desc: "Start building your amazing project with our expert team!" }
+                ].map((item) => (
+                  <li key={item.step} className="flex items-start space-x-4">
+                    <div className="w-8 h-8 bg-fm-magenta-700 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                      <span className="text-white font-semibold text-sm">{item.step}</span>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-fm-neutral-900">{item.title}</h4>
+                      <p className="text-fm-neutral-600">{item.desc}</p>
+                    </div>
+                  </li>
+                ))}
               </ul>
             </div>
-            
+
             {/* CTA Buttons */}
             <div className="space-y-6">
-              <LinkButton
+              <Link
                 href="/"
-                variant="primary"
-                className="w-full md:w-auto px-8 py-4 text-lg bg-gradient-to-r from-fm-magenta-700 to-fm-magenta-600 hover:from-fm-magenta-800 hover:to-fm-magenta-700 shadow-lg hover:shadow-xl"
+                className="v2-btn v2-btn-magenta"
               >
                 Return to Homepage
-              </LinkButton>
-              
+                <ArrowRight className="w-5 h-5" />
+              </Link>
+
               <p className="text-sm text-fm-neutral-500">
                 Questions? Email us at{' '}
                 <a href="mailto:hello@freakingminds.in" className="text-fm-magenta-700 hover:underline font-medium">
                   hello@freakingminds.in
                 </a>{' '}
                 or call us at{' '}
-                <a href="tel:+919876543210" className="text-fm-magenta-700 hover:underline font-medium">
-                  +91 98765 43210
+                <a href="tel:+919833257659" className="text-fm-magenta-700 hover:underline font-medium">
+                  +91 98332 57659
                 </a>
               </p>
             </div>
           </div>
         </div>
-      </div>
-    </div>
+      </section>
+    </V2PageWrapper>
   );
 }

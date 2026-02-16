@@ -108,7 +108,17 @@ export function ContactSection() {
 
       <div className="relative z-10 px-4 md:px-8 lg:px-16" style={{ paddingTop: '6rem', paddingBottom: '6rem', maxWidth: '1440px', margin: '0 auto' }}>
         {/* Section Header with Perfect Alignment */}
-        <div className="text-center mx-auto overflow-visible" style={{ marginBottom: '5rem', maxWidth: '800px' }}>
+        <div className="text-center mx-auto overflow-visible relative" style={{ marginBottom: '5rem', maxWidth: '800px' }}>
+          {/* Brain mascot - friendly decoration (3D) */}
+          <div className="absolute -left-20 md:-left-28 lg:-left-40 top-4 hidden md:block">
+            <img
+              src="/3dasset/happy brain.png"
+              alt="Freaking Minds - Let's Talk"
+              className="w-32 lg:w-44 h-auto hover:scale-110 transition-transform duration-500 brain-animate-bounce"
+              style={{ '--brain-rotate': '-10deg', mixBlendMode: 'multiply' } as React.CSSProperties}
+            />
+          </div>
+
           <div className="flex justify-center mb-8">
             <div className="inline-flex items-center px-4 py-2 bg-fm-magenta-50/80 backdrop-blur-sm border border-fm-magenta-200 rounded-full text-fm-magenta-700 text-sm font-medium contact-animate-fade-in badge-glow">
               <Star className="w-4 h-4 mr-2 animate-pulse-slow" />
@@ -192,7 +202,7 @@ export function ContactSection() {
             </div>
 
             {/* Enhanced Social Proof */}
-            <div className="bg-gradient-to-r from-fm-magenta-50/80 to-fm-purple-50/80 border border-fm-magenta-100 rounded-2xl p-6 contact-animate-fade-in-up" style={{ animationDelay: '800ms' }}>
+            <div className="bg-gradient-to-r from-fm-magenta-50/80 to-fm-magenta-100/50 border border-fm-magenta-100 rounded-2xl p-6 contact-animate-fade-in-up" style={{ animationDelay: '800ms' }}>
               <div className="flex items-center space-x-4 mb-4">
                 <div className="flex -space-x-2">
                   {[1, 2, 3, 4].map((i) => (

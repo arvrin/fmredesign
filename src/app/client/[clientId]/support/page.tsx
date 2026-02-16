@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useState, useEffect, useCallback } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import { 
   DashboardLayout,
   DashboardCard as Card,
@@ -62,8 +62,10 @@ interface FAQ {
 
 export default function ClientSupportPage() {
   const params = useParams();
+  const router = useRouter();
   const clientId = params.clientId as string;
-  
+
+  const [profileData, setProfileData] = useState<{ name: string; email: string; industry: string } | null>(null);
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
   const [faqs] = useState<FAQ[]>([
     {
@@ -98,8 +100,33 @@ export default function ClientSupportPage() {
   const [showNewTicketForm, setShowNewTicketForm] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
+  const handleLogout = useCallback(async () => {
+    try {
+      await fetch('/api/client-portal/logout', { method: 'POST' });
+    } catch {}
+    router.push('/client/login');
+  }, [router]);
+
   useEffect(() => {
-    // Simulate fetching support tickets
+    if (clientId) {
+      fetch(`/api/client-portal/${clientId}/profile`)
+        .then(res => res.ok ? res.json() : null)
+        .then(json => {
+          if (json?.data) {
+            const p = json.data;
+            setProfileData({
+              name: p.name,
+              email: p.primaryContact?.email || '',
+              industry: p.industry
+            });
+          }
+        })
+        .catch(() => {});
+    }
+  }, [clientId]);
+
+  useEffect(() => {
+    // Local mock support tickets (no tickets table yet)
     setTimeout(() => {
       setTickets([
         {
@@ -230,16 +257,17 @@ export default function ClientSupportPage() {
       variant="client"
       navigation={navigationItems}
       user={{
-        name: 'Client Name',
-        email: 'client@example.com',
-        role: 'Industry'
+        name: profileData?.name || 'Client',
+        email: profileData?.email || '',
+        role: profileData?.industry || ''
       }}
+      onLogout={handleLogout}
     >
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-fm-magenta-600 to-fm-orange-600 bg-clip-text text-transparent">
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-fm-magenta-600 to-fm-magenta-500 bg-clip-text text-transparent">
               Support Center
             </h1>
             <p className="text-gray-600 mt-1 font-medium">Get help and manage your support requests</p>
@@ -264,7 +292,7 @@ export default function ClientSupportPage() {
 
         <Card variant="client" hover className="cursor-pointer">
           <CardContent className="p-6 text-center">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-fm-orange-500 to-fm-orange-600 flex items-center justify-center mx-auto mb-4">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-fm-magenta-500 to-fm-magenta-600 flex items-center justify-center mx-auto mb-4">
               <Phone className="w-6 h-6 text-white" />
             </div>
             <h3 className="font-semibold text-gray-900 mb-2">Phone Support</h3>

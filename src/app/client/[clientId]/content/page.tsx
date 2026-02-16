@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useState, useEffect, useCallback } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import { 
   DashboardLayout,
   MetricCard,
@@ -63,101 +63,74 @@ interface ContentItem {
 
 export default function ClientContentPage() {
   const params = useParams();
+  const router = useRouter();
   const clientId = params.clientId as string;
-  
+
   const [contentItems, setContentItems] = useState<ContentItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'published' | 'scheduled' | 'draft'>('all');
   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
+  const [profileData, setProfileData] = useState<{ name: string; email: string; industry: string } | null>(null);
 
   useEffect(() => {
-    // Simulate fetching content data
-    setTimeout(() => {
-      setContentItems([
-        {
-          id: '1',
-          title: 'Ultimate Guide to Digital Marketing in 2024',
-          description: 'Comprehensive blog post covering latest digital marketing trends and strategies',
-          type: 'blog',
-          platform: 'Website',
-          status: 'published',
-          scheduledDate: '2024-03-15T10:00:00',
-          publishedDate: '2024-03-15T10:00:00',
-          author: 'Sarah Wilson',
-          performance: {
-            views: 12500,
-            engagement: 8.5,
-            shares: 245,
-            conversions: 48
-          },
-          tags: ['Digital Marketing', 'SEO', 'Content Strategy']
-        },
-        {
-          id: '2',
-          title: 'Product Launch Announcement',
-          description: 'Social media campaign for new product launch across multiple platforms',
-          type: 'social',
-          platform: 'Instagram, Facebook, LinkedIn',
-          status: 'scheduled',
-          scheduledDate: '2024-04-01T14:00:00',
-          author: 'Mike Johnson',
-          tags: ['Product Launch', 'Social Media', 'Campaign']
-        },
-        {
-          id: '3',
-          title: 'Customer Success Story Video',
-          description: 'Video testimonial featuring successful client implementation',
-          type: 'video',
-          platform: 'YouTube',
-          status: 'review',
-          scheduledDate: '2024-04-05T12:00:00',
-          author: 'Tom Brown',
-          tags: ['Video', 'Testimonial', 'Case Study']
-        },
-        {
-          id: '4',
-          title: 'Monthly Newsletter - March Edition',
-          description: 'Email newsletter with company updates, insights, and exclusive offers',
-          type: 'email',
-          platform: 'Email',
-          status: 'published',
-          scheduledDate: '2024-03-01T09:00:00',
-          publishedDate: '2024-03-01T09:00:00',
-          author: 'Lisa Park',
-          performance: {
-            views: 5800,
-            engagement: 24.3,
-            shares: 89,
-            conversions: 156
-          },
-          tags: ['Newsletter', 'Email Marketing', 'Updates']
-        },
-        {
-          id: '5',
-          title: 'Industry Insights Infographic',
-          description: 'Visual representation of market trends and statistics',
-          type: 'infographic',
-          platform: 'Pinterest, Instagram',
-          status: 'scheduled',
-          scheduledDate: '2024-04-10T11:00:00',
-          author: 'Alex Chen',
-          tags: ['Infographic', 'Data Visualization', 'Insights']
-        },
-        {
-          id: '6',
-          title: 'Expert Interview Podcast Episode',
-          description: 'Interview with industry expert on emerging technologies',
-          type: 'podcast',
-          platform: 'Spotify, Apple Podcasts',
-          status: 'draft',
-          scheduledDate: '2024-04-15T16:00:00',
-          author: 'John Doe',
-          tags: ['Podcast', 'Interview', 'Technology']
+    if (!clientId) return;
+
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+
+        // Fetch profile
+        const profileRes = await fetch(`/api/client-portal/${clientId}/profile`);
+        if (profileRes.ok) {
+          const profileJson = await profileRes.json();
+          const p = profileJson.data;
+          setProfileData({
+            name: p.name,
+            email: p.primaryContact?.email || '',
+            industry: p.industry
+          });
         }
-      ]);
-      setLoading(false);
-    }, 1000);
-  }, []);
+
+        // Fetch content
+        const res = await fetch(`/api/client-portal/${clientId}/content?limit=50`);
+        if (res.ok) {
+          const data = await res.json();
+          const mapped: ContentItem[] = (data.data || []).map((c: any) => ({
+            id: c.id,
+            title: c.title || 'Untitled',
+            description: c.description || '',
+            type: c.type || 'post',
+            platform: c.platform || 'Website',
+            status: c.status || 'draft',
+            scheduledDate: c.scheduledDate || '',
+            publishedDate: c.publishedDate,
+            author: c.author || '',
+            performance: c.engagement ? {
+              views: c.engagement.views || 0,
+              engagement: c.engagement.engagement || 0,
+              shares: c.engagement.shares || 0,
+              conversions: c.engagement.conversions || 0
+            } : undefined,
+            tags: Array.isArray(c.tags) ? c.tags : []
+          }));
+          setContentItems(mapped);
+        }
+      } catch (err) {
+        console.error('Error fetching content:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [clientId]);
+
+  const handleLogout = useCallback(async () => {
+    try {
+      await fetch('/api/client-portal/logout', { method: 'POST' });
+    } catch {}
+    router.push('/client/login');
+  }, [router]);
 
   const getTypeIcon = (type: string) => {
     switch (type) {
@@ -248,16 +221,17 @@ export default function ClientContentPage() {
       variant="client"
       navigation={navigationItems}
       user={{
-        name: 'Client Name',
-        email: 'client@example.com',
-        role: 'Industry'
+        name: profileData?.name || 'Client',
+        email: profileData?.email || '',
+        role: profileData?.industry || ''
       }}
+      onLogout={handleLogout}
     >
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-fm-magenta-600 to-fm-orange-600 bg-clip-text text-transparent">
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-fm-magenta-600 to-fm-magenta-500 bg-clip-text text-transparent">
               Content Calendar
             </h1>
             <p className="text-gray-600 mt-1 font-medium">Manage and track your content publishing schedule</p>
@@ -366,7 +340,7 @@ export default function ClientContentPage() {
             <CardHeader className="pb-3">
               <div className="flex items-start justify-between">
                 <div className="flex items-center space-x-2">
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-fm-magenta-100 to-fm-orange-100 flex items-center justify-center text-fm-magenta-600">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-fm-magenta-100 to-fm-magenta-100 flex items-center justify-center text-fm-magenta-600">
                     {getTypeIcon(item.type)}
                   </div>
                   <Badge className={getStatusColor(item.status)} variant="secondary">

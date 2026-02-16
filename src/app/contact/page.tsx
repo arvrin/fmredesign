@@ -1,58 +1,30 @@
 'use client';
 
-import { MapPin, Phone, Mail, Clock, Calendar, Users, MessageCircle } from "lucide-react";
+import { useState } from 'react';
+import { MapPin, Phone, Mail, Clock, MessageCircle, ArrowRight, ChevronDown, Send, CheckCircle } from "lucide-react";
+import Link from "next/link";
+import { V2PageWrapper } from "@/components/layouts/V2PageWrapper";
 
-// Design System Components
-import { 
-  LinkButton,
-  HeroSectionBuilder,
-  SectionBuilder,
-  ContactForm,
-  ContactInfo,
-  FAQSection,
-  patterns 
-} from "@/design-system";
-
-// Types
-import type { ContactFormData } from "@/design-system/components/molecules/ContactForm/ContactForm";
-
-// Real business contact information
 const contactInfo = [
   {
     icon: MapPin,
     title: "Visit Our Office",
-    details: [
-      "House No. 5, Maheshwari Bhawan",
-      "Near Qutbi Masjid, MP Nagar",
-      "Professors Colony, Bhopal - 462002",
-      "Madhya Pradesh, India"
-    ]
+    details: ["House No. 5, Maheshwari Bhawan", "Near Qutbi Masjid, MP Nagar", "Professors Colony, Bhopal - 462002", "Madhya Pradesh, India"]
   },
   {
     icon: Phone,
     title: "Call Us",
-    details: [
-      "+91 98332 57659",
-      "Available Mon-Sat 9AM-7PM"
-    ]
+    details: ["+91 98332 57659", "Available Mon-Sat 9AM-7PM"]
   },
   {
     icon: Mail,
     title: "Email Us",
-    details: [
-      "hello@freakingminds.in",
-      "business@freakingminds.in",
-      "careers@freakingminds.in"
-    ]
+    details: ["hello@freakingminds.in", "business@freakingminds.in", "careers@freakingminds.in"]
   },
   {
     icon: Clock,
     title: "Office Hours",
-    details: [
-      "Monday - Friday: 9:00 AM - 7:00 PM",
-      "Saturday: 10:00 AM - 5:00 PM",
-      "Sunday: By Appointment"
-    ]
+    details: ["Monday - Friday: 9:00 AM - 7:00 PM", "Saturday: 10:00 AM - 5:00 PM", "Sunday: By Appointment"]
   }
 ];
 
@@ -68,11 +40,11 @@ const services = [
 ];
 
 const budgetRanges = [
-  "₹25,000 - ₹50,000",
-  "₹50,000 - ₹1,00,000",
-  "₹1,00,000 - ₹3,00,000",
-  "₹3,00,000 - ₹5,00,000",
-  "₹5,00,000+"
+  { label: "₹25,000 - ₹50,000", value: "25k_50k" },
+  { label: "₹50,000 - ₹1,00,000", value: "50k_100k" },
+  { label: "₹1,00,000 - ₹2,50,000", value: "100k_250k" },
+  { label: "₹2,50,000+", value: "over_250k" },
+  { label: "Not sure yet", value: "not_disclosed" },
 ];
 
 const faqData = [
@@ -95,140 +67,367 @@ const faqData = [
 ];
 
 export default function ContactPage() {
-  const handleFormSubmit = async (formData: ContactFormData) => {
-    // Custom form submission logic can be added here
-    await new Promise(resolve => setTimeout(resolve, 2000));
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    company: '',
+    service: '',
+    budget: '',
+    message: ''
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [activeAccordion, setActiveAccordion] = useState<number | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setSubmitStatus('idle');
+
+    try {
+      const response = await fetch('/api/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          company: formData.company || 'Not specified',
+          projectType: formData.service ? 'digital_marketing' : 'consultation',
+          projectDescription: formData.message,
+          budgetRange: formData.budget || 'not_disclosed',
+          timeline: 'flexible',
+          primaryChallenge: formData.message,
+          companySize: 'small_business',
+          source: 'website_form',
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed to submit');
+
+      setSubmitStatus('success');
+      setFormData({ name: '', email: '', phone: '', company: '', service: '', budget: '', message: '' });
+    } catch {
+      setSubmitStatus('error');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
-    <div className="min-h-screen">
-      {/* Hero Section - Design System Version */}
-      <HeroSectionBuilder
-        badge={{
-          text: "Let's Start the Conversation",
-          icon: <MessageCircle className="w-4 h-4 mr-2" />
-        }}
-        headline={{
-          text: "Ready to Transform Your Business?",
-          level: "h1",
-          accent: { text: "Transform", position: "middle" }
-        }}
-        description="Get in touch with our team of digital marketing experts. We're here to help you achieve your business goals with strategic marketing solutions that deliver real results."
-        background="light"
-        maxWidth="xl"
-        minHeight="large"
-        content={
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <LinkButton href="tel:+919833257659" variant="primary" size="lg" icon={<Calendar className="w-5 h-5" />} iconPosition="right">
-              Schedule a Call
-            </LinkButton>
-            <LinkButton href="#contact-form" variant="secondary" size="lg">
-              Get Instant Quote
-            </LinkButton>
-          </div>
-        }
-      />
+    <V2PageWrapper>
+      {/* Hero Section */}
+      <section className="relative z-10 v2-section pt-32 lg:pt-40">
+        <div className="v2-container v2-container-wide">
+          <div className="max-w-4xl mx-auto" style={{ textAlign: 'center' }}>
+            {/* Badge */}
+            <div className="v2-badge v2-badge-glass mb-8">
+              <MessageCircle className="w-4 h-4 v2-text-primary" />
+              <span className="v2-text-primary">Let's Start the Conversation</span>
+            </div>
 
-      {/* Contact Form & Info - Design System Version */}
-      <section id="contact-form" className={`${patterns.layout.section} bg-fm-neutral-50 py-24`}>
-        <div className={`${patterns.layout.container} ${patterns.layout.maxWidth.xl}`}>
-          <div className="grid lg:grid-cols-2 gap-16">
-            {/* Contact Form */}
-            <ContactForm
-              services={services}
-              budgetRanges={budgetRanges}
-              onSubmit={handleFormSubmit}
-              title="Let's Discuss Your Project"
-              description="Fill out the form below and we'll get back to you within 24 hours with a custom proposal tailored to your needs."
-              theme="light"
-            />
+            {/* Headline */}
+            <h1 className="font-display text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold v2-text-primary mb-8 leading-tight">
+              Ready to{' '}
+              <span className="v2-accent">Transform</span>{' '}
+              Your Business?
+            </h1>
 
-            {/* Contact Information */}
-            <ContactInfo
-              contactInfo={contactInfo}
-              quickActions={{
-                phone: "+91 98332 57659",
-                email: "hello@freakingminds.in",
-                whatsapp: "+91 98332 57659"
-              }}
-              title="Get in Touch"
-              description="Prefer to speak directly? Our team is available through multiple channels to provide you with the support you need."
-              theme="light"
-            />
-          </div>
-        </div>
-      </section>
+            {/* Description */}
+            <p className="text-lg md:text-xl v2-text-secondary leading-relaxed" style={{ marginBottom: '48px' }}>
+              Get in touch with our team of digital marketing experts. We're here to help you achieve your business goals with strategic marketing solutions that deliver real results.
+            </p>
 
-      {/* Map Section - Design System Version */}
-      <SectionBuilder
-        headline={{
-          text: "Visit Our Office",
-          level: "h2",
-          accent: { text: "Office", position: "end" }
-        }}
-        description="Located in the heart of Bhopal's MP Nagar, we're easily accessible and always ready to welcome you for in-person consultations."
-        background="none"
-        content={
-          <div className="aspect-video bg-fm-neutral-300 rounded-xl flex items-center justify-center">
-            <div className="text-center">
-              <MapPin className="w-16 h-16 text-fm-magenta-700 mx-auto mb-4" />
-              <p className="text-fm-neutral-600 mb-2">
-                Interactive map will be integrated here
-              </p>
-              <p className="text-sm text-fm-neutral-500">
-                House No. 5, Maheshwari Bhawan, Near Qutbi Masjid
-              </p>
-              <p className="text-sm text-fm-neutral-500">
-                MP Nagar, Professors Colony, Bhopal - 462002
-              </p>
+            {/* CTAs */}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Link href="tel:+919833257659" className="v2-btn v2-btn-primary">
+                <Phone className="w-5 h-5" />
+                Schedule a Call
+              </Link>
+              <Link href="#contact-form" className="v2-btn v2-btn-secondary">
+                Get Instant Quote
+              </Link>
             </div>
           </div>
-        }
-      />
+        </div>
 
-      {/* FAQ Section - Design System Version */}
-      <section className={`${patterns.layout.section} bg-fm-neutral-50 py-24`}>
-        <div className={`${patterns.layout.container} ${patterns.layout.maxWidth.xl}`}>
-          <FAQSection
-            faqs={faqData}
-            title="Frequently Asked Questions"
-            description="Quick answers to common questions about our services and process."
-            theme="light"
-            allowMultipleOpen={false}
+        {/* 3D Brain Decoration */}
+        <div className="absolute left-8 lg:left-20 top-1/3 hidden lg:block z-10">
+          <img
+            src="/3dasset/brain-creative.png"
+            alt="Creative Solutions"
+            className="w-28 lg:w-36 h-auto animate-v2-hero-float drop-shadow-2xl"
+            style={{ filter: 'drop-shadow(0 20px 40px rgba(0,0,0,0.3))' }}
           />
         </div>
       </section>
 
-      {/* CTA Section - Design System Version */}
-      <SectionBuilder
-        badge={{
-          text: "Ready to Get Started?",
-          icon: <Users className="w-4 h-4" />
-        }}
-        headline={{
-          text: "Join 250+ Businesses That Trust Freaking Minds",
-          level: "h2"
-        }}
-        description="Transform your digital presence with our proven strategies. Let's create something extraordinary together and drive real business results."
-        background="gradient"
-        content={
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <LinkButton 
-              href="tel:+919833257659"
-              variant="secondary" 
-              size="lg" 
-              className="bg-fm-neutral-50 text-fm-magenta-700 hover:bg-fm-neutral-100"
-              icon={<Calendar className="w-5 h-5" />}
-              iconPosition="right"
-            >
-              Schedule Free Consultation
-            </LinkButton>
-            <LinkButton href="#" variant="ghost" size="lg" theme="dark">
-              Download Our Portfolio
-            </LinkButton>
+      {/* Contact Form & Info */}
+      <section id="contact-form" className="relative z-10 v2-section">
+        <div className="v2-container">
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12">
+            {/* Contact Form */}
+            <div className="v2-paper-lg rounded-3xl p-8 lg:p-10">
+              <h2 className="font-display text-2xl font-bold text-fm-neutral-900 mb-2">
+                Let's Discuss Your Project
+              </h2>
+              <p className="text-fm-neutral-600 mb-8">
+                Fill out the form below and we'll get back to you within 24 hours with a custom proposal.
+              </p>
+
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-fm-neutral-700 mb-2">Your Name *</label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      className="w-full px-4 py-3 bg-fm-neutral-50 border border-fm-neutral-200 rounded-xl focus:ring-2 focus:ring-fm-magenta-200 focus:border-fm-magenta-300 transition-all"
+                      placeholder="John Doe"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-fm-neutral-700 mb-2">Email Address *</label>
+                    <input
+                      type="email"
+                      required
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      className="w-full px-4 py-3 bg-fm-neutral-50 border border-fm-neutral-200 rounded-xl focus:ring-2 focus:ring-fm-magenta-200 focus:border-fm-magenta-300 transition-all"
+                      placeholder="john@company.com"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-fm-neutral-700 mb-2">Phone Number</label>
+                    <input
+                      type="tel"
+                      value={formData.phone}
+                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                      className="w-full px-4 py-3 bg-fm-neutral-50 border border-fm-neutral-200 rounded-xl focus:ring-2 focus:ring-fm-magenta-200 focus:border-fm-magenta-300 transition-all"
+                      placeholder="+91 XXXXX XXXXX"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-fm-neutral-700 mb-2">Company Name</label>
+                    <input
+                      type="text"
+                      value={formData.company}
+                      onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+                      className="w-full px-4 py-3 bg-fm-neutral-50 border border-fm-neutral-200 rounded-xl focus:ring-2 focus:ring-fm-magenta-200 focus:border-fm-magenta-300 transition-all"
+                      placeholder="Your Company"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-fm-neutral-700 mb-2">Service Required *</label>
+                    <select
+                      required
+                      value={formData.service}
+                      onChange={(e) => setFormData({ ...formData, service: e.target.value })}
+                      className="w-full px-4 py-3 bg-fm-neutral-50 border border-fm-neutral-200 rounded-xl focus:ring-2 focus:ring-fm-magenta-200 focus:border-fm-magenta-300 transition-all"
+                    >
+                      <option value="">Select a service</option>
+                      {services.map((service) => (
+                        <option key={service} value={service}>{service}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-fm-neutral-700 mb-2">Budget Range</label>
+                    <select
+                      value={formData.budget}
+                      onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
+                      className="w-full px-4 py-3 bg-fm-neutral-50 border border-fm-neutral-200 rounded-xl focus:ring-2 focus:ring-fm-magenta-200 focus:border-fm-magenta-300 transition-all"
+                    >
+                      <option value="">Select budget range</option>
+                      {budgetRanges.map((budget) => (
+                        <option key={budget.value} value={budget.value}>{budget.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-fm-neutral-700 mb-2">Project Details *</label>
+                  <textarea
+                    required
+                    value={formData.message}
+                    onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                    rows={6}
+                    className="w-full px-4 py-3 bg-fm-neutral-50 border border-fm-neutral-200 rounded-xl focus:ring-2 focus:ring-fm-magenta-200 focus:border-fm-magenta-300 transition-all resize-none"
+                    placeholder="Tell us about your project..."
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isSubmitting || submitStatus === 'success'}
+                  className="v2-btn v2-btn-magenta v2-btn-full disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      Sending...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-5 h-5" />
+                      Send Message
+                    </>
+                  )}
+                </button>
+
+                {submitStatus === 'success' && (
+                  <div className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-xl">
+                    <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
+                    <p className="text-green-800 text-sm font-medium">
+                      Thank you for your inquiry! We'll get back to you within 24 hours.
+                    </p>
+                  </div>
+                )}
+
+                {submitStatus === 'error' && (
+                  <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-xl">
+                    <Send className="w-5 h-5 text-red-600 flex-shrink-0" />
+                    <p className="text-red-800 text-sm font-medium">
+                      Something went wrong. Please try again or email us directly at hello@freakingminds.in
+                    </p>
+                  </div>
+                )}
+              </form>
+            </div>
+
+            {/* Contact Info */}
+            <div className="space-y-6">
+              <div className="v2-paper rounded-2xl p-8">
+                <h3 className="font-display text-xl font-bold text-fm-neutral-900 mb-6">Get in Touch</h3>
+                <p className="text-fm-neutral-600 mb-8">
+                  Prefer to speak directly? Our team is available through multiple channels.
+                </p>
+
+                <div className="space-y-6">
+                  {contactInfo.map((info) => {
+                    const Icon = info.icon;
+                    return (
+                      <div key={info.title} className="flex gap-4">
+                        <div className="w-12 h-12 rounded-xl bg-fm-magenta-50 flex items-center justify-center flex-shrink-0">
+                          <Icon className="w-5 h-5 text-fm-magenta-600" />
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-fm-neutral-900 mb-1">{info.title}</h4>
+                          {info.details.map((detail, idx) => (
+                            <p key={idx} className="text-fm-neutral-600 text-sm">{detail}</p>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Quick Actions */}
+              <div className="v2-paper rounded-2xl p-8">
+                <h3 className="font-display text-xl font-bold text-fm-neutral-900 mb-4">Quick Actions</h3>
+                <div className="space-y-3">
+                  <a
+                    href="tel:+919833257659"
+                    className="v2-btn v2-btn-magenta v2-btn-full"
+                  >
+                    <Phone className="w-5 h-5" />
+                    Call Now
+                  </a>
+                  <a
+                    href="mailto:hello@freakingminds.in"
+                    className="v2-btn v2-btn-outline v2-btn-full"
+                  >
+                    <Mail className="w-5 h-5" />
+                    Send Email
+                  </a>
+                  <a
+                    href="https://wa.me/919833257659"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="v2-btn v2-btn-outline v2-btn-full"
+                  >
+                    <MessageCircle className="w-5 h-5" />
+                    WhatsApp
+                  </a>
+                </div>
+              </div>
+            </div>
           </div>
-        }
-      />
-    </div>
+        </div>
+      </section>
+
+      {/* Map Section */}
+      <section className="relative z-10 v2-section">
+        <div className="v2-container">
+          <div className="max-w-2xl mx-auto" style={{ textAlign: 'center', marginBottom: '48px' }}>
+            <h2 className="font-display text-3xl md:text-4xl font-bold v2-text-primary mb-6 leading-tight">
+              Visit Our <span className="v2-accent">Office</span>
+            </h2>
+            <p className="v2-text-secondary">
+              Located in the heart of Bhopal's MP Nagar, we're easily accessible and always ready to welcome you.
+            </p>
+          </div>
+
+          <div className="v2-paper rounded-2xl overflow-hidden aspect-[4/3] md:aspect-video">
+            <iframe
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3665.9740851406573!2d77.39836927554988!3d23.2440300790192!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x397c434b09a56f8d%3A0xb51d32849457f0e6!2sFreaking%20Minds!5e0!3m2!1sen!2sin!4v1770984668410!5m2!1sen!2sin"
+              width="100%"
+              height="100%"
+              style={{ border: 0 }}
+              allowFullScreen
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              title="FreakingMinds Office Location - MP Nagar, Bhopal"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className="relative z-10 v2-section">
+        <div className="v2-container v2-container-narrow">
+          <div className="max-w-2xl mx-auto" style={{ textAlign: 'center', marginBottom: '48px' }}>
+            <h2 className="font-display text-3xl md:text-4xl font-bold v2-text-primary leading-tight">
+              Frequently Asked <span className="v2-accent">Questions</span>
+            </h2>
+          </div>
+
+          <div className="space-y-4">
+            {faqData.map((faq, index) => (
+              <div key={index} className="v2-paper-sm rounded-xl overflow-hidden">
+                <button
+                  onClick={() => setActiveAccordion(activeAccordion === index ? null : index)}
+                  className="w-full px-4 sm:px-6 py-4 flex items-center justify-between text-left"
+                >
+                  <span className="font-semibold text-fm-neutral-900 pr-2 sm:pr-4">{faq.question}</span>
+                  <ChevronDown
+                    className={`w-5 h-5 text-fm-neutral-400 transition-transform ${
+                      activeAccordion === index ? 'rotate-180' : ''
+                    }`}
+                  />
+                </button>
+                {activeAccordion === index && (
+                  <div className="px-6 pb-4">
+                    <p className="text-fm-neutral-600 text-sm leading-relaxed">{faq.answer}</p>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+    </V2PageWrapper>
   );
 }

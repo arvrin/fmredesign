@@ -182,14 +182,28 @@ export type TalentCategory =
   | 'photography'
   | 'copywriting';
 
+export interface PricingInfo {
+  hourlyRate: { min: number; max: number };
+  projectRate: { min: number; max: number };
+  retainerRate: { min: number; max: number };
+  openToNegotiation: boolean;
+}
+
+export interface PortfolioLinks {
+  websiteUrl: string;
+  workSampleUrls: string[]; // max 3
+}
+
 export interface TalentApplication {
   id: string;
   personalInfo: PersonalInfo;
   professionalDetails: ProfessionalDetails;
   portfolio: PortfolioItem[];
+  portfolioLinks: PortfolioLinks;
   socialMedia: SocialMediaMetrics;
   availability: AvailabilityInfo;
   preferences: TalentPreferences;
+  pricing: PricingInfo;
   applicationDate: string;
   status: 'submitted' | 'under_review' | 'approved' | 'rejected';
   reviewNotes?: string;
@@ -464,4 +478,18 @@ export const TIMEZONES = [
   'Europe/Berlin',
   'Asia/Tokyo',
   'Australia/Sydney'
+];
+
+export const POPULAR_TOOLS = [
+  'Figma', 'Adobe Photoshop', 'Adobe Illustrator', 'Adobe Premiere Pro',
+  'Adobe After Effects', 'Canva', 'VS Code', 'WordPress', 'Webflow',
+  'Sketch', 'InVision', 'Blender', 'Final Cut Pro', 'DaVinci Resolve',
+  'Google Analytics', 'Semrush', 'Ahrefs', 'Mailchimp', 'HubSpot',
+  'Notion', 'Slack', 'Trello', 'Asana', 'Monday.com'
+];
+
+export const PROJECT_COMMITMENT_OPTIONS = [
+  { value: 'short_term', label: 'Short-term (< 3 months)' },
+  { value: 'long_term', label: 'Long-term (3+ months)' },
+  { value: 'both', label: 'Both short & long-term' }
 ];

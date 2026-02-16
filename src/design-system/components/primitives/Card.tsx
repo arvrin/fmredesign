@@ -50,10 +50,10 @@ const cardVariants = {
     ].join(' '),
     
     client: [
-      'bg-gradient-to-br from-fm-magenta-50/80 to-orange-50/80 border-orange-200 shadow-lg',
+      'bg-gradient-to-br from-fm-magenta-50/80 to-fm-neutral-50 border-fm-magenta-100 shadow-lg',
       'backdrop-blur-sm',
-      'hover:from-fm-magenta-50 hover:to-orange-50 hover:shadow-xl',
-      'hover:border-orange-300'
+      'hover:from-fm-magenta-50 hover:to-white hover:shadow-xl',
+      'hover:border-fm-magenta-200'
     ].join(' ')
   },
   

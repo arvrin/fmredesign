@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { leadService } from '@/lib/admin/lead-service';
 import type { LeadInput, LeadUpdate, LeadFilters, LeadSortOptions } from '@/lib/admin/lead-types';
+import { rateLimit, getClientIp } from '@/lib/rate-limiter';
 
 // GET /api/leads - Fetch leads with optional filtering and sorting
 export async function GET(request: NextRequest) {
@@ -82,7 +83,6 @@ export async function GET(request: NextRequest) {
       { 
         success: false, 
         error: 'Failed to fetch leads',
-        details: error instanceof Error ? error.message : 'Unknown error'
       },
       { status: 500 }
     );
@@ -92,40 +92,59 @@ export async function GET(request: NextRequest) {
 // POST /api/leads - Create new lead
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting
+    const clientIp = getClientIp(request);
+    if (!rateLimit(clientIp, 5)) {
+      return NextResponse.json(
+        { success: false, error: 'Too many requests. Please try again later.' },
+        { status: 429 }
+      );
+    }
+
     const body = await request.json();
-    
+
     // Validate required fields
     const requiredFields = ['name', 'email', 'company', 'projectType', 'projectDescription', 'budgetRange', 'timeline', 'primaryChallenge', 'companySize'];
     const missingFields = requiredFields.filter(field => !body[field]);
-    
+
     if (missingFields.length > 0) {
       return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Missing required fields', 
-          missingFields 
+        {
+          success: false,
+          error: 'Missing required fields',
+          missingFields
         },
         { status: 400 }
       );
     }
-    
-    // Create lead input object
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(body.email)) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid email format' },
+        { status: 400 }
+      );
+    }
+
+    // Create lead input object (strip HTML tags from text inputs)
+    const stripHtml = (str: string) => str.replace(/<[^>]*>/g, '');
     const leadInput: LeadInput = {
-      name: body.name.trim(),
+      name: stripHtml(body.name.trim()),
       email: body.email.trim().toLowerCase(),
       phone: body.phone?.trim(),
-      company: body.company.trim(),
+      company: stripHtml(body.company.trim()),
       website: body.website?.trim(),
-      jobTitle: body.jobTitle?.trim(),
+      jobTitle: body.jobTitle ? stripHtml(body.jobTitle.trim()) : undefined,
       companySize: body.companySize,
       industry: body.industry,
       projectType: body.projectType,
-      projectDescription: body.projectDescription.trim(),
+      projectDescription: stripHtml(body.projectDescription.trim()),
       budgetRange: body.budgetRange,
       timeline: body.timeline,
-      primaryChallenge: body.primaryChallenge.trim(),
-      additionalChallenges: body.additionalChallenges?.filter((c: string) => c.trim()),
-      specificRequirements: body.specificRequirements?.trim(),
+      primaryChallenge: stripHtml(body.primaryChallenge.trim()),
+      additionalChallenges: body.additionalChallenges?.filter((c: string) => c.trim()).map((c: string) => stripHtml(c)),
+      specificRequirements: body.specificRequirements ? stripHtml(body.specificRequirements.trim()) : undefined,
       source: body.source || 'website_form',
       customFields: body.customFields || {}
     };
@@ -153,7 +172,6 @@ export async function POST(request: NextRequest) {
       { 
         success: false, 
         error: 'Failed to create lead',
-        details: error instanceof Error ? error.message : 'Unknown error'
       },
       { status: 500 }
     );
@@ -197,7 +215,6 @@ export async function PUT(request: NextRequest) {
       { 
         success: false, 
         error: 'Failed to update lead',
-        details: error instanceof Error ? error.message : 'Unknown error'
       },
       { status: 500 }
     );

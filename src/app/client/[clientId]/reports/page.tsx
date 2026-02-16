@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useState, useEffect, useCallback } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import { 
   DashboardLayout,
   MetricCard,
@@ -62,15 +62,42 @@ interface PerformanceData {
 
 export default function ClientReportsPage() {
   const params = useParams();
+  const router = useRouter();
   const clientId = params.clientId as string;
-  
+
   const [reports, setReports] = useState<Report[]>([]);
   const [performanceData, setPerformanceData] = useState<PerformanceData[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPeriod, setSelectedPeriod] = useState<'monthly' | 'quarterly' | 'annual'>('monthly');
+  const [profileData, setProfileData] = useState<{ name: string; email: string; industry: string } | null>(null);
+
+  const handleLogout = useCallback(async () => {
+    try {
+      await fetch('/api/client-portal/logout', { method: 'POST' });
+    } catch {}
+    router.push('/client/login');
+  }, [router]);
 
   useEffect(() => {
-    // Simulate fetching reports data
+    if (clientId) {
+      fetch(`/api/client-portal/${clientId}/profile`)
+        .then(res => res.ok ? res.json() : null)
+        .then(json => {
+          if (json?.data) {
+            const p = json.data;
+            setProfileData({
+              name: p.name,
+              email: p.primaryContact?.email || '',
+              industry: p.industry
+            });
+          }
+        })
+        .catch(() => {});
+    }
+  }, [clientId]);
+
+  useEffect(() => {
+    // Mock reports data (no reports backend yet)
     setTimeout(() => {
       setReports([
         {
@@ -167,16 +194,25 @@ export default function ClientReportsPage() {
       variant="client"
       navigation={navigationItems}
       user={{
-        name: 'Client Name',
-        email: 'client@example.com',
-        role: 'Industry'
+        name: profileData?.name || 'Client',
+        email: profileData?.email || '',
+        role: profileData?.industry || ''
       }}
+      onLogout={handleLogout}
     >
+      {/* Info banner */}
+      <div className="mb-6 bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-center space-x-3">
+        <Activity className="w-5 h-5 text-blue-600 flex-shrink-0" />
+        <p className="text-sm text-blue-800">
+          Detailed performance reports will be shared by your account manager. The data below is a sample overview.
+        </p>
+      </div>
+
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-fm-magenta-600 to-fm-orange-600 bg-clip-text text-transparent">
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-fm-magenta-600 to-fm-magenta-500 bg-clip-text text-transparent">
               Performance Reports
             </h1>
             <p className="text-gray-600 mt-1 font-medium">Track your marketing performance and ROI</p>
@@ -289,7 +325,7 @@ export default function ClientReportsPage() {
                   <span>Traffic</span>
                 </div>
                 <div className="flex items-center">
-                  <div className="w-3 h-3 rounded-full bg-fm-orange-500 mr-2"></div>
+                  <div className="w-3 h-3 rounded-full bg-fm-magenta-500 mr-2"></div>
                   <span>Leads</span>
                 </div>
                 <div className="flex items-center">
@@ -310,7 +346,7 @@ export default function ClientReportsPage() {
                       title={`Traffic: ${data.traffic.toLocaleString()}`}
                     ></div>
                     <div 
-                      className="w-3 bg-gradient-to-t from-fm-orange-500 to-fm-orange-300 rounded-t"
+                      className="w-3 bg-gradient-to-t from-fm-magenta-500 to-fm-magenta-200 rounded-t"
                       style={{ height: `${(data.leads / 1200) * 100}%` }}
                       title={`Leads: ${data.leads}`}
                     ></div>

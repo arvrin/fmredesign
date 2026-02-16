@@ -1,31 +1,34 @@
 /**
  * Talent Application Form
  * Multi-step form for joining CreativeMinds network
+ * 4 steps: About You, Your Expertise, Online Presence, Availability & Pricing
  */
 
 'use client';
 
 import { useState } from 'react';
-import { Button } from '@/design-system/components/primitives/Button';
-import { 
-  TalentApplication, 
-  TalentCategory, 
+import {
+  TalentApplication,
+  TalentCategory,
   TALENT_CATEGORIES,
   EXPERIENCE_LEVELS,
   POPULAR_SKILLS,
+  POPULAR_TOOLS,
   LANGUAGES,
-  CURRENCIES
+  CURRENCIES,
+  PROJECT_COMMITMENT_OPTIONS,
+  PricingInfo,
+  PortfolioLinks,
 } from '@/lib/admin/talent-types';
-import { 
-  ArrowLeft, 
-  ArrowRight, 
-  User, 
-  Briefcase, 
-  Briefcase as PortfolioIcon, 
+import {
+  ArrowLeft,
+  ArrowRight,
+  User,
+  Briefcase,
   Globe,
-  Clock,
-  Settings,
-  CheckCircle
+  DollarSign,
+  CheckCircle,
+  AlertCircle,
 } from 'lucide-react';
 
 interface TalentApplicationFormProps {
@@ -33,18 +36,17 @@ interface TalentApplicationFormProps {
   onCancel: () => void;
 }
 
-interface StepProps {
-  formData: Partial<TalentApplication>;
-  updateData: (updates: Partial<TalentApplication>) => void;
-  onNext: () => void;
-  onPrev: () => void;
-  isFirst: boolean;
-  isLast: boolean;
+type SubmitStatus = 'idle' | 'submitting' | 'success' | 'error';
+
+interface FormErrors {
+  [key: string]: string;
 }
 
 export function TalentApplicationForm({ onSubmit, onCancel }: TalentApplicationFormProps) {
   const [currentStep, setCurrentStep] = useState(1);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<SubmitStatus>('idle');
+  const [submitError, setSubmitError] = useState('');
+  const [errors, setErrors] = useState<FormErrors>({});
   const [formData, setFormData] = useState<Partial<TalentApplication>>({
     personalInfo: {
       fullName: '',
@@ -52,7 +54,7 @@ export function TalentApplicationForm({ onSubmit, onCancel }: TalentApplicationF
       phone: '',
       location: { city: '', state: '', country: 'India' },
       bio: '',
-      languages: ['English']
+      languages: ['English'],
     },
     professionalDetails: {
       category: 'creative_design',
@@ -63,7 +65,11 @@ export function TalentApplicationForm({ onSubmit, onCancel }: TalentApplicationF
       tools: [],
       certifications: [],
       education: [],
-      workExperience: []
+      workExperience: [],
+    },
+    portfolioLinks: {
+      websiteUrl: '',
+      workSampleUrls: ['', '', ''],
     },
     portfolio: [],
     socialMedia: {},
@@ -73,12 +79,12 @@ export function TalentApplicationForm({ onSubmit, onCancel }: TalentApplicationF
       preferredWorkingHours: {
         timezone: 'Asia/Kolkata',
         startTime: '09:00',
-        endTime: '18:00'
+        endTime: '18:00',
       },
       unavailableDates: [],
       projectCommitment: 'both',
       remoteWork: true,
-      travelWillingness: false
+      travelWillingness: false,
     },
     preferences: {
       projectTypes: [],
@@ -87,87 +93,200 @@ export function TalentApplicationForm({ onSubmit, onCancel }: TalentApplicationF
       communicationStyle: 'mixed',
       paymentTerms: [],
       minimumProjectValue: 10000,
-      currency: 'INR'
-    }
+      currency: 'INR',
+    },
+    pricing: {
+      hourlyRate: { min: 0, max: 0 },
+      projectRate: { min: 0, max: 0 },
+      retainerRate: { min: 0, max: 0 },
+      openToNegotiation: true,
+    },
   });
 
   const updateData = (updates: Partial<TalentApplication>) => {
-    setFormData(prev => ({ ...prev, ...updates }));
+    setFormData((prev) => ({ ...prev, ...updates }));
+  };
+
+  const isValidEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const isValidUrl = (url: string) => {
+    if (!url) return true; // empty is OK for optional fields
+    try {
+      new URL(url);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  const validateStep = (step: number): boolean => {
+    const newErrors: FormErrors = {};
+    const pi = formData.personalInfo!;
+    const pd = formData.professionalDetails!;
+    const pl = formData.portfolioLinks!;
+    const avail = formData.availability!;
+    const pricing = formData.pricing!;
+
+    if (step === 1) {
+      if (!pi.fullName.trim()) newErrors.fullName = 'Name is required';
+      if (!pi.email.trim()) newErrors.email = 'Email is required';
+      else if (!isValidEmail(pi.email)) newErrors.email = 'Enter a valid email';
+      if (!pi.phone.trim()) newErrors.phone = 'Phone is required';
+      if (!pi.location.city.trim()) newErrors.city = 'City is required';
+      if (!pi.location.state.trim()) newErrors.state = 'State is required';
+      if (!pi.bio.trim()) newErrors.bio = 'Bio is required';
+      else if (pi.bio.trim().length < 20) newErrors.bio = 'Bio must be at least 20 characters';
+    }
+
+    if (step === 2) {
+      if (pd.subcategories.length === 0) newErrors.subcategories = 'Select at least one subcategory';
+      if (!pd.skills || pd.skills.length === 0) newErrors.skills = 'Select at least one skill';
+      if (pd.yearsOfExperience <= 0) newErrors.yearsOfExperience = 'Enter your years of experience';
+      if (pl.websiteUrl && !isValidUrl(pl.websiteUrl)) newErrors.portfolioWebsite = 'Enter a valid URL';
+      pl.workSampleUrls?.forEach((url, i) => {
+        if (url && !isValidUrl(url)) newErrors[`workSample${i}`] = 'Enter a valid URL';
+      });
+    }
+
+    if (step === 3) {
+      const sm = formData.socialMedia || {};
+      if (sm.linkedin?.profileUrl && !sm.linkedin.profileUrl.includes('linkedin.com'))
+        newErrors.linkedin = 'Must be a LinkedIn URL';
+      if (sm.behance?.profileUrl && !sm.behance.profileUrl.includes('behance.net'))
+        newErrors.behance = 'Must be a Behance URL';
+      if (sm.dribbble?.profileUrl && !sm.dribbble.profileUrl.includes('dribbble.com'))
+        newErrors.dribbble = 'Must be a Dribbble URL';
+    }
+
+    if (step === 4) {
+      if (!avail.hoursPerWeek || avail.hoursPerWeek <= 0)
+        newErrors.hoursPerWeek = 'Enter hours per week';
+      const hasAnyRate =
+        (pricing.hourlyRate.min > 0 || pricing.hourlyRate.max > 0) ||
+        (pricing.projectRate.min > 0 || pricing.projectRate.max > 0) ||
+        (pricing.retainerRate.min > 0 || pricing.retainerRate.max > 0);
+      if (!hasAnyRate) newErrors.pricing = 'Fill at least one pricing rate';
+      if (pricing.hourlyRate.min > 0 && pricing.hourlyRate.max > 0 && pricing.hourlyRate.min > pricing.hourlyRate.max)
+        newErrors.hourlyRate = 'Min must be less than max';
+      if (pricing.projectRate.min > 0 && pricing.projectRate.max > 0 && pricing.projectRate.min > pricing.projectRate.max)
+        newErrors.projectRate = 'Min must be less than max';
+      if (pricing.retainerRate.min > 0 && pricing.retainerRate.max > 0 && pricing.retainerRate.min > pricing.retainerRate.max)
+        newErrors.retainerRate = 'Min must be less than max';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleNext = () => {
-    if (currentStep < 6) {
-      setCurrentStep(prev => prev + 1);
+    if (validateStep(currentStep) && currentStep < 4) {
+      setCurrentStep((prev) => prev + 1);
     }
   };
 
   const handlePrev = () => {
     if (currentStep > 1) {
-      setCurrentStep(prev => prev - 1);
+      setErrors({});
+      setCurrentStep((prev) => prev - 1);
     }
   };
 
   const handleSubmit = async () => {
-    setIsSubmitting(true);
+    if (!validateStep(4)) return;
+    setSubmitStatus('submitting');
+    setSubmitError('');
     try {
       await onSubmit(formData as TalentApplication);
+      setSubmitStatus('success');
     } catch (error) {
       console.error('Error submitting application:', error);
-    } finally {
-      setIsSubmitting(false);
+      setSubmitStatus('error');
+      setSubmitError('Failed to submit application. Please try again.');
     }
   };
 
   const steps = [
-    { number: 1, title: 'Personal Info', icon: User, component: PersonalInfoStep },
-    { number: 2, title: 'Professional', icon: Briefcase, component: ProfessionalStep },
-    { number: 3, title: 'Portfolio', icon: PortfolioIcon, component: PortfolioStep },
-    { number: 4, title: 'Social Media', icon: Globe, component: SocialMediaStep },
-    { number: 5, title: 'Availability', icon: Clock, component: AvailabilityStep },
-    { number: 6, title: 'Preferences', icon: Settings, component: PreferencesStep }
+    { number: 1, title: 'About You', icon: User },
+    { number: 2, title: 'Your Expertise', icon: Briefcase },
+    { number: 3, title: 'Online Presence', icon: Globe },
+    { number: 4, title: 'Availability & Pricing', icon: DollarSign },
   ];
 
-  const CurrentStepComponent = steps[currentStep - 1].component;
+  const totalSteps = steps.length;
+
+  if (submitStatus === 'success') {
+    return (
+      <div className="min-h-screen bg-fm-neutral-50 flex items-center justify-center px-4">
+        <div className="max-w-lg w-full bg-white rounded-2xl shadow-lg p-10" style={{ textAlign: 'center' }}>
+          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <CheckCircle className="w-10 h-10 text-green-600" />
+          </div>
+          <h2 className="text-2xl font-bold text-fm-neutral-900 mb-3">Application Submitted!</h2>
+          <p className="text-fm-neutral-600 mb-6">
+            Thank you for applying to join CreativeMinds. Our team will review your application within 24-48 hours.
+          </p>
+          <button onClick={onCancel} className="v2-btn v2-btn-magenta">
+            Back to CreativeMinds
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-fm-neutral-50">
       {/* Header */}
       <div className="bg-white border-b border-fm-neutral-200 sticky top-0 z-40">
-        <div className="max-w-4xl mx-auto px-6 py-4">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button
-                variant="outline"
-                icon={<ArrowLeft className="h-4 w-4" />}
+            <div className="flex items-center gap-3 sm:gap-4">
+              <button
                 onClick={onCancel}
+                className="flex items-center gap-1 px-3 py-1.5 text-sm border border-fm-neutral-300 rounded-lg hover:bg-fm-neutral-50 transition-colors"
               >
-                Exit Application
-              </Button>
+                <ArrowLeft className="h-4 w-4" />
+                <span className="hidden sm:inline">Exit</span>
+              </button>
               <div>
-                <h1 className="text-lg font-semibold text-fm-neutral-900">
+                <h1 className="text-base sm:text-lg font-semibold text-fm-neutral-900">
                   Join CreativeMinds Network
                 </h1>
-                <p className="text-sm text-fm-neutral-600">
-                  Step {currentStep} of 6: {steps[currentStep - 1].title}
+                <p className="text-xs sm:text-sm text-fm-neutral-600">
+                  Step {currentStep} of {totalSteps}: {steps[currentStep - 1].title}
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Progress bar */}
-          <div className="mt-4">
+          {/* Mobile Progress Dots */}
+          <div className="flex lg:hidden items-center justify-center gap-2 mt-3">
+            {steps.map((step) => (
+              <div
+                key={step.number}
+                className={`h-2.5 rounded-full transition-all duration-300 ${
+                  step.number === currentStep
+                    ? 'w-8 bg-fm-magenta-600'
+                    : step.number < currentStep
+                    ? 'w-2.5 bg-green-500'
+                    : 'w-2.5 bg-fm-neutral-300'
+                }`}
+              />
+            ))}
+          </div>
+
+          {/* Desktop Progress Bar */}
+          <div className="hidden lg:block mt-4">
             <div className="flex justify-between items-center mb-2">
               <span className="text-sm text-fm-neutral-600">
-                Progress: {currentStep}/6 steps completed
+                Progress: {currentStep}/{totalSteps} steps
               </span>
               <span className="text-sm font-medium text-fm-magenta-600">
-                {Math.round((currentStep / 6) * 100)}%
+                {Math.round((currentStep / totalSteps) * 100)}%
               </span>
             </div>
             <div className="w-full bg-fm-neutral-200 rounded-full h-2">
-              <div 
+              <div
                 className="bg-fm-magenta-600 h-2 rounded-full transition-all duration-300"
-                style={{ width: `${(currentStep / 6) * 100}%` }}
+                style={{ width: `${(currentStep / totalSteps) * 100}%` }}
               ></div>
             </div>
           </div>
@@ -176,40 +295,43 @@ export function TalentApplicationForm({ onSubmit, onCancel }: TalentApplicationF
 
       {/* Main Content */}
       <div className="flex">
-        {/* Step Navigation */}
-        <div className="w-80 bg-white border-r border-fm-neutral-200 min-h-screen">
+        {/* Desktop Sidebar */}
+        <div className="hidden lg:block w-72 bg-white border-r border-fm-neutral-200 min-h-screen">
           <div className="p-6">
             <h3 className="text-sm font-semibold text-fm-neutral-900 mb-4">Application Steps</h3>
             <div className="space-y-2">
               {steps.map((step) => {
                 const isCompleted = currentStep > step.number;
                 const isCurrent = currentStep === step.number;
-                
+                const StepIcon = step.icon;
+
                 return (
                   <div
                     key={step.number}
                     className={`flex items-center gap-3 p-3 rounded-lg ${
-                      isCurrent 
-                        ? 'bg-fm-magenta-50 border border-fm-magenta-200' 
+                      isCurrent
+                        ? 'bg-fm-magenta-50 border border-fm-magenta-200'
                         : 'hover:bg-fm-neutral-50'
                     }`}
                   >
                     {isCompleted ? (
                       <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
                     ) : (
-                      <step.icon className={`h-4 w-4 flex-shrink-0 ${
-                        isCurrent ? 'text-fm-magenta-600' : 'text-fm-neutral-400'
-                      }`} />
+                      <StepIcon
+                        className={`h-4 w-4 flex-shrink-0 ${
+                          isCurrent ? 'text-fm-magenta-600' : 'text-fm-neutral-400'
+                        }`}
+                      />
                     )}
                     <div>
-                      <div className={`text-sm font-medium ${
-                        isCurrent ? 'text-fm-magenta-900' : 'text-fm-neutral-900'
-                      }`}>
+                      <div
+                        className={`text-sm font-medium ${
+                          isCurrent ? 'text-fm-magenta-900' : 'text-fm-neutral-900'
+                        }`}
+                      >
                         {step.number}. {step.title}
                       </div>
-                      {isCompleted && (
-                        <div className="text-xs text-green-600">Completed</div>
-                      )}
+                      {isCompleted && <div className="text-xs text-green-600">Completed</div>}
                     </div>
                   </div>
                 );
@@ -220,42 +342,55 @@ export function TalentApplicationForm({ onSubmit, onCancel }: TalentApplicationF
 
         {/* Form Content */}
         <div className="flex-1">
-          <div className="max-w-2xl mx-auto px-6 py-8">
-            <CurrentStepComponent
-              formData={formData}
-              updateData={updateData}
-              onNext={handleNext}
-              onPrev={handlePrev}
-              isFirst={currentStep === 1}
-              isLast={currentStep === 6}
-            />
-            
+          <div className="max-w-2xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+            {/* Submit error banner */}
+            {submitStatus === 'error' && submitError && (
+              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3">
+                <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0" />
+                <p className="text-sm text-red-700">{submitError}</p>
+              </div>
+            )}
+
+            {currentStep === 1 && (
+              <PersonalInfoStep formData={formData} updateData={updateData} errors={errors} />
+            )}
+            {currentStep === 2 && (
+              <ExpertiseStep formData={formData} updateData={updateData} errors={errors} />
+            )}
+            {currentStep === 3 && (
+              <OnlinePresenceStep formData={formData} updateData={updateData} errors={errors} />
+            )}
+            {currentStep === 4 && (
+              <AvailabilityPricingStep formData={formData} updateData={updateData} errors={errors} />
+            )}
+
             {/* Navigation */}
             <div className="flex justify-between items-center mt-8 pt-8 border-t border-fm-neutral-200">
-              <Button
-                variant="outline"
+              <button
                 onClick={handlePrev}
                 disabled={currentStep === 1}
-                icon={<ArrowLeft className="h-4 w-4" />}
+                className="flex items-center gap-2 px-4 py-2 text-sm border border-fm-neutral-300 rounded-lg hover:bg-fm-neutral-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
+                <ArrowLeft className="h-4 w-4" />
                 Previous
-              </Button>
-              
-              {currentStep === 6 ? (
-                <Button
+              </button>
+
+              {currentStep === totalSteps ? (
+                <button
                   onClick={handleSubmit}
-                  disabled={isSubmitting}
-                  className="bg-green-600 hover:bg-green-700"
+                  disabled={submitStatus === 'submitting'}
+                  className="v2-btn v2-btn-magenta disabled:opacity-60"
                 >
-                  {isSubmitting ? 'Submitting...' : 'Submit Application'}
-                </Button>
+                  {submitStatus === 'submitting' ? 'Submitting...' : 'Submit Application'}
+                </button>
               ) : (
-                <Button
+                <button
                   onClick={handleNext}
-                  icon={<ArrowRight className="h-4 w-4" />}
+                  className="flex items-center gap-2 px-5 py-2.5 bg-fm-magenta-600 text-white text-sm font-medium rounded-lg hover:bg-fm-magenta-700 transition-colors"
                 >
                   Next Step
-                </Button>
+                  <ArrowRight className="h-4 w-4" />
+                </button>
               )}
             </div>
           </div>
@@ -265,114 +400,113 @@ export function TalentApplicationForm({ onSubmit, onCancel }: TalentApplicationF
   );
 }
 
-// Step Components
-function PersonalInfoStep({ formData, updateData }: StepProps) {
-  const personalInfo = formData.personalInfo!;
+/* ─── Shared helpers ─── */
+
+function FieldError({ message }: { message?: string }) {
+  if (!message) return null;
+  return <p className="text-red-600 text-xs mt-1">{message}</p>;
+}
+
+const inputClass =
+  'w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500 text-sm';
+const inputErrorClass =
+  'w-full px-3 py-2 border border-red-400 rounded-lg focus:ring-2 focus:ring-red-400 focus:border-red-400 text-sm';
+
+interface StepInternalProps {
+  formData: Partial<TalentApplication>;
+  updateData: (updates: Partial<TalentApplication>) => void;
+  errors: FormErrors;
+}
+
+/* ─── Step 1: About You ─── */
+
+function PersonalInfoStep({ formData, updateData, errors }: StepInternalProps) {
+  const pi = formData.personalInfo!;
 
   const handleChange = (field: string, value: any) => {
-    updateData({
-      personalInfo: { ...personalInfo, [field]: value }
-    });
+    updateData({ personalInfo: { ...pi, [field]: value } });
   };
 
   const handleLocationChange = (field: string, value: string) => {
     updateData({
-      personalInfo: {
-        ...personalInfo,
-        location: { ...personalInfo.location, [field]: value }
-      }
+      personalInfo: { ...pi, location: { ...pi.location, [field]: value } },
     });
   };
 
   return (
     <div>
       <div className="mb-8">
-        <h2 className="text-2xl font-bold text-fm-neutral-900 mb-2">Personal Information</h2>
+        <h2 className="text-2xl font-bold text-fm-neutral-900 mb-2">About You</h2>
         <p className="text-fm-neutral-600">Tell us about yourself</p>
       </div>
 
-      <div className="space-y-6">
+      <div className="space-y-5">
         <div>
-          <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
-            Full Name *
-          </label>
+          <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">Full Name *</label>
           <input
             type="text"
-            value={personalInfo.fullName}
+            value={pi.fullName}
             onChange={(e) => handleChange('fullName', e.target.value)}
-            className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+            className={errors.fullName ? inputErrorClass : inputClass}
             placeholder="Enter your full name"
-            required
           />
+          <FieldError message={errors.fullName} />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
-              Email *
-            </label>
+            <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">Email *</label>
             <input
               type="email"
-              value={personalInfo.email}
+              value={pi.email}
               onChange={(e) => handleChange('email', e.target.value)}
-              className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+              className={errors.email ? inputErrorClass : inputClass}
               placeholder="your@email.com"
-              required
             />
+            <FieldError message={errors.email} />
           </div>
-
           <div>
-            <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
-              Phone *
-            </label>
+            <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">Phone *</label>
             <input
               type="tel"
-              value={personalInfo.phone}
+              value={pi.phone}
               onChange={(e) => handleChange('phone', e.target.value)}
-              className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+              className={errors.phone ? inputErrorClass : inputClass}
               placeholder="+91 98765 43210"
-              required
             />
+            <FieldError message={errors.phone} />
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
-              City *
-            </label>
+            <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">City *</label>
             <input
               type="text"
-              value={personalInfo.location.city}
+              value={pi.location.city}
               onChange={(e) => handleLocationChange('city', e.target.value)}
-              className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+              className={errors.city ? inputErrorClass : inputClass}
               placeholder="Mumbai"
-              required
             />
+            <FieldError message={errors.city} />
           </div>
-
           <div>
-            <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
-              State *
-            </label>
+            <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">State *</label>
             <input
               type="text"
-              value={personalInfo.location.state}
+              value={pi.location.state}
               onChange={(e) => handleLocationChange('state', e.target.value)}
-              className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+              className={errors.state ? inputErrorClass : inputClass}
               placeholder="Maharashtra"
-              required
             />
+            <FieldError message={errors.state} />
           </div>
-
           <div>
-            <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
-              Country *
-            </label>
+            <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">Country</label>
             <select
-              value={personalInfo.location.country}
+              value={pi.location.country}
               onChange={(e) => handleLocationChange('country', e.target.value)}
-              className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+              className={inputClass}
             >
               <option value="India">India</option>
               <option value="USA">USA</option>
@@ -384,38 +518,36 @@ function PersonalInfoStep({ formData, updateData }: StepProps) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
-            Professional Bio *
+          <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">
+            Professional Bio * <span className="text-fm-neutral-400 font-normal">(min 20 characters)</span>
           </label>
           <textarea
-            value={personalInfo.bio}
+            value={pi.bio}
             onChange={(e) => handleChange('bio', e.target.value)}
             rows={4}
-            className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+            className={errors.bio ? inputErrorClass : inputClass}
             placeholder="Tell us about your experience, skills, and what makes you unique..."
-            required
           />
+          <FieldError message={errors.bio} />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
-            Languages
-          </label>
+          <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">Languages</label>
           <div className="flex flex-wrap gap-2">
             {LANGUAGES.map((lang) => (
-              <label key={lang} className="flex items-center">
+              <label key={lang} className="flex items-center gap-1.5 text-sm">
                 <input
                   type="checkbox"
-                  checked={personalInfo.languages.includes(lang)}
+                  checked={pi.languages.includes(lang)}
                   onChange={(e) => {
                     const languages = e.target.checked
-                      ? [...personalInfo.languages, lang]
-                      : personalInfo.languages.filter(l => l !== lang);
+                      ? [...pi.languages, lang]
+                      : pi.languages.filter((l) => l !== lang);
                     handleChange('languages', languages);
                   }}
-                  className="mr-2"
+                  className="rounded"
                 />
-                <span className="text-sm">{lang}</span>
+                {lang}
               </label>
             ))}
           </div>
@@ -425,141 +557,138 @@ function PersonalInfoStep({ formData, updateData }: StepProps) {
   );
 }
 
-function ProfessionalStep({ formData, updateData }: StepProps) {
-  const professionalDetails = formData.professionalDetails!;
+/* ─── Step 2: Your Expertise ─── */
+
+function ExpertiseStep({ formData, updateData, errors }: StepInternalProps) {
+  const pd = formData.professionalDetails!;
+  const pl = formData.portfolioLinks || { websiteUrl: '', workSampleUrls: ['', '', ''] };
 
   const handleCategoryChange = (category: TalentCategory) => {
     updateData({
-      professionalDetails: {
-        ...professionalDetails,
-        category,
-        subcategories: []
-      }
+      professionalDetails: { ...pd, category, subcategories: [] },
     });
   };
 
   const handleSkillToggle = (skill: string) => {
-    const currentSkills = professionalDetails.skills || [];
-    const skillExists = currentSkills.find(s => s.name === skill);
-    
+    const currentSkills = pd.skills || [];
+    const skillExists = currentSkills.find((s) => s.name === skill);
     const updatedSkills = skillExists
-      ? currentSkills.filter(s => s.name !== skill)
-      : [...currentSkills, { 
-          name: skill, 
-          proficiency: 'intermediate', 
-          yearsOfExperience: 1, 
-          verified: false 
-        }];
-    
-    updateData({
-      professionalDetails: {
-        ...professionalDetails,
-        skills: updatedSkills
-      }
-    });
+      ? currentSkills.filter((s) => s.name !== skill)
+      : [
+          ...currentSkills,
+          { name: skill, proficiency: 'intermediate' as const, yearsOfExperience: 1, verified: false },
+        ];
+    updateData({ professionalDetails: { ...pd, skills: updatedSkills } });
+  };
+
+  const handleToolToggle = (tool: string) => {
+    const currentTools = pd.tools || [];
+    const updatedTools = currentTools.includes(tool)
+      ? currentTools.filter((t) => t !== tool)
+      : [...currentTools, tool];
+    updateData({ professionalDetails: { ...pd, tools: updatedTools } });
+  };
+
+  const updateWorkSample = (index: number, value: string) => {
+    const urls = [...(pl.workSampleUrls || ['', '', ''])];
+    urls[index] = value;
+    updateData({ portfolioLinks: { ...pl, workSampleUrls: urls } });
   };
 
   return (
     <div>
       <div className="mb-8">
-        <h2 className="text-2xl font-bold text-fm-neutral-900 mb-2">Professional Details</h2>
-        <p className="text-fm-neutral-600">Share your expertise and experience</p>
+        <h2 className="text-2xl font-bold text-fm-neutral-900 mb-2">Your Expertise</h2>
+        <p className="text-fm-neutral-600">Share your skills, tools, and portfolio</p>
       </div>
 
       <div className="space-y-6">
         <div>
-          <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
+          <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">
             Primary Category *
           </label>
           <select
-            value={professionalDetails.category}
+            value={pd.category}
             onChange={(e) => handleCategoryChange(e.target.value as TalentCategory)}
-            className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
-            required
+            className={inputClass}
           >
             {Object.entries(TALENT_CATEGORIES).map(([key, category]) => (
-              <option key={key} value={key}>{category.label}</option>
+              <option key={key} value={key}>
+                {category.label}
+              </option>
             ))}
           </select>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
-            Subcategories
+          <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">
+            Subcategories *
           </label>
-          <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto">
-            {TALENT_CATEGORIES[professionalDetails.category].subcategories.map((sub) => (
-              <label key={sub} className="flex items-center text-sm">
+          <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto border border-fm-neutral-200 rounded-lg p-3">
+            {TALENT_CATEGORIES[pd.category].subcategories.map((sub) => (
+              <label key={sub} className="flex items-center text-sm gap-1.5">
                 <input
                   type="checkbox"
-                  checked={professionalDetails.subcategories.includes(sub)}
+                  checked={pd.subcategories.includes(sub)}
                   onChange={(e) => {
                     const subcategories = e.target.checked
-                      ? [...professionalDetails.subcategories, sub]
-                      : professionalDetails.subcategories.filter(s => s !== sub);
-                    
-                    updateData({
-                      professionalDetails: {
-                        ...professionalDetails,
-                        subcategories
-                      }
-                    });
+                      ? [...pd.subcategories, sub]
+                      : pd.subcategories.filter((s) => s !== sub);
+                    updateData({ professionalDetails: { ...pd, subcategories } });
                   }}
-                  className="mr-2"
+                  className="rounded"
                 />
                 {sub}
               </label>
             ))}
           </div>
+          <FieldError message={errors.subcategories} />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
+            <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">
               Experience Level *
             </label>
             <select
-              value={professionalDetails.experienceLevel}
-              onChange={(e) => updateData({
-                professionalDetails: {
-                  ...professionalDetails,
-                  experienceLevel: e.target.value as any
-                }
-              })}
-              className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
-              required
+              value={pd.experienceLevel}
+              onChange={(e) =>
+                updateData({
+                  professionalDetails: { ...pd, experienceLevel: e.target.value as any },
+                })
+              }
+              className={inputClass}
             >
               {EXPERIENCE_LEVELS.map((level) => (
-                <option key={level.value} value={level.value}>{level.label}</option>
+                <option key={level.value} value={level.value}>
+                  {level.label}
+                </option>
               ))}
             </select>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
+            <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">
               Years of Experience *
             </label>
             <input
               type="number"
-              value={professionalDetails.yearsOfExperience}
-              onChange={(e) => updateData({
-                professionalDetails: {
-                  ...professionalDetails,
-                  yearsOfExperience: parseInt(e.target.value) || 0
-                }
-              })}
+              value={pd.yearsOfExperience || ''}
+              onChange={(e) =>
+                updateData({
+                  professionalDetails: { ...pd, yearsOfExperience: parseInt(e.target.value) || 0 },
+                })
+              }
               min="0"
               max="50"
-              className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
-              required
+              className={errors.yearsOfExperience ? inputErrorClass : inputClass}
             />
+            <FieldError message={errors.yearsOfExperience} />
           </div>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
-            Core Skills *
-          </label>
+          <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">Core Skills *</label>
           <div className="flex flex-wrap gap-2">
             {POPULAR_SKILLS.map((skill) => (
               <button
@@ -567,7 +696,7 @@ function ProfessionalStep({ formData, updateData }: StepProps) {
                 type="button"
                 onClick={() => handleSkillToggle(skill)}
                 className={`px-3 py-1 rounded-full text-sm border transition-colors ${
-                  professionalDetails.skills?.find(s => s.name === skill)
+                  pd.skills?.find((s) => s.name === skill)
                     ? 'bg-fm-magenta-100 border-fm-magenta-300 text-fm-magenta-800'
                     : 'bg-fm-neutral-100 border-fm-neutral-300 text-fm-neutral-700 hover:bg-fm-neutral-200'
                 }`}
@@ -576,237 +705,405 @@ function ProfessionalStep({ formData, updateData }: StepProps) {
               </button>
             ))}
           </div>
+          <FieldError message={errors.skills} />
         </div>
-      </div>
-    </div>
-  );
-}
 
-// Simplified versions of remaining steps to complete the form quickly
-function PortfolioStep({ formData, updateData }: StepProps) {
-  return (
-    <div>
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold text-fm-neutral-900 mb-2">Portfolio & Work</h2>
-        <p className="text-fm-neutral-600">Showcase your best work</p>
-      </div>
-      <div className="text-center py-8 bg-fm-neutral-50 rounded-lg">
-        <PortfolioIcon className="h-12 w-12 mx-auto mb-3 text-fm-neutral-400" />
-        <p className="text-fm-neutral-600">Portfolio upload will be enabled after initial approval.</p>
-        <p className="text-sm text-fm-neutral-500 mt-2">You can share portfolio links in the next steps.</p>
-      </div>
-    </div>
-  );
-}
-
-function SocialMediaStep({ formData, updateData }: StepProps) {
-  const socialMedia = formData.socialMedia || {};
-
-  return (
-    <div>
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold text-fm-neutral-900 mb-2">Social Media Presence</h2>
-        <p className="text-fm-neutral-600">Help us understand your online presence</p>
-      </div>
-
-      <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
-            Instagram Handle
-          </label>
-          <div className="flex">
-            <span className="inline-flex items-center px-3 py-2 rounded-l-lg border border-r-0 border-fm-neutral-300 bg-fm-neutral-50 text-sm">@</span>
-            <input
-              type="text"
-              value={socialMedia.instagram?.handle || ''}
-              onChange={(e) => updateData({
-                socialMedia: {
-                  ...socialMedia,
-                  instagram: {
-                    handle: e.target.value,
-                    followers: socialMedia.instagram?.followers || 0,
-                    engagementRate: 0,
-                    lastUpdated: '',
-                    verified: false
-                  }
-                }
-              })}
-              className="flex-1 px-3 py-2 border border-fm-neutral-300 rounded-r-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
-              placeholder="your_handle"
-            />
+          <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">Tools</label>
+          <div className="flex flex-wrap gap-2">
+            {POPULAR_TOOLS.map((tool) => (
+              <button
+                key={tool}
+                type="button"
+                onClick={() => handleToolToggle(tool)}
+                className={`px-3 py-1 rounded-full text-sm border transition-colors ${
+                  pd.tools?.includes(tool)
+                    ? 'bg-blue-100 border-blue-300 text-blue-800'
+                    : 'bg-fm-neutral-100 border-fm-neutral-300 text-fm-neutral-700 hover:bg-fm-neutral-200'
+                }`}
+              >
+                {tool}
+              </button>
+            ))}
           </div>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
-            Instagram Followers (approximate)
-          </label>
-          <input
-            type="number"
-            value={socialMedia.instagram?.followers || ''}
-            onChange={(e) => updateData({
-              socialMedia: {
-                ...socialMedia,
-                instagram: {
-                  handle: socialMedia.instagram?.handle || '',
-                  followers: parseInt(e.target.value) || 0,
-                  engagementRate: 0,
-                  lastUpdated: '',
-                  verified: false
+        <div className="border-t border-fm-neutral-200 pt-6">
+          <h3 className="text-sm font-semibold text-fm-neutral-900 mb-3">Portfolio Links</h3>
+          <div className="space-y-3">
+            <div>
+              <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">
+                Portfolio Website URL
+              </label>
+              <input
+                type="url"
+                value={pl.websiteUrl}
+                onChange={(e) =>
+                  updateData({ portfolioLinks: { ...pl, websiteUrl: e.target.value } })
                 }
-              }
-            })}
-            className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
-            placeholder="1000"
-          />
+                className={errors.portfolioWebsite ? inputErrorClass : inputClass}
+                placeholder="https://yourportfolio.com"
+              />
+              <FieldError message={errors.portfolioWebsite} />
+            </div>
+
+            {[0, 1, 2].map((i) => (
+              <div key={i}>
+                <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">
+                  Work Sample URL {i + 1}
+                </label>
+                <input
+                  type="url"
+                  value={pl.workSampleUrls?.[i] || ''}
+                  onChange={(e) => updateWorkSample(i, e.target.value)}
+                  className={errors[`workSample${i}`] ? inputErrorClass : inputClass}
+                  placeholder="https://example.com/project"
+                />
+                <FieldError message={errors[`workSample${i}`]} />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Step 3: Online Presence ─── */
+
+function OnlinePresenceStep({ formData, updateData, errors }: StepInternalProps) {
+  const sm = formData.socialMedia || {};
+
+  const updateSocial = (updates: Partial<typeof sm>) => {
+    updateData({ socialMedia: { ...sm, ...updates } });
+  };
+
+  return (
+    <div>
+      <div className="mb-8">
+        <h2 className="text-2xl font-bold text-fm-neutral-900 mb-2">Online Presence</h2>
+        <p className="text-fm-neutral-600">Help us understand your online reach (all optional)</p>
+      </div>
+
+      <div className="space-y-5">
+        {/* Instagram */}
+        <div className="p-4 border border-fm-neutral-200 rounded-lg space-y-3">
+          <h3 className="text-sm font-semibold text-fm-neutral-900 flex items-center gap-2">
+            <span className="w-5 h-5 bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600 rounded inline-block"></span>
+            Instagram
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs text-fm-neutral-600 mb-1">Handle</label>
+              <div className="flex">
+                <span className="inline-flex items-center px-3 py-2 rounded-l-lg border border-r-0 border-fm-neutral-300 bg-fm-neutral-50 text-sm">
+                  @
+                </span>
+                <input
+                  type="text"
+                  value={sm.instagram?.handle || ''}
+                  onChange={(e) =>
+                    updateSocial({
+                      instagram: {
+                        handle: e.target.value,
+                        followers: sm.instagram?.followers || 0,
+                        engagementRate: 0,
+                        lastUpdated: '',
+                        verified: false,
+                      },
+                    })
+                  }
+                  className="flex-1 px-3 py-2 border border-fm-neutral-300 rounded-r-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500 text-sm"
+                  placeholder="your_handle"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs text-fm-neutral-600 mb-1">Followers (approx)</label>
+              <input
+                type="number"
+                value={sm.instagram?.followers || ''}
+                onChange={(e) =>
+                  updateSocial({
+                    instagram: {
+                      handle: sm.instagram?.handle || '',
+                      followers: parseInt(e.target.value) || 0,
+                      engagementRate: 0,
+                      lastUpdated: '',
+                      verified: false,
+                    },
+                  })
+                }
+                className={inputClass}
+                placeholder="1000"
+              />
+            </div>
+          </div>
         </div>
 
+        {/* YouTube */}
+        <div className="p-4 border border-fm-neutral-200 rounded-lg space-y-3">
+          <h3 className="text-sm font-semibold text-fm-neutral-900 flex items-center gap-2">
+            <span className="w-5 h-5 bg-red-600 rounded inline-flex items-center justify-center text-white text-[10px] font-bold">
+              &#9654;
+            </span>
+            YouTube
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs text-fm-neutral-600 mb-1">Channel URL</label>
+              <input
+                type="url"
+                value={sm.youtube?.channel || ''}
+                onChange={(e) =>
+                  updateSocial({
+                    youtube: {
+                      channel: e.target.value,
+                      subscribers: sm.youtube?.subscribers || 0,
+                      totalViews: 0,
+                      averageViews: 0,
+                      lastUpdated: '',
+                      verified: false,
+                    },
+                  })
+                }
+                className={inputClass}
+                placeholder="https://youtube.com/@channel"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-fm-neutral-600 mb-1">Subscribers (approx)</label>
+              <input
+                type="number"
+                value={sm.youtube?.subscribers || ''}
+                onChange={(e) =>
+                  updateSocial({
+                    youtube: {
+                      channel: sm.youtube?.channel || '',
+                      subscribers: parseInt(e.target.value) || 0,
+                      totalViews: 0,
+                      averageViews: 0,
+                      lastUpdated: '',
+                      verified: false,
+                    },
+                  })
+                }
+                className={inputClass}
+                placeholder="5000"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* LinkedIn */}
         <div>
-          <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
+          <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">
             LinkedIn Profile URL
           </label>
           <input
             type="url"
-            value={socialMedia.linkedin?.profileUrl || ''}
-            onChange={(e) => updateData({
-              socialMedia: {
-                ...socialMedia,
-                linkedin: {
-                  profileUrl: e.target.value,
-                  connections: 0,
-                  lastUpdated: '',
-                  verified: false
-                }
-              }
-            })}
-            className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+            value={sm.linkedin?.profileUrl || ''}
+            onChange={(e) =>
+              updateSocial({
+                linkedin: { profileUrl: e.target.value, connections: 0, lastUpdated: '', verified: false },
+              })
+            }
+            className={errors.linkedin ? inputErrorClass : inputClass}
             placeholder="https://linkedin.com/in/yourprofile"
           />
+          <FieldError message={errors.linkedin} />
+        </div>
+
+        {/* Behance */}
+        <div>
+          <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">
+            Behance Profile URL
+          </label>
+          <input
+            type="url"
+            value={sm.behance?.profileUrl || ''}
+            onChange={(e) =>
+              updateSocial({
+                behance: {
+                  profileUrl: e.target.value,
+                  followers: 0,
+                  projects: 0,
+                  views: 0,
+                  lastUpdated: '',
+                  verified: false,
+                },
+              })
+            }
+            className={errors.behance ? inputErrorClass : inputClass}
+            placeholder="https://behance.net/yourprofile"
+          />
+          <FieldError message={errors.behance} />
+        </div>
+
+        {/* Dribbble */}
+        <div>
+          <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">
+            Dribbble Profile URL
+          </label>
+          <input
+            type="url"
+            value={sm.dribbble?.profileUrl || ''}
+            onChange={(e) =>
+              updateSocial({
+                dribbble: {
+                  profileUrl: e.target.value,
+                  followers: 0,
+                  likes: 0,
+                  shots: 0,
+                  lastUpdated: '',
+                  verified: false,
+                },
+              })
+            }
+            className={errors.dribbble ? inputErrorClass : inputClass}
+            placeholder="https://dribbble.com/yourprofile"
+          />
+          <FieldError message={errors.dribbble} />
         </div>
       </div>
     </div>
   );
 }
 
-function AvailabilityStep({ formData, updateData }: StepProps) {
-  const availability = formData.availability!;
+/* ─── Step 4: Availability & Pricing ─── */
+
+function AvailabilityPricingStep({ formData, updateData, errors }: StepInternalProps) {
+  const avail = formData.availability!;
+  const prefs = formData.preferences!;
+  const pricing = formData.pricing!;
+
+  const updatePricingField = (
+    rateType: 'hourlyRate' | 'projectRate' | 'retainerRate',
+    field: 'min' | 'max',
+    value: number
+  ) => {
+    updateData({
+      pricing: {
+        ...pricing,
+        [rateType]: { ...pricing[rateType], [field]: value },
+      },
+    });
+  };
+
+  const currencySymbol = CURRENCIES.find((c) => c.code === prefs.currency)?.symbol || '₹';
 
   return (
     <div>
       <div className="mb-8">
-        <h2 className="text-2xl font-bold text-fm-neutral-900 mb-2">Availability</h2>
-        <p className="text-fm-neutral-600">Let us know when you're available</p>
+        <h2 className="text-2xl font-bold text-fm-neutral-900 mb-2">Availability & Pricing</h2>
+        <p className="text-fm-neutral-600">Set your availability and rate ranges</p>
       </div>
 
       <div className="space-y-6">
-        <div>
-          <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
-            Current Status
-          </label>
-          <select
-            value={availability.currentStatus}
-            onChange={(e) => updateData({
-              availability: {
-                ...availability,
-                currentStatus: e.target.value as any
+        {/* Availability section */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">
+              Current Status
+            </label>
+            <select
+              value={avail.currentStatus}
+              onChange={(e) =>
+                updateData({ availability: { ...avail, currentStatus: e.target.value as any } })
               }
-            })}
-            className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
-          >
-            <option value="available">Available</option>
-            <option value="partially_available">Partially Available</option>
-            <option value="busy">Busy</option>
-          </select>
+              className={inputClass}
+            >
+              <option value="available">Available</option>
+              <option value="partially_available">Partially Available</option>
+              <option value="busy">Busy</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">
+              Hours per Week *
+            </label>
+            <input
+              type="number"
+              value={avail.hoursPerWeek || ''}
+              onChange={(e) =>
+                updateData({
+                  availability: { ...avail, hoursPerWeek: parseInt(e.target.value) || 0 },
+                })
+              }
+              min="1"
+              max="80"
+              className={errors.hoursPerWeek ? inputErrorClass : inputClass}
+            />
+            <FieldError message={errors.hoursPerWeek} />
+          </div>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
-            Hours per Week
-          </label>
-          <input
-            type="number"
-            value={availability.hoursPerWeek}
-            onChange={(e) => updateData({
-              availability: {
-                ...availability,
-                hoursPerWeek: parseInt(e.target.value) || 40
-              }
-            })}
-            min="1"
-            max="80"
-            className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
-          />
-        </div>
-
-        <div className="flex items-center">
+        <div className="flex items-center gap-3">
           <input
             type="checkbox"
             id="remoteWork"
-            checked={availability.remoteWork}
-            onChange={(e) => updateData({
-              availability: {
-                ...availability,
-                remoteWork: e.target.checked
-              }
-            })}
-            className="mr-3"
+            checked={avail.remoteWork}
+            onChange={(e) =>
+              updateData({ availability: { ...avail, remoteWork: e.target.checked } })
+            }
+            className="rounded"
           />
           <label htmlFor="remoteWork" className="text-sm font-medium text-fm-neutral-700">
             Available for remote work
           </label>
         </div>
-      </div>
-    </div>
-  );
-}
 
-function PreferencesStep({ formData, updateData }: StepProps) {
-  const preferences = formData.preferences!;
+        <div>
+          <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">
+            Project Commitment
+          </label>
+          <select
+            value={avail.projectCommitment}
+            onChange={(e) =>
+              updateData({
+                availability: { ...avail, projectCommitment: e.target.value as any },
+              })
+            }
+            className={inputClass}
+          >
+            {PROJECT_COMMITMENT_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+        </div>
 
-  return (
-    <div>
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold text-fm-neutral-900 mb-2">Preferences</h2>
-        <p className="text-fm-neutral-600">Tell us about your project preferences</p>
-      </div>
-
-      <div className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
+            <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">
               Minimum Project Value
             </label>
             <input
               type="number"
-              value={preferences.minimumProjectValue}
-              onChange={(e) => updateData({
-                preferences: {
-                  ...preferences,
-                  minimumProjectValue: parseInt(e.target.value) || 0
-                }
-              })}
-              className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+              value={prefs.minimumProjectValue || ''}
+              onChange={(e) =>
+                updateData({
+                  preferences: { ...prefs, minimumProjectValue: parseInt(e.target.value) || 0 },
+                })
+              }
+              className={inputClass}
               placeholder="10000"
             />
           </div>
-
           <div>
-            <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
-              Currency
-            </label>
+            <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">Currency</label>
             <select
-              value={preferences.currency}
-              onChange={(e) => updateData({
-                preferences: {
-                  ...preferences,
-                  currency: e.target.value
-                }
-              })}
-              className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+              value={prefs.currency}
+              onChange={(e) =>
+                updateData({ preferences: { ...prefs, currency: e.target.value } })
+              }
+              className={inputClass}
             >
-              {CURRENCIES.map((currency) => (
-                <option key={currency.code} value={currency.code}>
-                  {currency.symbol} {currency.label}
+              {CURRENCIES.map((c) => (
+                <option key={c.code} value={c.code}>
+                  {c.symbol} {c.label}
                 </option>
               ))}
             </select>
@@ -814,18 +1111,17 @@ function PreferencesStep({ formData, updateData }: StepProps) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
+          <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">
             Communication Style
           </label>
           <select
-            value={preferences.communicationStyle}
-            onChange={(e) => updateData({
-              preferences: {
-                ...preferences,
-                communicationStyle: e.target.value as any
-              }
-            })}
-            className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+            value={prefs.communicationStyle}
+            onChange={(e) =>
+              updateData({
+                preferences: { ...prefs, communicationStyle: e.target.value as any },
+              })
+            }
+            className={inputClass}
           >
             <option value="formal">Formal</option>
             <option value="casual">Casual</option>
@@ -833,14 +1129,114 @@ function PreferencesStep({ formData, updateData }: StepProps) {
           </select>
         </div>
 
-        {/* Ready to Submit */}
-        <div className="bg-fm-magenta-50 border border-fm-magenta-200 rounded-xl p-6 mt-8">
+        {/* Pricing section */}
+        <div className="border-t border-fm-neutral-200 pt-6">
+          <h3 className="text-sm font-semibold text-fm-neutral-900 mb-1">
+            Pricing Rates *
+          </h3>
+          <p className="text-xs text-fm-neutral-500 mb-4">
+            Fill at least one rate range ({currencySymbol})
+          </p>
+          {errors.pricing && <FieldError message={errors.pricing} />}
+
+          <div className="space-y-4">
+            {/* Hourly */}
+            <div>
+              <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">
+                Hourly Rate ({currencySymbol})
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                <input
+                  type="number"
+                  value={pricing.hourlyRate.min || ''}
+                  onChange={(e) => updatePricingField('hourlyRate', 'min', parseInt(e.target.value) || 0)}
+                  className={errors.hourlyRate ? inputErrorClass : inputClass}
+                  placeholder="Min"
+                />
+                <input
+                  type="number"
+                  value={pricing.hourlyRate.max || ''}
+                  onChange={(e) => updatePricingField('hourlyRate', 'max', parseInt(e.target.value) || 0)}
+                  className={errors.hourlyRate ? inputErrorClass : inputClass}
+                  placeholder="Max"
+                />
+              </div>
+              <FieldError message={errors.hourlyRate} />
+            </div>
+
+            {/* Per-project */}
+            <div>
+              <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">
+                Per-project Rate ({currencySymbol})
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                <input
+                  type="number"
+                  value={pricing.projectRate.min || ''}
+                  onChange={(e) => updatePricingField('projectRate', 'min', parseInt(e.target.value) || 0)}
+                  className={errors.projectRate ? inputErrorClass : inputClass}
+                  placeholder="Min"
+                />
+                <input
+                  type="number"
+                  value={pricing.projectRate.max || ''}
+                  onChange={(e) => updatePricingField('projectRate', 'max', parseInt(e.target.value) || 0)}
+                  className={errors.projectRate ? inputErrorClass : inputClass}
+                  placeholder="Max"
+                />
+              </div>
+              <FieldError message={errors.projectRate} />
+            </div>
+
+            {/* Monthly retainer */}
+            <div>
+              <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">
+                Monthly Retainer ({currencySymbol})
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                <input
+                  type="number"
+                  value={pricing.retainerRate.min || ''}
+                  onChange={(e) => updatePricingField('retainerRate', 'min', parseInt(e.target.value) || 0)}
+                  className={errors.retainerRate ? inputErrorClass : inputClass}
+                  placeholder="Min"
+                />
+                <input
+                  type="number"
+                  value={pricing.retainerRate.max || ''}
+                  onChange={(e) => updatePricingField('retainerRate', 'max', parseInt(e.target.value) || 0)}
+                  className={errors.retainerRate ? inputErrorClass : inputClass}
+                  placeholder="Max"
+                />
+              </div>
+              <FieldError message={errors.retainerRate} />
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 mt-4">
+            <input
+              type="checkbox"
+              id="negotiation"
+              checked={pricing.openToNegotiation}
+              onChange={(e) =>
+                updateData({ pricing: { ...pricing, openToNegotiation: e.target.checked } })
+              }
+              className="rounded"
+            />
+            <label htmlFor="negotiation" className="text-sm text-fm-neutral-700">
+              Open to negotiation on rates
+            </label>
+          </div>
+        </div>
+
+        {/* Ready box */}
+        <div className="bg-fm-magenta-50 border border-fm-magenta-200 rounded-xl p-6 mt-4">
           <div className="flex items-center gap-3 mb-3">
             <CheckCircle className="h-5 w-5 text-fm-magenta-600" />
             <h3 className="text-lg font-semibold text-fm-magenta-900">Ready to Submit!</h3>
           </div>
           <p className="text-fm-magenta-700 mb-4">
-            You've completed all sections. Review your information and submit your application.
+            Review your information and submit your application.
           </p>
           <div className="text-sm text-fm-magenta-600">
             <strong>What happens next:</strong>

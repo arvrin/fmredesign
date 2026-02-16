@@ -31,7 +31,7 @@ export interface AdminSession {
   };
 }
 
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "FreakingMinds2024!";
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 const SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 hours
 const SESSION_KEY = "fm_admin_session";
 
@@ -40,6 +40,10 @@ export class AdminAuth {
    * Authenticate admin with password (Super Admin)
    */
   static authenticate(password: string): boolean {
+    if (!ADMIN_PASSWORD) {
+      console.error('ADMIN_PASSWORD environment variable is not set');
+      return false;
+    }
     if (password === ADMIN_PASSWORD) {
       const session: AdminSession = {
         isAuthenticated: true,

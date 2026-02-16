@@ -60,10 +60,10 @@ const buttonVariants = {
     ].join(' '),
     
     client: [
-      'bg-gradient-to-r from-fm-magenta-500 to-fm-orange-500',
+      'bg-gradient-to-r from-fm-magenta-500 to-fm-magenta-700',
       'text-white shadow-lg hover:shadow-xl',
       'focus:ring-fm-magenta-500 border border-fm-magenta-500',
-      'hover:from-fm-magenta-600 hover:to-fm-orange-600'
+      'hover:from-fm-magenta-600 hover:to-fm-magenta-800'
     ].join(' ')
   },
   

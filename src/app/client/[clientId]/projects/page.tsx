@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { 
   DashboardLayout,
@@ -13,8 +13,7 @@ import {
   DashboardButton as Button
 } from '@/design-system';
 import { Badge } from '@/components/ui/Badge';
-import { Progress } from '@/components/ui/progress';
-import { 
+import {
   Briefcase,
   Calendar,
   Clock,
@@ -67,77 +66,72 @@ export default function ClientProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'active' | 'completed'>('all');
+  const [profileData, setProfileData] = useState<{ name: string; email: string; industry: string } | null>(null);
 
   useEffect(() => {
-    // Simulate fetching projects data
-    setTimeout(() => {
-      setProjects([
-        {
-          id: '1',
-          name: 'Website Redesign',
-          description: 'Complete overhaul of company website with modern design and improved UX',
-          status: 'active',
-          priority: 'high',
-          progress: 65,
-          startDate: '2024-01-15',
-          endDate: '2024-04-15',
-          budget: 500000,
-          spent: 325000,
-          team: ['John Doe', 'Jane Smith', 'Mike Johnson'],
-          deliverables: { total: 12, completed: 8 },
-          milestones: [
-            { name: 'Design Approval', date: '2024-02-01', status: 'completed' },
-            { name: 'Development Phase 1', date: '2024-02-28', status: 'completed' },
-            { name: 'Testing & QA', date: '2024-03-15', status: 'in-progress' },
-            { name: 'Launch', date: '2024-04-15', status: 'upcoming' }
-          ],
-          lastUpdate: '2 hours ago'
-        },
-        {
-          id: '2',
-          name: 'Social Media Campaign Q1',
-          description: 'Comprehensive social media strategy and content creation for Q1',
-          status: 'completed',
-          priority: 'medium',
-          progress: 100,
-          startDate: '2024-01-01',
-          endDate: '2024-03-31',
-          budget: 150000,
-          spent: 145000,
-          team: ['Sarah Wilson', 'Tom Brown'],
-          deliverables: { total: 30, completed: 30 },
-          milestones: [
-            { name: 'Strategy Finalized', date: '2024-01-10', status: 'completed' },
-            { name: 'Content Creation', date: '2024-02-15', status: 'completed' },
-            { name: 'Campaign Launch', date: '2024-03-01', status: 'completed' }
-          ],
-          lastUpdate: '1 week ago'
-        },
-        {
-          id: '3',
-          name: 'SEO Optimization',
-          description: 'Technical SEO audit and implementation for better search rankings',
-          status: 'active',
-          priority: 'high',
-          progress: 40,
-          startDate: '2024-02-01',
-          endDate: '2024-05-01',
-          budget: 200000,
-          spent: 80000,
-          team: ['Alex Chen', 'Lisa Park'],
-          deliverables: { total: 8, completed: 3 },
-          milestones: [
-            { name: 'SEO Audit', date: '2024-02-15', status: 'completed' },
-            { name: 'Technical Implementation', date: '2024-03-30', status: 'in-progress' },
-            { name: 'Content Optimization', date: '2024-04-15', status: 'upcoming' },
-            { name: 'Performance Review', date: '2024-05-01', status: 'upcoming' }
-          ],
-          lastUpdate: '5 hours ago'
+    if (!clientId) return;
+
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+
+        // Fetch profile for DashboardLayout user prop
+        const profileRes = await fetch(`/api/client-portal/${clientId}/profile`);
+        if (profileRes.ok) {
+          const profileJson = await profileRes.json();
+          const p = profileJson.data;
+          setProfileData({
+            name: p.name,
+            email: p.primaryContact?.email || '',
+            industry: p.industry
+          });
         }
-      ]);
-      setLoading(false);
-    }, 1000);
-  }, []);
+
+        // Fetch projects
+        const res = await fetch(`/api/client-portal/${clientId}/projects?limit=50`);
+        if (res.ok) {
+          const data = await res.json();
+          const mapped = (data.data || []).map((p: any) => ({
+            id: p.id,
+            name: p.name,
+            description: p.description || '',
+            status: p.status || 'planning',
+            priority: p.priority || 'medium',
+            progress: p.progress || 0,
+            startDate: p.startDate || '',
+            endDate: p.endDate || '',
+            budget: p.budget || 0,
+            spent: p.spent || 0,
+            team: [],
+            deliverables: {
+              total: (p.deliverables || []).length,
+              completed: (p.deliverables || []).filter((d: any) => d.status === 'completed').length
+            },
+            milestones: (p.milestones || []).map((m: any) => ({
+              name: m.title || m.name || '',
+              date: m.dueDate || m.date || '',
+              status: m.isCompleted ? 'completed' : 'upcoming'
+            })),
+            lastUpdate: p.updatedAt ? new Date(p.updatedAt).toLocaleDateString() : ''
+          }));
+          setProjects(mapped);
+        }
+      } catch (err) {
+        console.error('Error fetching projects:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [clientId]);
+
+  const handleLogout = useCallback(async () => {
+    try {
+      await fetch('/api/client-portal/logout', { method: 'POST' });
+    } catch {}
+    router.push('/client/login');
+  }, [router]);
 
   const filteredProjects = projects.filter(project => {
     if (filter === 'all') return true;
@@ -219,16 +213,17 @@ export default function ClientProjectsPage() {
       variant="client"
       navigation={navigationItems}
       user={{
-        name: 'Client Name',
-        email: 'client@example.com',
-        role: 'Industry'
+        name: profileData?.name || 'Client',
+        email: profileData?.email || '',
+        role: profileData?.industry || ''
       }}
+      onLogout={handleLogout}
     >
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-fm-magenta-600 to-fm-orange-600 bg-clip-text text-transparent">
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-fm-magenta-600 to-fm-magenta-500 bg-clip-text text-transparent">
               Your Projects
             </h1>
             <p className="text-gray-600 mt-1 font-medium">Track progress and milestones across all initiatives</p>
@@ -341,7 +336,7 @@ export default function ClientProjectsPage() {
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
                   <div 
-                    className="bg-gradient-to-r from-fm-magenta-500 to-fm-orange-500 h-2 rounded-full transition-all duration-500" 
+                    className="bg-gradient-to-r from-fm-magenta-500 to-fm-magenta-400 h-2 rounded-full transition-all duration-500" 
                     style={{ width: `${project.progress}%` }}
                   />
                 </div>
@@ -387,7 +382,7 @@ export default function ClientProjectsPage() {
                 <div className="flex items-center space-x-2">
                   <div className="flex -space-x-2">
                     {project.team.slice(0, 3).map((member, idx) => (
-                      <div key={idx} className="w-8 h-8 rounded-full bg-gradient-to-br from-fm-magenta-400 to-fm-orange-400 border-2 border-white flex items-center justify-center">
+                      <div key={idx} className="w-8 h-8 rounded-full bg-gradient-to-br from-fm-magenta-400 to-fm-magenta-300 border-2 border-white flex items-center justify-center">
                         <span className="text-xs text-white font-medium">
                           {member.split(' ').map(n => n[0]).join('')}
                         </span>

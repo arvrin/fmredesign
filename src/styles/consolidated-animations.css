@@ -1,6 +1,17 @@
 /* FreakingMinds - Consolidated Animations */
 /* All section animations consolidated for better performance */
 
+/* Scroll Indicator Animation */
+@keyframes scrollIndicator {
+  0% { transform: translateY(-100%); }
+  50% { transform: translateY(250%); }
+  100% { transform: translateY(-100%); }
+}
+
+.scroll-indicator-line {
+  animation: scrollIndicator 2s ease-in-out infinite;
+}
+
 /* Hero Section Animations */
 @keyframes heroFadeInUp {
   from {
@@ -32,19 +43,7 @@
   animation: heroSlideIn 0.6s ease-out forwards;
 }
 
-/* Services Section Animations */
-@keyframes serviceCardFloat {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
-}
-
-.service-card:hover {
-  animation: serviceCardFloat 2s ease-in-out infinite;
-}
+/* Services Section Animations — Card3D handles hover transforms */
 
 /* Case Studies Section Animations */
 @keyframes caseStudyReveal {
@@ -371,6 +370,49 @@
 
 .animate-fade-in-up {
   animation: fadeInUp 0.6s ease-out;
+}
+
+/* Hero gradient text animation */
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.animate-gradient-shift {
+  animation: gradientShift 5s ease infinite;
+}
+
+/* Scroll Jacking Animations */
+@keyframes bounceSlow {
+  0%, 100% {
+    transform: translateX(-50%) translateY(0);
+  }
+  50% {
+    transform: translateX(-50%) translateY(-8px);
+  }
+}
+
+@keyframes scrollIndicatorMouse {
+  0% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(6px);
+    opacity: 0.5;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-bounce-slow {
+  animation: bounceSlow 2s ease-in-out infinite;
+}
+
+.animate-scroll-indicator {
+  animation: scrollIndicatorMouse 1.5s ease-in-out infinite;
 }
 
 /* Reduced motion support */

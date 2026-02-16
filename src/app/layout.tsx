@@ -1,23 +1,47 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Playfair_Display, Plus_Jakarta_Sans, Instrument_Serif } from "next/font/google";
 import "./globals.css";
 import { ConditionalLayout } from "@/components/layout/ConditionalLayout";
+import { SmoothScrollProvider } from "@/providers/SmoothScrollProvider";
 
-const inter = Inter({
-  variable: "--font-inter",
+// Display font - elegant serif for headlines (authority & sophistication)
+const playfair = Playfair_Display({
+  variable: "--font-display",
   subsets: ["latin"],
   display: "swap",
+  weight: ["400", "500", "600", "700", "800", "900"],
+});
+
+// Body font - modern, highly readable sans
+const jakarta = Plus_Jakarta_Sans({
+  variable: "--font-sans",
+  subsets: ["latin"],
+  display: "swap",
+  weight: ["300", "400", "500", "600", "700"],
+});
+
+// Accent font - for special moments
+const instrument = Instrument_Serif({
+  variable: "--font-accent",
+  subsets: ["latin"],
+  display: "swap",
+  weight: ["400"],
+  style: ["normal", "italic"],
 });
 
 export const viewport = {
   width: "device-width",
   initialScale: 1,
+  viewportFit: "cover" as const,
 };
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://freakingminds.in'),
-  title: "Freaking Minds - Digital Marketing Agency in Bhopal | We Don't Just Market, We Create Movements",
-  description: "Leading digital marketing agency in Bhopal. Data-driven creative solutions that transform ambitious brands into market leaders. 50+ years experience, 250+ successful campaigns.",
+  title: {
+    default: "Freaking Minds - Digital Marketing Agency in Bhopal | We Don't Just Market, We Create Movements",
+    template: "%s | Freaking Minds",
+  },
+  description: "Leading digital marketing agency in Bhopal. Data-driven creative solutions that transform ambitious brands into market leaders.",
   keywords: [
     "digital marketing agency bhopal",
     "seo services bhopal",
@@ -50,6 +74,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
+    site: "@freakingminds",
     title: "Freaking Minds - Digital Marketing Agency",
     description: "We Don't Just Market, We Create Movements",
     images: ["/logo.png"],
@@ -72,10 +97,75 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'Organization',
+        '@id': 'https://freakingminds.in/#organization',
+        name: 'Freaking Minds',
+        url: 'https://freakingminds.in',
+        logo: {
+          '@type': 'ImageObject',
+          url: 'https://freakingminds.in/logo.png',
+        },
+        sameAs: [
+          'https://www.instagram.com/freakingminds/',
+          'https://www.linkedin.com/company/freakingminds/',
+        ],
+        contactPoint: {
+          '@type': 'ContactPoint',
+          telephone: '+91-9833257659',
+          contactType: 'customer service',
+          email: 'hello@freakingminds.in',
+          areaServed: 'IN',
+          availableLanguage: ['English', 'Hindi'],
+        },
+      },
+      {
+        '@type': 'LocalBusiness',
+        '@id': 'https://freakingminds.in/#localbusiness',
+        name: 'Freaking Minds',
+        description: 'Leading digital marketing agency in Bhopal. Data-driven creative solutions that transform ambitious brands into market leaders.',
+        url: 'https://freakingminds.in',
+        telephone: '+91-9833257659',
+        email: 'hello@freakingminds.in',
+        address: {
+          '@type': 'PostalAddress',
+          addressLocality: 'Bhopal',
+          addressRegion: 'Madhya Pradesh',
+          addressCountry: 'IN',
+        },
+        priceRange: '$$',
+        openingHoursSpecification: {
+          '@type': 'OpeningHoursSpecification',
+          dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+          opens: '09:00',
+          closes: '18:00',
+        },
+      },
+      {
+        '@type': 'WebSite',
+        '@id': 'https://freakingminds.in/#website',
+        url: 'https://freakingminds.in',
+        name: 'Freaking Minds',
+        publisher: { '@id': 'https://freakingminds.in/#organization' },
+      },
+    ],
+  };
+
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="en" className={`${playfair.variable} ${jakarta.variable} ${instrument.variable}`}>
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      </head>
       <body className="font-sans antialiased">
-        <ConditionalLayout>{children}</ConditionalLayout>
+        <SmoothScrollProvider>
+          <ConditionalLayout>{children}</ConditionalLayout>
+        </SmoothScrollProvider>
       </body>
     </html>
   );

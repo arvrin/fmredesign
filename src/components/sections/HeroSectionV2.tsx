@@ -1,0 +1,313 @@
+'use client';
+
+import React, { useEffect, useState, useRef, useCallback } from 'react';
+import Link from 'next/link';
+import { ArrowRight, ChevronDown } from 'lucide-react';
+import { gsap } from 'gsap';
+import { GradientOrb } from '@/components/animations/ParallaxLayer';
+
+// Register GSAP plugins
+if (typeof window !== 'undefined') {
+  gsap.registerPlugin();
+}
+
+// Rotating phrases for the hero headline
+const rotatingPhrases = [
+  'move markets.',
+  'drive growth.',
+  'spark change.',
+  'build empires.',
+  'break barriers.',
+  'create impact.',
+  'inspire action.',
+  'win hearts.',
+  'turn heads.',
+];
+
+export function HeroSectionV2() {
+  const [mousePos, setMousePos] = useState({ x: 0.5, y: 0.5 });
+  const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const headlineStaticRef = useRef<HTMLSpanElement>(null);
+  const headlineRotatingRef = useRef<HTMLSpanElement>(null);
+  const subheadRef = useRef<HTMLParagraphElement>(null);
+  const ctaRef = useRef<HTMLDivElement>(null);
+  const mascotRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Check for reduced motion
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    setPrefersReducedMotion(mediaQuery.matches);
+    const handler = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches);
+    mediaQuery.addEventListener('change', handler);
+    return () => mediaQuery.removeEventListener('change', handler);
+  }, []);
+
+  // GSAP staggered entrance animation
+  useEffect(() => {
+    if (prefersReducedMotion) {
+      // Show everything immediately for reduced motion
+      [headlineStaticRef, headlineRotatingRef, subheadRef, ctaRef, mascotRef, scrollRef].forEach(ref => {
+        if (ref.current) {
+          ref.current.style.opacity = '1';
+          ref.current.style.transform = 'none';
+        }
+      });
+      return;
+    }
+
+    const ctx = gsap.context(() => {
+      const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
+
+      // Headline static words — slide up from below
+      tl.fromTo(
+        headlineStaticRef.current,
+        { opacity: 0, y: 60 },
+        { opacity: 1, y: 0, duration: 0.9 },
+        0.2
+      );
+
+      // Headline rotating phrase — slide up with slight delay
+      tl.fromTo(
+        headlineRotatingRef.current,
+        { opacity: 0, y: 50 },
+        { opacity: 1, y: 0, duration: 0.8 },
+        0.5
+      );
+
+      // Subhead — fade in
+      tl.fromTo(
+        subheadRef.current,
+        { opacity: 0, y: 30 },
+        { opacity: 1, y: 0, duration: 0.7 },
+        0.75
+      );
+
+      // CTA buttons — slide up and fade
+      tl.fromTo(
+        ctaRef.current,
+        { opacity: 0, y: 25 },
+        { opacity: 1, y: 0, duration: 0.6 },
+        0.95
+      );
+
+      // Mascot — scale in from slightly smaller with bounce
+      tl.fromTo(
+        mascotRef.current,
+        { opacity: 0, scale: 0.7, y: 40 },
+        { opacity: 1, scale: 1, y: 0, duration: 1, ease: 'back.out(1.4)' },
+        0.6
+      );
+
+      // Scroll indicator — fade in last
+      tl.fromTo(
+        scrollRef.current,
+        { opacity: 0 },
+        { opacity: 1, duration: 0.5 },
+        1.5
+      );
+    }, sectionRef);
+
+    return () => ctx.revert();
+  }, [prefersReducedMotion]);
+
+  // Rotate phrases every 3 seconds
+  useEffect(() => {
+    if (prefersReducedMotion) return;
+
+    const interval = setInterval(() => {
+      setIsAnimating(true);
+      setTimeout(() => {
+        setCurrentPhraseIndex((prev) => (prev + 1) % rotatingPhrases.length);
+        setIsAnimating(false);
+      }, 300);
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [prefersReducedMotion]);
+
+  // Mouse parallax for mascot
+  const handleMouseMove = useCallback(
+    (e: MouseEvent) => {
+      if (prefersReducedMotion) return;
+      if (sectionRef.current) {
+        const rect = sectionRef.current.getBoundingClientRect();
+        setMousePos({
+          x: (e.clientX - rect.left) / rect.width,
+          y: (e.clientY - rect.top) / rect.height,
+        });
+      }
+    },
+    [prefersReducedMotion]
+  );
+
+  useEffect(() => {
+    if (prefersReducedMotion) return;
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, [handleMouseMove, prefersReducedMotion]);
+
+  return (
+    <section
+      ref={sectionRef}
+      className="relative min-h-[min(100vh,960px)] overflow-hidden flex items-center"
+    >
+      {/* Ambient Gradient Orbs — 2 only, subtle depth */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <GradientOrb
+          color="rgba(201, 50, 93, 0.2)"
+          size={650}
+          blur={100}
+          position={{ top: '5%', left: '-12%' }}
+        />
+        <GradientOrb
+          color="rgba(160, 30, 70, 0.15)"
+          size={500}
+          blur={80}
+          position={{ bottom: '10%', right: '-10%' }}
+        />
+      </div>
+
+      {/* Main Content — Asymmetric layout */}
+      <div className="relative z-10 v2-container w-full pt-28 lg:pt-36 pb-28 lg:pb-20">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
+
+          {/* Left Column — Text content (7 cols on desktop) */}
+          <div className="lg:col-span-7 flex flex-col items-start">
+            {/* Main Headline */}
+            <h1
+              className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold leading-[1.05] tracking-tight"
+              style={{ marginBottom: '28px' }}
+            >
+              {/* Static part */}
+              <span
+                ref={headlineStaticRef}
+                className="v2-text-primary block"
+                style={{ opacity: 0 }}
+              >
+                Ideas that
+              </span>
+
+              {/* Rotating phrase */}
+              <span
+                ref={headlineRotatingRef}
+                className="relative block overflow-hidden"
+                style={{ opacity: 0, height: '1.65em', lineHeight: 1.4 }}
+              >
+                <span
+                  className={`
+                    inline-block
+                    transition-all duration-500
+                    ${isAnimating ? 'opacity-0 -translate-y-[110%]' : 'opacity-100 translate-y-0'}
+                  `}
+                  style={{
+                    transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)',
+                    lineHeight: 1.4,
+                    paddingBottom: '0.05em',
+                  }}
+                >
+                  <span className="hero-stacked-text">
+                    {rotatingPhrases[currentPhraseIndex]}
+                  </span>
+                </span>
+              </span>
+            </h1>
+
+            {/* Subheadline */}
+            <p
+              ref={subheadRef}
+              className="v2-text-secondary text-base md:text-lg lg:text-xl leading-relaxed max-w-full lg:max-w-lg"
+              style={{ opacity: 0, marginBottom: '40px' }}
+            >
+              Strategic creativity that transforms ambitious brands into market leaders.
+              Data-informed. Design-led. Results-driven.
+            </p>
+
+            {/* CTA Buttons */}
+            <div
+              ref={ctaRef}
+              className="flex flex-col sm:flex-row items-stretch sm:items-start gap-4 w-full sm:w-auto"
+              style={{ opacity: 0 }}
+            >
+              <Link
+                href="/get-started"
+                className="v2-btn v2-btn-primary v2-btn-lg group"
+              >
+                Start a Project
+                <ArrowRight className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" />
+              </Link>
+              <Link
+                href="/work"
+                className="v2-btn v2-btn-secondary v2-btn-lg"
+              >
+                View Our Work
+              </Link>
+            </div>
+          </div>
+
+          {/* Right Column — Brain Mascot (5 cols on desktop) */}
+          <div className="lg:col-span-5 flex justify-center lg:justify-end relative">
+            <div
+              ref={mascotRef}
+              className="relative"
+              style={{
+                opacity: 0,
+                transform: prefersReducedMotion
+                  ? 'none'
+                  : `
+                    perspective(800px)
+                    rotateY(${(mousePos.x - 0.5) * 12}deg)
+                    rotateX(${(mousePos.y - 0.5) * -8}deg)
+                    translateX(${(mousePos.x - 0.5) * 15}px)
+                    translateY(${(mousePos.y - 0.5) * 10}px)
+                  `,
+                transition: 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+              }}
+            >
+              {/* Glow behind mascot */}
+              <div
+                className="absolute inset-0 -z-10 pointer-events-none"
+                style={{
+                  background: 'radial-gradient(circle at 50% 50%, rgba(201, 50, 93, 0.2) 0%, transparent 65%)',
+                  transform: 'scale(1.5)',
+                  filter: 'blur(40px)',
+                }}
+              />
+              <img
+                src="/3dasset/brain-rocket.png"
+                alt="Launch Your Brand"
+                className="w-52 sm:w-64 md:w-80 lg:w-[360px] xl:w-[420px] max-w-full drop-shadow-2xl"
+                style={{
+                  filter: 'drop-shadow(0 30px 60px rgba(0,0,0,0.45))',
+                  animation: prefersReducedMotion ? 'none' : 'v2HeroFloat 6s ease-in-out infinite',
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Scroll Indicator */}
+      <div
+        ref={scrollRef}
+        className="absolute bottom-16 md:bottom-8 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2"
+        style={{ opacity: 0 }}
+      >
+        <span className="v2-text-muted text-[11px] uppercase tracking-[0.2em] font-medium">
+          Scroll
+        </span>
+        <ChevronDown
+          className="w-5 h-5 v2-text-tertiary"
+          style={{
+            animation: prefersReducedMotion ? 'none' : 'heroScrollBounce 2s ease-in-out infinite',
+          }}
+        />
+      </div>
+
+    </section>
+  );
+}

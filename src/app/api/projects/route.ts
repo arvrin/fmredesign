@@ -116,7 +116,6 @@ export async function GET(request: NextRequest) {
       { 
         success: false, 
         error: 'Failed to fetch projects',
-        details: error instanceof Error ? error.message : 'Unknown error'
       },
       { status: 500 }
     );
@@ -208,7 +207,6 @@ export async function POST(request: NextRequest) {
       { 
         success: false, 
         error: 'Failed to create project',
-        details: error instanceof Error ? error.message : 'Unknown error'
       },
       { status: 500 }
     );
@@ -324,7 +322,6 @@ export async function PUT(request: NextRequest) {
       { 
         success: false, 
         error: 'Failed to update project',
-        details: error instanceof Error ? error.message : 'Unknown error'
       },
       { status: 500 }
     );
@@ -390,7 +387,6 @@ export async function DELETE(request: NextRequest) {
       { 
         success: false, 
         error: 'Failed to delete project',
-        details: error instanceof Error ? error.message : 'Unknown error'
       },
       { status: 500 }
     );

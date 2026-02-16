@@ -661,7 +661,7 @@ export default function SettingsPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="p-6 bg-gradient-to-r from-fm-magenta-700 to-fm-orange-600 rounded-lg text-white">
+                  <div className="p-6 bg-gradient-to-r from-fm-magenta-700 to-fm-magenta-500 rounded-lg text-white">
                     <div className="flex items-center justify-between">
                       <div>
                         <h3 className="text-lg font-semibold">{settings.billing.plan} Plan</h3>

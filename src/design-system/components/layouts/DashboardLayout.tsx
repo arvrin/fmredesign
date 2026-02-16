@@ -48,9 +48,9 @@ const layoutVariants = {
     theme: 'Command Center'
   },
   client: {
-    bg: 'bg-gradient-to-br from-orange-50 via-white to-fm-magenta-50/30',
-    sidebar: 'bg-white/95 backdrop-blur-md border-r border-orange-200',
-    header: 'bg-white/80 backdrop-blur-md border-b border-orange-200',
+    bg: 'bg-gradient-to-br from-fm-magenta-50/30 via-white to-fm-neutral-50',
+    sidebar: 'bg-white/95 backdrop-blur-md border-r border-fm-magenta-100',
+    header: 'bg-white/80 backdrop-blur-md border-b border-fm-magenta-100',
     accent: 'text-fm-magenta-700',
     logo: 'Client Portal',
     theme: 'Your Progress Hub'
@@ -134,7 +134,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                 'flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200',
                 'hover:bg-gray-100/60 hover:scale-105 active:scale-95',
                 item.active ? cn('bg-gradient-to-r shadow-md text-white', 
-                  variant === 'admin' ? 'from-fm-magenta-600 to-fm-magenta-700' : 'from-fm-magenta-500 to-fm-orange-500'
+                  variant === 'admin' ? 'from-fm-magenta-600 to-fm-magenta-700' : 'from-fm-magenta-500 to-fm-magenta-700'
                 ) : 'text-gray-700 hover:text-gray-900'
               )}
             >

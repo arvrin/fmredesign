@@ -1,324 +1,381 @@
-import type { Metadata } from "next";
-import { ArrowRight, Search, TrendingUp, Lightbulb, Target, BookOpen } from "lucide-react";
+'use client';
 
-// Design System Components
-import { 
-  LinkButton,
-  HeroSectionBuilder,
-  SectionBuilder,
-  ArticleCard,
-  SidebarWidget,
-  FeaturedArticle,
-  patterns 
-} from "@/design-system";
+import { useState, useMemo } from 'react';
+import { ArrowRight, Search, TrendingUp, Lightbulb, Target, BookOpen, Star, Clock, User, Tag, ChevronRight } from "lucide-react";
+import Link from "next/link";
+import { V2PageWrapper } from "@/components/layouts/V2PageWrapper";
+import { blogPosts, getAllCategories, getAllTags } from '@/lib/blog-data';
 
-export const metadata: Metadata = {
-  title: "Digital Marketing Blog - Freaking Minds | Tips, Strategies & Industry Insights",
-  description: "Stay updated with the latest digital marketing trends, strategies, and insights. Expert advice on SEO, social media, PPC, content marketing, and more from Freaking Minds.",
-  keywords: [
-    "digital marketing blog",
-    "seo tips",
-    "social media marketing strategies",
-    "content marketing insights",
-    "digital marketing trends",
-    "marketing best practices",
-    "freaking minds blog"
-  ],
-  openGraph: {
-    title: "Digital Marketing Blog - Expert Insights & Strategies",
-    description: "Get the latest digital marketing insights, tips, and strategies from industry experts. Stay ahead of the curve with Freaking Minds.",
-    url: "https://freakingminds.in/blog",
-    type: "website",
-  },
+const categoryGradients: Record<string, string> = {
+  'Strategy': 'v2-gradient-brand',
+  'SEO': 'v2-gradient-seo',
+  'Social Media': 'v2-gradient-social',
+  'Content Marketing': 'v2-gradient-content',
+  'Web Design': 'v2-gradient-deep',
+  'Analytics': 'v2-gradient-performance',
 };
 
-const featuredPost = {
-  title: "The Ultimate Guide to Digital Marketing in 2024: Trends That Will Shape Your Strategy",
-  excerpt: "Discover the top digital marketing trends for 2024 including AI-powered marketing, voice search optimization, privacy-first strategies, and the rise of video commerce. Learn how to adapt your strategy for maximum impact.",
-  category: "Strategy",
-  readTime: "12 min read",
-  date: "March 15, 2024",
-  author: "Rajesh Sharma",
-  image: "/placeholder-blog-featured.jpg",
-  featured: true
+const categoryIcons: Record<string, typeof TrendingUp> = {
+  'Strategy': Target,
+  'SEO': Search,
+  'Social Media': Star,
+  'Content Marketing': BookOpen,
+  'Web Design': Lightbulb,
+  'Analytics': TrendingUp,
 };
-
-const blogPosts = [
-  {
-    title: "10 SEO Mistakes That Are Killing Your Website Traffic",
-    excerpt: "Avoid these common SEO pitfalls that could be sabotaging your search rankings. From technical issues to content problems, we cover the top mistakes and how to fix them.",
-    category: "SEO",
-    readTime: "8 min read",
-    date: "March 12, 2024",
-    author: "Priya Patel",
-    image: "/placeholder-blog-1.jpg",
-    tags: ["SEO", "Technical SEO", "Website Optimization"]
-  },
-  {
-    title: "Social Media ROI: How to Measure and Improve Your Returns",
-    excerpt: "Learn how to track, measure, and optimize your social media ROI with practical metrics, tools, and strategies that actually work for businesses of all sizes.",
-    category: "Social Media",
-    readTime: "6 min read",
-    date: "March 10, 2024",
-    author: "Sneha Agarwal",
-    image: "/placeholder-blog-2.jpg",
-    tags: ["Social Media", "ROI", "Analytics"]
-  },
-  {
-    title: "PPC Campaign Optimization: Advanced Strategies for Better Results",
-    excerpt: "Take your PPC campaigns to the next level with advanced optimization techniques, bid strategies, and conversion tracking methods that maximize your ad spend.",
-    category: "PPC",
-    readTime: "10 min read",
-    date: "March 8, 2024",
-    author: "Amit Kumar",
-    image: "/placeholder-blog-3.jpg",
-    tags: ["PPC", "Google Ads", "Optimization"]
-  },
-  {
-    title: "Content Marketing That Converts: A Step-by-Step Framework",
-    excerpt: "Build a content marketing strategy that drives real business results. From ideation to distribution, learn the framework top brands use to create converting content.",
-    category: "Content Marketing",
-    readTime: "7 min read",
-    date: "March 5, 2024",
-    author: "Rajesh Sharma",
-    image: "/placeholder-blog-4.jpg",
-    tags: ["Content Marketing", "Strategy", "Conversion"]
-  },
-  {
-    title: "Local SEO for Multi-Location Businesses: Complete Guide",
-    excerpt: "Master local SEO for businesses with multiple locations. Learn how to optimize Google My Business, manage reviews, and dominate local search results.",
-    category: "Local SEO",
-    readTime: "9 min read",
-    date: "March 3, 2024",
-    author: "Priya Patel",
-    image: "/placeholder-blog-5.jpg",
-    tags: ["Local SEO", "Multi-Location", "Google My Business"]
-  },
-  {
-    title: "Email Marketing Automation: Workflows That Drive Sales",
-    excerpt: "Discover high-converting email automation workflows that nurture leads and drive sales. Includes templates, best practices, and real-world examples.",
-    category: "Email Marketing",
-    readTime: "11 min read",
-    date: "March 1, 2024",
-    author: "Sneha Agarwal",
-    image: "/placeholder-blog-6.jpg",
-    tags: ["Email Marketing", "Automation", "Lead Nurturing"]
-  }
-];
-
-const categories = [
-  { name: "All Posts", count: 45, active: true },
-  { name: "SEO", count: 12 },
-  { name: "Social Media", count: 8 },
-  { name: "PPC", count: 6 },
-  { name: "Content Marketing", count: 10 },
-  { name: "Strategy", count: 9 }
-];
-
-const popularTags = [
-  "Digital Marketing", "SEO", "Social Media", "PPC", "Content Strategy", 
-  "Analytics", "Conversion Optimization", "Lead Generation", "Branding", "E-commerce"
-];
 
 export default function BlogPage() {
-  return (
-    <div className="min-h-screen">
-      {/* Hero Section - Design System Version with Search */}
-      <HeroSectionBuilder
-        badge={{
-          text: "Expert Insights & Industry Knowledge",
-          icon: <BookOpen className="w-4 h-4 mr-2" />
-        }}
-        headline={{
-          text: "Digital Marketing Insights That Drive Results",
-          level: "h1",
-          accent: { text: "Insights", position: "middle" }
-        }}
-        description="Stay ahead of the curve with expert insights, proven strategies, and actionable tips from our team of digital marketing professionals. Learn what works, avoid what doesn't, and transform your marketing approach."
-        background="light"
-        maxWidth="xl"
-        minHeight="large"
-        content={
-          <div className="max-w-md mx-auto relative">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-fm-neutral-500" />
-            <input
-              type="text"
-              placeholder="Search articles..."
-              className="w-full pl-12 pr-4 py-3 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-700 focus:border-fm-magenta-700 transition-colors"
-            />
-          </div>
-        }
-      />
+  const [activeCategory, setActiveCategory] = useState("All Posts");
+  const [searchQuery, setSearchQuery] = useState("");
 
-      {/* Featured Post - Design System Version */}
-      <section className={`${patterns.layout.section} bg-fm-neutral-50 py-16`}>
-        <div className={`${patterns.layout.container} ${patterns.layout.maxWidth.xl}`}>
-          <FeaturedArticle
-            title={featuredPost.title}
-            excerpt={featuredPost.excerpt}
-            category={featuredPost.category}
-            readTime={featuredPost.readTime}
-            date={featuredPost.date}
-            author={featuredPost.author}
-            layout="horizontal"
-            size="lg"
-            imageSlot={
-              <div className="aspect-square lg:aspect-auto bg-gradient-to-br from-fm-magenta-600 to-fm-magenta-900 flex items-center justify-center">
-                <div className="text-center">
-                  <TrendingUp className="w-24 h-24 mx-auto mb-4 text-fm-neutral-200" />
-                  <p className="text-fm-neutral-200">Featured Article Visual</p>
+  const allCategories = getAllCategories();
+  const allTags = getAllTags();
+
+  const featuredPost = blogPosts.find((p) => p.featured) || blogPosts[0];
+  const regularPosts = blogPosts.filter((p) => p.slug !== featuredPost.slug);
+
+  const filteredPosts = useMemo(() => {
+    let posts = regularPosts;
+    if (activeCategory !== "All Posts") {
+      posts = posts.filter((p) => p.category === activeCategory);
+    }
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      posts = posts.filter(
+        (p) =>
+          p.title.toLowerCase().includes(query) ||
+          p.excerpt.toLowerCase().includes(query) ||
+          p.tags.some((t) => t.toLowerCase().includes(query))
+      );
+    }
+    return posts;
+  }, [activeCategory, searchQuery, regularPosts]);
+
+  return (
+    <V2PageWrapper>
+      {/* Hero Section */}
+      <section className="relative z-10 v2-section pt-32 lg:pt-40">
+        <div className="v2-container v2-container-wide">
+          <div className="max-w-4xl mx-auto" style={{ textAlign: 'center' }}>
+            {/* Badge */}
+            <div className="v2-badge v2-badge-glass mb-8">
+              <BookOpen className="w-4 h-4 v2-text-primary" />
+              <span className="v2-text-primary">Expert Insights & Industry Knowledge</span>
+            </div>
+
+            {/* Headline */}
+            <h1 className="font-display text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold v2-text-primary mb-8 leading-tight">
+              Digital Marketing{' '}
+              <span className="v2-accent">Insights</span> That Drive Results
+            </h1>
+
+            {/* Description */}
+            <p className="text-lg md:text-xl v2-text-secondary leading-relaxed" style={{ marginBottom: '48px' }}>
+              Stay ahead of the curve with expert insights, proven strategies, and actionable tips from our team of digital marketing professionals.
+            </p>
+
+            {/* Search Bar */}
+            <div className="max-w-md mx-auto relative mb-10">
+              <div className="v2-paper-sm rounded-xl p-1">
+                <div className="relative">
+                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-fm-neutral-400" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search articles..."
+                    className="w-full pl-12 pr-4 py-4 bg-fm-neutral-50 border border-fm-neutral-200 rounded-xl text-fm-neutral-900 placeholder-fm-neutral-400 focus:outline-none focus:ring-2 focus:ring-fm-magenta-200 focus:border-fm-magenta-300 transition-all"
+                  />
                 </div>
               </div>
-            }
+            </div>
+
+            {/* CTAs */}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Link href="#posts" className="v2-btn v2-btn-primary">
+                Browse Articles
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </Link>
+              <Link href="/get-started" className="v2-btn v2-btn-secondary">
+                Get Marketing Help
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        {/* 3D Brain Decoration */}
+        <div className="absolute left-8 lg:left-20 top-1/3 hidden lg:block z-10">
+          <img
+            src="/3dasset/brain-learning.png"
+            alt="Learning & Insights"
+            className="w-28 lg:w-36 h-auto animate-v2-hero-float drop-shadow-2xl"
+            style={{ filter: 'drop-shadow(0 20px 40px rgba(0,0,0,0.3))' }}
           />
         </div>
       </section>
 
-      {/* Blog Content - Design System Version */}
-      <section className={`${patterns.layout.section} bg-fm-neutral-50 py-24`}>
-        <div className={`${patterns.layout.container} ${patterns.layout.maxWidth.xl}`}>
-          <div className="grid lg:grid-cols-4 gap-12">
-            {/* Main Content */}
-            <div className="lg:col-span-3">
-              {/* Category Filter - Simplified Version */}
-              <div className="flex flex-wrap gap-3 mb-12">
-                {categories.map((category, index) => (
-                  <div
-                    key={index}
-                    className={`px-4 py-2 rounded-lg font-medium transition-colors cursor-pointer ${
-                      category.active 
-                        ? 'bg-fm-magenta-700 text-white' 
-                        : 'bg-fm-neutral-200 text-fm-neutral-700 hover:bg-fm-neutral-300'
-                    }`}
-                  >
-                    {category.name} ({category.count})
-                  </div>
-                ))}
-              </div>
-
-              {/* Blog Posts Grid - Design System Version */}
-              <div className="grid md:grid-cols-2 gap-8">
-                {blogPosts.map((post) => (
-                  <ArticleCard
-                    key={post.title}
-                    title={post.title}
-                    excerpt={post.excerpt}
-                    category={post.category}
-                    readTime={post.readTime}
-                    date={post.date}
-                    author={post.author}
-                    tags={post.tags}
-                    size="md"
-                    layout="vertical"
-                    imageSlot={
-                      <div className="aspect-video bg-gradient-to-br from-fm-magenta-100 to-fm-magenta-200 flex items-center justify-center">
-                        <Lightbulb className="w-12 h-12 text-fm-magenta-700" />
-                      </div>
-                    }
-                  />
-                ))}
-              </div>
-
-              {/* Load More Button - Design System Version */}
-              <div className="text-center mt-12">
-                <LinkButton variant="secondary" size="lg">
-                  Load More Articles
-                </LinkButton>
-              </div>
-            </div>
-
-            {/* Sidebar - Design System Version */}
-            <div className="lg:col-span-1 space-y-8">
-              {/* Newsletter Signup - Simplified Version */}
-              <div className="bg-fm-magenta-700 rounded-xl p-6 text-white mb-8">
-                <h3 className="text-lg font-semibold mb-4">Stay Updated</h3>
-                <p className="text-fm-neutral-200 mb-6 text-sm">
-                  Get the latest digital marketing insights delivered to your inbox weekly.
-                </p>
-                <div className="space-y-3">
-                  <input
-                    type="email"
-                    placeholder="Your email address"
-                    className="w-full px-3 py-2 rounded-lg text-fm-neutral-900 placeholder-fm-neutral-500"
-                  />
-                  <LinkButton variant="secondary" size="sm" className="w-full bg-fm-neutral-50 text-fm-magenta-700 hover:bg-fm-neutral-100" fullWidth>
-                    Subscribe
-                  </LinkButton>
+      {/* Featured Post Section */}
+      <section className="relative z-10 v2-section">
+        <div className="v2-container">
+          <Link
+            href={`/blog/${featuredPost.slug}`}
+            className="group relative block v2-paper-lg rounded-3xl overflow-hidden hover:shadow-3xl transition-all duration-500"
+          >
+            <div className="grid lg:grid-cols-2">
+              {/* Visual Side */}
+              <div className={`relative ${categoryGradients[featuredPost.category] || 'v2-gradient-brand'} p-8 lg:p-12 min-h-[240px] md:min-h-[300px] lg:min-h-[400px] flex items-center justify-center`}>
+                <div className="absolute inset-0 opacity-20">
+                  <div className="absolute top-8 left-8 w-40 h-40 border border-white/30 rounded-full" />
+                  <div className="absolute bottom-8 right-8 w-28 h-28 border border-white/20 rounded-full" />
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 border border-white/10 rounded-full" />
+                </div>
+                <div className="relative text-center">
+                  <TrendingUp className="w-24 h-24 mx-auto mb-4 text-white/90" />
+                  <p className="text-white/90 text-lg font-medium">Featured Article</p>
+                </div>
+                <div className="absolute top-6 left-6 v2-tag v2-tag-overlay">
+                  {featuredPost.category}
                 </div>
               </div>
 
-              {/* Popular Tags - Simplified Version */}
-              <div className="bg-fm-neutral-50 border border-fm-neutral-200 rounded-xl p-6 mb-8">
-                <h3 className="text-lg font-semibold text-fm-neutral-900 mb-4">Popular Tags</h3>
+              {/* Content Side */}
+              <div className="p-8 lg:p-12 flex flex-col justify-center">
+                <div className="flex items-center gap-4 mb-4">
+                  <span className="v2-tag v2-tag-magenta">
+                    Featured
+                  </span>
+                  <span className="flex items-center gap-1 text-fm-neutral-500 text-sm">
+                    <Clock className="w-4 h-4" />
+                    {featuredPost.readTime}
+                  </span>
+                </div>
+
+                <h2 className="font-display text-2xl lg:text-3xl font-bold text-fm-neutral-900 mb-4 group-hover:text-fm-magenta-700 transition-colors">
+                  {featuredPost.title}
+                </h2>
+
+                <p className="text-lg text-fm-neutral-600 mb-6 leading-relaxed">
+                  {featuredPost.excerpt}
+                </p>
+
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-fm-magenta-100 rounded-full flex items-center justify-center">
+                      <User className="w-5 h-5 text-fm-magenta-600" />
+                    </div>
+                    <div>
+                      <div className="font-semibold text-fm-neutral-900">{featuredPost.author}</div>
+                      <div className="text-sm text-fm-neutral-500">{featuredPost.date}</div>
+                    </div>
+                  </div>
+
+                  <span className="inline-flex items-center gap-2 text-fm-magenta-600 font-semibold group-hover:text-fm-magenta-700 transition-colors">
+                    Read Article
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </span>
+                </div>
+              </div>
+            </div>
+          </Link>
+        </div>
+      </section>
+
+      {/* Blog Content Section */}
+      <section id="posts" className="relative z-10 v2-section">
+        <div className="v2-container v2-container-wide">
+          <div className="grid lg:grid-cols-4 gap-8 lg:gap-12">
+            {/* Main Content */}
+            <div className="lg:col-span-3">
+              {/* Category Filter */}
+              <div className="flex flex-wrap gap-2 sm:gap-3 mb-12">
+                <button
+                  onClick={() => setActiveCategory("All Posts")}
+                  className={`px-4 py-2 rounded-full font-medium transition-all duration-300 ${
+                    activeCategory === "All Posts"
+                      ? 'bg-fm-magenta-600 text-white shadow-lg'
+                      : 'bg-fm-neutral-100 text-fm-neutral-600 hover:bg-fm-neutral-200 hover:text-fm-neutral-900'
+                  }`}
+                >
+                  All Posts ({blogPosts.length})
+                </button>
+                {allCategories.map((category) => {
+                  const count = blogPosts.filter((p) => p.category === category).length;
+                  return (
+                    <button
+                      key={category}
+                      onClick={() => setActiveCategory(category)}
+                      className={`px-4 py-2 rounded-full font-medium transition-all duration-300 ${
+                        activeCategory === category
+                          ? 'bg-fm-magenta-600 text-white shadow-lg'
+                          : 'bg-fm-neutral-100 text-fm-neutral-600 hover:bg-fm-neutral-200 hover:text-fm-neutral-900'
+                      }`}
+                    >
+                      {category} ({count})
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Blog Posts Grid */}
+              {filteredPosts.length > 0 ? (
+                <div className="grid md:grid-cols-2 gap-6 md:gap-8">
+                  {filteredPosts.map((post) => {
+                    const gradient = categoryGradients[post.category] || 'v2-gradient-brand';
+                    const Icon = categoryIcons[post.category] || Lightbulb;
+                    return (
+                      <article
+                        key={post.slug}
+                        className="group v2-paper rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-500 hover:-translate-y-2"
+                      >
+                        <Link href={`/blog/${post.slug}`}>
+                          {/* Visual Header */}
+                          <div className={`relative ${gradient} p-6 h-32 sm:h-40 flex items-center justify-center`}>
+                            <Icon className="w-10 sm:w-12 h-10 sm:h-12 text-white/80" />
+                            <div className="absolute top-4 left-4 v2-tag v2-tag-overlay">
+                              {post.category}
+                            </div>
+                          </div>
+
+                          {/* Content */}
+                          <div className="p-6">
+                            <div className="flex items-center gap-3 mb-3 text-sm text-fm-neutral-500">
+                              <span className="flex items-center gap-1">
+                                <Clock className="w-4 h-4" />
+                                {post.readTime}
+                              </span>
+                              <span>&bull;</span>
+                              <span>{post.date}</span>
+                            </div>
+
+                            <h3 className="font-display text-xl font-bold text-fm-neutral-900 mb-3 group-hover:text-fm-magenta-700 transition-colors line-clamp-2">
+                              {post.title}
+                            </h3>
+
+                            <p className="text-fm-neutral-600 text-sm mb-4 line-clamp-2">
+                              {post.excerpt}
+                            </p>
+
+                            {/* Tags */}
+                            <div className="flex flex-wrap gap-2 mb-4">
+                              {post.tags.slice(0, 2).map((tag) => (
+                                <span
+                                  key={tag}
+                                  className="v2-tag v2-tag-neutral"
+                                >
+                                  {tag}
+                                </span>
+                              ))}
+                            </div>
+
+                            {/* Author */}
+                            <div className="flex items-center justify-between pt-4 border-t border-fm-neutral-100">
+                              <div className="flex items-center gap-2">
+                                <div className="w-8 h-8 bg-fm-magenta-100 rounded-full flex items-center justify-center">
+                                  <User className="w-4 h-4 text-fm-magenta-600" />
+                                </div>
+                                <span className="text-sm font-medium text-fm-neutral-700">{post.author}</span>
+                              </div>
+                              <span className="text-fm-magenta-600 text-sm font-semibold group-hover:text-fm-magenta-700 flex items-center gap-1">
+                                Read
+                                <ChevronRight className="w-4 h-4" />
+                              </span>
+                            </div>
+                          </div>
+                        </Link>
+                      </article>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="v2-paper rounded-2xl p-12" style={{ textAlign: 'center' }}>
+                  <Lightbulb className="w-12 h-12 text-fm-neutral-300 mx-auto mb-4" />
+                  <h3 className="font-display text-xl font-bold text-fm-neutral-900 mb-2">No articles found</h3>
+                  <p className="text-fm-neutral-600 text-sm leading-relaxed">
+                    Try adjusting your search or filter to find what you're looking for.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Sidebar */}
+            <div className="lg:col-span-1 space-y-8">
+              {/* Popular Tags */}
+              <div className="v2-paper rounded-2xl p-6">
+                <h3 className="text-lg font-semibold text-fm-neutral-900 mb-4 flex items-center gap-2">
+                  <Tag className="w-5 h-5 text-fm-magenta-600" />
+                  Popular Tags
+                </h3>
                 <div className="flex flex-wrap gap-2">
-                  {popularTags.map((tag, index) => (
-                    <div
-                      key={index}
-                      className="text-xs bg-fm-neutral-200 text-fm-neutral-700 px-3 py-2 rounded hover:bg-fm-magenta-100 hover:text-fm-magenta-700 transition-colors cursor-pointer"
+                  {allTags.map((tag) => (
+                    <button
+                      key={tag}
+                      onClick={() => setSearchQuery(tag)}
+                      className="v2-tag v2-tag-neutral cursor-pointer"
                     >
                       #{tag}
-                    </div>
+                    </button>
                   ))}
                 </div>
               </div>
 
               {/* Recent Posts */}
-              <SidebarWidget
-                title="Recent Posts"
-                variant="default"
-                size="md"
-              >
+              <div className="v2-paper rounded-2xl p-6">
+                <h3 className="text-lg font-semibold text-fm-neutral-900 mb-4">Recent Posts</h3>
                 <div className="space-y-4">
-                  {blogPosts.slice(0, 3).map((post, index) => (
-                    <div key={index} className="flex gap-3">
-                      <div className="w-16 h-16 bg-gradient-to-br from-fm-magenta-100 to-fm-magenta-200 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <Lightbulb className="w-6 h-6 text-fm-magenta-700" />
-                      </div>
-                      <div>
-                        <h4 className="text-sm font-medium text-fm-neutral-900 line-clamp-2 mb-1 hover:text-fm-magenta-700 transition-colors">
-                          <a href="#">{post.title}</a>
-                        </h4>
-                        <p className="text-xs text-fm-neutral-500">{post.date}</p>
-                      </div>
-                    </div>
-                  ))}
+                  {blogPosts.slice(0, 3).map((post) => {
+                    const gradient = categoryGradients[post.category] || 'v2-gradient-brand';
+                    const Icon = categoryIcons[post.category] || Lightbulb;
+                    return (
+                      <Link
+                        key={post.slug}
+                        href={`/blog/${post.slug}`}
+                        className="flex gap-3 group"
+                      >
+                        <div className={`w-16 h-16 ${gradient} rounded-lg flex items-center justify-center flex-shrink-0`}>
+                          <Icon className="w-6 h-6 text-white/80" />
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-medium text-fm-neutral-900 line-clamp-2 mb-1 group-hover:text-fm-magenta-600 transition-colors">
+                            {post.title}
+                          </h4>
+                          <p className="text-xs text-fm-neutral-500">{post.date}</p>
+                        </div>
+                      </Link>
+                    );
+                  })}
                 </div>
-              </SidebarWidget>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* CTA Section - Design System Version */}
-      <SectionBuilder
-        badge={{
-          text: "Ready to Take Action?",
-          icon: <Target className="w-4 h-4" />
-        }}
-        headline={{
-          text: "Ready to Implement These Strategies?",
-          level: "h2"
-        }}
-        description="Turn insights into action with our expert team. We'll help you implement proven strategies that drive real business results."
-        background="gradient"
-        content={
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <LinkButton 
-              href="/contact"
-              variant="secondary" 
-              size="lg" 
-              className="bg-fm-neutral-50 text-fm-magenta-700 hover:bg-fm-neutral-100"
-              icon={<ArrowRight className="w-5 h-5" />}
-              iconPosition="right"
-            >
-              Start Your Marketing Journey
-            </LinkButton>
-            <LinkButton href="#" variant="ghost" size="lg" theme="dark">
-              Download Free Guide
-            </LinkButton>
+      {/* CTA Section */}
+      <section className="relative z-10 v2-section pb-32">
+        <div className="v2-container v2-container-narrow">
+          <div className="v2-paper rounded-3xl p-10 lg:p-14" style={{ textAlign: 'center' }}>
+            <div className="v2-badge v2-badge-light mb-6">
+              <Target className="w-4 h-4" />
+              <span>Ready to Take Action?</span>
+            </div>
+            <h2 className="font-display text-3xl md:text-4xl font-bold text-fm-neutral-900 mb-6 leading-tight">
+              Ready to Implement These <span className="text-fm-magenta-600">Strategies</span>?
+            </h2>
+            <p className="text-fm-neutral-600 mb-8 max-w-xl mx-auto">
+              Turn insights into action with our expert team. We'll help you implement proven strategies that drive real business results.
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Link href="/get-started" className="v2-btn v2-btn-magenta">
+                Start Your Marketing Journey
+                <ArrowRight className="w-5 h-5" />
+              </Link>
+              <Link href="/contact" className="v2-btn v2-btn-outline">
+                Schedule a Call
+              </Link>
+            </div>
           </div>
-        }
-      />
-    </div>
+        </div>
+      </section>
+    </V2PageWrapper>
   );
 }

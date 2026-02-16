@@ -93,7 +93,7 @@ export class ClientService {
     try {
       // Get registered clients from the clients API
       const baseUrl = typeof window === 'undefined' 
-        ? process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3002'
+        ? process.env.NEXT_PUBLIC_BASE_URL || ''
         : '';
       const fetchUrl = `${baseUrl}/api/clients?sortBy=createdAt&sortDirection=desc`;
       const response = await fetch(fetchUrl);
@@ -199,7 +199,7 @@ export class ClientService {
       // If not found in localStorage, check API clients
       const baseUrl = typeof window !== 'undefined' 
         ? '' 
-        : process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3002';
+        : process.env.NEXT_PUBLIC_BASE_URL || '';
       
       const response = await fetch(`${baseUrl}/api/clients`);
       const result = await response.json();
@@ -688,7 +688,7 @@ export class ClientService {
       // Determine the base URL for API calls
       const baseUrl = typeof window !== 'undefined' 
         ? '' 
-        : process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3002';
+        : process.env.NEXT_PUBLIC_BASE_URL || '';
       
       // Fetch real client data from API instead of localStorage
       const response = await fetch(`${baseUrl}/api/clients`);
@@ -754,7 +754,7 @@ export class ClientService {
       // Determine the base URL for API calls
       const baseUrl = typeof window !== 'undefined' 
         ? '' 
-        : process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3002';
+        : process.env.NEXT_PUBLIC_BASE_URL || '';
       
       // Fetch real client data from API
       const response = await fetch(`${baseUrl}/api/clients`);

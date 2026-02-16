@@ -52,8 +52,14 @@
   opacity: 0.1 !important;
 }
 
-/* PRIORITY 6: DISABLE ALL will-change DECLARATIONS */
-* {
+/* PRIORITY 6: DISABLE will-change on contact/footer elements only */
+.contact-card-premium,
+.contact-gradient-bg,
+.form-glass-container,
+.newsletter-glass-container,
+.footer-gradient-bg,
+.social-proof-glass,
+.social-icon-premium {
   will-change: auto !important;
 }
 
@@ -91,13 +97,16 @@
   }
 }
 
-/* PRIORITY 9: ACCESSIBILITY - COMPLETE ANIMATION DISABLE */
+/* PRIORITY 9: ACCESSIBILITY - DISABLE DECORATIVE ANIMATIONS (preserve navigation) */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+  /* Only disable transforms/transitions on non-navigation elements */
+  :not(header):not(header *):not(nav):not(nav *) {
+    transition-duration: 0.01ms !important;
     transform: none !important;
     backdrop-filter: none !important;
   }

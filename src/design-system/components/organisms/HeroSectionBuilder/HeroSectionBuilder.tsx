@@ -138,7 +138,7 @@ export function HeroSectionBuilder({
 
           {/* Description */}
           {description && (
-            <p className="text-lg md:text-xl text-fm-neutral-600 max-w-4xl mx-auto" style={{ marginBottom: '3.5rem', lineHeight: '1.8' }}>
+            <p className="text-lg md:text-xl text-fm-neutral-600 text-center max-w-4xl mx-auto" style={{ marginBottom: '3.5rem', lineHeight: '1.8' }}>
               {description}
             </p>
           )}

@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { googleSheetsService } from '@/lib/google-sheets';
+import { supabaseAdmin } from '@/lib/supabase';
 
 export async function GET(request: NextRequest) {
   try {
@@ -135,12 +136,44 @@ export async function POST(request: NextRequest) {
     };
 
     const success = await googleSheetsService.addClient(flatClientData);
-    
+
     if (success) {
-      return NextResponse.json({ 
-        success: true, 
+      // Dual-write to Supabase for client portal access
+      try {
+        await supabaseAdmin.from('clients').upsert([{
+          id: clientData.id,
+          name: clientData.name,
+          email: clientData.primaryContact.email,
+          phone: clientData.primaryContact.phone || null,
+          industry: clientData.industry,
+          website: formData.website || null,
+          address: clientData.headquarters.street || null,
+          city: clientData.headquarters.city || null,
+          state: clientData.headquarters.state || null,
+          zip_code: clientData.headquarters.zipCode || null,
+          country: clientData.headquarters.country || null,
+          gst_number: clientData.gstNumber || null,
+          status: clientData.status,
+          health: clientData.health,
+          account_manager: clientData.accountManager,
+          contract_type: clientData.contractDetails.type,
+          contract_value: clientData.contractDetails.value,
+          contract_start_date: clientData.contractDetails.startDate,
+          contract_end_date: formData.contractEndDate || null,
+          billing_cycle: clientData.contractDetails.billingCycle,
+          total_value: clientData.contractDetails.value,
+          portal_password: formData.portalPassword || null,
+          created_at: clientData.createdAt,
+          updated_at: clientData.updatedAt,
+        }]);
+      } catch (supabaseError) {
+        console.warn('Supabase dual-write failed (non-blocking):', supabaseError);
+      }
+
+      return NextResponse.json({
+        success: true,
         data: clientData,
-        message: 'Client created successfully' 
+        message: 'Client created successfully'
       });
     } else {
       return NextResponse.json(

@@ -120,7 +120,6 @@ export async function POST(
       { 
         success: false, 
         error: 'Authentication failed',
-        details: error instanceof Error ? error.message : 'Unknown error'
       },
       { status: 500 }
     );
@@ -182,7 +181,6 @@ export async function GET(
       { 
         success: false, 
         error: 'Token validation failed',
-        details: error instanceof Error ? error.message : 'Unknown error'
       },
       { status: 500 }
     );

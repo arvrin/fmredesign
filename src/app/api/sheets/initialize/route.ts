@@ -42,7 +42,6 @@ export async function POST(request: NextRequest) {
       { 
         success: false, 
         error: 'Failed to initialize Google Sheets', 
-        details: error instanceof Error ? error.message : String(error),
         troubleshooting: [
           'Verify GOOGLE_SPREADSHEET_ID is set',
           'Check Google service account credentials',

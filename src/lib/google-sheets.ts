@@ -125,7 +125,7 @@ class GoogleSheetsService {
     try {
       // Sanitize sheet name to handle special characters
       const sanitizedSheetName = sheetName.replace(/[^a-zA-Z0-9_]/g, '_');
-      const sheetRange = range || `${sanitizedSheetName}!A1:Z1000`;
+      const sheetRange = range || `${sanitizedSheetName}!A1:BZ1000`;
       
       const response = await this.sheets.spreadsheets.values.get({
         spreadsheetId: SHEETS_CONFIG.SPREADSHEET_ID,
@@ -168,7 +168,7 @@ class GoogleSheetsService {
     try {
       await this.sheets.spreadsheets.values.append({
         spreadsheetId: SHEETS_CONFIG.SPREADSHEET_ID,
-        range: `${sheetName}!A:Z`,
+        range: `${sheetName}!A:BZ`,
         valueInputOption: 'RAW',
         insertDataOption: 'INSERT_ROWS',
         requestBody: {

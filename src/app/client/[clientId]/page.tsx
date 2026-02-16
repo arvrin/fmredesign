@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import { 
+import { useParams, useRouter } from 'next/navigation';
+import {
   DashboardLayout,
   MetricCard,
   DashboardCard as Card,
@@ -13,27 +13,27 @@ import {
   DashboardButton as Button
 } from '@/design-system';
 import { Badge } from '@/components/ui/Badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Input } from '@/components/ui/Input';
-import { 
-  CalendarDays,
+import {
   Clock,
   Users,
   TrendingUp,
   AlertCircle,
-  CheckCircle2,
   FileText,
   MessageSquare,
   Shield,
-  Mail,
   BarChart3,
   Target,
   Calendar,
   Activity,
   Award,
   Briefcase,
-  PieChart
+  PieChart,
+  Handshake,
+  CreditCard,
+  CheckCircle2,
+  Timer
 } from 'lucide-react';
+import { AGENCY_SERVICES } from '@/lib/admin/types';
 
 interface ClientProfile {
   id: string;
@@ -43,11 +43,17 @@ interface ClientProfile {
   status: string;
   health: string;
   accountManager: string;
+  onboardedAt: string;
   contractDetails: {
+    type: string;
     value: number;
     currency: string;
     startDate: string;
     endDate?: string;
+    billingCycle: string;
+    retainerAmount: number;
+    services: string[];
+    isActive: boolean;
   };
 }
 
@@ -70,53 +76,72 @@ interface ContentItem {
   scheduledDate: string;
 }
 
+function formatPartnerDuration(isoDate: string): { text: string; exact: string } {
+  const start = new Date(isoDate);
+  const now = new Date();
+  const totalMonths = (now.getFullYear() - start.getFullYear()) * 12 + (now.getMonth() - start.getMonth());
+  const years = Math.floor(totalMonths / 12);
+  const months = totalMonths % 12;
+
+  let text = '';
+  if (years > 0) text += `${years} year${years > 1 ? 's' : ''}`;
+  if (years > 0 && months > 0) text += ' ';
+  if (months > 0) text += `${months} month${months > 1 ? 's' : ''}`;
+  if (!text) text = 'Less than a month';
+
+  const exact = start.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
+  return { text, exact };
+}
+
+function getNextBillingDate(startDate: string, billingCycle: string): string | null {
+  if (billingCycle === 'one-time') return null;
+  const start = new Date(startDate);
+  const now = new Date();
+  const next = new Date(start);
+
+  while (next <= now) {
+    if (billingCycle === 'monthly') next.setMonth(next.getMonth() + 1);
+    else if (billingCycle === 'quarterly') next.setMonth(next.getMonth() + 3);
+    else if (billingCycle === 'yearly') next.setFullYear(next.getFullYear() + 1);
+    else next.setMonth(next.getMonth() + 1);
+  }
+
+  return next.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function getContractProgress(startDate: string, endDate?: string): number | null {
+  if (!endDate) return null;
+  const start = new Date(startDate).getTime();
+  const end = new Date(endDate).getTime();
+  const now = Date.now();
+  if (end <= start) return 100;
+  const progress = Math.round(((now - start) / (end - start)) * 100);
+  return Math.max(0, Math.min(100, progress));
+}
+
+function getServiceName(serviceId: string): string {
+  const service = AGENCY_SERVICES.find(s => s.id === serviceId);
+  return service?.name || serviceId.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+}
+
 export default function ClientDashboard() {
   const params = useParams();
   const router = useRouter();
-  const searchParams = useSearchParams();
   const clientId = params.clientId as string;
-  const token = searchParams.get('token');
 
   const [clientProfile, setClientProfile] = useState<ClientProfile | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const [contentItems, setContentItems] = useState<ContentItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [authLoading, setAuthLoading] = useState(true);
-  
-  // Authentication state
-  const [email, setEmail] = useState('');
-  const [authError, setAuthError] = useState<string | null>(null);
-  const [requestingAccess, setRequestingAccess] = useState(false);
 
   useEffect(() => {
     if (!clientId) return;
-    
-    const validateAuthentication = async () => {
-      if (token) {
-        // Validate token
-        try {
-          const response = await fetch(`/api/client-portal/${clientId}/auth?token=${token}`);
-          if (response.ok) {
-            setIsAuthenticated(true);
-            setAuthLoading(false);
-            fetchClientData();
-            return;
-          }
-        } catch (err) {
-          console.error('Token validation failed:', err);
-        }
-      }
-      
-      setIsAuthenticated(false);
-      setAuthLoading(false);
-    };
 
     const fetchClientData = async () => {
       try {
         setLoading(true);
-        
+
         // Fetch client profile
         const clientResponse = await fetch(`/api/client-portal/${clientId}/profile`);
         if (!clientResponse.ok) {
@@ -151,125 +176,17 @@ export default function ClientDashboard() {
       }
     };
 
-    validateAuthentication();
-  }, [clientId, token]);
+    fetchClientData();
+  }, [clientId]);
 
-  const handleRequestAccess = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email.trim()) {
-      setAuthError('Please enter your email address');
-      return;
-    }
-
-    setRequestingAccess(true);
-    setAuthError(null);
-
+  const handleLogout = async () => {
     try {
-      const response = await fetch(`/api/client-portal/${clientId}/auth`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: email.trim(),
-          requestAccess: true
-        })
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        // Redirect to portal with token
-        const portalUrl = data.data.portalUrl;
-        window.location.href = portalUrl;
-      } else {
-        setAuthError(data.error || 'Failed to request access');
-      }
-    } catch (err) {
-      console.error('Error requesting access:', err);
-      setAuthError('Failed to request access. Please try again.');
-    } finally {
-      setRequestingAccess(false);
+      await fetch('/api/client-portal/logout', { method: 'POST' });
+    } catch {
+      // Ignore errors — redirect regardless
     }
+    router.push('/client/login');
   };
-
-  // Show loading while checking authentication
-  if (authLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-fm-magenta-50 via-orange-50/30 to-fm-magenta-50 flex items-center justify-center">
-        <Card variant="glass" className="p-8 text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-fm-magenta-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600 font-medium">Verifying access...</p>
-        </Card>
-      </div>
-    );
-  }
-
-  // Show authentication form if not authenticated
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-fm-magenta-50 via-orange-50/30 to-fm-magenta-50 flex items-center justify-center p-4">
-        <div className="max-w-md w-full mx-auto">
-          <Card variant="glass" className="overflow-hidden">
-            <CardHeader className="text-center bg-gradient-to-r from-fm-magenta-600/10 to-fm-orange-500/10">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-fm-magenta-500 to-fm-orange-500 flex items-center justify-center mx-auto mb-4">
-                <Shield className="h-8 w-8 text-white" />
-              </div>
-              <CardTitle className="text-2xl bg-gradient-to-r from-fm-magenta-600 to-fm-orange-600 bg-clip-text text-transparent">
-                FreakingMinds Client Portal
-              </CardTitle>
-              <CardDescription className="text-gray-600">
-                Your Progress Hub - Enter your email to access your dashboard
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="p-6">
-              <form onSubmit={handleRequestAccess} className="space-y-6">
-                <div className="space-y-2">
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                    Email Address
-                  </label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                    <Input
-                      id="email"
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="your.email@company.com"
-                      className="pl-10 h-12 rounded-xl border-gray-200 focus:border-fm-magenta-500 focus:ring-fm-magenta-500 bg-white/80 backdrop-blur-sm"
-                      required
-                    />
-                  </div>
-                </div>
-
-                {authError && (
-                  <div className="flex items-center space-x-2 text-red-600 text-sm bg-red-50/80 backdrop-blur-sm border border-red-200 rounded-xl p-3">
-                    <AlertCircle className="h-4 w-4" />
-                    <span>{authError}</span>
-                  </div>
-                )}
-
-                <Button 
-                  type="submit" 
-                  variant="client"
-                  size="lg"
-                  fullWidth
-                  loading={requestingAccess}
-                >
-                  {requestingAccess ? 'Requesting Access...' : 'Access Your Dashboard'}
-                </Button>
-              </form>
-
-              <div className="mt-6 text-center text-sm text-gray-600 bg-gray-50/50 backdrop-blur-sm border border-gray-200 rounded-xl p-4">
-                <p className="font-medium">Need assistance?</p>
-                <p className="mt-1">Contact your dedicated account manager for immediate support.</p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
-  }
 
   // Show loading while fetching data
   if (loading) {
@@ -323,13 +240,16 @@ export default function ClientDashboard() {
   const thisMonthContent = contentItems.filter(c => {
     const itemDate = new Date(c.scheduledDate);
     const now = new Date();
-    return itemDate.getMonth() === now.getMonth() && 
+    return itemDate.getMonth() === now.getMonth() &&
            itemDate.getFullYear() === now.getFullYear();
   }).length;
-  
-  const completedProjects = projects.filter(p => p.status === 'completed').length;
-  const avgProgress = projects.length > 0 ? 
+
+  const avgProgress = projects.length > 0 ?
     Math.round(projects.reduce((sum, p) => sum + p.progress, 0) / projects.length) : 0;
+
+  const partnerDuration = formatPartnerDuration(clientProfile.onboardedAt);
+  const nextBilling = getNextBillingDate(clientProfile.contractDetails.startDate, clientProfile.contractDetails.billingCycle);
+  const contractProgress = getContractProgress(clientProfile.contractDetails.startDate, clientProfile.contractDetails.endDate);
 
   // Navigation items for client dashboard
   const navigationItems = [
@@ -372,6 +292,7 @@ export default function ClientDashboard() {
         email: `contact@${clientProfile.name.toLowerCase().replace(/\s+/g, '')}.com`,
         role: clientProfile.industry
       }}
+      onLogout={handleLogout}
     >
       {/* Welcome Header */}
       <div className="mb-8">
@@ -379,15 +300,15 @@ export default function ClientDashboard() {
           <div className="flex items-center space-x-4">
             {clientProfile.logo && (
               <div className="w-16 h-16 rounded-xl overflow-hidden ring-2 ring-fm-magenta-100 shadow-lg">
-                <img 
-                  src={clientProfile.logo} 
+                <img
+                  src={clientProfile.logo}
                   alt={clientProfile.name}
                   className="w-full h-full object-cover"
                 />
               </div>
             )}
             <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-fm-magenta-600 to-fm-orange-600 bg-clip-text text-transparent">
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-fm-magenta-600 to-fm-magenta-500 bg-clip-text text-transparent">
                 Welcome back, {clientProfile.name}
               </h1>
               <p className="text-gray-600 mt-1 font-medium capitalize">
@@ -463,6 +384,149 @@ export default function ClientDashboard() {
         />
       </div>
 
+      {/* Partnership Details */}
+      <Card variant="client" hover glow className="mb-8">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-fm-magenta-500 to-fm-magenta-600 flex items-center justify-center">
+                <Handshake className="w-5 h-5 text-white" />
+              </div>
+              <CardTitle className="text-xl">Partnership Details</CardTitle>
+            </div>
+            {clientProfile.contractDetails.isActive && (
+              <Badge variant="secondary" className="bg-green-50 text-green-700 border-green-200">
+                Active Partnership
+              </Badge>
+            )}
+          </div>
+          <CardDescription>Your engagement overview with FreakingMinds</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Left Column — Key Info */}
+            <div className="space-y-4">
+              {/* Partner Since */}
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 rounded-full bg-fm-magenta-100 flex items-center justify-center flex-shrink-0">
+                  <Timer className="w-4 h-4 text-fm-magenta-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Partner Since</p>
+                  <p className="font-medium text-gray-900">{partnerDuration.text} <span className="text-gray-500 font-normal">(since {partnerDuration.exact})</span></p>
+                </div>
+              </div>
+
+              {/* Package Type */}
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 rounded-full bg-fm-magenta-100 flex items-center justify-center flex-shrink-0">
+                  <Briefcase className="w-4 h-4 text-fm-magenta-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Package Type</p>
+                  <p className="font-medium text-gray-900 capitalize">{clientProfile.contractDetails.type.replace(/-/g, ' ')} Plan</p>
+                </div>
+              </div>
+
+              {/* Billing Cycle */}
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 rounded-full bg-fm-magenta-100 flex items-center justify-center flex-shrink-0">
+                  <CreditCard className="w-4 h-4 text-fm-magenta-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Billing Cycle</p>
+                  <p className="font-medium text-gray-900 capitalize">
+                    {clientProfile.contractDetails.billingCycle.replace(/-/g, ' ')}
+                    {nextBilling && <span className="text-gray-500 font-normal"> — Next billing: {nextBilling}</span>}
+                  </p>
+                </div>
+              </div>
+
+              {/* Contract Value */}
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 rounded-full bg-fm-magenta-100 flex items-center justify-center flex-shrink-0">
+                  <TrendingUp className="w-4 h-4 text-fm-magenta-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Contract Value</p>
+                  <p className="font-medium text-gray-900">
+                    {new Intl.NumberFormat('en-IN', { style: 'currency', currency: clientProfile.contractDetails.currency, minimumFractionDigits: 0 }).format(clientProfile.contractDetails.value)}
+                    {clientProfile.contractDetails.retainerAmount > 0 && (
+                      <span className="text-gray-500 font-normal">
+                        {' '}(Retainer: {new Intl.NumberFormat('en-IN', { style: 'currency', currency: clientProfile.contractDetails.currency, minimumFractionDigits: 0 }).format(clientProfile.contractDetails.retainerAmount)}/mo)
+                      </span>
+                    )}
+                  </p>
+                </div>
+              </div>
+
+              {/* Account Manager */}
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 rounded-full bg-fm-magenta-100 flex items-center justify-center flex-shrink-0">
+                  <Users className="w-4 h-4 text-fm-magenta-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Account Manager</p>
+                  <p className="font-medium text-gray-900">{clientProfile.accountManager}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column — Services & Timeline */}
+            <div className="space-y-6">
+              {/* Services Subscribed */}
+              <div>
+                <p className="text-sm text-gray-500 mb-3 font-medium">Services Subscribed</p>
+                {clientProfile.contractDetails.services.length > 0 ? (
+                  <div className="space-y-2">
+                    {clientProfile.contractDetails.services.map((serviceId) => (
+                      <div key={serviceId} className="flex items-center space-x-2">
+                        <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />
+                        <span className="text-sm text-gray-700">{getServiceName(serviceId)}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-400 italic">No specific services listed</p>
+                )}
+              </div>
+
+              {/* Contract Timeline */}
+              <div>
+                <p className="text-sm text-gray-500 mb-3 font-medium">Contract Period</p>
+                <div className="text-sm text-gray-700 mb-2">
+                  {new Date(clientProfile.contractDetails.startDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                  {' — '}
+                  {clientProfile.contractDetails.endDate
+                    ? new Date(clientProfile.contractDetails.endDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+                    : 'Ongoing'
+                  }
+                </div>
+                {contractProgress !== null ? (
+                  <div className="space-y-1">
+                    <div className="w-full bg-gray-200 rounded-full h-2.5">
+                      <div
+                        className="bg-gradient-to-r from-fm-magenta-500 to-fm-magenta-600 h-2.5 rounded-full transition-all duration-500"
+                        style={{ width: `${contractProgress}%` }}
+                      />
+                    </div>
+                    <p className="text-xs text-gray-500">{contractProgress}% elapsed</p>
+                  </div>
+                ) : (
+                  <div className="flex items-center space-x-2">
+                    <span className="relative flex h-2.5 w-2.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
+                    </span>
+                    <span className="text-xs text-green-600 font-medium">Ongoing — No fixed end date</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Projects & Content Overview */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
         {/* Recent Projects */}
@@ -475,7 +539,7 @@ export default function ClientDashboard() {
                 </div>
                 <CardTitle className="text-xl">Recent Projects</CardTitle>
               </div>
-              <Badge variant="outline" className="bg-fm-magenta-50 text-fm-magenta-700 border-fm-magenta-200">
+              <Badge variant="secondary" className="bg-fm-magenta-50 text-fm-magenta-700 border-fm-magenta-200">
                 {projects.length} Total
               </Badge>
             </div>
@@ -485,8 +549,8 @@ export default function ClientDashboard() {
             {projects.length === 0 ? (
               <div className="text-center py-8">
                 <Briefcase className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600 font-medium">No projects found</p>
-                <p className="text-gray-500 text-sm">New projects will appear here</p>
+                <p className="text-gray-600 font-medium">No projects yet</p>
+                <p className="text-gray-500 text-sm">New projects will appear here once set up</p>
               </div>
             ) : (
               projects.slice(0, 3).map((project) => (
@@ -500,7 +564,7 @@ export default function ClientDashboard() {
                         </Badge>
                       </div>
                       <div className="text-sm text-gray-600">
-                        {new Date(project.startDate).toLocaleDateString()} - 
+                        {new Date(project.startDate).toLocaleDateString()} -
                         {new Date(project.endDate).toLocaleDateString()}
                       </div>
                       <div className="space-y-2">
@@ -509,8 +573,8 @@ export default function ClientDashboard() {
                           <span className="font-medium text-fm-magenta-600">{project.progress}%</span>
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div 
-                            className="bg-gradient-to-r from-fm-magenta-500 to-fm-magenta-600 h-2 rounded-full transition-all duration-300" 
+                          <div
+                            className="bg-gradient-to-r from-fm-magenta-500 to-fm-magenta-600 h-2 rounded-full transition-all duration-300"
                             style={{ width: `${project.progress}%` }}
                           />
                         </div>
@@ -548,12 +612,12 @@ export default function ClientDashboard() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-fm-orange-500 to-fm-orange-600 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-fm-magenta-500 to-fm-magenta-600 flex items-center justify-center">
                   <Calendar className="w-5 h-5 text-white" />
                 </div>
                 <CardTitle className="text-xl">Content Calendar</CardTitle>
               </div>
-              <Badge variant="outline" className="bg-fm-orange-50 text-fm-orange-700 border-fm-orange-200">
+              <Badge variant="secondary" className="bg-fm-magenta-50 text-fm-magenta-700 border-fm-magenta-200">
                 {thisMonthContent} This Month
               </Badge>
             </div>
@@ -564,11 +628,11 @@ export default function ClientDashboard() {
               <div className="text-center py-8">
                 <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                 <p className="text-gray-600 font-medium">No content scheduled</p>
-                <p className="text-gray-500 text-sm">Content items will appear here</p>
+                <p className="text-gray-500 text-sm">Content items will appear here once created</p>
               </div>
             ) : (
               contentItems.slice(0, 4).map((item) => (
-                <Card key={item.id} variant="glass" className="border-fm-orange-100">
+                <Card key={item.id} variant="glass" className="border-fm-magenta-100">
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div className="space-y-1 flex-1">
@@ -593,7 +657,7 @@ export default function ClientDashboard() {
             )}
             {contentItems.length > 4 && (
               <div className="pt-4 border-t border-gray-100">
-                <Button variant="ghost" size="sm" className="w-full text-fm-orange-600 hover:bg-fm-orange-50">
+                <Button variant="ghost" size="sm" className="w-full text-fm-magenta-600 hover:bg-fm-magenta-50">
                   View Full Calendar
                 </Button>
               </div>
@@ -644,7 +708,7 @@ export default function ClientDashboard() {
         <Card variant="glass" hover>
           <CardHeader>
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-fm-magenta-500 to-fm-magenta-600 flex items-center justify-center">
                 <Shield className="w-5 h-5 text-white" />
               </div>
               <CardTitle className="text-xl">Support & Resources</CardTitle>
@@ -652,35 +716,9 @@ export default function ClientDashboard() {
             <CardDescription>Get help and access important information</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="bg-gradient-to-r from-fm-magenta-50 to-fm-orange-50 border border-fm-magenta-200 rounded-xl p-4">
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 rounded-full bg-fm-magenta-100 flex items-center justify-center">
-                  <Users className="w-4 h-4 text-fm-magenta-600" />
-                </div>
-                <div>
-                  <p className="font-medium text-gray-900">Account Manager</p>
-                  <p className="text-sm text-gray-600">{clientProfile.accountManager}</p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="bg-gradient-to-r from-fm-orange-50 to-fm-magenta-50 border border-fm-orange-200 rounded-xl p-4">
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 rounded-full bg-fm-orange-100 flex items-center justify-center">
-                  <Clock className="w-4 h-4 text-fm-orange-600" />
-                </div>
-                <div>
-                  <p className="font-medium text-gray-900">Contract Period</p>
-                  <p className="text-sm text-gray-600">
-                    {new Date(clientProfile.contractDetails.startDate).toLocaleDateString()} - 
-                    {clientProfile.contractDetails.endDate 
-                      ? new Date(clientProfile.contractDetails.endDate).toLocaleDateString()
-                      : ' Ongoing'
-                    }
-                  </p>
-                </div>
-              </div>
-            </div>
+            <p className="text-sm text-gray-600">
+              Need help? Reach out to your account manager <span className="font-medium text-gray-900">{clientProfile.accountManager}</span> or submit a support request.
+            </p>
 
             <Button variant="client" size="lg" className="w-full">
               <MessageSquare className="w-5 h-5 mr-2" />

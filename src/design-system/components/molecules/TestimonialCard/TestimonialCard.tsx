@@ -91,7 +91,7 @@ export function TestimonialCard({
             <Star 
               key={index} 
               className={cn(
-                'fill-fm-orange-500 text-fm-orange-500',
+                'fill-fm-magenta-500 text-fm-magenta-500',
                 sizeConfig.stars
               )} 
             />

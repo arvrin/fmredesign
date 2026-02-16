@@ -1,0 +1,68 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { supabaseAdmin } from '@/lib/supabase';
+import { createSession, setSessionCookie, type SessionData } from '@/lib/client-session';
+
+export async function POST(request: NextRequest) {
+  try {
+    const { email, password } = await request.json();
+
+    if (!email || !password) {
+      return NextResponse.json(
+        { success: false, error: 'Email and password are required' },
+        { status: 400 }
+      );
+    }
+
+    // Look up client by email and portal_password
+    const { data: client, error } = await supabaseAdmin
+      .from('clients')
+      .select('id, name, email, portal_password')
+      .eq('email', email.trim().toLowerCase())
+      .single();
+
+    if (error || !client) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid email or password' },
+        { status: 401 }
+      );
+    }
+
+    // Check password
+    if (!client.portal_password || client.portal_password !== password) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid email or password' },
+        { status: 401 }
+      );
+    }
+
+    // Create session
+    const sessionId = await createSession(client.id, client.email, client.name);
+
+    const sessionData: SessionData = {
+      sessionId,
+      clientId: client.id,
+      email: client.email,
+      clientName: client.name,
+      expires: Date.now() + 7 * 24 * 60 * 60 * 1000,
+    };
+
+    const response = NextResponse.json({
+      success: true,
+      data: {
+        clientId: client.id,
+        name: client.name,
+        redirectUrl: `/client/${client.id}`,
+      },
+    });
+
+    setSessionCookie(response, sessionId, sessionData);
+
+    return response;
+  } catch (error) {
+    console.error('Login error:', error);
+    return NextResponse.json(
+      { success: false, error: 'An error occurred during login' },
+      { status: 500 }
+    );
+  }
+}
