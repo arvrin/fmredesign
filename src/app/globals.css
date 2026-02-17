@@ -1273,7 +1273,8 @@ section:not(.v2-section):not([class*="v2-"]):not([class*="pt-"]):not([class*="py
     max-width: var(--v2-container-wide);
   }
 
-  /* V2 Section Spacing */
+  /* V2 Section Spacing — in @layer base so Tailwind utilities (pt-40 etc.) can override */
+@layer base {
   .v2-section {
     padding-top: var(--v2-section-padding);
     padding-bottom: var(--v2-section-padding);
@@ -1283,6 +1284,7 @@ section:not(.v2-section):not([class*="v2-"]):not([class*="pt-"]):not([class*="py
   .v2-section-gap {
     margin-top: var(--v2-section-gap);
   }
+}
 
   /* V2 Brand Shadows */
   .shadow-fm-sm {
