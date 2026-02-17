@@ -13,7 +13,7 @@ import {
 // Tools data
 const tools = [
   { name: 'Deep Dive', icon: Brain, desc: 'AI-powered brand analysis', href: 'https://deepdive-three.vercel.app', gradient: 'linear-gradient(135deg, #c9325d, #4a1942)' },
-  { name: 'Brand Skits', icon: Video, desc: 'Viral video creator', href: '/tools/brand-skits', gradient: 'linear-gradient(135deg, #e04d7d, #c9325d)' },
+  { name: 'Brand Kits', icon: Video, desc: 'Viral video creator', href: 'https://brandkits-nine.vercel.app', gradient: 'linear-gradient(135deg, #e04d7d, #c9325d)' },
   { name: 'WeBuild', icon: Code, desc: 'Website builder', href: '/tools/webuild', gradient: 'linear-gradient(135deg, #7a2155, #4a1942)' },
   { name: 'WebCraft', icon: PenTool, desc: 'Design system generator', href: 'https://fmwebdemo-fgto.vercel.app', gradient: 'linear-gradient(135deg, #c9325d, #8c213d)' },
 ];
