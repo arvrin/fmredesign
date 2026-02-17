@@ -86,46 +86,43 @@ export default function ClientDashboardLayout({
   const basePath = `/client/${slug}`;
   const navigationItems = [
     {
-      label: 'Overview',
-      href: basePath,
-      icon: <BarChart3 className="w-5 h-5" />,
-      active: pathname === basePath,
-    },
-    {
-      label: 'Projects',
-      href: `${basePath}/projects`,
-      icon: <Briefcase className="w-5 h-5" />,
-      active: pathname.startsWith(`${basePath}/projects`),
-    },
-    {
-      label: 'Content',
-      href: `${basePath}/content`,
-      icon: <Calendar className="w-5 h-5" />,
-      active: pathname.startsWith(`${basePath}/content`),
-    },
-    {
-      label: 'Reports',
-      href: `${basePath}/reports`,
-      icon: <PieChart className="w-5 h-5" />,
-      active: pathname.startsWith(`${basePath}/reports`),
-    },
-    {
-      label: 'Documents',
-      href: `${basePath}/documents`,
-      icon: <FolderOpen className="w-5 h-5" />,
-      active: pathname.startsWith(`${basePath}/documents`),
-    },
-    {
-      label: 'Support',
-      href: `${basePath}/support`,
-      icon: <MessageSquare className="w-5 h-5" />,
-      active: pathname.startsWith(`${basePath}/support`),
-    },
-    {
-      label: 'Settings',
-      href: `${basePath}/settings`,
-      icon: <Settings className="w-5 h-5" />,
-      active: pathname.startsWith(`${basePath}/settings`),
+      items: [
+        {
+          label: 'Overview',
+          href: basePath,
+          icon: <BarChart3 className="w-5 h-5" />,
+        },
+        {
+          label: 'Projects',
+          href: `${basePath}/projects`,
+          icon: <Briefcase className="w-5 h-5" />,
+        },
+        {
+          label: 'Content',
+          href: `${basePath}/content`,
+          icon: <Calendar className="w-5 h-5" />,
+        },
+        {
+          label: 'Reports',
+          href: `${basePath}/reports`,
+          icon: <PieChart className="w-5 h-5" />,
+        },
+        {
+          label: 'Documents',
+          href: `${basePath}/documents`,
+          icon: <FolderOpen className="w-5 h-5" />,
+        },
+        {
+          label: 'Support',
+          href: `${basePath}/support`,
+          icon: <MessageSquare className="w-5 h-5" />,
+        },
+        {
+          label: 'Settings',
+          href: `${basePath}/settings`,
+          icon: <Settings className="w-5 h-5" />,
+        },
+      ],
     },
   ];
 
