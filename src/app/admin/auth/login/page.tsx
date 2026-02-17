@@ -39,7 +39,7 @@ export default function AdminLoginPage() {
       let success = false;
       
       if (authMethod === 'password') {
-        success = AdminAuth.authenticate(password);
+        success = await AdminAuth.authenticate(password);
         if (!success) {
           setError('Invalid password. Please try again.');
           setPassword('');

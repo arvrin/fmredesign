@@ -31,38 +31,48 @@ export interface AdminSession {
   };
 }
 
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 const SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 hours
 const SESSION_KEY = "fm_admin_session";
 
 export class AdminAuth {
   /**
    * Authenticate admin with password (Super Admin)
+   * Calls server-side API to verify password
    */
-  static authenticate(password: string): boolean {
-    if (!ADMIN_PASSWORD) {
-      console.error('ADMIN_PASSWORD environment variable is not set');
+  static async authenticate(password: string): Promise<boolean> {
+    try {
+      const response = await fetch('/api/admin/auth/password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        const session: AdminSession = {
+          isAuthenticated: true,
+          timestamp: Date.now(),
+          expiresAt: Date.now() + SESSION_DURATION,
+          authMethod: 'password',
+          user: {
+            type: 'admin',
+            data: null
+          }
+        };
+
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+        }
+
+        return true;
+      }
+
+      return false;
+    } catch (error) {
+      console.error('Password authentication error:', error);
       return false;
     }
-    if (password === ADMIN_PASSWORD) {
-      const session: AdminSession = {
-        isAuthenticated: true,
-        timestamp: Date.now(),
-        expiresAt: Date.now() + SESSION_DURATION,
-        authMethod: 'password',
-        user: {
-          type: 'admin',
-          data: null
-        }
-      };
-      
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(SESSION_KEY, JSON.stringify(session));
-      }
-      
-      return true;
-    }
-    return false;
   }
 
   /**
@@ -294,8 +304,8 @@ export function useAdminAuth() {
     setLoading(false);
   }, []);
 
-  const login = (password: string): boolean => {
-    const success = AdminAuth.authenticate(password);
+  const login = async (password: string): Promise<boolean> => {
+    const success = await AdminAuth.authenticate(password);
     if (success) {
       const user = AdminAuth.getCurrentUser();
       setIsAuthenticated(true);
