@@ -552,6 +552,11 @@ section:not(.v2-section):not([class*="v2-"]):not([class*="pt-"]):not([class*="py
 /* Logo images - let component classes control sizing */
 
 /* Brain mascot animations */
+@keyframes shimmer-badge {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
 @keyframes brain-float {
   0%, 100% {
     transform: translateY(0) rotate(var(--brain-rotate, 0deg));

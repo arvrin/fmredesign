@@ -12,11 +12,30 @@ import {
 
 // Tools data
 const tools = [
-  { name: 'Deep Dive', icon: Brain, desc: 'AI-powered brand analysis', href: 'https://deepdive-three.vercel.app', gradient: 'linear-gradient(135deg, #c9325d, #4a1942)' },
-  { name: 'Brand Kits', icon: Video, desc: 'AI logo asset generator', href: 'https://brandkits-nine.vercel.app', gradient: 'linear-gradient(135deg, #e04d7d, #c9325d)' },
-  { name: 'WeBuild', icon: Code, desc: 'Website builder', href: '/tools/webuild', gradient: 'linear-gradient(135deg, #7a2155, #4a1942)' },
-  { name: 'WebCraft', icon: PenTool, desc: '7-day website builder', href: 'https://fmwebdemo-fgto.vercel.app', gradient: 'linear-gradient(135deg, #c9325d, #8c213d)' },
+  { name: 'Deep Dive', icon: Brain, desc: 'AI-powered brand analysis', href: 'https://deepdive-three.vercel.app', gradient: 'linear-gradient(135deg, #c9325d, #4a1942)', comingSoon: true },
+  { name: 'Brand Kits', icon: Video, desc: 'AI logo asset generator', href: 'https://brandkits-nine.vercel.app', gradient: 'linear-gradient(135deg, #e04d7d, #c9325d)', comingSoon: true },
+  { name: 'WeBuild', icon: Code, desc: 'Website builder', href: '/tools/webuild', gradient: 'linear-gradient(135deg, #7a2155, #4a1942)', comingSoon: true },
+  { name: 'WebCraft', icon: PenTool, desc: '7-day website builder', href: 'https://fmwebdemo-fgto.vercel.app', gradient: 'linear-gradient(135deg, #c9325d, #8c213d)', comingSoon: true },
 ];
+
+// Shimmer "Coming Soon" pill
+function ComingSoonBadge({ className = '' }: { className?: string }) {
+  return (
+    <span
+      className={`inline-flex items-center text-[9px] font-bold uppercase tracking-wider leading-none rounded-full ${className}`}
+      style={{
+        padding: '2.5px 7px',
+        color: '#c9325d',
+        background: 'linear-gradient(90deg, rgba(201,50,93,0.08) 0%, rgba(201,50,93,0.15) 50%, rgba(201,50,93,0.08) 100%)',
+        backgroundSize: '200% 100%',
+        animation: 'shimmer-badge 2s ease-in-out infinite',
+        border: '1px solid rgba(201,50,93,0.15)',
+      }}
+    >
+      Coming Soon
+    </span>
+  );
+}
 
 // Talent data
 const talent = {
@@ -268,7 +287,10 @@ export function HeaderV2() {
                             <tool.icon className="w-4 h-4 text-white" />
                           </div>
                           <div>
-                            <div className="font-medium text-sm" style={{ color: '#1a0a12' }}>{tool.name}</div>
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-medium text-sm" style={{ color: '#1a0a12' }}>{tool.name}</span>
+                              {tool.comingSoon && <ComingSoonBadge />}
+                            </div>
                             <div className="text-[11px] leading-tight" style={{ color: '#9a7888' }}>{tool.desc}</div>
                           </div>
                         </Link>
@@ -479,7 +501,10 @@ export function HeaderV2() {
                           <tool.icon className="w-4 h-4 text-white" />
                         </div>
                         <div>
-                          <div className="text-sm font-medium" style={{ color: '#1a0a12' }}>{tool.name}</div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-sm font-medium" style={{ color: '#1a0a12' }}>{tool.name}</span>
+                            {tool.comingSoon && <ComingSoonBadge />}
+                          </div>
                           <div className="text-xs" style={{ color: '#9a7888' }}>{tool.desc}</div>
                         </div>
                       </Link>
