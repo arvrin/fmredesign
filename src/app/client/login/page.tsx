@@ -3,6 +3,7 @@
 import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Input } from '@/components/ui/Input';
+import Link from 'next/link';
 import Image from 'next/image';
 import {
   Mail,
@@ -153,15 +154,17 @@ function ClientLoginForm() {
         <div className="relative flex flex-col justify-between h-full px-12 xl:px-16 py-10" style={{ zIndex: 1 }}>
           {/* Top: Logo + headline */}
           <div>
-            <Image
-              src="/logo.png"
-              alt="FreakingMinds"
-              width={200}
-              height={56}
-              className="w-auto mb-14"
-              style={{ height: '3.5rem' }}
-              priority
-            />
+            <Link href="/">
+              <Image
+                src="/logo.png"
+                alt="FreakingMinds"
+                width={200}
+                height={56}
+                className="w-auto mb-14 hover:opacity-80 transition-opacity"
+                style={{ height: '3.5rem' }}
+                priority
+              />
+            </Link>
 
             <h1
               className="font-display text-4xl xl:text-5xl font-bold leading-tight mb-6 text-fm-neutral-900"
@@ -249,15 +252,17 @@ function ClientLoginForm() {
             background: 'linear-gradient(135deg, #fef5f8 0%, #f5d0de 50%, #fce8ef 100%)',
           }}
         >
-          <Image
-            src="/logo.png"
-            alt="FreakingMinds"
-            width={200}
-            height={56}
-            className="w-auto mb-4"
-            style={{ height: '2.75rem' }}
-            priority
-          />
+          <Link href="/">
+            <Image
+              src="/logo.png"
+              alt="FreakingMinds"
+              width={200}
+              height={56}
+              className="w-auto mb-4 hover:opacity-80 transition-opacity"
+              style={{ height: '2.75rem' }}
+              priority
+            />
+          </Link>
           <h1 className="font-display text-2xl font-bold text-fm-neutral-900">
             Client Portal
           </h1>
