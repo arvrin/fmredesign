@@ -29,6 +29,7 @@ interface ClientPortalContextType {
   profile: ClientProfile;
   clientId: string;
   slug: string;
+  refreshProfile?: () => void;
 }
 
 const ClientPortalContext = createContext<ClientPortalContextType | null>(null);

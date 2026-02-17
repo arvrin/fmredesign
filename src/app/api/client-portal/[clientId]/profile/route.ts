@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { resolveClientId } from '@/lib/client-portal/resolve-client';
 import type { ClientProfile } from '@/lib/admin/client-types';
 
 export async function GET(
@@ -21,26 +22,19 @@ export async function GET(
       );
     }
 
-    // Try slug first, fall back to id for backward compatibility
-    let client, error;
-    const slugResult = await supabaseAdmin
+    const resolved = await resolveClientId(clientId);
+    if (!resolved) {
+      return NextResponse.json(
+        { success: false, error: 'Client not found' },
+        { status: 404 }
+      );
+    }
+
+    const { data: client, error } = await supabaseAdmin
       .from('clients')
       .select('*')
-      .eq('slug', clientId)
+      .eq('id', resolved.id)
       .single();
-
-    if (slugResult.data) {
-      client = slugResult.data;
-      error = null;
-    } else {
-      const idResult = await supabaseAdmin
-        .from('clients')
-        .select('*')
-        .eq('id', clientId)
-        .single();
-      client = idResult.data;
-      error = idResult.error;
-    }
 
     if (error || !client) {
       return NextResponse.json(
@@ -66,6 +60,60 @@ export async function GET(
       },
       { status: 500 }
     );
+  }
+}
+
+const ALLOWED_FIELDS = [
+  'name', 'email', 'phone', 'website', 'description',
+  'logo', 'address', 'city', 'state', 'zip_code', 'country',
+];
+
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ clientId: string }> }
+) {
+  try {
+    const { clientId } = await params;
+    if (!clientId) {
+      return NextResponse.json({ success: false, error: 'Client ID is required' }, { status: 400 });
+    }
+
+    const resolved = await resolveClientId(clientId);
+    if (!resolved) {
+      return NextResponse.json({ success: false, error: 'Client not found' }, { status: 404 });
+    }
+
+    const body = await request.json();
+
+    // Filter to only allowed fields
+    const updates: Record<string, unknown> = {};
+    for (const key of Object.keys(body)) {
+      if (ALLOWED_FIELDS.includes(key)) {
+        updates[key] = body[key];
+      }
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return NextResponse.json({ success: false, error: 'No valid fields to update' }, { status: 400 });
+    }
+
+    updates.updated_at = new Date().toISOString();
+    updates.last_activity = new Date().toISOString();
+
+    const { error } = await supabaseAdmin
+      .from('clients')
+      .update(updates)
+      .eq('id', resolved.id);
+
+    if (error) {
+      console.error('Supabase update error:', error);
+      return NextResponse.json({ success: false, error: 'Failed to update profile' }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Error updating client profile:', error);
+    return NextResponse.json({ success: false, error: 'Failed to update profile' }, { status: 500 });
   }
 }
 

@@ -20,6 +20,10 @@ export function getStatusColor(status: string): string {
       return 'bg-green-100 text-green-800 border-green-200';
     case 'scheduled':
       return 'bg-blue-100 text-blue-800 border-blue-200';
+    case 'approved':
+      return 'bg-green-100 text-green-800 border-green-200';
+    case 'revision_needed':
+      return 'bg-orange-100 text-orange-800 border-orange-200';
     case 'draft':
       return 'bg-fm-neutral-100 text-fm-neutral-800 border-fm-neutral-200';
     case 'open':

@@ -51,6 +51,13 @@ interface ContentItem {
   scheduledDate: string;
 }
 
+interface ActivityItem {
+  type: string;
+  title: string;
+  description: string;
+  timestamp: string;
+}
+
 function formatPartnerDuration(isoDate: string): { text: string; exact: string } {
   const start = new Date(isoDate);
   const now = new Date();
@@ -104,6 +111,7 @@ export default function ClientDashboard() {
 
   const [projects, setProjects] = useState<Project[]>([]);
   const [contentItems, setContentItems] = useState<ContentItem[]>([]);
+  const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [pageLoading, setPageLoading] = useState(true);
 
   useEffect(() => {
@@ -113,9 +121,10 @@ export default function ClientDashboard() {
       try {
         setPageLoading(true);
 
-        const [projectsResponse, contentResponse] = await Promise.all([
+        const [projectsResponse, contentResponse, activityResponse] = await Promise.all([
           fetch(`/api/client-portal/${clientId}/projects`),
           fetch(`/api/client-portal/${clientId}/content`),
+          fetch(`/api/client-portal/${clientId}/activity`),
         ]);
 
         if (projectsResponse.ok) {
@@ -126,6 +135,11 @@ export default function ClientDashboard() {
         if (contentResponse.ok) {
           const contentData = await contentResponse.json();
           setContentItems(contentData.data || []);
+        }
+
+        if (activityResponse.ok) {
+          const activityData = await activityResponse.json();
+          setActivities(activityData.data || []);
         }
       } catch (err) {
         console.error('Error fetching page data:', err);
@@ -537,48 +551,59 @@ export default function ClientDashboard() {
 
       {/* Quick Actions & Support */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Quick Actions */}
+        {/* Recent Activity */}
         <Card variant="glass" hover>
           <CardHeader>
             <div className="flex items-center space-x-3">
               <IconBox>
                 <Activity className="w-5 h-5" />
               </IconBox>
-              <CardTitle className="text-xl">Quick Actions</CardTitle>
+              <CardTitle className="text-xl">Recent Activity</CardTitle>
             </div>
-            <CardDescription>Frequently used features and shortcuts</CardDescription>
+            <CardDescription>Latest updates across your account</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3">
-            <Link
-              href={`/client/${slug}/reports`}
-              className="flex items-center w-full text-left h-auto p-4 rounded-md hover:bg-fm-neutral-50 transition-colors"
-            >
-              <FileText className="w-5 h-5 mr-3 text-fm-magenta-600 flex-shrink-0" />
-              <div>
-                <div className="font-medium text-fm-neutral-900">Project Reports</div>
-                <div className="text-sm text-fm-neutral-500">View detailed progress reports</div>
+          <CardContent>
+            {activities.length > 0 ? (
+              <div className="space-y-4">
+                {activities.map((activity, idx) => {
+                  const iconMap: Record<string, React.ReactNode> = {
+                    project_created: <Briefcase className="w-4 h-4 text-fm-magenta-600" />,
+                    project_updated: <Briefcase className="w-4 h-4 text-blue-600" />,
+                    content_created: <Calendar className="w-4 h-4 text-purple-600" />,
+                    content_approved: <CheckCircle2 className="w-4 h-4 text-green-600" />,
+                    content_published: <Calendar className="w-4 h-4 text-green-600" />,
+                    ticket_created: <MessageSquare className="w-4 h-4 text-orange-600" />,
+                    ticket_updated: <MessageSquare className="w-4 h-4 text-blue-600" />,
+                    document_shared: <FileText className="w-4 h-4 text-fm-magenta-600" />,
+                  };
+
+                  return (
+                    <div key={idx} className="flex items-start space-x-3">
+                      <div className="w-8 h-8 rounded-full bg-fm-neutral-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        {iconMap[activity.type] || <Activity className="w-4 h-4 text-fm-neutral-500" />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-fm-neutral-900">{activity.title}</p>
+                        <p className="text-sm text-fm-neutral-600 truncate">{activity.description}</p>
+                        <p className="text-xs text-fm-neutral-500 mt-0.5">
+                          {new Date(activity.timestamp).toLocaleDateString('en-IN', {
+                            day: 'numeric',
+                            month: 'short',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-            </Link>
-            <Link
-              href={`/client/${slug}/support`}
-              className="flex items-center w-full text-left h-auto p-4 rounded-md hover:bg-fm-neutral-50 transition-colors"
-            >
-              <MessageSquare className="w-5 h-5 mr-3 text-fm-magenta-600 flex-shrink-0" />
-              <div>
-                <div className="font-medium text-fm-neutral-900">Contact Manager</div>
-                <div className="text-sm text-fm-neutral-500">Get in touch with {profile.accountManager}</div>
+            ) : (
+              <div className="text-center py-6">
+                <Activity className="w-10 h-10 text-fm-neutral-300 mx-auto mb-2" />
+                <p className="text-fm-neutral-500 text-sm">No recent activity</p>
               </div>
-            </Link>
-            <Link
-              href={`/client/${slug}/reports`}
-              className="flex items-center w-full text-left h-auto p-4 rounded-md hover:bg-fm-neutral-50 transition-colors"
-            >
-              <Award className="w-5 h-5 mr-3 text-fm-magenta-600 flex-shrink-0" />
-              <div>
-                <div className="font-medium text-fm-neutral-900">Success Metrics</div>
-                <div className="text-sm text-fm-neutral-500">Track ROI and performance</div>
-              </div>
-            </Link>
+            )}
           </CardContent>
         </Card>
 

@@ -91,6 +91,71 @@ export async function GET(
   }
 }
 
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ clientId: string }> }
+) {
+  try {
+    const { clientId } = await params;
+    if (!clientId) {
+      return NextResponse.json({ success: false, error: 'Client ID is required' }, { status: 400 });
+    }
+
+    const body = await request.json();
+    const { contentId, action, feedback } = body;
+
+    if (!contentId || !action) {
+      return NextResponse.json({ success: false, error: 'contentId and action are required' }, { status: 400 });
+    }
+
+    if (!['approve', 'request_revision'].includes(action)) {
+      return NextResponse.json({ success: false, error: 'Invalid action' }, { status: 400 });
+    }
+
+    // Verify the content belongs to this client and is in review status
+    const { data: content, error: fetchError } = await supabaseAdmin
+      .from('content_calendar')
+      .select('id, status, client_id')
+      .eq('id', contentId)
+      .eq('client_id', clientId)
+      .single();
+
+    if (fetchError || !content) {
+      return NextResponse.json({ success: false, error: 'Content not found' }, { status: 404 });
+    }
+
+    if (content.status !== 'review') {
+      return NextResponse.json({ success: false, error: 'Content is not pending review' }, { status: 400 });
+    }
+
+    const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
+
+    if (action === 'approve') {
+      updates.status = 'approved';
+      updates.approved_at = new Date().toISOString();
+      if (feedback) updates.client_feedback = feedback;
+    } else {
+      updates.status = 'revision_needed';
+      if (feedback) updates.revision_notes = feedback;
+    }
+
+    const { error: updateError } = await supabaseAdmin
+      .from('content_calendar')
+      .update(updates)
+      .eq('id', contentId);
+
+    if (updateError) {
+      console.error('Supabase content update error:', updateError);
+      return NextResponse.json({ success: false, error: 'Failed to update content' }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true, data: { status: updates.status } });
+  } catch (error) {
+    console.error('Error updating content:', error);
+    return NextResponse.json({ success: false, error: 'Failed to update content' }, { status: 500 });
+  }
+}
+
 /**
  * Transform Supabase content row for client view
  */

@@ -40,7 +40,7 @@ interface ContentItem {
   description: string;
   type: 'blog' | 'social' | 'video' | 'infographic' | 'podcast' | 'email';
   platform: string;
-  status: 'draft' | 'scheduled' | 'published' | 'review';
+  status: 'draft' | 'scheduled' | 'published' | 'review' | 'approved' | 'revision_needed';
   scheduledDate: string;
   publishedDate?: string;
   author: string;
@@ -52,6 +52,9 @@ interface ContentItem {
   };
   thumbnail?: string;
   tags: string[];
+  clientFeedback?: string;
+  revisionNotes?: string;
+  approvedAt?: string;
 }
 
 export default function ClientContentPage() {
@@ -59,8 +62,11 @@ export default function ClientContentPage() {
 
   const [contentItems, setContentItems] = useState<ContentItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<'all' | 'published' | 'scheduled' | 'draft'>('all');
+  const [filter, setFilter] = useState<'all' | 'published' | 'scheduled' | 'draft' | 'review'>('all');
   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
+  const [feedbackMap, setFeedbackMap] = useState<Record<string, string>>({});
+  const [actioningId, setActioningId] = useState<string | null>(null);
+  const [expandedReviewId, setExpandedReviewId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!clientId) return;
@@ -88,7 +94,10 @@ export default function ClientContentPage() {
               shares: c.engagement.shares || 0,
               conversions: c.engagement.conversions || 0
             } : undefined,
-            tags: Array.isArray(c.tags) ? c.tags : []
+            tags: Array.isArray(c.tags) ? c.tags : [],
+            clientFeedback: c.clientFeedback,
+            revisionNotes: c.revisionNotes,
+            approvedAt: c.approvedAt,
           }));
           setContentItems(mapped);
         }
@@ -123,6 +132,46 @@ export default function ClientContentPage() {
     if (lowerPlatform.includes('youtube')) return <Youtube className="w-4 h-4" />;
     return <Globe className="w-4 h-4" />;
   };
+
+  const handleContentAction = async (contentId: string, action: 'approve' | 'request_revision') => {
+    try {
+      setActioningId(contentId);
+      const feedback = feedbackMap[contentId] || '';
+      const res = await fetch(`/api/client-portal/${clientId}/content`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contentId, action, feedback }),
+      });
+      if (res.ok) {
+        const json = await res.json();
+        setContentItems((prev) =>
+          prev.map((item) =>
+            item.id === contentId
+              ? {
+                  ...item,
+                  status: json.data.status,
+                  ...(action === 'approve'
+                    ? { approvedAt: new Date().toISOString(), clientFeedback: feedback }
+                    : { revisionNotes: feedback }),
+                }
+              : item
+          )
+        );
+        setExpandedReviewId(null);
+        setFeedbackMap((prev) => {
+          const next = { ...prev };
+          delete next[contentId];
+          return next;
+        });
+      }
+    } catch (err) {
+      console.error('Error performing content action:', err);
+    } finally {
+      setActioningId(null);
+    }
+  };
+
+  const reviewContent = contentItems.filter(item => item.status === 'review');
 
   const filteredContent = contentItems.filter(item => {
     const matchesStatus = filter === 'all' || item.status === filter;
@@ -239,6 +288,13 @@ export default function ClientContentPage() {
             Scheduled ({scheduledContent.length})
           </Button>
           <Button
+            variant={filter === 'review' ? 'client' : 'ghost'}
+            size="sm"
+            onClick={() => setFilter('review')}
+          >
+            Review ({reviewContent.length})
+          </Button>
+          <Button
             variant={filter === 'draft' ? 'client' : 'ghost'}
             size="sm"
             onClick={() => setFilter('draft')}
@@ -341,6 +397,83 @@ export default function ClientContentPage() {
                   </span>
                 ))}
               </div>
+
+              {/* Feedback display */}
+              {item.clientFeedback && (
+                <div className="pt-2 border-t border-fm-neutral-100">
+                  <p className="text-xs text-fm-neutral-500 mb-1">Your Feedback</p>
+                  <p className="text-sm text-fm-neutral-700 bg-green-50 rounded-md p-2">{item.clientFeedback}</p>
+                </div>
+              )}
+              {item.revisionNotes && (
+                <div className="pt-2 border-t border-fm-neutral-100">
+                  <p className="text-xs text-fm-neutral-500 mb-1">Revision Notes</p>
+                  <p className="text-sm text-fm-neutral-700 bg-orange-50 rounded-md p-2">{item.revisionNotes}</p>
+                </div>
+              )}
+
+              {/* Review Actions */}
+              {item.status === 'review' && (
+                <div className="pt-3 border-t border-fm-neutral-100 space-y-2">
+                  {expandedReviewId === item.id ? (
+                    <>
+                      <textarea
+                        value={feedbackMap[item.id] || ''}
+                        onChange={(e) => setFeedbackMap((prev) => ({ ...prev, [item.id]: e.target.value }))}
+                        placeholder="Add feedback (optional)..."
+                        rows={2}
+                        className="w-full rounded-md border border-fm-neutral-300 bg-fm-neutral-50 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-fm-magenta-500"
+                      />
+                      <div className="flex items-center space-x-2">
+                        <Button
+                          variant="client"
+                          size="sm"
+                          disabled={actioningId === item.id}
+                          onClick={() => handleContentAction(item.id, 'approve')}
+                        >
+                          <CheckCircle2 className="w-4 h-4 mr-1" />
+                          Approve
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-orange-600 hover:bg-orange-50"
+                          disabled={actioningId === item.id}
+                          onClick={() => handleContentAction(item.id, 'request_revision')}
+                        >
+                          Request Revision
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setExpandedReviewId(null)}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        variant="client"
+                        size="sm"
+                        onClick={() => setExpandedReviewId(item.id)}
+                      >
+                        <CheckCircle2 className="w-4 h-4 mr-1" />
+                        Approve
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-orange-600 hover:bg-orange-50"
+                        onClick={() => setExpandedReviewId(item.id)}
+                      >
+                        Request Revision
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Actions */}
               <div className="flex items-center justify-between pt-2">

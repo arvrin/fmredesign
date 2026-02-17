@@ -23,7 +23,11 @@ import {
   Activity,
   Zap,
   Award,
-  Calendar
+  Calendar,
+  Share2,
+  Copy,
+  Check,
+  X,
 } from 'lucide-react';
 import { useClientPortal } from '@/lib/client-portal/context';
 import { downloadCSV } from '@/lib/client-portal/export';
@@ -79,6 +83,9 @@ export default function ClientReportsPage() {
   const [insights, setInsights] = useState<Insight[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPeriod, setSelectedPeriod] = useState<'monthly' | 'quarterly' | 'annual'>('monthly');
+  const [shareUrl, setShareUrl] = useState<string | null>(null);
+  const [shareLoading, setShareLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (!clientId) return;
@@ -116,6 +123,38 @@ export default function ClientReportsPage() {
       String(m.engagement),
     ]);
     downloadCSV('performance-report.csv', headers, rows);
+  };
+
+  const handleShareReport = async () => {
+    try {
+      setShareLoading(true);
+      const res = await fetch(`/api/client-portal/${clientId}/share`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          resourceType: 'report',
+          resourceId: clientId,
+          label: 'Performance Report',
+          expiresInDays: 30,
+        }),
+      });
+      if (res.ok) {
+        const json = await res.json();
+        const fullUrl = `${window.location.origin}${json.data.url}`;
+        setShareUrl(fullUrl);
+      }
+    } catch (err) {
+      console.error('Error creating share link:', err);
+    } finally {
+      setShareLoading(false);
+    }
+  };
+
+  const handleCopy = async () => {
+    if (!shareUrl) return;
+    await navigator.clipboard.writeText(shareUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   if (loading) {
@@ -159,8 +198,36 @@ export default function ClientReportsPage() {
               <Download className="w-4 h-4 mr-2" />
               Download Report
             </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-fm-magenta-600"
+              onClick={handleShareReport}
+              disabled={shareLoading}
+            >
+              <Share2 className="w-4 h-4 mr-2" />
+              {shareLoading ? 'Sharing...' : 'Share Report'}
+            </Button>
           </div>
         </div>
+
+        {/* Share URL */}
+        {shareUrl && (
+          <div className="mt-4 p-4 bg-fm-neutral-50 border border-fm-neutral-200 rounded-lg flex items-center space-x-3">
+            <input
+              readOnly
+              value={shareUrl}
+              className="flex-1 text-sm bg-white border border-fm-neutral-300 rounded-md px-3 py-2 text-fm-neutral-700"
+            />
+            <Button variant="client" size="sm" onClick={handleCopy}>
+              {copied ? <Check className="w-4 h-4 mr-1" /> : <Copy className="w-4 h-4 mr-1" />}
+              {copied ? 'Copied!' : 'Copy'}
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => setShareUrl(null)}>
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Key Metrics */}

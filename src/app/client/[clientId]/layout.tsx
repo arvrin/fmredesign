@@ -13,6 +13,8 @@ import {
   PieChart,
   MessageSquare,
   AlertCircle,
+  FolderOpen,
+  Settings,
 } from 'lucide-react';
 import {
   ClientPortalProvider,
@@ -33,32 +35,43 @@ export default function ClientDashboardLayout({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!slug) return;
-
-    const fetchProfile = async () => {
-      try {
-        setLoading(true);
-        const res = await fetch(`/api/client-portal/${slug}/profile`);
-        if (!res.ok) {
-          if (res.status === 404) {
-            setError('Client not found. Please check your link.');
-            return;
-          }
-          throw new Error('Failed to fetch client profile');
+  const fetchProfile = useCallback(async () => {
+    try {
+      setLoading(true);
+      const res = await fetch(`/api/client-portal/${slug}/profile`);
+      if (!res.ok) {
+        if (res.status === 404) {
+          setError('Client not found. Please check your link.');
+          return;
         }
+        throw new Error('Failed to fetch client profile');
+      }
+      const json = await res.json();
+      setProfile(json.data);
+    } catch (err) {
+      console.error('Error fetching profile:', err);
+      setError('Failed to load client data. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
+  }, [slug]);
+
+  const refreshProfile = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/client-portal/${slug}/profile`);
+      if (res.ok) {
         const json = await res.json();
         setProfile(json.data);
-      } catch (err) {
-        console.error('Error fetching profile:', err);
-        setError('Failed to load client data. Please try again later.');
-      } finally {
-        setLoading(false);
       }
-    };
-
-    fetchProfile();
+    } catch (err) {
+      console.error('Error refreshing profile:', err);
+    }
   }, [slug]);
+
+  useEffect(() => {
+    if (!slug) return;
+    fetchProfile();
+  }, [slug, fetchProfile]);
 
   const handleLogout = useCallback(async () => {
     try {
@@ -97,10 +110,22 @@ export default function ClientDashboardLayout({
       active: pathname.startsWith(`${basePath}/reports`),
     },
     {
+      label: 'Documents',
+      href: `${basePath}/documents`,
+      icon: <FolderOpen className="w-5 h-5" />,
+      active: pathname.startsWith(`${basePath}/documents`),
+    },
+    {
       label: 'Support',
       href: `${basePath}/support`,
       icon: <MessageSquare className="w-5 h-5" />,
       active: pathname.startsWith(`${basePath}/support`),
+    },
+    {
+      label: 'Settings',
+      href: `${basePath}/settings`,
+      icon: <Settings className="w-5 h-5" />,
+      active: pathname.startsWith(`${basePath}/settings`),
     },
   ];
 
@@ -136,7 +161,7 @@ export default function ClientDashboardLayout({
   }
 
   return (
-    <ClientPortalProvider value={{ profile, clientId: profile.id, slug }}>
+    <ClientPortalProvider value={{ profile, clientId: profile.id, slug, refreshProfile }}>
       <DashboardLayout
         variant="client"
         navigation={navigationItems}
