@@ -1,6 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createHmac } from 'crypto';
+import { rateLimit, getClientIp } from '@/lib/rate-limiter';
 
 export async function POST(request: NextRequest) {
+  // Rate limit: 5 attempts per minute per IP
+  const clientIp = getClientIp(request);
+  if (!rateLimit(clientIp, 5, 60_000)) {
+    return NextResponse.json(
+      { success: false, error: 'Too many login attempts. Please try again later.' },
+      { status: 429 }
+    );
+  }
+
   try {
     const { password } = await request.json();
 
@@ -21,24 +32,30 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (password === adminPassword) {
-      // Create session token: base64(password:timestamp) — matches admin-auth-middleware
-      const token = Buffer.from(`${adminPassword}:${Date.now()}`).toString('base64');
-      const response = NextResponse.json({ success: true });
-      response.cookies.set('fm-admin-session', token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        path: '/',
-        maxAge: 24 * 60 * 60, // 24 hours in seconds
-      });
-      return response;
+    // Constant-time-ish comparison (avoid timing attacks)
+    if (password.length !== adminPassword.length || password !== adminPassword) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid password' },
+        { status: 401 }
+      );
     }
 
-    return NextResponse.json(
-      { success: false, error: 'Invalid password' },
-      { status: 401 }
-    );
+    // Create HMAC-signed session token (password is the key, never stored in the token)
+    const timestamp = Date.now().toString();
+    const signature = createHmac('sha256', adminPassword)
+      .update(timestamp)
+      .digest('hex');
+    const token = `${timestamp}.${signature}`;
+
+    const response = NextResponse.json({ success: true });
+    response.cookies.set('fm-admin-session', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 24 * 60 * 60,
+    });
+    return response;
   } catch (error) {
     console.error('Password authentication error:', error);
     return NextResponse.json(

@@ -37,7 +37,6 @@ import {
 import { Badge } from '@/components/ui/Badge';
 import { ClientService } from '@/lib/admin/client-service';
 import { ProposalNumbering } from '@/lib/admin/proposal-numbering';
-import { ProposalStorage } from '@/lib/admin/proposal-storage';
 import { ProposalPDFGenerator } from '@/lib/admin/proposal-pdf-generator';
 import { 
   Proposal, 
@@ -279,20 +278,32 @@ export function ProposalFormNew({ initialProposal, onSaveSuccess }: ProposalForm
     }));
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     try {
+      const proposalToSave = { ...proposal };
       // Generate proposal number if not present
-      if (!proposal.proposalNumber || proposal.proposalNumber.startsWith('PROP-')) {
-        setProposal(prev => ({
-          ...prev,
-          proposalNumber: ProposalNumbering.getNextProposalNumber()
-        }));
+      if (!proposalToSave.proposalNumber || proposalToSave.proposalNumber.startsWith('PROP-')) {
+        proposalToSave.proposalNumber = '';
       }
 
-      ProposalStorage.saveProposal(proposal);
-      alert('Proposal saved successfully!');
-      if (onSaveSuccess) {
-        onSaveSuccess();
+      const response = await fetch('/api/proposals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(proposalToSave),
+      });
+      const result = await response.json();
+
+      if (result.success) {
+        // Update local numbering if the server generated a number
+        if (result.data?.proposalNumber) {
+          ProposalNumbering.updateFromManualProposal(result.data.proposalNumber);
+        }
+        alert('Proposal saved successfully!');
+        if (onSaveSuccess) {
+          onSaveSuccess();
+        }
+      } else {
+        alert('Error saving proposal: ' + (result.error || 'Unknown error'));
       }
     } catch (error) {
       console.error('Error saving proposal:', error);

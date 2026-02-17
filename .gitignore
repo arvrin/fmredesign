@@ -51,3 +51,4 @@ next-env.d.ts
 .env.production
 fm-admin-469817-575a41fd1488.json
 vercel-env-variables.txt
+.env*.local

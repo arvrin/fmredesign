@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { useClientPortal } from '@/lib/client-portal/context';
 import { getStatusColor, getPriorityColor } from '@/lib/client-portal/status-colors';
+import { downloadCSV } from '@/lib/client-portal/export';
 
 interface Project {
   id: string;
@@ -136,7 +137,19 @@ export default function ClientProjectsPage() {
             <p className="text-fm-neutral-600 mt-1 font-medium">Track progress and milestones across all initiatives</p>
           </div>
           <div className="flex items-center space-x-3">
-            <Button variant="ghost" size="sm" className="text-fm-magenta-600">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-fm-magenta-600"
+              onClick={() => {
+                const headers = ['Name', 'Status', 'Priority', 'Progress', 'Budget', 'Spent', 'Start Date', 'End Date'];
+                const rows = projects.map(p => [
+                  p.name, p.status, p.priority, `${p.progress}%`,
+                  String(p.budget), String(p.spent), p.startDate, p.endDate,
+                ]);
+                downloadCSV('projects-report.csv', headers, rows);
+              }}
+            >
               <Download className="w-4 h-4 mr-2" />
               Export Report
             </Button>
@@ -152,11 +165,6 @@ export default function ClientProjectsPage() {
           subtitle="Currently in progress"
           icon={<Briefcase className="w-6 h-6" />}
           variant="client"
-          change={{
-            value: 2,
-            type: 'increase',
-            period: 'this month'
-          }}
         />
 
         <MetricCard

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   DashboardCard as Card,
   CardContent,
@@ -19,7 +19,6 @@ import {
   Send,
   Search,
   HelpCircle,
-  Info,
   BookOpen,
   Video,
   Download,
@@ -50,44 +49,11 @@ interface FAQ {
 }
 
 export default function ClientSupportPage() {
-  const { profile, clientId } = useClientPortal();
+  const { clientId } = useClientPortal();
 
-  const [tickets, setTickets] = useState<SupportTicket[]>([
-    {
-      id: '1',
-      title: 'Request for additional social media platforms',
-      description: 'Would like to expand our social media presence to include TikTok and Pinterest',
-      status: 'in-progress',
-      priority: 'medium',
-      createdDate: '2024-03-20',
-      lastUpdate: '2024-03-22',
-      assignedTo: 'Sarah Wilson',
-      category: 'Services'
-    },
-    {
-      id: '2',
-      title: 'Question about monthly report metrics',
-      description: 'Need clarification on how engagement rate is calculated in the reports',
-      status: 'resolved',
-      priority: 'low',
-      createdDate: '2024-03-15',
-      lastUpdate: '2024-03-16',
-      assignedTo: 'Mike Johnson',
-      category: 'Reports'
-    },
-    {
-      id: '3',
-      title: 'Website loading speed optimization',
-      description: 'Website seems to be loading slowly on mobile devices, especially on the homepage',
-      status: 'open',
-      priority: 'high',
-      createdDate: '2024-03-25',
-      lastUpdate: '2024-03-25',
-      assignedTo: 'Alex Chen',
-      category: 'Technical'
-    }
-  ]);
-  const [loading] = useState(false);
+  const [tickets, setTickets] = useState<SupportTicket[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
 
   const [faqs] = useState<FAQ[]>([
     {
@@ -121,23 +87,47 @@ export default function ClientSupportPage() {
   const [showNewTicketForm, setShowNewTicketForm] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const handleSubmitTicket = (e: React.FormEvent) => {
-    e.preventDefault();
-    const newTicketData: SupportTicket = {
-      id: crypto.randomUUID(),
-      title: newTicket.title,
-      description: newTicket.description,
-      status: 'open',
-      priority: newTicket.priority,
-      createdDate: new Date().toISOString().split('T')[0],
-      lastUpdate: new Date().toISOString().split('T')[0],
-      assignedTo: 'Support Team',
-      category: newTicket.category
-    };
+  useEffect(() => {
+    if (!clientId) return;
+    fetchTickets();
+  }, [clientId]);
 
-    setTickets([newTicketData, ...tickets]);
-    setNewTicket({ title: '', description: '', priority: 'medium', category: 'general' });
-    setShowNewTicketForm(false);
+  const fetchTickets = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch(`/api/client-portal/${clientId}/support/tickets`);
+      if (res.ok) {
+        const data = await res.json();
+        setTickets(data.data || []);
+      }
+    } catch (err) {
+      console.error('Error fetching tickets:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmitTicket = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      setSubmitting(true);
+      const res = await fetch(`/api/client-portal/${clientId}/support/tickets`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newTicket),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setTickets([data.data, ...tickets]);
+        setNewTicket({ title: '', description: '', priority: 'medium', category: 'general' });
+        setShowNewTicketForm(false);
+      }
+    } catch (err) {
+      console.error('Error creating ticket:', err);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const filteredFAQs = faqs.filter(faq =>
@@ -165,15 +155,6 @@ export default function ClientSupportPage() {
             <p className="text-fm-neutral-600 mt-1 font-medium">Get help and manage your support requests</p>
           </div>
         </div>
-      </div>
-
-      {/* Sample Data Banner */}
-      <div className="mb-6 bg-fm-magenta-50 border border-fm-magenta-100 rounded-xl p-4 flex items-center space-x-3">
-        <Info className="w-5 h-5 text-fm-magenta-600 flex-shrink-0" />
-        <p className="text-sm text-fm-magenta-800">
-          <span className="font-semibold">Demo data.</span>{' '}
-          Support tickets shown below are sample data. Submit real requests via email or phone.
-        </p>
       </div>
 
       {/* Quick Actions */}
@@ -303,9 +284,9 @@ export default function ClientSupportPage() {
                     </div>
                   </div>
                   <div className="flex items-center space-x-3 pt-4">
-                    <Button type="submit" variant="client" size="sm">
+                    <Button type="submit" variant="client" size="sm" disabled={submitting}>
                       <Send className="w-4 h-4 mr-2" />
-                      Submit Ticket
+                      {submitting ? 'Submitting...' : 'Submit Ticket'}
                     </Button>
                     <Button
                       type="button"
@@ -316,9 +297,6 @@ export default function ClientSupportPage() {
                       Cancel
                     </Button>
                   </div>
-                  <p className="text-xs text-fm-neutral-500 pt-1">
-                    Tickets are saved locally for demo purposes.
-                  </p>
                 </form>
               </CardContent>
             </Card>

@@ -32,6 +32,7 @@ import {
 } from 'lucide-react';
 import { useClientPortal } from '@/lib/client-portal/context';
 import { getStatusColor } from '@/lib/client-portal/status-colors';
+import { downloadCSV } from '@/lib/client-portal/export';
 
 interface ContentItem {
   id: string;
@@ -156,7 +157,18 @@ export default function ClientContentPage() {
             <p className="text-fm-neutral-600 mt-1 font-medium">Manage and track your content publishing schedule</p>
           </div>
           <div className="flex items-center space-x-3">
-            <Button variant="ghost" size="sm" className="text-fm-magenta-600">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-fm-magenta-600"
+              onClick={() => {
+                const headers = ['Title', 'Type', 'Platform', 'Status', 'Scheduled Date', 'Author'];
+                const rows = contentItems.map(c => [
+                  c.title, c.type, c.platform, c.status, c.scheduledDate, c.author,
+                ]);
+                downloadCSV('content-calendar.csv', headers, rows);
+              }}
+            >
               <Download className="w-4 h-4 mr-2" />
               Export Calendar
             </Button>
@@ -172,11 +184,6 @@ export default function ClientContentPage() {
           subtitle="This month"
           icon={<CheckCircle2 className="w-6 h-6" />}
           variant="client"
-          change={{
-            value: 12,
-            type: 'increase',
-            period: 'vs last month'
-          }}
         />
 
         <MetricCard
@@ -204,11 +211,6 @@ export default function ClientContentPage() {
           subtitle="Engagement rate"
           icon={<TrendingUp className="w-6 h-6" />}
           variant="client"
-          change={{
-            value: 2.3,
-            type: 'increase',
-            period: 'vs last month'
-          }}
         />
       </div>
 

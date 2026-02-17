@@ -34,9 +34,14 @@ import {
   MetricCard
 } from '@/design-system';
 import { Badge } from '@/components/ui/Badge';
-import { ProposalStorage } from '@/lib/admin/proposal-storage';
 import { Proposal } from '@/lib/admin/proposal-types';
 import { ProposalPDFGenerator } from '@/lib/admin/proposal-pdf-generator';
+
+interface ProposalStats {
+  total: number; draft: number; sent: number; viewed: number;
+  approved: number; declined: number; expired: number; converted: number;
+  approvalRate: number; conversionRate: number;
+}
 
 interface ProposalDashboardProps {
   onCreateNew: () => void;
@@ -49,7 +54,9 @@ export function ProposalDashboard({ onCreateNew, onEditProposal }: ProposalDashb
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
-  const [stats, setStats] = useState(ProposalStorage.getProposalStats());
+  const [stats, setStats] = useState<ProposalStats>({ total: 0, draft: 0, sent: 0, viewed: 0, approved: 0, declined: 0, expired: 0, converted: 0, approvalRate: 0, conversionRate: 0 });
+  const [totalValue, setTotalValue] = useState(0);
+  const [convertedValue, setConvertedValue] = useState(0);
   const [pdfGenerator] = useState(() => new ProposalPDFGenerator());
 
   // Load proposals
@@ -84,29 +91,63 @@ export function ProposalDashboard({ onCreateNew, onEditProposal }: ProposalDashb
     setFilteredProposals(filtered);
   }, [proposals, searchQuery, statusFilter, typeFilter]);
 
-  const loadProposals = () => {
-    const allProposals = ProposalStorage.getProposals();
-    setProposals(allProposals);
-    setStats(ProposalStorage.getProposalStats());
+  const loadProposals = async () => {
+    try {
+      const response = await fetch('/api/proposals');
+      const result = await response.json();
+      if (result.success) {
+        const allProposals = result.data || [];
+        setProposals(allProposals);
+        if (result.stats) setStats(result.stats);
+        setTotalValue(allProposals.reduce((sum: number, p: Proposal) => sum + (p.investment?.total || 0), 0));
+        setConvertedValue(allProposals.filter((p: Proposal) => p.status === 'converted').reduce((sum: number, p: Proposal) => sum + (p.investment?.total || 0), 0));
+      }
+    } catch (error) {
+      console.error('Error loading proposals:', error);
+    }
   };
 
-  const handleDeleteProposal = (proposalId: string) => {
+  const handleDeleteProposal = async (proposalId: string) => {
     if (confirm('Are you sure you want to delete this proposal?')) {
-      ProposalStorage.deleteProposal(proposalId);
-      loadProposals();
+      try {
+        await fetch(`/api/proposals?id=${proposalId}`, { method: 'DELETE' });
+        loadProposals();
+      } catch (error) {
+        console.error('Error deleting proposal:', error);
+      }
     }
   };
 
   const handleDuplicateProposal = (proposalId: string) => {
-    const duplicated = ProposalStorage.duplicateProposal(proposalId);
-    if (duplicated) {
+    const original = proposals.find(p => p.id === proposalId);
+    if (original) {
+      const duplicated: Proposal = {
+        ...original,
+        id: `prop-${Date.now()}`,
+        title: `Copy of ${original.title}`,
+        proposalNumber: '',
+        status: 'draft',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        sentAt: undefined,
+        viewedAt: undefined,
+        approvedAt: undefined,
+      };
       onEditProposal(duplicated);
     }
   };
 
-  const handleStatusUpdate = (proposalId: string, newStatus: Proposal['status']) => {
-    ProposalStorage.updateProposalStatus(proposalId, newStatus);
-    loadProposals();
+  const handleStatusUpdate = async (proposalId: string, newStatus: Proposal['status']) => {
+    try {
+      await fetch('/api/proposals', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: proposalId, status: newStatus }),
+      });
+      loadProposals();
+    } catch (error) {
+      console.error('Error updating proposal status:', error);
+    }
   };
 
   const handlePreviewProposal = async (proposal: Proposal) => {
@@ -192,14 +233,14 @@ export function ProposalDashboard({ onCreateNew, onEditProposal }: ProposalDashb
         />
         <MetricCard
           title="Total Value"
-          value={formatCurrency(ProposalStorage.getTotalProposalValue())}
+          value={formatCurrency(totalValue)}
           subtitle="All active proposals"
           icon={<DollarSign className="w-6 h-6" />}
           variant="admin"
         />
         <MetricCard
           title="Converted Value"
-          value={formatCurrency(ProposalStorage.getTotalProposalValue('converted'))}
+          value={formatCurrency(convertedValue)}
           subtitle={`${stats.converted} converted`}
           icon={<CheckCircle className="w-6 h-6" />}
           variant="admin"

@@ -6,22 +6,24 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { 
-  LayoutDashboard, 
-  FileText, 
-  Users, 
+import {
+  LayoutDashboard,
+  FileText,
+  Users,
   Target,
-  Settings, 
+  Settings,
   LogOut,
   Menu,
   X,
   Shield,
-  TestTube,
   Search,
   Sparkles,
   Briefcase,
   Calendar,
-  Presentation
+  Presentation,
+  UsersRound,
+  UserCog,
+  MessageSquare,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
@@ -66,7 +68,7 @@ const navigation: NavigationItem[] = [
   {
     name: 'Team',
     href: '/admin/team',
-    icon: Briefcase,
+    icon: UsersRound,
   },
   {
     name: 'Projects',
@@ -79,6 +81,11 @@ const navigation: NavigationItem[] = [
     icon: Calendar,
   },
   {
+    name: 'Support Tickets',
+    href: '/admin/support',
+    icon: MessageSquare,
+  },
+  {
     name: 'Discovery',
     href: '/admin/discovery',
     icon: Search,
@@ -89,14 +96,14 @@ const navigation: NavigationItem[] = [
     icon: Sparkles,
   },
   {
+    name: 'User Management',
+    href: '/admin/users',
+    icon: UserCog,
+  },
+  {
     name: 'Admin System',
     href: '/admin/system',
     icon: Shield,
-  },
-  {
-    name: 'Test Sheets',
-    href: '/admin/test-sheets',
-    icon: TestTube,
   },
   {
     name: 'Settings',

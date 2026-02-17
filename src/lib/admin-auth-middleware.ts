@@ -1,12 +1,15 @@
 /**
  * Server-side admin authentication middleware.
  * Validates admin session token from cookies before allowing access to admin API routes.
+ * Token format: timestamp.hmac_signature (password never stored in token)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { createHmac, timingSafeEqual } from 'crypto';
 import { getSupabaseAdmin } from '@/lib/supabase';
 
 const ADMIN_SESSION_COOKIE = 'fm-admin-session';
+const MAX_SESSION_AGE_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 /**
  * Validate that the request has a valid admin session.
@@ -23,7 +26,6 @@ export async function requireAdminAuth(request: NextRequest): Promise<NextRespon
     );
   }
 
-  // Validate against ADMIN_PASSWORD (simple token = base64 of password + timestamp check)
   const adminPassword = process.env.ADMIN_PASSWORD;
   if (!adminPassword) {
     console.error('ADMIN_PASSWORD not configured');
@@ -34,25 +36,69 @@ export async function requireAdminAuth(request: NextRequest): Promise<NextRespon
   }
 
   try {
-    // Token format: base64(password:timestamp)
-    const decoded = Buffer.from(sessionToken, 'base64').toString('utf-8');
-    const [password, timestampStr] = decoded.split(':');
+    // Support both new HMAC format (timestamp.signature) and legacy base64 format
+    if (sessionToken.includes('.')) {
+      // New HMAC-based token: timestamp.signature
+      const [timestampStr, signature] = sessionToken.split('.');
 
-    if (password !== adminPassword) {
-      return NextResponse.json(
-        { success: false, error: 'Invalid session' },
-        { status: 401 }
-      );
-    }
+      if (!timestampStr || !signature) {
+        return NextResponse.json(
+          { success: false, error: 'Invalid session token' },
+          { status: 401 }
+        );
+      }
 
-    // Check token age (24 hours max)
-    const timestamp = parseInt(timestampStr, 10);
-    const maxAge = 24 * 60 * 60 * 1000; // 24 hours
-    if (isNaN(timestamp) || Date.now() - timestamp > maxAge) {
-      return NextResponse.json(
-        { success: false, error: 'Session expired' },
-        { status: 401 }
-      );
+      // Verify HMAC signature
+      const expectedSignature = createHmac('sha256', adminPassword)
+        .update(timestampStr)
+        .digest('hex');
+
+      // Constant-time comparison
+      const sigBuffer = Buffer.from(signature, 'hex');
+      const expectedBuffer = Buffer.from(expectedSignature, 'hex');
+      if (sigBuffer.length !== expectedBuffer.length || !timingSafeEqual(sigBuffer, expectedBuffer)) {
+        return NextResponse.json(
+          { success: false, error: 'Invalid session' },
+          { status: 401 }
+        );
+      }
+
+      // Check token age
+      const timestamp = parseInt(timestampStr, 10);
+      if (isNaN(timestamp) || Date.now() - timestamp > MAX_SESSION_AGE_MS) {
+        return NextResponse.json(
+          { success: false, error: 'Session expired' },
+          { status: 401 }
+        );
+      }
+    } else {
+      // Legacy base64 token: base64(password:timestamp) — support during migration
+      const decoded = Buffer.from(sessionToken, 'base64').toString('utf-8');
+      const colonIndex = decoded.lastIndexOf(':');
+      if (colonIndex === -1) {
+        return NextResponse.json(
+          { success: false, error: 'Invalid session token' },
+          { status: 401 }
+        );
+      }
+
+      const password = decoded.substring(0, colonIndex);
+      const timestampStr = decoded.substring(colonIndex + 1);
+
+      if (password !== adminPassword) {
+        return NextResponse.json(
+          { success: false, error: 'Invalid session' },
+          { status: 401 }
+        );
+      }
+
+      const timestamp = parseInt(timestampStr, 10);
+      if (isNaN(timestamp) || Date.now() - timestamp > MAX_SESSION_AGE_MS) {
+        return NextResponse.json(
+          { success: false, error: 'Session expired' },
+          { status: 401 }
+        );
+      }
     }
 
     return null; // Auth passed
@@ -71,12 +117,12 @@ export async function requireAdminAuth(request: NextRequest): Promise<NextRespon
 export async function requireAuth(request: NextRequest): Promise<NextResponse | null> {
   // First check admin session
   const adminResult = await requireAdminAuth(request);
-  if (!adminResult) return null; // Admin auth passed
+  if (!adminResult) return null;
 
   // Check mobile user session
   const mobileToken = request.headers.get('x-mobile-token');
   if (!mobileToken) {
-    return adminResult; // Return original admin auth error
+    return adminResult;
   }
 
   try {
@@ -95,7 +141,7 @@ export async function requireAuth(request: NextRequest): Promise<NextResponse | 
       );
     }
 
-    return null; // Mobile auth passed
+    return null;
   } catch {
     return NextResponse.json(
       { success: false, error: 'Authentication failed' },

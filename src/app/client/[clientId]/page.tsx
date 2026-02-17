@@ -218,11 +218,6 @@ export default function ClientDashboard() {
           value={thisMonthContent}
           subtitle="Scheduled publications"
           icon={<Calendar className="w-6 h-6" />}
-          change={{
-            value: 15,
-            type: 'increase',
-            period: 'vs last month'
-          }}
           variant="client"
         />
 
@@ -245,11 +240,6 @@ export default function ClientDashboard() {
           value={`${avgProgress}%`}
           subtitle="Across all projects"
           icon={<Target className="w-6 h-6" />}
-          change={{
-            value: avgProgress > 50 ? 8 : -3,
-            type: avgProgress > 50 ? 'increase' : 'decrease',
-            period: 'this quarter'
-          }}
           variant="client"
         />
       </div>

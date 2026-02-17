@@ -205,9 +205,9 @@ export default function AdminDashboard() {
       color: 'bg-green-50 text-green-700',
     },
     {
-      title: 'View Reports',
-      description: 'Analytics and financial reports',
-      href: '/admin/reports',
+      title: 'Lead Analytics',
+      description: 'Track leads and conversions',
+      href: '/admin/leads',
       icon: TrendingUp,
       color: 'bg-orange-50 text-orange-700',
     },
@@ -404,10 +404,12 @@ export default function AdminDashboard() {
               <CardTitle className="text-xl">Revenue Stream</CardTitle>
             </div>
             <div className="flex items-center space-x-2">
-              <Button variant="ghost" size="sm">
-                <Eye className="w-4 h-4 mr-2" />
-                View All
-              </Button>
+              <Link href="/admin/invoice">
+                <Button variant="ghost" size="sm">
+                  <Eye className="w-4 h-4 mr-2" />
+                  View All
+                </Button>
+              </Link>
               <Link href="/admin/invoice">
                 <Button variant="admin" size="sm">
                   <Plus className="w-4 h-4 mr-2" />
@@ -468,9 +470,11 @@ export default function AdminDashboard() {
               ))}
               {recentInvoices.length >= 5 && (
                 <div className="pt-4 border-t border-indigo-100">
-                  <Button variant="ghost" size="sm" className="w-full text-indigo-600 hover:bg-indigo-50">
-                    View All Invoices
-                  </Button>
+                  <Link href="/admin/invoice">
+                    <Button variant="ghost" size="sm" className="w-full text-indigo-600 hover:bg-indigo-50">
+                      View All Invoices
+                    </Button>
+                  </Link>
                 </div>
               )}
             </div>
@@ -491,10 +495,12 @@ export default function AdminDashboard() {
                 <CardTitle className="text-xl">Active Projects</CardTitle>
               </div>
               <div className="flex items-center space-x-2">
-                <Button variant="ghost" size="sm">
-                  <Eye className="w-4 h-4 mr-2" />
-                  View All
-                </Button>
+                <Link href="/admin/projects">
+                  <Button variant="ghost" size="sm">
+                    <Eye className="w-4 h-4 mr-2" />
+                    View All
+                  </Button>
+                </Link>
               </div>
             </div>
             <CardDescription>Monitor project progress and deadlines</CardDescription>
@@ -551,9 +557,11 @@ export default function AdminDashboard() {
                 ))}
                 {recentProjects.length > 0 && (
                   <div className="pt-4 border-t border-indigo-100">
-                    <Button variant="ghost" size="sm" className="w-full text-indigo-600 hover:bg-indigo-50">
-                      View All Projects
-                    </Button>
+                    <Link href="/admin/projects">
+                      <Button variant="ghost" size="sm" className="w-full text-indigo-600 hover:bg-indigo-50">
+                        View All Projects
+                      </Button>
+                    </Link>
                   </div>
                 )}
               </div>
@@ -572,10 +580,12 @@ export default function AdminDashboard() {
                 <CardTitle className="text-xl">Content Pipeline</CardTitle>
               </div>
               <div className="flex items-center space-x-2">
-                <Button variant="ghost" size="sm">
-                  <Eye className="w-4 h-4 mr-2" />
-                  Calendar
-                </Button>
+                <Link href="/admin/content">
+                  <Button variant="ghost" size="sm">
+                    <Eye className="w-4 h-4 mr-2" />
+                    Calendar
+                  </Button>
+                </Link>
               </div>
             </div>
             <CardDescription>Upcoming content scheduled for publication</CardDescription>
@@ -652,9 +662,11 @@ export default function AdminDashboard() {
                 ))}
                 {upcomingContent.length > 0 && (
                   <div className="pt-4 border-t border-indigo-100">
-                    <Button variant="ghost" size="sm" className="w-full text-indigo-600 hover:bg-indigo-50">
-                      View Content Calendar
-                    </Button>
+                    <Link href="/admin/content">
+                      <Button variant="ghost" size="sm" className="w-full text-indigo-600 hover:bg-indigo-50">
+                        View Content Calendar
+                      </Button>
+                    </Link>
                   </div>
                 )}
               </div>

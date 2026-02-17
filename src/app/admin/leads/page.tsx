@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { 
   Users, 
   TrendingUp, 
@@ -154,6 +154,27 @@ export default function LeadDashboard({}: LeadDashboardProps) {
     }
   };
 
+  const [selectedLead, setSelectedLead] = useState<LeadProfile | null>(null);
+
+  const exportLeads = useCallback(() => {
+    if (leads.length === 0) return;
+    const headers = ['Name', 'Email', 'Phone', 'Company', 'Project Type', 'Budget', 'Status', 'Priority', 'Score', 'Created'];
+    const rows = leads.map(l => [
+      l.name, l.email, l.phone || '', l.company,
+      l.projectType.replace(/_/g, ' '), l.budgetRange.replace(/_/g, ' '),
+      l.status.replace(/_/g, ' '), l.priority, String(l.leadScore),
+      new Date(l.createdAt).toLocaleDateString()
+    ]);
+    const csv = [headers.join(','), ...rows.map(r => r.map(v => `"${v}"`).join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `leads-export-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [leads]);
+
   const getPriorityColor = (priority: LeadPriority) => {
     const colors = {
       hot: 'text-red-600 bg-red-100',
@@ -217,7 +238,7 @@ export default function LeadDashboard({}: LeadDashboardProps) {
           <p className="text-gray-600 mt-1 font-medium">Track, qualify, and convert your leads</p>
         </div>
         <div className="flex items-center space-x-3 mt-4 md:mt-0">
-          <DashboardButton variant="outline" size="sm">
+          <DashboardButton variant="outline" size="sm" onClick={exportLeads}>
             <Download className="w-4 h-4 mr-2" />
             Export
           </DashboardButton>
@@ -518,24 +539,22 @@ export default function LeadDashboard({}: LeadDashboardProps) {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex items-center space-x-2">
-                        <DashboardButton variant="ghost" size="sm">
+                        <DashboardButton variant="ghost" size="sm" onClick={() => setSelectedLead(lead)} title="View details">
                           <Eye className="w-4 h-4" />
                         </DashboardButton>
-                        <DashboardButton variant="ghost" size="sm">
+                        <DashboardButton variant="ghost" size="sm" onClick={() => setSelectedLead(lead)} title="Edit lead">
                           <Edit className="w-4 h-4" />
                         </DashboardButton>
                         {(lead.status === 'qualified' || lead.status === 'discovery_completed' || lead.status === 'proposal_sent') && (
-                          <DashboardButton 
-                            variant="ghost" 
+                          <DashboardButton
+                            variant="ghost"
                             size="sm"
                             onClick={() => convertToClient(lead.id)}
+                            title="Convert to client"
                           >
                             <UserCheck className="w-4 h-4 text-green-600" />
                           </DashboardButton>
                         )}
-                        <DashboardButton variant="ghost" size="sm">
-                          <MoreVertical className="w-4 h-4" />
-                        </DashboardButton>
                       </div>
                     </td>
                   </tr>
@@ -603,15 +622,15 @@ export default function LeadDashboard({}: LeadDashboardProps) {
                   </select>
                   
                   <div className="flex items-center space-x-1">
-                    <DashboardButton variant="ghost" size="sm">
+                    <DashboardButton variant="ghost" size="sm" onClick={() => setSelectedLead(lead)} title="View details">
                       <Eye className="w-4 h-4" />
                     </DashboardButton>
-                    <DashboardButton variant="ghost" size="sm">
+                    <DashboardButton variant="ghost" size="sm" onClick={() => setSelectedLead(lead)} title="Edit lead">
                       <Edit className="w-4 h-4" />
                     </DashboardButton>
                     {(lead.status === 'qualified' || lead.status === 'discovery_completed' || lead.status === 'proposal_sent') && (
-                      <DashboardButton 
-                        variant="ghost" 
+                      <DashboardButton
+                        variant="ghost"
                         size="sm"
                         onClick={() => convertToClient(lead.id)}
                         title="Convert to Client"
@@ -642,6 +661,102 @@ export default function LeadDashboard({}: LeadDashboardProps) {
             Add First Lead
           </DashboardButton>
         </div>
+      )}
+
+      {/* Lead Detail Drawer */}
+      {selectedLead && (
+        <>
+          <div className="fixed inset-0 bg-black/30 z-40" onClick={() => setSelectedLead(null)} />
+          <div className="fixed right-0 top-0 bottom-0 w-full max-w-lg bg-white shadow-2xl z-50 overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-gray-900">Lead Details</h2>
+                <button onClick={() => setSelectedLead(null)} className="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+              </div>
+              <div className="space-y-5">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">{selectedLead.name}</h3>
+                  <p className="text-sm text-gray-600">{selectedLead.company}</p>
+                </div>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-gray-500 block">Email</span>
+                    <a href={`mailto:${selectedLead.email}`} className="text-fm-magenta-600 font-medium">{selectedLead.email}</a>
+                  </div>
+                  {selectedLead.phone && (
+                    <div>
+                      <span className="text-gray-500 block">Phone</span>
+                      <a href={`tel:${selectedLead.phone}`} className="text-fm-magenta-600 font-medium">{selectedLead.phone}</a>
+                    </div>
+                  )}
+                  {selectedLead.website && (
+                    <div>
+                      <span className="text-gray-500 block">Website</span>
+                      <a href={selectedLead.website} target="_blank" rel="noopener noreferrer" className="text-fm-magenta-600 font-medium truncate block">{selectedLead.website.replace(/^https?:\/\//, '')}</a>
+                    </div>
+                  )}
+                  <div>
+                    <span className="text-gray-500 block">Company Size</span>
+                    <p className="font-medium text-gray-900">{selectedLead.companySize}</p>
+                  </div>
+                </div>
+                <hr className="border-gray-200" />
+                <div className="space-y-3">
+                  <div>
+                    <span className="text-gray-500 text-sm block">Project Type</span>
+                    <p className="font-medium text-gray-900 capitalize">{selectedLead.projectType.replace(/_/g, ' ')}</p>
+                  </div>
+                  <div>
+                    <span className="text-gray-500 text-sm block">Description</span>
+                    <p className="text-gray-700 text-sm">{selectedLead.projectDescription}</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <span className="text-gray-500 text-sm block">Budget</span>
+                      <p className="font-medium text-gray-900">{selectedLead.budgetRange.replace(/_/g, ' ')}</p>
+                    </div>
+                    <div>
+                      <span className="text-gray-500 text-sm block">Timeline</span>
+                      <p className="font-medium text-gray-900 capitalize">{selectedLead.timeline.replace(/_/g, ' ')}</p>
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-gray-500 text-sm block">Primary Challenge</span>
+                    <p className="text-gray-700 text-sm">{selectedLead.primaryChallenge}</p>
+                  </div>
+                </div>
+                <hr className="border-gray-200" />
+                <div className="grid grid-cols-3 gap-4 text-sm">
+                  <div>
+                    <span className="text-gray-500 block">Status</span>
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(selectedLead.status)}`}>
+                      {formatStatus(selectedLead.status)}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-gray-500 block">Priority</span>
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPriorityColor(selectedLead.priority)}`}>
+                      {formatPriority(selectedLead.priority)}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-gray-500 block">Score</span>
+                    <p className="font-bold text-gray-900">{selectedLead.leadScore}/100</p>
+                  </div>
+                </div>
+                <div className="text-xs text-gray-500">
+                  Created: {new Date(selectedLead.createdAt).toLocaleString()}
+                </div>
+                {(selectedLead.status === 'qualified' || selectedLead.status === 'discovery_completed' || selectedLead.status === 'proposal_sent') && (
+                  <DashboardButton variant="admin" size="sm" onClick={() => { convertToClient(selectedLead.id); setSelectedLead(null); }} className="w-full justify-center">
+                    <UserCheck className="w-4 h-4 mr-2" />
+                    Convert to Client
+                  </DashboardButton>
+                )}
+              </div>
+            </div>
+          </div>
+        </>
       )}
 
       {/* Add Lead Modal */}

@@ -286,7 +286,7 @@ export default function DiscoveryDashboardPage() {
                       <DashboardButton
                         variant="outline"
                         size="sm"
-                        onClick={() => router.push(`/admin/discovery/new?clientId=${session.clientId || session.id}`)}
+                        onClick={() => router.push(`/admin/discovery/new?sessionId=${session.id}`)}
                       >
                         <Eye className="h-4 w-4 mr-1" />
                         {session.status === 'completed' ? 'View' : 'Continue'}

@@ -4,10 +4,21 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { createHmac } from 'crypto';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { normalizeMobileNumber } from '@/lib/supabase-utils';
+import { rateLimit, getClientIp } from '@/lib/rate-limiter';
 
 export async function POST(request: NextRequest) {
+  // Rate limit: 5 attempts per minute per IP
+  const clientIp = getClientIp(request);
+  if (!rateLimit(clientIp, 5, 60_000)) {
+    return NextResponse.json(
+      { success: false, error: 'Too many login attempts. Please try again later.' },
+      { status: 429 }
+    );
+  }
+
   try {
     const body = await request.json();
     const { mobileNumber } = body;
@@ -89,7 +100,11 @@ export async function POST(request: NextRequest) {
       user,
     });
     if (adminPassword) {
-      const token = Buffer.from(`${adminPassword}:${Date.now()}`).toString('base64');
+      const timestamp = Date.now().toString();
+      const signature = createHmac('sha256', adminPassword)
+        .update(timestamp)
+        .digest('hex');
+      const token = `${timestamp}.${signature}`;
       response.cookies.set('fm-admin-session', token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',

@@ -33,7 +33,6 @@ import {
   MetricCard
 } from '@/design-system';
 import { Badge } from '@/components/ui/Badge';
-import { TeamService } from '@/lib/admin/team-service';
 import { TeamMember, TeamMetrics, TEAM_ROLES, TEAM_DEPARTMENTS } from '@/lib/admin/types';
 
 export default function TeamDashboardPage() {
@@ -49,13 +48,14 @@ export default function TeamDashboardPage() {
     loadTeamData();
   }, []);
 
-  const loadTeamData = () => {
+  const loadTeamData = async () => {
     try {
-      const members = TeamService.getAllTeamMembers();
-      const metrics = TeamService.getTeamMetrics();
-      
-      setTeamMembers(members);
-      setTeamMetrics(metrics);
+      const response = await fetch('/api/team');
+      const result = await response.json();
+      if (result.success) {
+        setTeamMembers(result.data || []);
+        if (result.metrics) setTeamMetrics(result.metrics as TeamMetrics);
+      }
     } catch (error) {
       console.error('Error loading team data:', error);
     } finally {
