@@ -9,6 +9,7 @@ import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard,
   FileText,
+  FilePlus,
   Users,
   Target,
   Settings,
@@ -46,9 +47,14 @@ const navigation: NavigationItem[] = [
     icon: LayoutDashboard,
   },
   {
-    name: 'Invoice Generator',
-    href: '/admin/invoice',
+    name: 'Invoices',
+    href: '/admin/invoices',
     icon: FileText,
+  },
+  {
+    name: 'New Invoice',
+    href: '/admin/invoice',
+    icon: FilePlus,
   },
   {
     name: 'Proposals',
