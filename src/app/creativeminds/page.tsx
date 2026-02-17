@@ -159,7 +159,7 @@ export default function CreativeMindsPage() {
                 <Sparkles className="w-4 h-4 v2-text-primary" />
                 <span className="v2-text-primary">Join CreativeMinds</span>
               </div>
-              <h1 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold v2-text-primary leading-tight" style={{ marginBottom: '16px' }}>
+              <h1 className="font-display text-4xl md:text-5xl lg:text-5xl font-bold v2-text-primary leading-tight" style={{ marginBottom: '16px' }}>
                 Apply to the <span className="v2-accent">Network</span>
               </h1>
               <p className="text-base md:text-lg v2-text-secondary leading-relaxed max-w-2xl mx-auto">
