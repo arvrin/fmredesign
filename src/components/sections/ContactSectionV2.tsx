@@ -43,43 +43,42 @@ export function ContactSectionV2() {
           scrollTrigger: {
             trigger: contentRef.current,
             start: 'top 80%',
-            toggleActions: 'play none none reverse',
+            toggleActions: 'play none none none',
           },
         });
 
         tl.from(badge, {
-          x: -60,
+          x: -25,
           opacity: 0,
-          duration: 0.8,
-          ease: 'power3.out',
+          duration: 0.4,
+          ease: 'power2.out',
         })
         .from(heading, {
-          x: -80,
+          x: -30,
           opacity: 0,
-          duration: 0.9,
-          ease: 'power3.out',
-        }, '-=0.5')
+          duration: 0.45,
+          ease: 'power2.out',
+        }, '-=0.25')
         .from(subtitle, {
-          x: -60,
+          x: -25,
           opacity: 0,
-          duration: 0.8,
-          ease: 'power3.out',
-        }, '-=0.5')
+          duration: 0.4,
+          ease: 'power2.out',
+        }, '-=0.25')
         .from(ctaButtons, {
-          y: 40,
+          y: 15,
           opacity: 0,
-          scale: 0.9,
-          duration: 0.7,
-          stagger: 0.15,
-          ease: 'back.out(1.5)',
-        }, '-=0.4')
+          duration: 0.35,
+          stagger: 0.06,
+          ease: 'power2.out',
+        }, '-=0.2')
         .from(quickFactItems, {
-          y: 30,
+          y: 15,
           opacity: 0,
-          duration: 0.6,
-          stagger: 0.1,
-          ease: 'power3.out',
-        }, '-=0.3');
+          duration: 0.3,
+          stagger: 0.05,
+          ease: 'power2.out',
+        }, '-=0.15');
       }
 
       // Mascot + contact bar consolidated timeline
@@ -90,44 +89,31 @@ export function ContactSectionV2() {
           scrollTrigger: {
             trigger: sectionRef.current,
             start: 'top 85%',
-            toggleActions: 'play none none reverse',
+            toggleActions: 'play none none none',
           },
         });
 
         // Mascot entrance
         entranceTl.from(mascotRef.current, {
-          x: 100,
+          x: 30,
           opacity: 0,
-          scale: 0.8,
-          rotation: 10,
-          duration: 1.2,
-          ease: 'back.out(1.5)',
+          duration: 0.5,
+          ease: 'power2.out',
         })
         // Contact bar slides up
         .from(contactBarRef.current, {
-          y: 60,
+          y: 20,
           opacity: 0,
-          scale: 0.95,
-          duration: 0.9,
-          ease: 'power3.out',
-        }, '-=0.6')
-        // Icons bounce in
+          duration: 0.4,
+          ease: 'power2.out',
+        }, '-=0.3')
+        // Icons fade in
         .from(icons, {
-          scale: 0,
-          rotation: -180,
-          duration: 0.7,
-          stagger: 0.15,
-          ease: 'back.out(1.7)',
-        }, '-=0.4');
-
-        // Continuous floating animation (not scroll-triggered)
-        gsap.to(mascotRef.current, {
-          y: -20,
-          duration: 3,
-          repeat: -1,
-          yoyo: true,
-          ease: 'sine.inOut',
-        });
+          opacity: 0,
+          duration: 0.3,
+          stagger: 0.05,
+          ease: 'power2.out',
+        }, '-=0.2');
       }
     }, sectionRef);
 
@@ -139,8 +125,6 @@ export function ContactSectionV2() {
       ref={sectionRef}
       className="relative"
       style={{
-        transformStyle: 'preserve-3d',
-        perspective: '1000px',
         overflowX: 'clip',
       }}
     >
@@ -160,23 +144,22 @@ export function ContactSectionV2() {
       {/* Ambient Gradient Orbs — tuned for light bg */}
       <GradientOrb
         color="rgba(160, 30, 70, 0.22)"
-        size={700}
-        blur={60}
-        position={{ top: '-300px', right: '-200px' }}
-        drift={30}
+        size={500}
+        blur={20}
+        position={{ top: '-200px', right: '-150px' }}
+        drift={20}
       />
       <GradientOrb
         color="rgba(140, 25, 60, 0.18)"
-        size={500}
-        blur={50}
-        position={{ bottom: '-150px', left: '-100px' }}
-        drift={20}
+        size={400}
+        blur={18}
+        position={{ bottom: '-100px', left: '-80px' }}
+        drift={15}
       />
 
       {/* Content */}
       <div
         className="relative z-10 v2-section"
-        style={{ transform: 'translateZ(0)' }}
       >
         <div className="v2-container">
           <div className="grid md:grid-cols-2 gap-8 md:gap-10 lg:gap-12 items-center">
@@ -291,7 +274,7 @@ export function ContactSectionV2() {
             <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6 text-center sm:text-left">
               {/* Email */}
               <div className="contact-item flex items-center justify-center md:justify-start gap-3 group">
-                <div className="contact-icon w-10 h-10 rounded-full bg-fm-magenta-50 flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:bg-fm-magenta-100">
+                <div className="contact-icon w-10 h-10 rounded-full bg-fm-magenta-50 flex items-center justify-center transition-[transform,background-color] duration-300 group-hover:scale-110 group-hover:bg-fm-magenta-100">
                   <Mail className="w-5 h-5 text-fm-magenta-600" />
                 </div>
                 <div>
@@ -304,7 +287,7 @@ export function ContactSectionV2() {
 
               {/* Phone */}
               <div className="contact-item flex items-center justify-center md:justify-start gap-3 group">
-                <div className="contact-icon w-10 h-10 rounded-full bg-fm-magenta-50 flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:bg-fm-magenta-100">
+                <div className="contact-icon w-10 h-10 rounded-full bg-fm-magenta-50 flex items-center justify-center transition-[transform,background-color] duration-300 group-hover:scale-110 group-hover:bg-fm-magenta-100">
                   <Phone className="w-5 h-5 text-fm-magenta-600" />
                 </div>
                 <div>
@@ -317,7 +300,7 @@ export function ContactSectionV2() {
 
               {/* Location */}
               <div className="contact-item flex items-center justify-center md:justify-start gap-3 group">
-                <div className="contact-icon w-10 h-10 rounded-full bg-fm-magenta-50 flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:bg-fm-magenta-100">
+                <div className="contact-icon w-10 h-10 rounded-full bg-fm-magenta-50 flex items-center justify-center transition-[transform,background-color] duration-300 group-hover:scale-110 group-hover:bg-fm-magenta-100">
                   <MapPin className="w-5 h-5 text-fm-magenta-600" />
                 </div>
                 <div>

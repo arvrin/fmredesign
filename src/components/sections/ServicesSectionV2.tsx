@@ -190,7 +190,7 @@ function ServiceCard({
         <div className="relative mt-auto border-t border-fm-neutral-100" style={{ paddingTop: isMobile ? '16px' : '20px' }}>
           <Link
             href="/services"
-            className="inline-flex items-center gap-2 rounded-full text-sm font-semibold text-white transition-all group"
+            className="inline-flex items-center gap-2 rounded-full text-sm font-semibold text-white transition-[background-color] group"
             style={{
               padding: '0.5rem 1.25rem',
               background: 'linear-gradient(135deg, var(--color-fm-magenta-600), var(--color-fm-magenta-700))',
@@ -243,8 +243,8 @@ export function ServicesSectionV2() {
     const ctx = gsap.context(() => {
       // Header stagger reveal
       gsap.from(header.querySelectorAll('.reveal-item'), {
-        y: 50, opacity: 0, duration: 0.9, stagger: 0.12, ease: 'power3.out',
-        scrollTrigger: { trigger: header, start: 'top 78%', toggleActions: 'play none none reverse' },
+        y: 25, opacity: 0, duration: 0.45, stagger: 0.06, ease: 'power2.out',
+        scrollTrigger: { trigger: header, start: 'top 85%', toggleActions: 'play none none none' },
       });
 
       // Scroll math
@@ -261,10 +261,11 @@ export function ServicesSectionV2() {
         scrollTrigger: {
           trigger: trigger,
           start: 'top top',
-          end: () => `+=${scrollDistance * 1.1}`,
-          scrub: 0.8,
+          end: () => `+=${scrollDistance}`,
+          scrub: 1.5,
           pin: true,
           anticipatePin: 1,
+          fastScrollEnd: true,
           invalidateOnRefresh: true,
           onUpdate: (self) => {
             // Direct DOM update — no React re-render
@@ -298,15 +299,19 @@ export function ServicesSectionV2() {
       // CTA
       if (ctaRef.current) {
         gsap.from(ctaRef.current, {
-          y: 60, opacity: 0, scale: 0.96, duration: 0.9, ease: 'power3.out',
-          scrollTrigger: { trigger: ctaRef.current, start: 'top 85%', toggleActions: 'play none none reverse' },
+          y: 20, opacity: 0, duration: 0.4, ease: 'power2.out',
+          scrollTrigger: { trigger: ctaRef.current, start: 'top 90%', toggleActions: 'play none none none' },
         });
       }
     }, section);
 
-    const onResize = () => ScrollTrigger.refresh();
+    let resizeTimer: ReturnType<typeof setTimeout>;
+    const onResize = () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => ScrollTrigger.refresh(), 200);
+    };
     window.addEventListener('resize', onResize);
-    return () => { ctx.revert(); window.removeEventListener('resize', onResize); };
+    return () => { ctx.revert(); window.removeEventListener('resize', onResize); clearTimeout(resizeTimer); };
   }, [prefersReducedMotion, isMobile]);
 
   // Mobile / reduced-motion animations
@@ -318,15 +323,15 @@ export function ServicesSectionV2() {
 
     const ctx = gsap.context(() => {
       gsap.from(header.querySelectorAll('.reveal-item'), {
-        y: 24, opacity: 0, duration: 0.6, stagger: 0.1, ease: 'power2.out',
-        scrollTrigger: { trigger: header, start: 'top 80%', toggleActions: 'play none none none' },
+        y: 15, opacity: 0, duration: 0.35, stagger: 0.05, ease: 'power2.out',
+        scrollTrigger: { trigger: header, start: 'top 85%', toggleActions: 'play none none none' },
       });
       gsap.from(section.querySelectorAll('.service-card-mobile'), {
-        x: 40, opacity: 0, duration: 0.5, stagger: 0.08, ease: 'power2.out',
+        x: 20, opacity: 0, duration: 0.3, stagger: 0.05, ease: 'power2.out',
         scrollTrigger: { trigger: section.querySelector('.mobile-scroll-track'), start: 'top 85%', toggleActions: 'play none none none' },
       });
       if (ctaRef.current) {
-        gsap.from(ctaRef.current, { y: 30, opacity: 0, duration: 0.5, ease: 'power2.out',
+        gsap.from(ctaRef.current, { y: 15, opacity: 0, duration: 0.35, ease: 'power2.out',
           scrollTrigger: { trigger: ctaRef.current, start: 'top 90%', toggleActions: 'play none none none' },
         });
       }
@@ -442,7 +447,6 @@ export function ServicesSectionV2() {
               style={{
                 paddingLeft: 'max(3rem, calc((100vw - 1280px) / 2 + 3rem))',
                 paddingRight: '6rem',
-                willChange: 'transform',
               }}
             >
               {services.map((service) => (

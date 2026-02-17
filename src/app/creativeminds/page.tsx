@@ -1,79 +1,144 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { TalentApplication } from '@/lib/admin/talent-types';
 import { TalentApplicationForm } from '@/components/public/TalentApplicationForm';
 import { V2PageWrapper } from "@/components/layouts/V2PageWrapper";
 
 import {
+  Palette,
+  Code,
+  Megaphone,
+  PenTool,
   Users,
-  Star,
+  Briefcase,
+  LineChart,
+  Video,
+  Camera,
+  Type,
+  ShieldCheck,
   Zap,
-  Globe,
   TrendingUp,
   Award,
+  Headphones,
+  Star,
+  Target,
   ArrowRight,
-  CheckCircle,
   Sparkles,
-  Target
+  CheckCircle,
+  Globe,
+  Check,
 } from 'lucide-react';
 
-const benefits = [
+/* ─── Data ───────────────────────────────────────────────────────── */
+
+const bentoCategories = [
   {
-    icon: TrendingUp,
-    title: "Premium Projects",
-    description: "Work with top brands and startups. Average project value: ₹25,000+",
-    gradient: "v2-gradient-brand"
+    icon: Palette, name: 'Creative Design', description: 'Visual identity & branding',
+    gradient: 'v2-gradient-brand', area: 'design', wash: '201, 50, 93',
   },
   {
-    icon: Zap,
-    title: "Fast Payments",
-    description: "Get paid within 7 days of project completion. No payment delays.",
-    gradient: "v2-gradient-performance"
+    icon: Code, name: 'Development', description: 'Web & app development',
+    gradient: 'v2-gradient-deep', area: 'dev', wash: '120, 50, 140',
   },
   {
-    icon: Users,
-    title: "Curated Network",
-    description: "Join an exclusive community of verified professionals. Quality over quantity.",
-    gradient: "v2-gradient-social"
+    icon: Video, name: 'Video Production', description: 'Motion graphics & reels',
+    gradient: 'v2-gradient-content', area: 'video', wash: '255, 150, 100',
   },
   {
-    icon: Globe,
-    title: "Global Exposure",
-    description: "Work with international clients and expand your portfolio globally.",
-    gradient: "v2-gradient-content"
+    icon: PenTool, name: 'Content Creation', description: 'Blogs, scripts & strategy',
+    gradient: 'v2-gradient-seo', area: 'content', wash: '255, 127, 80',
   },
   {
-    icon: Award,
-    title: "Skill Development",
-    description: "Access to workshops, courses, and mentorship from industry experts.",
-    gradient: "v2-gradient-seo"
+    icon: Megaphone, name: 'Digital Marketing', description: 'SEO, PPC & campaigns',
+    gradient: 'v2-gradient-performance', area: 'marketing', wash: '168, 37, 72',
   },
   {
-    icon: Star,
-    title: "Recognition",
-    description: "Build your reputation with verified reviews and showcase your work.",
-    gradient: "v2-gradient-deep"
-  }
+    icon: Users, name: 'Influencer & Social', description: 'Creators & community',
+    gradient: 'v2-gradient-social', area: 'influencer', wash: '224, 77, 125',
+  },
 ];
+
+const moreCategories = [
+  { icon: Camera, name: 'Photography' },
+  { icon: Type, name: 'Copywriting' },
+  { icon: Briefcase, name: 'Project Management' },
+  { icon: LineChart, name: 'Business Consulting' },
+];
+
+const processSteps = [
+  { step: '01', title: 'Brief us.', description: 'Share your project requirements — we\'ll scope the right talent.' },
+  { step: '02', title: 'We match.', description: 'Hand-picked professionals, vetted and ready for your project.' },
+  { step: '03', title: 'You create.', description: 'Your matched creative delivers quality work, on time.' },
+];
+
+const businessBenefits = [
+  {
+    icon: ShieldCheck, title: 'Vetted Professionals', tagline: 'Quality over quantity.',
+    description: 'Every creative is portfolio-reviewed and verified before joining our network.',
+    gradient: 'v2-gradient-brand', wash: '201, 50, 93', featured: true,
+  },
+  {
+    icon: Zap, title: 'Fast Turnaround', tagline: 'Matched in 48 hours.',
+    description: 'Projects start immediately after onboarding — no weeks of sourcing.',
+    gradient: 'v2-gradient-performance', wash: '168, 37, 72', featured: true,
+  },
+  {
+    icon: Users, title: 'Flexible Teams',
+    description: 'One specialist or an entire squad — scale up or down as needed.',
+    gradient: 'v2-gradient-social', wash: '224, 77, 125', featured: false,
+  },
+  {
+    icon: TrendingUp, title: 'Cost Effective',
+    description: 'Premium talent without the agency markup.',
+    gradient: 'v2-gradient-content', wash: '255, 150, 100', featured: false,
+  },
+  {
+    icon: Award, title: 'Quality Guaranteed',
+    description: 'Revision policy and satisfaction guarantee on every project.',
+    gradient: 'v2-gradient-seo', wash: '140, 29, 74', featured: false,
+  },
+  {
+    icon: Headphones, title: 'End-to-End Support',
+    description: 'We handle coordination so you focus on growth.',
+    gradient: 'v2-gradient-deep', wash: '100, 30, 90', featured: false,
+  },
+];
+
+const talentPerks = [
+  { icon: Star, title: 'Premium Projects' },
+  { icon: Zap, title: 'Fast Payments' },
+  { icon: Globe, title: 'Global Exposure' },
+  { icon: TrendingUp, title: 'Skill Growth' },
+];
+
+/* ─── Page ───────────────────────────────────────────────────────── */
 
 export default function CreativeMindsPage() {
   const [showApplicationForm, setShowApplicationForm] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
+  // Intersection observer for bento entrance
+  const bentoSectionRef = useRef<HTMLElement>(null);
+  const [bentoVisible, setBentoVisible] = useState(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) setBentoVisible(true); },
+      { threshold: 0.1 }
+    );
+    if (bentoSectionRef.current) observer.observe(bentoSectionRef.current);
+    return () => observer.disconnect();
+  }, []);
+
   const handleApplicationSubmit = async (application: TalentApplication) => {
     const response = await fetch('/api/talent', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'submit_application',
-        application
-      })
+      body: JSON.stringify({ action: 'submit_application', application })
     });
-
     const result = await response.json();
-
     if (result.success) {
       setSubmitted(true);
       setShowApplicationForm(false);
@@ -100,16 +165,13 @@ export default function CreativeMindsPage() {
               <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-8">
                 <CheckCircle className="w-12 h-12 text-green-600" />
               </div>
-
               <h1 className="text-3xl font-bold text-fm-neutral-900 mb-4">
                 Application Submitted Successfully!
               </h1>
-
               <p className="text-lg text-fm-neutral-600 mb-8">
                 Thank you for joining the CreativeMinds network. Our team will review your application
                 and get back to you within 48 hours.
               </p>
-
               <div className="bg-fm-magenta-50 rounded-xl p-6 mb-8">
                 <h3 className="text-lg font-semibold mb-4 text-fm-neutral-900">What happens next?</h3>
                 <div className="space-y-3 text-left">
@@ -127,11 +189,7 @@ export default function CreativeMindsPage() {
                   ))}
                 </div>
               </div>
-
-              <Link
-                href="/"
-                className="v2-btn v2-btn-magenta"
-              >
+              <Link href="/" className="v2-btn v2-btn-magenta">
                 Visit Freaking Minds
                 <ArrowRight className="w-4 h-4" />
               </Link>
@@ -142,89 +200,119 @@ export default function CreativeMindsPage() {
     );
   }
 
+  const featuredBenefits = businessBenefits.filter(b => b.featured);
+  const regularBenefits = businessBenefits.filter(b => !b.featured);
+
   return (
     <V2PageWrapper>
-      {/* Hero Section */}
+      {/* ── Section 1: Hero — Asymmetric 2-col ──────────────────────── */}
       <section className="relative z-10 v2-section pt-32 lg:pt-40">
         <div className="v2-container v2-container-wide">
-          <div className="max-w-4xl mx-auto" style={{ textAlign: 'center' }}>
-            {/* Badge */}
-            <div className="v2-badge v2-badge-glass mb-8">
-              <Sparkles className="w-4 h-4 v2-text-primary" />
-              <span className="v2-text-primary">Join the Premium Creative Talent Network</span>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
+
+            {/* Left: Copy (7 cols) */}
+            <div className="lg:col-span-7 flex flex-col items-start">
+              <div className="v2-badge v2-badge-glass mb-8">
+                <Sparkles className="w-4 h-4 v2-text-primary" />
+                <span className="v2-text-primary">CreativeMinds Network</span>
+              </div>
+
+              <h1 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold v2-text-primary leading-[1.08] tracking-tight" style={{ marginBottom: '28px' }}>
+                Your next creative team is{' '}
+                <span className="v2-accent">already here.</span>
+              </h1>
+
+              <p className="v2-text-secondary text-lg md:text-xl leading-relaxed max-w-full lg:max-w-lg" style={{ marginBottom: '40px' }}>
+                Vetted professionals. Matched in 48 hours. No agency markup.
+                Skip the hiring headache — we connect you with the right talent, fast.
+              </p>
+
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-start gap-4 w-full sm:w-auto" style={{ marginBottom: '40px' }}>
+                <Link href="/get-started" className="group v2-btn v2-btn-primary v2-btn-lg">
+                  Hire Creative Talent
+                  <ArrowRight className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" />
+                </Link>
+                <a href="#for-creatives" className="v2-btn v2-btn-secondary v2-btn-lg">
+                  Join as Creative
+                </a>
+              </div>
+
+              {/* Inline proof points */}
+              <div className="flex flex-wrap gap-x-6 gap-y-3">
+                {['500+ Verified Creatives', '150+ Projects Delivered', '48hr Matching'].map((item) => (
+                  <div key={item} className="flex items-center gap-2 text-sm v2-text-secondary">
+                    <Check className="w-4 h-4 text-fm-magenta-400" />
+                    <span>{item}</span>
+                  </div>
+                ))}
+              </div>
             </div>
 
-            {/* Headline */}
-            <h1 className="font-display text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold v2-text-primary mb-8 leading-tight">
-              The{' '}
-              <span className="v2-accent">CreativeMinds</span>{' '}Network
-            </h1>
-
-            {/* Description */}
-            <p className="text-lg md:text-xl v2-text-secondary leading-relaxed" style={{ marginBottom: '48px' }}>
-              Connect with premium brands, earn consistently, and grow your career with a trusted creative talent network serving clients worldwide. Join a curated community of verified professionals.
-            </p>
-
-            {/* CTAs */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <button
-                onClick={() => setShowApplicationForm(true)}
-                className="group v2-btn v2-btn-primary"
-              >
-                Apply to Join Network
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </button>
-              <Link href="#benefits" className="v2-btn v2-btn-secondary">
-                Learn More
-              </Link>
+            {/* Right: Brain Mascot (5 cols) */}
+            <div className="lg:col-span-5 flex justify-center lg:justify-end relative">
+              <div className="relative">
+                {/* Glow behind mascot */}
+                <div
+                  className="absolute inset-0 pointer-events-none"
+                  style={{
+                    background: 'radial-gradient(circle at 50% 50%, rgba(201, 50, 93, 0.2) 0%, transparent 65%)',
+                    transform: 'scale(1.5)',
+                    filter: 'blur(25px)',
+                    zIndex: -1,
+                  }}
+                />
+                <img
+                  src="/3dasset/brain-celebrating.png"
+                  alt="CreativeMinds Network"
+                  className="max-w-full"
+                  style={{
+                    width: 'min(380px, 70vw)',
+                    height: 'auto',
+                    filter: 'drop-shadow(0 30px 60px rgba(140,25,60,0.3))',
+                    animation: 'v2HeroFloat 6s ease-in-out infinite',
+                  }}
+                />
+              </div>
             </div>
           </div>
         </div>
-
-        {/* Floating Brain Decoration */}
-        <div className="absolute left-8 lg:left-24 top-1/3 hidden lg:block" style={{ zIndex: 10 }}>
-          <img
-            src="/3dasset/brain-celebrating.png"
-            alt="Success"
-            className="h-auto animate-v2-hero-float"
-            style={{
-              width: 'min(180px, 30vw)',
-              filter: 'drop-shadow(0 20px 40px rgba(140,25,60,0.2))',
-            }}
-          />
-        </div>
       </section>
 
-      {/* Benefits Section */}
-      <section id="benefits" className="relative z-10 v2-section v2-texture-dots">
+      {/* ── Section 2: How It Works — with connecting arrows ────────── */}
+      <section className="relative z-10 v2-section v2-texture-mesh">
         <div className="v2-container">
           <div className="max-w-3xl mx-auto" style={{ textAlign: 'center', marginBottom: '64px' }}>
             <div className="v2-badge v2-badge-glass mb-6">
               <Target className="w-4 h-4 v2-text-primary" />
-              <span className="v2-text-primary">Why Join Us</span>
+              <span className="v2-text-primary">Simple Process</span>
             </div>
             <h2 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold v2-text-primary mb-8 leading-tight">
-              Why Join <span className="v2-accent">CreativeMinds</span>?
+              How It <span className="v2-accent">Works</span>
             </h2>
-            <p className="text-lg md:text-xl v2-text-secondary leading-relaxed">
-              We're not just another freelance platform. We're a premium network
-              that values quality over quantity.
-            </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-6 lg:gap-8">
-            {benefits.map((benefit) => {
-              const Icon = benefit.icon;
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+            {processSteps.map((item, index) => {
+              const Icon = [Target, Users, Zap][index];
               return (
                 <div
-                  key={benefit.title}
-                  className="v2-paper rounded-2xl p-8 hover:scale-105 transition-transform duration-300"
+                  key={item.step}
+                  className="v2-paper rounded-2xl p-8 relative overflow-hidden"
+                  style={{ textAlign: 'center' }}
                 >
-                  <div className={`w-14 h-14 ${benefit.gradient} rounded-xl flex items-center justify-center mb-6`}>
+                  <div className="font-display text-5xl font-bold text-fm-magenta-100 mb-4">{item.step}</div>
+                  <div className={`w-14 h-14 v2-gradient-brand rounded-xl flex items-center justify-center mx-auto mb-6`}>
                     <Icon className="w-7 h-7 text-white" />
                   </div>
-                  <h3 className="font-display text-xl font-bold text-fm-neutral-900 mb-3">{benefit.title}</h3>
-                  <p className="text-fm-neutral-600 text-sm leading-relaxed">{benefit.description}</p>
+                  <h3 className="font-display text-xl font-bold text-fm-neutral-900 mb-3">{item.title}</h3>
+                  <p className="text-fm-neutral-600 text-sm leading-relaxed">{item.description}</p>
+
+                  {/* Connecting arrow */}
+                  {index < processSteps.length - 1 && (
+                    <div className="hidden md:block absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2" style={{ zIndex: 10 }}>
+                      <ArrowRight className="w-6 h-6 text-fm-neutral-300" />
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -232,36 +320,389 @@ export default function CreativeMindsPage() {
         </div>
       </section>
 
-      {/* CTA Section */}
+      {/* Wave Divider */}
+      <div className="relative" style={{ zIndex: 10, marginTop: '-1px' }}>
+        <img src="/textures/wave-divider.svg" alt="" className="w-full" style={{ height: '60px', display: 'block', transform: 'scaleX(-1)' }} />
+      </div>
+
+      {/* ── Section 3: Categories — Asymmetric 2-col with bento ──── */}
+      <section ref={bentoSectionRef} className="relative z-10 v2-section overflow-hidden">
+        {/* Ambient background */}
+        <div className="absolute inset-0 pointer-events-none" style={{ contain: 'layout style paint' }}>
+          <div
+            className="absolute -left-1/4 top-1/4 w-[500px] h-[500px] rounded-full opacity-25"
+            style={{
+              background: 'radial-gradient(circle, rgba(201, 50, 93, 0.12) 0%, transparent 70%)',
+              filter: 'blur(30px)',
+            }}
+          />
+        </div>
+
+        <div className="relative max-w-7xl mx-auto px-6 md:px-12 lg:px-20">
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+            {/* Left: Copy */}
+            <div className={`transition-[opacity,transform] duration-500 ease-out ${bentoVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+              <div className="v2-badge v2-badge-glass mb-8">
+                <Sparkles className="w-4 h-4 v2-text-primary" />
+                <span className="v2-text-primary">Our Expertise</span>
+              </div>
+
+              <h2 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold v2-text-primary mb-6 leading-[1.1]">
+                Every skill,{' '}
+                <span className="v2-accent">one network.</span>
+              </h2>
+
+              <p className="text-lg md:text-xl v2-text-secondary mb-10 leading-relaxed max-w-xl">
+                From brand design to full-stack development — vetted talent across every creative
+                discipline, ready to plug into your project.
+              </p>
+
+              <div className="flex flex-wrap gap-x-6 gap-y-3 mb-10">
+                {['Verified Profiles', 'Quality Assured', 'Fast Matching'].map((item) => (
+                  <div key={item} className="flex items-center gap-2 text-sm v2-text-secondary">
+                    <Check className="w-4 h-4 text-fm-magenta-400" />
+                    <span>{item}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex flex-col md:flex-row gap-4">
+                <Link href="/get-started" className="v2-btn v2-btn-primary">
+                  Explore Network
+                  <ArrowRight className="w-5 h-5" />
+                </Link>
+              </div>
+            </div>
+
+            {/* Right: Bento grid */}
+            <div className={`relative transition-[opacity,transform] duration-500 delay-100 ease-out ${bentoVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+              {/* Mobile: 2-col flat grid */}
+              <div className="grid grid-cols-2 gap-3 lg:hidden">
+                {bentoCategories.map((cat, index) => {
+                  const Icon = cat.icon;
+                  return (
+                    <Link
+                      key={cat.name}
+                      href="/get-started"
+                      className="group relative rounded-2xl p-5 overflow-hidden transition-[opacity,transform] duration-300"
+                      style={{
+                        opacity: bentoVisible ? 1 : 0,
+                        transform: bentoVisible ? 'translateY(0)' : 'translateY(10px)',
+                        transitionDelay: `${index * 40 + 100}ms`,
+                        background: 'linear-gradient(145deg, rgba(255,255,255,0.95) 0%, rgba(245,243,248,0.92) 100%)',
+                        border: '1px solid rgba(201, 50, 93, 0.08)',
+                      }}
+                    >
+                      <div className={`absolute top-0 left-0 right-0 h-[3px] ${cat.gradient} opacity-70`} />
+                      <div className={`w-10 h-10 rounded-xl ${cat.gradient} flex items-center justify-center shadow-lg mb-3`}>
+                        <Icon className="w-5 h-5 text-white" />
+                      </div>
+                      <h3 className="text-fm-neutral-900 font-semibold text-sm mb-0.5">{cat.name}</h3>
+                      <p className="text-fm-neutral-500 text-xs">{cat.description}</p>
+                    </Link>
+                  );
+                })}
+              </div>
+
+              {/* Desktop: Bento grid with named areas */}
+              <div
+                className="hidden lg:grid gap-3"
+                style={{
+                  gridTemplateColumns: 'repeat(3, 1fr)',
+                  gridTemplateRows: '140px 140px 140px',
+                  gridTemplateAreas: `
+                    "design design dev"
+                    "video content dev"
+                    "marketing marketing influencer"
+                  `,
+                }}
+              >
+                {bentoCategories.map((cat, index) => {
+                  const Icon = cat.icon;
+                  const isLarge = cat.area === 'design' || cat.area === 'marketing' || cat.area === 'dev';
+
+                  return (
+                    <Link
+                      key={cat.name}
+                      href="/get-started"
+                      className="group relative rounded-2xl overflow-hidden transition-[opacity,transform] duration-300 hover:scale-[1.02]"
+                      style={{
+                        gridArea: cat.area,
+                        opacity: bentoVisible ? 1 : 0,
+                        transform: bentoVisible ? 'translateY(0)' : 'translateY(10px)',
+                        transitionDelay: `${index * 50 + 100}ms`,
+                        background: 'linear-gradient(145deg, rgba(255,255,255,0.95) 0%, rgba(245,243,248,0.92) 100%)',
+                        border: '1px solid rgba(201, 50, 93, 0.08)',
+                      }}
+                    >
+                      {/* Top accent line */}
+                      <div className={`absolute top-0 left-0 right-0 h-[3px] ${cat.gradient} opacity-70 group-hover:opacity-100 transition-opacity duration-500`} />
+
+                      <div className="relative h-full p-5 flex flex-col justify-between">
+                        <div className={`${isLarge ? 'w-12 h-12' : 'w-10 h-10'} rounded-xl ${cat.gradient} flex items-center justify-center shadow-lg transition-transform duration-300 group-hover:scale-110`}>
+                          <Icon className={`${isLarge ? 'w-6 h-6' : 'w-5 h-5'} text-white`} />
+                        </div>
+
+                        <div>
+                          <h3 className={`text-fm-neutral-900 font-semibold ${isLarge ? 'text-base' : 'text-sm'} mb-0.5 group-hover:text-fm-magenta-700 transition-colors`}>
+                            {cat.name}
+                          </h3>
+                          {isLarge && (
+                            <p className="text-fm-neutral-500 text-xs leading-relaxed">{cat.description}</p>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Hover arrow */}
+                      <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-[opacity,transform] duration-300 translate-x-1 group-hover:translate-x-0">
+                        <ArrowRight className="w-4 h-4 text-fm-neutral-400" />
+                      </div>
+
+                      {/* Hover shadow */}
+                      <div
+                        className="absolute inset-0 rounded-2xl pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                        style={{ boxShadow: '0 8px 30px rgba(201, 50, 93, 0.12), 0 2px 8px rgba(0,0,0,0.06)' }}
+                      />
+                    </Link>
+                  );
+                })}
+              </div>
+
+              {/* Decorative circles */}
+              <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full pointer-events-none" style={{ border: '1px solid rgba(201, 50, 93, 0.08)' }} />
+              <div className="absolute -bottom-5 -left-5 w-20 h-20 rounded-full pointer-events-none" style={{ border: '1px solid rgba(201, 50, 93, 0.08)' }} />
+            </div>
+          </div>
+
+          {/* +4 more categories strip */}
+          <div
+            className="flex flex-wrap items-center justify-center gap-3 mt-12"
+            style={{ opacity: bentoVisible ? 1 : 0, transition: 'opacity 0.5s ease-out 0.4s' }}
+          >
+            <span className="text-sm v2-text-tertiary mr-2">Plus:</span>
+            {moreCategories.map((cat) => {
+              const Icon = cat.icon;
+              return (
+                <Link
+                  key={cat.name}
+                  href="/get-started"
+                  className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium v2-text-secondary hover:text-white transition-colors duration-300"
+                  style={{
+                    background: 'rgba(255,255,255,0.12)',
+                    border: '1px solid rgba(255,255,255,0.15)',
+                  }}
+                >
+                  <Icon className="w-4 h-4" />
+                  {cat.name}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* Wave Divider */}
+      <div className="relative" style={{ zIndex: 10, marginTop: '-1px' }}>
+        <img src="/textures/wave-divider.svg" alt="" className="w-full" style={{ height: '60px', display: 'block' }} />
+      </div>
+
+      {/* ── Section 4: Why Businesses Choose Us — varied grid ─────── */}
+      <section className="relative z-10 v2-section v2-texture-dots">
+        <div className="v2-container">
+          <div className="max-w-3xl mx-auto" style={{ textAlign: 'center', marginBottom: '64px' }}>
+            <div className="v2-badge v2-badge-glass mb-6">
+              <Award className="w-4 h-4 v2-text-primary" />
+              <span className="v2-text-primary">Why Choose Us</span>
+            </div>
+            <h2 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold v2-text-primary mb-8 leading-tight">
+              Skip the guesswork.{' '}
+              <span className="v2-accent">Hire with confidence.</span>
+            </h2>
+          </div>
+
+          {/* Featured 2 — larger horizontal cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8 mb-6 lg:mb-8">
+            {featuredBenefits.map((benefit) => {
+              const Icon = benefit.icon;
+              return (
+                <div
+                  key={benefit.title}
+                  className="v2-paper rounded-2xl p-8 hover:shadow-2xl transition-[box-shadow,transform] duration-300 hover:-translate-y-1 relative overflow-hidden group"
+                >
+                  {/* Corner glow */}
+                  <div
+                    className="absolute -top-10 -right-10 w-44 h-44 rounded-full pointer-events-none transition-opacity duration-500 group-hover:opacity-100"
+                    style={{
+                      background: `radial-gradient(circle, rgba(${benefit.wash}, 0.07) 0%, rgba(${benefit.wash}, 0.02) 40%, transparent 70%)`,
+                      opacity: 0.7,
+                    }}
+                  />
+                  {/* Watermark icon */}
+                  <div
+                    className="absolute -bottom-2 -right-2 pointer-events-none transition-opacity duration-500 group-hover:opacity-[0.12]"
+                    style={{ opacity: 0.08 }}
+                  >
+                    <Icon className="w-32 h-32" style={{ color: `rgb(${benefit.wash})` }} />
+                  </div>
+
+                  <div className="relative" style={{ zIndex: 2 }}>
+                    <div className="flex items-center gap-4 mb-4">
+                      <div className={`w-14 h-14 ${benefit.gradient} rounded-xl flex items-center justify-center`}>
+                        <Icon className="w-7 h-7 text-white" />
+                      </div>
+                      <p className="text-fm-magenta-600 font-semibold text-sm tracking-wide uppercase">{benefit.tagline}</p>
+                    </div>
+                    <h3 className="font-display text-xl font-bold text-fm-neutral-900 mb-3">{benefit.title}</h3>
+                    <p className="text-fm-neutral-600 text-sm leading-relaxed">{benefit.description}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Regular 4 — smaller cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {regularBenefits.map((benefit) => {
+              const Icon = benefit.icon;
+              return (
+                <div
+                  key={benefit.title}
+                  className="v2-paper rounded-2xl p-6 relative overflow-hidden group hover:scale-[1.03] transition-transform duration-300"
+                >
+                  {/* Corner glow */}
+                  <div
+                    className="absolute -top-10 -right-10 w-36 h-36 rounded-full pointer-events-none transition-opacity duration-500 group-hover:opacity-100"
+                    style={{
+                      background: `radial-gradient(circle, rgba(${benefit.wash}, 0.07) 0%, rgba(${benefit.wash}, 0.02) 40%, transparent 70%)`,
+                      opacity: 0.7,
+                    }}
+                  />
+
+                  <div className="relative" style={{ zIndex: 2 }}>
+                    <div className={`w-12 h-12 ${benefit.gradient} rounded-xl flex items-center justify-center mb-4`}>
+                      <Icon className="w-6 h-6 text-white" />
+                    </div>
+                    <h3 className="font-display text-base font-bold text-fm-neutral-900 mb-2">{benefit.title}</h3>
+                    <p className="text-fm-neutral-600 text-xs leading-relaxed">{benefit.description}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Section 5: For Creatives ────────────────────────────────── */}
+      <section id="for-creatives" className="relative z-10 v2-section">
+        <div className="v2-container v2-container-narrow">
+          <div className="v2-paper rounded-3xl p-8 md:p-12" style={{ textAlign: 'center' }}>
+            <div className="v2-badge v2-badge-light mb-6">
+              <Star className="w-4 h-4" />
+              <span>For Creatives</span>
+            </div>
+
+            <h2 className="font-display text-3xl md:text-4xl font-bold text-fm-neutral-900 mb-4 leading-tight">
+              Built for the <span className="text-fm-magenta-600">best</span>.
+            </h2>
+
+            <p className="text-fm-neutral-600 mb-8 max-w-lg mx-auto">
+              Premium projects. Fast payments. Zero drama.
+              Join India&apos;s most curated creative talent network.
+            </p>
+
+            {/* Perk badges */}
+            <div className="flex flex-wrap items-center justify-center gap-3 mb-8">
+              {talentPerks.map((perk) => {
+                const Icon = perk.icon;
+                return (
+                  <div
+                    key={perk.title}
+                    className="flex items-center gap-2 bg-fm-magenta-50 text-fm-magenta-700 px-4 py-2 rounded-full text-sm font-medium"
+                  >
+                    <Icon className="w-4 h-4" />
+                    {perk.title}
+                  </div>
+                );
+              })}
+            </div>
+
+            <button
+              onClick={() => setShowApplicationForm(true)}
+              className="group v2-btn v2-btn-magenta"
+            >
+              Apply to Join
+              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Section 6: Bottom CTA — Split Design ───────────────────── */}
       <section className="relative z-10 v2-section pb-32">
         <div className="v2-container v2-container-narrow">
-          <div className="v2-paper rounded-3xl p-10 lg:p-14" style={{ textAlign: 'center' }}>
-            <div className="v2-badge v2-badge-light mb-6">
-              <Sparkles className="w-4 h-4" />
-              <span>Transform Your Career</span>
+          <div className="v2-paper rounded-3xl p-8 md:p-12 lg:p-14 relative overflow-hidden">
+            {/* Ambient smoke blobs */}
+            <div
+              className="absolute pointer-events-none rounded-full"
+              style={{
+                width: '350px', height: '350px', top: '-100px', right: '-80px',
+                background: 'radial-gradient(circle, rgba(201,50,93,0.06) 0%, transparent 70%)',
+                animation: 'ctaSmokeFloat1 8s ease-in-out infinite',
+              }}
+            />
+            <div
+              className="absolute pointer-events-none rounded-full"
+              style={{
+                width: '300px', height: '300px', bottom: '-80px', left: '-60px',
+                background: 'radial-gradient(circle, rgba(160,30,70,0.05) 0%, transparent 70%)',
+                animation: 'ctaSmokeFloat2 10s ease-in-out infinite',
+              }}
+            />
+
+            <div className="relative grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-0" style={{ zIndex: 2 }}>
+              {/* Left — Business */}
+              <div className="md:pr-8 lg:pr-12" style={{ textAlign: 'center' }}>
+                <h3 className="font-display text-2xl md:text-3xl font-bold text-fm-neutral-900 mb-4 leading-tight">
+                  Ready to build your{' '}
+                  <span className="text-fm-magenta-600">dream team</span>?
+                </h3>
+                <p className="text-fm-neutral-600 mb-6">
+                  Tell us what you need — we&apos;ll match you with the right creative talent.
+                </p>
+                <Link href="/get-started" className="group v2-btn v2-btn-magenta">
+                  Hire Talent
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </Link>
+              </div>
+
+              {/* Divider */}
+              <div
+                className="hidden md:block absolute left-1/2 top-6 bottom-6 w-px pointer-events-none"
+                style={{
+                  background: 'linear-gradient(180deg, transparent, rgba(201,50,93,0.15), transparent)',
+                  transform: 'translateX(-50%)',
+                }}
+              />
+              <div className="md:hidden w-full h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(201,50,93,0.15), transparent)' }} />
+
+              {/* Right — Talent */}
+              <div className="md:pl-8 lg:pl-12" style={{ textAlign: 'center' }}>
+                <h3 className="font-display text-2xl md:text-3xl font-bold text-fm-neutral-900 mb-4 leading-tight">
+                  Ready to showcase your{' '}
+                  <span className="text-fm-magenta-600">talent</span>?
+                </h3>
+                <p className="text-fm-neutral-600 mb-6">
+                  Join a curated network working with premium brands across India.
+                </p>
+                <button
+                  onClick={() => setShowApplicationForm(true)}
+                  className="group v2-btn v2-btn-outline"
+                >
+                  Apply Now
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </button>
+              </div>
             </div>
-            <h2 className="font-display text-3xl md:text-4xl font-bold text-fm-neutral-900 mb-6 leading-tight">
-              Ready to Transform Your <span className="text-fm-magenta-600">Career</span>?
-            </h2>
-            <p className="text-fm-neutral-600 mb-8 max-w-xl mx-auto">
-              Join CreativeMinds today and connect with premium brands looking for
-              talented professionals like you.
-            </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <button
-                onClick={() => setShowApplicationForm(true)}
-                className="group v2-btn v2-btn-magenta"
-              >
-                Start Your Application
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </button>
-              <Link href="/" className="v2-btn v2-btn-outline">
-                Learn More About FM
-              </Link>
-            </div>
-            <p className="text-fm-neutral-400 text-sm mt-8">
-              Application review time: 24-48 hours • No application fee • Premium network
-            </p>
           </div>
         </div>
       </section>

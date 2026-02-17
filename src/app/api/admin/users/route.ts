@@ -1,36 +1,42 @@
 /**
  * User Management API Endpoints
- * Handles CRUD operations for authorized users
+ * Handles CRUD operations for authorized users (Supabase)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { googleSheetsService } from '@/lib/google-sheets';
+import { getSupabaseAdmin } from '@/lib/supabase';
+import { normalizeMobileNumber, getRolePermissions } from '@/lib/supabase-utils';
 
 // GET - List all authorized users
 export async function GET(request: NextRequest) {
   try {
-    const users = await googleSheetsService.getAuthorizedUsers();
-    
-    const formattedUsers = users.map(user => ({
-      id: user.id as string,
-      mobileNumber: user.mobileNumber as string,
-      name: user.name as string,
-      email: user.email as string,
-      role: user.role as string,
-      permissions: user.permissions as string,
-      status: user.status as string,
-      createdBy: user.createdBy as string,
-      createdAt: user.createdAt as string,
-      updatedAt: user.updatedAt as string,
-      lastLogin: user.lastLogin as string | null,
-      notes: user.notes as string
+    const supabase = getSupabaseAdmin();
+    const { data: users, error } = await supabase
+      .from('authorized_users')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    const formattedUsers = (users || []).map((u) => ({
+      id: u.id,
+      mobileNumber: u.mobile_number,
+      name: u.name,
+      email: u.email,
+      role: u.role,
+      permissions: u.permissions,
+      status: u.status,
+      createdBy: u.created_by,
+      createdAt: u.created_at,
+      updatedAt: u.updated_at,
+      lastLogin: u.last_login,
+      notes: u.notes,
     }));
 
     return NextResponse.json({
       success: true,
-      users: formattedUsers
+      users: formattedUsers,
     });
-
   } catch (error) {
     console.error('Error fetching users:', error);
     return NextResponse.json(
@@ -46,7 +52,6 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { name, email, mobileNumber, role, notes } = body;
 
-    // Validate required fields
     if (!name || !email || !mobileNumber || !role) {
       return NextResponse.json(
         { success: false, error: 'Name, email, mobile number, and role are required' },
@@ -54,68 +59,34 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Normalize mobile number
-    const normalizeMobileNumber = (mobile: string): string => {
-      if (!mobile) return '';
-      
-      let normalized = mobile.replace(/[^\d+]/g, '');
-      
-      if (normalized.startsWith('+91')) {
-        return normalized;
-      }
-      
-      if (normalized.startsWith('91') && normalized.length === 12) {
-        return `+${normalized}`;
-      }
-      
-      if (normalized.length === 10 && !normalized.startsWith('0')) {
-        return `+91${normalized}`;
-      }
-      
-      return normalized;
-    };
-
-    // Get role permissions
-    const getRolePermissions = (roleKey: string): string[] => {
-      const rolePermissions = {
-        admin: ['read', 'write', 'delete', 'admin', 'users', 'clients', 'projects', 'invoices', 'settings'],
-        manager: ['read', 'write', 'clients', 'projects', 'invoices'],
-        editor: ['read', 'write', 'clients', 'projects'],
-        viewer: ['read']
-      };
-      
-      return rolePermissions[roleKey as keyof typeof rolePermissions] || [];
-    };
-
     const newUser = {
       id: `user-${Date.now()}`,
-      mobileNumber: normalizeMobileNumber(mobileNumber),
+      mobile_number: normalizeMobileNumber(mobileNumber),
       name,
       email,
       role,
       permissions: getRolePermissions(role).join(','),
       status: 'active',
-      createdBy: 'admin',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      lastLogin: null,
-      notes: notes || ''
+      created_by: 'admin',
+      notes: notes || '',
     };
 
-    const success = await googleSheetsService.addAuthorizedUser(newUser);
-    
-    if (success) {
-      return NextResponse.json({
-        success: true,
-        user: newUser
-      });
-    } else {
-      return NextResponse.json(
-        { success: false, error: 'Failed to create user' },
-        { status: 500 }
-      );
-    }
+    const supabase = getSupabaseAdmin();
+    const { error } = await supabase.from('authorized_users').insert(newUser);
 
+    if (error) throw error;
+
+    return NextResponse.json({
+      success: true,
+      user: {
+        ...newUser,
+        mobileNumber: newUser.mobile_number,
+        createdBy: newUser.created_by,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        lastLogin: null,
+      },
+    });
   } catch (error) {
     console.error('Error creating user:', error);
     return NextResponse.json(
@@ -138,46 +109,10 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // Normalize mobile number if provided
-    const normalizeMobileNumber = (mobile: string): string => {
-      if (!mobile) return '';
-      
-      let normalized = mobile.replace(/[^\d+]/g, '');
-      
-      if (normalized.startsWith('+91')) {
-        return normalized;
-      }
-      
-      if (normalized.startsWith('91') && normalized.length === 12) {
-        return `+${normalized}`;
-      }
-      
-      if (normalized.length === 10 && !normalized.startsWith('0')) {
-        return `+91${normalized}`;
-      }
-      
-      return normalized;
-    };
-
-    // Get role permissions
-    const getRolePermissions = (roleKey: string): string[] => {
-      const rolePermissions = {
-        admin: ['read', 'write', 'delete', 'admin', 'users', 'clients', 'projects', 'invoices', 'settings'],
-        manager: ['read', 'write', 'clients', 'projects', 'invoices'],
-        editor: ['read', 'write', 'clients', 'projects'],
-        viewer: ['read']
-      };
-      
-      return rolePermissions[roleKey as keyof typeof rolePermissions] || [];
-    };
-
-    const updates: any = {
-      updatedAt: new Date().toISOString()
-    };
-
+    const updates: Record<string, any> = {};
     if (name) updates.name = name;
     if (email) updates.email = email;
-    if (mobileNumber) updates.mobileNumber = normalizeMobileNumber(mobileNumber);
+    if (mobileNumber) updates.mobile_number = normalizeMobileNumber(mobileNumber);
     if (role) {
       updates.role = role;
       updates.permissions = getRolePermissions(role).join(',');
@@ -185,19 +120,15 @@ export async function PUT(request: NextRequest) {
     if (status) updates.status = status;
     if (notes !== undefined) updates.notes = notes;
 
-    const success = await googleSheetsService.updateAuthorizedUser(id, updates);
-    
-    if (success) {
-      return NextResponse.json({
-        success: true
-      });
-    } else {
-      return NextResponse.json(
-        { success: false, error: 'Failed to update user' },
-        { status: 500 }
-      );
-    }
+    const supabase = getSupabaseAdmin();
+    const { error } = await supabase
+      .from('authorized_users')
+      .update(updates)
+      .eq('id', id);
 
+    if (error) throw error;
+
+    return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error updating user:', error);
     return NextResponse.json(
@@ -220,19 +151,15 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const success = await googleSheetsService.deleteAuthorizedUser(userId);
-    
-    if (success) {
-      return NextResponse.json({
-        success: true
-      });
-    } else {
-      return NextResponse.json(
-        { success: false, error: 'Failed to delete user' },
-        { status: 500 }
-      );
-    }
+    const supabase = getSupabaseAdmin();
+    const { error } = await supabase
+      .from('authorized_users')
+      .delete()
+      .eq('id', userId);
 
+    if (error) throw error;
+
+    return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error deleting user:', error);
     return NextResponse.json(

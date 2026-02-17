@@ -1,393 +1,280 @@
 /**
  * Projects API Routes
- * Handles CRUD operations for project management
+ * Handles CRUD operations for project management (Supabase)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { GoogleSheetsService } from '@/lib/google-sheets';
-import type { Project, ProjectInput, ProjectUpdate } from '@/lib/admin/project-types';
+import { getSupabaseAdmin } from '@/lib/supabase';
+import type { ProjectInput, Project } from '@/lib/admin/project-types';
 import { ProjectUtils } from '@/lib/admin/project-types';
 
-const SHEET_NAME = 'Projects';
-
-// GET /api/projects - Fetch all projects with filtering
+// GET /api/projects
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
-    
-    // Parse query parameters
     const clientId = searchParams.get('clientId');
     const status = searchParams.get('status');
     const type = searchParams.get('type');
-    const assignedTo = searchParams.get('assignedTo');
-    const sortBy = searchParams.get('sortBy') || 'createdAt';
+    const sortBy = searchParams.get('sortBy') || 'created_at';
     const sortDirection = searchParams.get('sortDirection') || 'desc';
-    
-    const sheetsService = new GoogleSheetsService();
-    
-    // Get all projects from Google Sheets
-    let projectsData: any[][];
-    try {
-      projectsData = await sheetsService.readSheet(SHEET_NAME);
-    } catch (error) {
-      // Sheet doesn't exist yet, return empty data
-      return NextResponse.json({
-        success: true,
-        data: [],
-        total: 0
-      });
-    }
-    
-    // Skip header row and convert to objects
-    if (projectsData.length === 0) {
-      return NextResponse.json({
-        success: true,
-        data: [],
-        total: 0
-      });
-    }
-    
-    const headers = projectsData[0];
-    let projects = projectsData.slice(1).map(row => {
-      const project: any = {};
-      headers.forEach((header: string, index: number) => {
-        if (header && row[index] !== undefined) {
-          project[header] = row[index];
-        }
-      });
-      return project;
-    });
-    
-    // Apply filters
-    if (clientId) {
-      projects = projects.filter((project: any) => project.clientId === clientId);
-    }
-    
-    if (status) {
-      const statusList = status.split(',');
-      projects = projects.filter((project: any) => statusList.includes(project.status));
-    }
-    
-    if (type) {
-      const typeList = type.split(',');
-      projects = projects.filter((project: any) => typeList.includes(project.type));
-    }
-    
-    if (assignedTo) {
-      projects = projects.filter((project: any) => {
-        const assignedTalent = project.assignedTalent ? 
-          JSON.parse(project.assignedTalent) : [];
-        return assignedTalent.includes(assignedTo) || project.projectManager === assignedTo;
-      });
-    }
-    
-    // Sort projects
-    projects.sort((a: any, b: any) => {
-      const aValue = a[sortBy];
-      const bValue = b[sortBy];
-      
-      if (sortDirection === 'desc') {
-        return bValue > aValue ? 1 : -1;
-      } else {
-        return aValue > bValue ? 1 : -1;
-      }
-    });
-    
-    // Transform data for response
-    const transformedProjects = projects.map((project: any) => ({
-      ...project,
-      milestones: project.milestones ? JSON.parse(project.milestones) : [],
-      deliverables: project.deliverables ? JSON.parse(project.deliverables) : [],
-      assignedTalent: project.assignedTalent ? JSON.parse(project.assignedTalent) : [],
-      contentRequirements: project.contentRequirements ? JSON.parse(project.contentRequirements) : {},
-      tags: project.tags ? JSON.parse(project.tags) : [],
-      invoiceIds: project.invoiceIds ? JSON.parse(project.invoiceIds) : []
+
+    const supabase = getSupabaseAdmin();
+    let query = supabase.from('projects').select('*');
+
+    if (clientId) query = query.eq('client_id', clientId);
+    if (status) query = query.in('status', status.split(','));
+    if (type) query = query.in('type', type.split(','));
+
+    // Map camelCase sort fields to snake_case
+    const sortFieldMap: Record<string, string> = {
+      createdAt: 'created_at',
+      updatedAt: 'updated_at',
+      startDate: 'start_date',
+      endDate: 'end_date',
+    };
+    const dbSortField = sortFieldMap[sortBy] || sortBy;
+    query = query.order(dbSortField, { ascending: sortDirection === 'asc' });
+
+    const { data, error } = await query;
+    if (error) throw error;
+
+    // Transform to camelCase for frontend
+    const projects = (data || []).map((p) => ({
+      id: p.id,
+      clientId: p.client_id,
+      discoveryId: p.discovery_id,
+      name: p.name,
+      description: p.description,
+      type: p.type,
+      status: p.status,
+      priority: p.priority,
+      startDate: p.start_date,
+      endDate: p.end_date,
+      estimatedHours: p.estimated_hours,
+      projectManager: p.project_manager,
+      assignedTalent: p.assigned_talent || [],
+      budget: p.budget,
+      spent: p.spent,
+      hourlyRate: p.hourly_rate,
+      progress: p.progress,
+      milestones: p.milestones || [],
+      deliverables: p.deliverables || [],
+      contentRequirements: p.content_requirements || {},
+      tags: p.tags || [],
+      invoiceIds: p.invoice_ids || [],
+      notes: p.notes,
+      createdAt: p.created_at,
+      updatedAt: p.updated_at,
     }));
-    
+
     return NextResponse.json({
       success: true,
-      data: transformedProjects,
-      total: transformedProjects.length
+      data: projects,
+      total: projects.length,
     });
-    
   } catch (error) {
     console.error('Error fetching projects:', error);
     return NextResponse.json(
-      { 
-        success: false, 
-        error: 'Failed to fetch projects',
-      },
+      { success: false, error: 'Failed to fetch projects' },
       { status: 500 }
     );
   }
 }
 
-// POST /api/projects - Create new project
+// POST /api/projects
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    
-    // Validate required fields
+
     const requiredFields = ['clientId', 'name', 'type', 'startDate', 'endDate', 'projectManager', 'budget'];
-    const missingFields = requiredFields.filter(field => !body[field]);
-    
+    const missingFields = requiredFields.filter((field) => !body[field]);
+
     if (missingFields.length > 0) {
       return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Missing required fields', 
-          missingFields 
-        },
+        { success: false, error: 'Missing required fields', missingFields },
         { status: 400 }
       );
     }
-    
-    // Create project object
-    const projectInput: ProjectInput = {
-      clientId: body.clientId,
-      discoveryId: body.discoveryId,
+
+    const newProject = {
+      id: ProjectUtils.generateProjectId(),
+      client_id: body.clientId,
+      discovery_id: body.discoveryId || null,
       name: body.name.trim(),
       description: body.description?.trim() || '',
       type: body.type,
-      priority: body.priority || 'medium',
-      startDate: body.startDate,
-      endDate: body.endDate,
-      estimatedHours: body.estimatedHours || 0,
-      projectManager: body.projectManager,
-      assignedTalent: body.assignedTalent || [],
-      budget: parseFloat(body.budget),
-      hourlyRate: parseFloat(body.hourlyRate) || 0,
-      contentRequirements: body.contentRequirements || {
-        postsPerWeek: 0,
-        platforms: [],
-        contentTypes: []
-      },
-      tags: body.tags || [],
-      notes: body.notes?.trim() || ''
-    };
-    
-    const newProject: Project = {
-      id: ProjectUtils.generateProjectId(),
-      ...projectInput,
       status: 'planning',
+      priority: body.priority || 'medium',
+      start_date: body.startDate,
+      end_date: body.endDate,
+      estimated_hours: body.estimatedHours || 0,
+      project_manager: body.projectManager,
+      budget: parseFloat(body.budget),
+      hourly_rate: parseFloat(body.hourlyRate) || 0,
+      progress: 0,
       milestones: [],
       deliverables: [],
-      invoiceIds: [],
+      content_requirements: body.contentRequirements || { postsPerWeek: 0, platforms: [], contentTypes: [] },
+      tags: body.tags || [],
+      notes: body.notes?.trim() || '',
+    };
+
+    const supabase = getSupabaseAdmin();
+    const { data, error } = await supabase.from('projects').insert(newProject).select().single();
+
+    if (error) throw error;
+
+    // Response in camelCase
+    const responseProject = {
+      id: data.id,
+      clientId: data.client_id,
+      name: data.name,
+      description: data.description,
+      type: data.type,
+      status: data.status,
+      priority: data.priority,
+      startDate: data.start_date,
+      endDate: data.end_date,
+      estimatedHours: data.estimated_hours,
+      projectManager: data.project_manager,
+      assignedTalent: [],
+      budget: data.budget,
+      hourlyRate: data.hourly_rate,
       progress: 0,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      milestones: [],
+      deliverables: [],
+      contentRequirements: data.content_requirements,
+      tags: data.tags,
+      invoiceIds: [],
+      notes: data.notes,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at,
     };
-    
-    const sheetsService = new GoogleSheetsService();
-    
-    // Transform project for Google Sheets (serialize arrays/objects)
-    const projectForSheets = {
-      ...newProject,
-      milestones: JSON.stringify(newProject.milestones),
-      deliverables: JSON.stringify(newProject.deliverables),
-      assignedTalent: JSON.stringify(newProject.assignedTalent),
-      contentRequirements: JSON.stringify(newProject.contentRequirements),
-      tags: JSON.stringify(newProject.tags),
-      invoiceIds: JSON.stringify(newProject.invoiceIds)
-    };
-    
-    // Convert to array format for Google Sheets
-    const projectValues = Object.values(projectForSheets);
-    await sheetsService.appendToSheet(SHEET_NAME, [projectValues]);
-    
-    return NextResponse.json({
-      success: true,
-      data: newProject,
-      message: 'Project created successfully'
-    }, { status: 201 });
-    
+
+    return NextResponse.json(
+      { success: true, data: responseProject, message: 'Project created successfully' },
+      { status: 201 }
+    );
   } catch (error) {
     console.error('Error creating project:', error);
     return NextResponse.json(
-      { 
-        success: false, 
-        error: 'Failed to create project',
-      },
+      { success: false, error: 'Failed to create project' },
       { status: 500 }
     );
   }
 }
 
-// PUT /api/projects - Update project
+// PUT /api/projects
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
-    
+
     if (!body.id) {
       return NextResponse.json(
         { success: false, error: 'Project ID is required' },
         { status: 400 }
       );
     }
-    
-    const sheetsService = new GoogleSheetsService();
-    
-    // Get existing project
-    const projectsData = await sheetsService.readSheet(SHEET_NAME);
-    if (projectsData.length === 0) {
-      return NextResponse.json(
-        { success: false, error: 'No projects found' },
-        { status: 404 }
-      );
-    }
-    
-    const headers = projectsData[0];
-    const projects = projectsData.slice(1).map(row => {
-      const project: any = {};
-      headers.forEach((header: string, index: number) => {
-        if (header && row[index] !== undefined) {
-          project[header] = row[index];
-        }
-      });
-      return project;
-    });
-    const projectIndex = projects.findIndex((p: any) => p.id === body.id);
-    
-    if (projectIndex === -1) {
+
+    const updates: Record<string, any> = {};
+    if (body.name !== undefined) updates.name = body.name;
+    if (body.description !== undefined) updates.description = body.description;
+    if (body.status !== undefined) updates.status = body.status;
+    if (body.priority !== undefined) updates.priority = body.priority;
+    if (body.endDate !== undefined) updates.end_date = body.endDate;
+    if (body.progress !== undefined) updates.progress = body.progress;
+    if (body.assignedTalent !== undefined) updates.assigned_talent = body.assignedTalent;
+    if (body.notes !== undefined) updates.notes = body.notes;
+    if (body.milestones !== undefined) updates.milestones = body.milestones;
+    if (body.deliverables !== undefined) updates.deliverables = body.deliverables;
+    if (body.contentRequirements !== undefined) updates.content_requirements = body.contentRequirements;
+    if (body.tags !== undefined) updates.tags = body.tags;
+    if (body.invoiceIds !== undefined) updates.invoice_ids = body.invoiceIds;
+    if (body.clientSatisfaction !== undefined) updates.client_satisfaction = body.clientSatisfaction;
+
+    const supabase = getSupabaseAdmin();
+    const { data, error } = await supabase
+      .from('projects')
+      .update(updates)
+      .eq('id', body.id)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    if (!data) {
       return NextResponse.json(
         { success: false, error: 'Project not found' },
         { status: 404 }
       );
     }
-    
-    const existingProject = projects[projectIndex];
-    
-    // Create update object
-    const updates: ProjectUpdate = {
-      name: body.name,
-      description: body.description,
-      status: body.status,
-      priority: body.priority,
-      endDate: body.endDate,
-      progress: body.progress,
-      assignedTalent: body.assignedTalent,
-      notes: body.notes,
-      clientSatisfaction: body.clientSatisfaction
-    };
-    
-    // Remove undefined values
-    Object.keys(updates).forEach(key => {
-      if (updates[key as keyof ProjectUpdate] === undefined) {
-        delete updates[key as keyof ProjectUpdate];
-      }
-    });
-    
-    // Merge with existing project
-    const updatedProject = {
-      ...existingProject,
-      ...updates,
-      updatedAt: new Date().toISOString()
-    };
-    
-    // Handle array fields properly
-    if (body.milestones) updatedProject.milestones = JSON.stringify(body.milestones);
-    if (body.deliverables) updatedProject.deliverables = JSON.stringify(body.deliverables);
-    if (body.assignedTalent) updatedProject.assignedTalent = JSON.stringify(body.assignedTalent);
-    if (body.contentRequirements) updatedProject.contentRequirements = JSON.stringify(body.contentRequirements);
-    if (body.tags) updatedProject.tags = JSON.stringify(body.tags);
-    if (body.invoiceIds) updatedProject.invoiceIds = JSON.stringify(body.invoiceIds);
-    
-    // Update in Google Sheets
-    projects[projectIndex] = updatedProject;
-    
-    // Convert back to array format for Google Sheets
-    const updatedProjectsData = [headers, ...projects.map(project => headers.map((header: string) => project[header] || ''))];
-    await sheetsService.writeSheet(SHEET_NAME, updatedProjectsData);
-    
-    // Transform response data
+
     const responseProject = {
-      ...updatedProject,
-      milestones: updatedProject.milestones ? JSON.parse(updatedProject.milestones) : [],
-      deliverables: updatedProject.deliverables ? JSON.parse(updatedProject.deliverables) : [],
-      assignedTalent: updatedProject.assignedTalent ? JSON.parse(updatedProject.assignedTalent) : [],
-      contentRequirements: updatedProject.contentRequirements ? JSON.parse(updatedProject.contentRequirements) : {},
-      tags: updatedProject.tags ? JSON.parse(updatedProject.tags) : [],
-      invoiceIds: updatedProject.invoiceIds ? JSON.parse(updatedProject.invoiceIds) : []
+      id: data.id,
+      clientId: data.client_id,
+      name: data.name,
+      description: data.description,
+      type: data.type,
+      status: data.status,
+      priority: data.priority,
+      startDate: data.start_date,
+      endDate: data.end_date,
+      estimatedHours: data.estimated_hours,
+      projectManager: data.project_manager,
+      assignedTalent: data.assigned_talent || [],
+      budget: data.budget,
+      hourlyRate: data.hourly_rate,
+      progress: data.progress,
+      milestones: data.milestones || [],
+      deliverables: data.deliverables || [],
+      contentRequirements: data.content_requirements || {},
+      tags: data.tags || [],
+      invoiceIds: data.invoice_ids || [],
+      notes: data.notes,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at,
     };
-    
+
     return NextResponse.json({
       success: true,
       data: responseProject,
-      message: 'Project updated successfully'
+      message: 'Project updated successfully',
     });
-    
   } catch (error) {
     console.error('Error updating project:', error);
     return NextResponse.json(
-      { 
-        success: false, 
-        error: 'Failed to update project',
-      },
+      { success: false, error: 'Failed to update project' },
       { status: 500 }
     );
   }
 }
 
-// DELETE /api/projects - Delete project  
+// DELETE /api/projects
 export async function DELETE(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const projectId = searchParams.get('id');
-    
+
     if (!projectId) {
       return NextResponse.json(
         { success: false, error: 'Project ID is required' },
         { status: 400 }
       );
     }
-    
-    const sheetsService = new GoogleSheetsService();
-    
-    // Get all projects
-    const projectsData = await sheetsService.readSheet(SHEET_NAME);
-    if (projectsData.length === 0) {
-      return NextResponse.json(
-        { success: false, error: 'No projects found' },
-        { status: 404 }
-      );
-    }
-    
-    const headers = projectsData[0];
-    const projects = projectsData.slice(1).map(row => {
-      const project: any = {};
-      headers.forEach((header: string, index: number) => {
-        if (header && row[index] !== undefined) {
-          project[header] = row[index];
-        }
-      });
-      return project;
-    });
-    
-    const filteredProjects = projects.filter((p: any) => p.id !== projectId);
-    
-    if (projects.length === filteredProjects.length) {
-      return NextResponse.json(
-        { success: false, error: 'Project not found' },
-        { status: 404 }
-      );
-    }
-    
-    // Update Google Sheets with filtered data
-    const updatedData = [headers, ...filteredProjects.map(project => headers.map((header: string) => project[header] || ''))];
-    await sheetsService.writeSheet(SHEET_NAME, updatedData);
-    
+
+    const supabase = getSupabaseAdmin();
+    const { error } = await supabase.from('projects').delete().eq('id', projectId);
+
+    if (error) throw error;
+
     return NextResponse.json({
       success: true,
-      message: 'Project deleted successfully'
+      message: 'Project deleted successfully',
     });
-    
   } catch (error) {
     console.error('Error deleting project:', error);
     return NextResponse.json(
-      { 
-        success: false, 
-        error: 'Failed to delete project',
-      },
+      { success: false, error: 'Failed to delete project' },
       { status: 500 }
     );
   }

@@ -74,7 +74,7 @@ const inputBase: React.CSSProperties = {
   color: '#0f0f0f',
   width: '100%',
   borderRadius: '12px',
-  transition: 'all 0.2s ease',
+  transition: 'border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease',
 };
 
 const inputWithIcon: React.CSSProperties = { ...inputBase, paddingLeft: '48px' };
@@ -288,7 +288,7 @@ export default function GetStartedPage() {
                     {[1, 2, 3, 4].map((step) => (
                       <div key={step} className="flex flex-col items-center">
                         <div
-                          className={`flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 transition-all duration-300 font-semibold
+                          className={`flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 transition-[background-color,border-color,color,box-shadow] duration-300 font-semibold
                             ${currentStep >= step
                               ? 'bg-fm-magenta-700 border-fm-magenta-700 text-white shadow-lg'
                               : 'border-fm-neutral-300 text-fm-neutral-500 bg-white'}`}
@@ -312,7 +312,7 @@ export default function GetStartedPage() {
                   </div>
                   <div className="w-full bg-fm-neutral-200 rounded-full" style={{ height: '6px' }}>
                     <div
-                      className="bg-gradient-to-r from-fm-magenta-700 to-fm-magenta-400 rounded-full transition-all duration-500 ease-out"
+                      className="bg-gradient-to-r from-fm-magenta-700 to-fm-magenta-400 rounded-full transition-[width] duration-500 ease-out"
                       style={{ width: `${((currentStep - 1) / 3) * 100}%`, height: '6px' }}
                     />
                   </div>
@@ -454,7 +454,7 @@ export default function GetStartedPage() {
                               key={type.value}
                               type="button"
                               onClick={() => updateFormData({ projectType: type.value })}
-                              className={`p-6 border-2 rounded-xl text-left hover:bg-fm-magenta-50 hover:border-fm-magenta-300 transition-all duration-300 group
+                              className={`p-6 border-2 rounded-xl text-left hover:bg-fm-magenta-50 hover:border-fm-magenta-300 transition-[background-color,border-color] duration-300 group
                                 ${formData.projectType === type.value
                                   ? 'border-fm-magenta-700 bg-fm-magenta-50 shadow-lg'
                                   : 'border-fm-neutral-200'}`}
@@ -540,7 +540,7 @@ export default function GetStartedPage() {
                               key={budget.value}
                               type="button"
                               onClick={() => updateFormData({ budgetRange: budget.value })}
-                              className={`p-6 border-2 rounded-xl text-left hover:bg-fm-magenta-50 hover:border-fm-magenta-300 transition-all duration-300 relative
+                              className={`p-6 border-2 rounded-xl text-left hover:bg-fm-magenta-50 hover:border-fm-magenta-300 transition-[background-color,border-color] duration-300 relative
                                 ${formData.budgetRange === budget.value
                                   ? 'border-fm-magenta-700 bg-fm-magenta-50 shadow-lg'
                                   : 'border-fm-neutral-200'}`}
@@ -567,7 +567,7 @@ export default function GetStartedPage() {
                               key={timeline.value}
                               type="button"
                               onClick={() => updateFormData({ timeline: timeline.value })}
-                              className={`w-full p-6 border-2 rounded-xl text-left hover:bg-fm-magenta-50 hover:border-fm-magenta-300 transition-all duration-300
+                              className={`w-full p-6 border-2 rounded-xl text-left hover:bg-fm-magenta-50 hover:border-fm-magenta-300 transition-[background-color,border-color] duration-300
                                 ${formData.timeline === timeline.value
                                   ? 'border-fm-magenta-700 bg-fm-magenta-50 shadow-lg'
                                   : 'border-fm-neutral-200'}`}
@@ -645,7 +645,7 @@ export default function GetStartedPage() {
                               key={size.value}
                               type="button"
                               onClick={() => updateFormData({ companySize: size.value })}
-                              className={`w-full p-6 border-2 rounded-xl text-left hover:bg-fm-magenta-50 hover:border-fm-magenta-300 transition-all duration-300
+                              className={`w-full p-6 border-2 rounded-xl text-left hover:bg-fm-magenta-50 hover:border-fm-magenta-300 transition-[background-color,border-color] duration-300
                                 ${formData.companySize === size.value
                                   ? 'border-fm-magenta-700 bg-fm-magenta-50 shadow-lg'
                                   : 'border-fm-neutral-200'}`}
@@ -683,7 +683,7 @@ export default function GetStartedPage() {
                   <button
                     onClick={prevStep}
                     disabled={currentStep === 1}
-                    className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
+                    className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-[background-color,color] duration-300 ${
                       currentStep === 1
                         ? 'text-fm-neutral-400 cursor-not-allowed'
                         : 'text-fm-neutral-700 hover:bg-fm-neutral-100'

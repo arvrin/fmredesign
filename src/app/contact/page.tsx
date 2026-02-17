@@ -187,7 +187,7 @@ export default function ContactPage() {
                       required
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full rounded-xl transition-all duration-200"
+                      className="w-full rounded-xl transition-[border-color,box-shadow,background-color] duration-200"
                       style={{
                         padding: '14px 16px',
                         background: '#faf9f9',
@@ -208,7 +208,7 @@ export default function ContactPage() {
                       required
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full rounded-xl transition-all duration-200"
+                      className="w-full rounded-xl transition-[border-color,box-shadow,background-color] duration-200"
                       style={{
                         padding: '14px 16px',
                         background: '#faf9f9',
@@ -231,7 +231,7 @@ export default function ContactPage() {
                       type="tel"
                       value={formData.phone}
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      className="w-full rounded-xl transition-all duration-200"
+                      className="w-full rounded-xl transition-[border-color,box-shadow,background-color] duration-200"
                       style={{
                         padding: '14px 16px',
                         background: '#faf9f9',
@@ -251,7 +251,7 @@ export default function ContactPage() {
                       type="text"
                       value={formData.company}
                       onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-                      className="w-full rounded-xl transition-all duration-200"
+                      className="w-full rounded-xl transition-[border-color,box-shadow,background-color] duration-200"
                       style={{
                         padding: '14px 16px',
                         background: '#faf9f9',
@@ -274,7 +274,7 @@ export default function ContactPage() {
                       required
                       value={formData.service}
                       onChange={(e) => setFormData({ ...formData, service: e.target.value })}
-                      className="w-full rounded-xl transition-all duration-200 cursor-pointer"
+                      className="w-full rounded-xl transition-[border-color,box-shadow,background-color] duration-200 cursor-pointer"
                       style={{
                         padding: '14px 16px',
                         background: '#faf9f9',
@@ -302,7 +302,7 @@ export default function ContactPage() {
                     <select
                       value={formData.budget}
                       onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
-                      className="w-full rounded-xl transition-all duration-200 cursor-pointer"
+                      className="w-full rounded-xl transition-[border-color,box-shadow,background-color] duration-200 cursor-pointer"
                       style={{
                         padding: '14px 16px',
                         background: '#faf9f9',
@@ -334,7 +334,7 @@ export default function ContactPage() {
                     value={formData.message}
                     onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                     rows={6}
-                    className="w-full rounded-xl transition-all duration-200"
+                    className="w-full rounded-xl transition-[border-color,box-shadow,background-color] duration-200"
                     style={{
                       padding: '14px 16px',
                       background: '#faf9f9',

@@ -91,104 +91,92 @@ export function CaseStudiesSectionV2() {
         const subtitle = headerRef.current.querySelector('p');
 
         gsap.from([badge, heading, subtitle], {
-          y: 60,
+          y: 25,
           opacity: 0,
-          duration: 0.9,
-          stagger: 0.15,
-          ease: 'power3.out',
+          duration: 0.45,
+          stagger: 0.06,
+          ease: 'power2.out',
           scrollTrigger: {
             trigger: headerRef.current,
-            start: 'top 80%',
-            toggleActions: 'play none none reverse',
+            start: 'top 85%',
+            toggleActions: 'play none none none',
           },
         });
       }
 
-      // Featured case study with cinematic reveal
+      // Featured case study
       if (featuredRef.current) {
         const card = featuredRef.current.querySelector('.featured-card');
-        const visual = featuredRef.current.querySelector('.featured-visual');
-        const content = featuredRef.current.querySelector('.featured-content');
         const metrics = featuredRef.current.querySelectorAll('.metric-item');
         const decorativeCircles = featuredRef.current.querySelectorAll('.decorative-circle');
 
-        // Card entrance
         gsap.from(card, {
-          y: 100,
+          y: 30,
           opacity: 0,
-          scale: 0.95,
-          duration: 1,
-          ease: 'power3.out',
+          duration: 0.5,
+          ease: 'power2.out',
           scrollTrigger: {
             trigger: featuredRef.current,
             start: 'top 85%',
-            toggleActions: 'play none none reverse',
+            toggleActions: 'play none none none',
           },
         });
 
-        // Decorative circles with rotation
         gsap.from(decorativeCircles, {
-          scale: 0,
-          rotation: -180,
           opacity: 0,
-          duration: 1.2,
-          stagger: 0.1,
-          ease: 'back.out(1.7)',
+          duration: 0.4,
+          stagger: 0.05,
+          ease: 'power2.out',
+          scrollTrigger: {
+            trigger: featuredRef.current,
+            start: 'top 80%',
+            toggleActions: 'play none none none',
+          },
+        });
+
+        gsap.from(metrics, {
+          y: 20,
+          opacity: 0,
+          duration: 0.4,
+          stagger: 0.06,
+          ease: 'power2.out',
           scrollTrigger: {
             trigger: featuredRef.current,
             start: 'top 75%',
-            toggleActions: 'play none none reverse',
-          },
-        });
-
-        // Metrics counter animation
-        gsap.from(metrics, {
-          y: 40,
-          opacity: 0,
-          scale: 0.8,
-          duration: 0.8,
-          stagger: 0.1,
-          ease: 'back.out(1.5)',
-          scrollTrigger: {
-            trigger: featuredRef.current,
-            start: 'top 70%',
-            toggleActions: 'play none none reverse',
+            toggleActions: 'play none none none',
           },
         });
       }
 
-      // Grid cards with staggered 3D entrance
+      // Grid cards
       if (gridRef.current) {
         const cards = gridRef.current.querySelectorAll('.case-card');
 
         gsap.from(cards, {
-          y: 80,
+          y: 25,
           opacity: 0,
-          rotationX: 20,
-          scale: 0.9,
-          duration: 0.8,
-          stagger: 0.15,
-          ease: 'power3.out',
+          duration: 0.4,
+          stagger: 0.06,
+          ease: 'power2.out',
           scrollTrigger: {
             trigger: gridRef.current,
             start: 'top 85%',
-            toggleActions: 'play none none reverse',
+            toggleActions: 'play none none none',
           },
         });
       }
 
-      // CTA animation
+      // CTA
       if (ctaRef.current) {
         gsap.from(ctaRef.current, {
-          y: 40,
+          y: 20,
           opacity: 0,
-          scale: 0.95,
-          duration: 0.8,
-          ease: 'power3.out',
+          duration: 0.4,
+          ease: 'power2.out',
           scrollTrigger: {
             trigger: ctaRef.current,
             start: 'top 90%',
-            toggleActions: 'play none none reverse',
+            toggleActions: 'play none none none',
           },
         });
       }
@@ -328,12 +316,10 @@ export function CaseStudiesSectionV2() {
             >
               <div
                 className="group relative v2-paper rounded-2xl overflow-hidden h-full"
-                style={{ transformStyle: 'preserve-3d' }}
               >
                 {/* Visual Header */}
                 <div
                   className={`relative ${study.gradientClass} p-6 h-40 flex items-center justify-center`}
-                  style={{ transform: 'translateZ(10px)' }}
                 >
                   {/* Metric Display */}
                   <div className="text-center">
@@ -350,7 +336,7 @@ export function CaseStudiesSectionV2() {
                 </div>
 
                 {/* Content */}
-                <div className="p-6" style={{ transform: 'translateZ(5px)' }}>
+                <div className="p-6">
                   <p className="text-fm-magenta-600 font-semibold text-xs tracking-wide uppercase mb-2">
                     {study.tagline}
                   </p>

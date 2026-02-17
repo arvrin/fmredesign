@@ -62,54 +62,54 @@ export function HeroSectionV2() {
     }
 
     const ctx = gsap.context(() => {
-      const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
+      const tl = gsap.timeline({ defaults: { ease: 'power2.out' } });
 
-      // Headline static words — slide up from below
+      // Headline static words
       tl.fromTo(
         headlineStaticRef.current,
-        { opacity: 0, y: 60 },
-        { opacity: 1, y: 0, duration: 0.9 },
-        0.2
+        { opacity: 0, y: 30 },
+        { opacity: 1, y: 0, duration: 0.5 },
+        0.1
       );
 
-      // Headline rotating phrase — slide up with slight delay
+      // Headline rotating phrase
       tl.fromTo(
         headlineRotatingRef.current,
-        { opacity: 0, y: 50 },
-        { opacity: 1, y: 0, duration: 0.8 },
-        0.5
+        { opacity: 0, y: 25 },
+        { opacity: 1, y: 0, duration: 0.45 },
+        0.25
       );
 
-      // Subhead — fade in
+      // Subhead
       tl.fromTo(
         subheadRef.current,
-        { opacity: 0, y: 30 },
-        { opacity: 1, y: 0, duration: 0.7 },
-        0.75
+        { opacity: 0, y: 20 },
+        { opacity: 1, y: 0, duration: 0.4 },
+        0.4
       );
 
-      // CTA buttons — slide up and fade
+      // CTA buttons
       tl.fromTo(
         ctaRef.current,
-        { opacity: 0, y: 25 },
-        { opacity: 1, y: 0, duration: 0.6 },
-        0.95
+        { opacity: 0, y: 15 },
+        { opacity: 1, y: 0, duration: 0.35 },
+        0.55
       );
 
-      // Mascot — scale in from slightly smaller with bounce
+      // Mascot
       tl.fromTo(
         mascotRef.current,
-        { opacity: 0, scale: 0.7, y: 40 },
-        { opacity: 1, scale: 1, y: 0, duration: 1, ease: 'back.out(1.4)' },
-        0.6
+        { opacity: 0, y: 20 },
+        { opacity: 1, y: 0, duration: 0.5 },
+        0.35
       );
 
-      // Scroll indicator — fade in last
+      // Scroll indicator
       tl.fromTo(
         scrollRef.current,
         { opacity: 0 },
-        { opacity: 1, duration: 0.5 },
-        1.5
+        { opacity: 1, duration: 0.3 },
+        0.8
       );
     }, sectionRef);
 
@@ -177,13 +177,13 @@ export function HeroSectionV2() {
         <GradientOrb
           color="rgba(201, 50, 93, 0.2)"
           size={650}
-          blur={60}
+          blur={25}
           position={{ top: '5%', left: '-12%' }}
         />
         <GradientOrb
           color="rgba(160, 30, 70, 0.15)"
           size={500}
-          blur={50}
+          blur={20}
           position={{ bottom: '10%', right: '-10%' }}
         />
       </div>
@@ -217,7 +217,7 @@ export function HeroSectionV2() {
                 <span
                   className={`
                     inline-block
-                    transition-all duration-500
+                    transition-[opacity,transform] duration-500
                     ${isAnimating ? 'opacity-0 -translate-y-[110%]' : 'opacity-100 translate-y-0'}
                   `}
                   style={{
@@ -281,7 +281,7 @@ export function HeroSectionV2() {
                 style={{
                   background: 'radial-gradient(circle at 50% 50%, rgba(201, 50, 93, 0.2) 0%, transparent 65%)',
                   transform: 'scale(1.5)',
-                  filter: 'blur(40px)',
+                  filter: 'blur(25px)',
                 }}
               />
               <img

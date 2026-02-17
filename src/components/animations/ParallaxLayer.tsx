@@ -82,7 +82,6 @@ export function FloatingElement({
         animation: `floating-y ${duration}s ease-in-out infinite alternate`,
         animationDelay: `${delay}s`,
         '--float-amplitude': `${amplitude}px`,
-        willChange: 'transform',
       } as React.CSSProperties}
     >
       {children}
@@ -155,7 +154,7 @@ interface GradientOrbProps {
 export function GradientOrb({
   color = 'rgba(201, 50, 93, 0.25)',
   size = 400,
-  blur = 60, // Reduced default blur for better performance
+  blur = 25, // Capped default blur — high values force expensive repaint
   position = { top: '20%', left: '10%' },
   drift = 20,
   className = '',
@@ -172,7 +171,7 @@ export function GradientOrb({
         height: size,
         background: `radial-gradient(circle, ${color} 0%, transparent 70%)`,
         filter: `blur(${blur}px)`,
-        willChange: 'transform',
+        contain: 'layout style paint',
         animation: `orb-drift ${duration}s ease-in-out infinite alternate`,
         ...position,
       }}

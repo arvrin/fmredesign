@@ -69,7 +69,7 @@ export function CreativeNetworkSection() {
             {/* Main illustration card */}
             <div className="relative bg-gradient-to-br from-fm-magenta-500 to-fm-magenta-700 rounded-3xl p-8 lg:p-12">
               {/* Pattern overlay */}
-              <div className="absolute inset-0 opacity-10 rounded-3xl overflow-hidden">
+              <div className="absolute inset-0 opacity-10 rounded-3xl overflow-hidden pointer-events-none" style={{ zIndex: 0 }}>
                 <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
                   <defs>
                     <pattern id="networkDotsPattern" width="30" height="30" patternUnits="userSpaceOnUse">
@@ -81,7 +81,7 @@ export function CreativeNetworkSection() {
               </div>
 
               {/* Network illustration */}
-              <div className="relative">
+              <div className="relative" style={{ zIndex: 2 }}>
                 <svg viewBox="0 0 400 300" className="w-full h-auto">
                   {/* Connection lines */}
                   <line x1="200" y1="150" x2="80" y2="80" stroke="rgba(255,255,255,0.3)" strokeWidth="2" strokeDasharray="5,5" />

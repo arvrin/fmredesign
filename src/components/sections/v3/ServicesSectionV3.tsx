@@ -89,7 +89,7 @@ export function ServicesSectionV3() {
       className="relative py-28 lg:py-36 bg-white overflow-hidden"
     >
       {/* Subtle background pattern */}
-      <div className="absolute inset-0 opacity-[0.02]">
+      <div className="absolute inset-0 opacity-[0.02] pointer-events-none" style={{ zIndex: 0 }}>
         <div
           className="absolute inset-0"
           style={{
@@ -99,7 +99,7 @@ export function ServicesSectionV3() {
         />
       </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-12 lg:px-20">
+      <div className="relative max-w-7xl mx-auto px-6 md:px-12 lg:px-20" style={{ zIndex: 2 }}>
         {/* Section Header */}
         <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8 mb-20">
           <div className="max-w-2xl">

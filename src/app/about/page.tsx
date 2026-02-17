@@ -151,7 +151,7 @@ export default function AboutPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto">
             {teamMembers.map((member) => (
-              <div key={member.name} className="v2-paper rounded-2xl p-8 text-center hover:shadow-2xl transition-all duration-300 hover:-translate-y-2">
+              <div key={member.name} className="v2-paper rounded-2xl p-8 text-center hover:shadow-2xl transition-[box-shadow,transform] duration-300 hover:-translate-y-2">
                 <img
                   src={member.image}
                   alt={member.name}

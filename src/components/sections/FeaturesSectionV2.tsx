@@ -160,19 +160,40 @@ export function FeaturesSectionV2() {
   }, [isMobile]);
 
   // Main scroll handler — direct DOM manipulation to avoid React re-renders per frame
+  // Uses cached dimensions + rAF throttle to eliminate layout thrashing
   useEffect(() => {
     if (isMobile || prefersReducedMotion || !containerRef.current) return;
 
-    const handleScroll = () => {
+    // Cache dimensions to avoid getBoundingClientRect/offsetHeight every frame
+    let cachedContainerTop = 0;
+    let cachedContainerHeight = 0;
+    let cachedWindowHeight = window.innerHeight;
+    let rafId = 0;
+    let ticking = false;
+
+    const measureDimensions = () => {
       const container = containerRef.current;
       if (!container) return;
-
       const rect = container.getBoundingClientRect();
-      const windowHeight = window.innerHeight;
-      const containerHeight = container.offsetHeight;
+      cachedContainerTop = rect.top + window.scrollY;
+      cachedContainerHeight = container.offsetHeight;
+      cachedWindowHeight = window.innerHeight;
+    };
 
-      const scrollProgress = -rect.top;
-      const maxScroll = containerHeight - windowHeight;
+    // Measure once on mount
+    measureDimensions();
+
+    // Re-measure on resize (debounced)
+    let resizeTimer: ReturnType<typeof setTimeout>;
+    const handleResize = () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(measureDimensions, 150);
+    };
+
+    const updateCards = () => {
+      ticking = false;
+      const scrollProgress = window.scrollY - cachedContainerTop;
+      const maxScroll = cachedContainerHeight - cachedWindowHeight;
 
       // Determine section state
       let newState: 'before' | 'during' | 'after';
@@ -230,10 +251,24 @@ export function FeaturesSectionV2() {
       });
     };
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    handleScroll();
+    const handleScroll = () => {
+      if (!ticking) {
+        ticking = true;
+        rafId = requestAnimationFrame(updateCards);
+      }
+    };
 
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('resize', handleResize);
+    // Initial call
+    updateCards();
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleResize);
+      cancelAnimationFrame(rafId);
+      clearTimeout(resizeTimer);
+    };
   }, [isMobile, prefersReducedMotion]);
 
   // Fix #8: Enhanced mascot click with wobble
@@ -255,7 +290,7 @@ export function FeaturesSectionV2() {
     const section = mobileSectionRef.current;
     const ctx = gsap.context(() => {
       gsap.from(section.querySelectorAll('.feature-card-mobile'), {
-        x: 40, opacity: 0, duration: 0.5, stagger: 0.08, ease: 'power2.out',
+        x: 20, opacity: 0, duration: 0.3, stagger: 0.04, ease: 'power2.out',
         scrollTrigger: {
           trigger: section.querySelector('.mobile-scroll-track'),
           start: 'top 85%',
@@ -310,25 +345,33 @@ export function FeaturesSectionV2() {
                     borderColor: 'rgba(140, 29, 74, 0.2)',
                   }}
                 >
-                  {/* Brain mascot */}
+                  {/* Brain mascot — uses plain <img> on mobile to avoid Next.js Image optimization issues in horizontal scroll */}
                   <div className="relative flex justify-center pt-6 pb-2">
                     <div
                       className={`absolute w-36 h-36 rounded-full opacity-40 ${feature.gradientClass}`}
-                      style={{ filter: 'blur(40px)', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}
+                      style={{ filter: 'blur(25px)', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}
                     />
-                    <Image
-                      src={feature.mascot}
-                      alt={feature.mascotAlt}
-                      width={200}
-                      height={200}
-                      className="relative w-44"
+                    <div
+                      className="relative"
                       style={{
-                        filter: `drop-shadow(0 20px 40px ${shadowColor})`,
+                        zIndex: 2,
                         animation: prefersReducedMotion ? 'none' : 'featureFloat 6s ease-in-out infinite',
                         animationDelay: `${index * 0.5}s`,
                       }}
-                      loading="lazy"
-                    />
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={feature.mascot}
+                        alt={feature.mascotAlt}
+                        width={200}
+                        height={200}
+                        className="w-44"
+                        style={{
+                          filter: `drop-shadow(0 20px 40px ${shadowColor})`,
+                          height: 'auto',
+                        }}
+                      />
+                    </div>
                   </div>
 
                   {/* Card content */}
@@ -382,7 +425,7 @@ export function FeaturesSectionV2() {
             {features.map((_, i) => (
               <button
                 key={i}
-                className="w-2 h-2 rounded-full transition-all duration-300"
+                className="w-2 h-2 rounded-full transition-[background-color,transform] duration-300"
                 style={{
                   backgroundColor: i === mobileActiveIndex ? '#8c1d4a' : 'rgba(140, 29, 74, 0.25)',
                   transform: i === mobileActiveIndex ? 'scale(1.3)' : 'scale(1)',
@@ -460,12 +503,13 @@ export function FeaturesSectionV2() {
                   style={{
                     backgroundImage: `radial-gradient(circle at 1px 1px, white 1px, transparent 0)`,
                     backgroundSize: '40px 40px',
+                    zIndex: 0,
                   }}
                 />
 
                 {/* Card content */}
-                <div className="w-full h-full flex items-center overflow-hidden">
-                  <div className="v2-container w-full max-w-6xl py-12 lg:py-16 relative z-10">
+                <div className="w-full h-full flex items-center overflow-hidden" style={{ position: 'relative', zIndex: 2 }}>
+                  <div className="v2-container w-full max-w-6xl py-12 lg:py-16 relative" style={{ zIndex: 2 }}>
                     {/* Feature number */}
                     <div className="absolute top-4 right-4 lg:top-8 lg:right-8 flex items-center gap-2">
                       <span className="text-sm font-medium text-white/40">{String(index + 1).padStart(2, '0')}</span>
@@ -478,7 +522,7 @@ export function FeaturesSectionV2() {
                       <div className={`order-1 lg:order-none relative flex items-center justify-center py-4 lg:py-0 ${isEven ? '' : 'lg:col-start-1 lg:row-start-1'}`}>
                         <div
                           className={`absolute w-[200px] h-[200px] md:w-[280px] md:h-[280px] lg:w-[350px] lg:h-[350px] rounded-full opacity-40 ${feature.gradientClass}`}
-                          style={{ filter: 'blur(40px)' }}
+                          style={{ filter: 'blur(25px)' }}
                         />
                         <div
                           className="mascot-wrapper relative cursor-pointer"
@@ -494,7 +538,7 @@ export function FeaturesSectionV2() {
                             alt={feature.mascotAlt}
                             width={320}
                             height={320}
-                            className={`w-48 sm:w-56 md:w-64 lg:w-80 transition-all duration-300 ${imagesLoaded.has(index) ? 'opacity-100' : 'opacity-0'}`}
+                            className={`w-48 sm:w-56 md:w-64 lg:w-80 transition-opacity duration-300 ${imagesLoaded.has(index) ? 'opacity-100' : 'opacity-0'}`}
                             style={{
                               filter: `drop-shadow(0 20px 40px ${shadowColor})`,
                               animation: clickedMascot === index

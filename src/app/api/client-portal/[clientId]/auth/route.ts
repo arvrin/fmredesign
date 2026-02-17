@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { GoogleSheetsService } from '@/lib/google-sheets';
+import { getSupabaseAdmin } from '@/lib/supabase';
 import crypto from 'crypto';
 
 // Simple token storage (in production, use a database)
@@ -26,40 +26,16 @@ export async function POST(
       );
     }
 
-    const sheetsService = new GoogleSheetsService();
-    
-    // Verify client exists and email matches
-    let clientsData: any[][];
-    try {
-      clientsData = await sheetsService.readSheet('Clients');
-    } catch (error) {
-      return NextResponse.json(
-        { success: false, error: 'Client not found' },
-        { status: 404 }
-      );
-    }
+    const supabase = getSupabaseAdmin();
 
-    if (clientsData.length === 0) {
-      return NextResponse.json(
-        { success: false, error: 'Client not found' },
-        { status: 404 }
-      );
-    }
+    // Verify client exists
+    const { data: client, error: clientError } = await supabase
+      .from('clients')
+      .select('*')
+      .eq('id', clientId)
+      .single();
 
-    // Find client and verify email
-    const headers = clientsData[0];
-    const clients = clientsData.slice(1).map(row => {
-      const client: any = {};
-      headers.forEach((header: string, index: number) => {
-        if (header && row[index] !== undefined) {
-          client[header] = row[index];
-        }
-      });
-      return client;
-    });
-
-    const client = clients.find((c: any) => c.id === clientId);
-    if (!client) {
+    if (clientError || !client) {
       return NextResponse.json(
         { success: false, error: 'Client not found' },
         { status: 404 }
@@ -68,9 +44,9 @@ export async function POST(
 
     // Check if email matches any authorized emails for this client
     const authorizedEmails = [
-      client.primaryContactEmail,
+      client.primary_contact_email,
       client.email,
-      ...(client.additionalEmails ? client.additionalEmails.split(',').map((e: string) => e.trim()) : [])
+      ...(client.additional_emails ? String(client.additional_emails).split(',').map((e: string) => e.trim()) : [])
     ].filter(Boolean);
 
     if (!authorizedEmails.some((authorizedEmail: string) => 
@@ -109,7 +85,7 @@ export async function POST(
       success: true,
       data: {
         clientId,
-        clientName: client.name || client.companyName,
+        clientName: client.name || client.company_name,
         authorizedEmail: email
       }
     });

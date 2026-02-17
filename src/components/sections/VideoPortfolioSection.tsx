@@ -45,7 +45,7 @@ export function VideoPortfolioSection() {
       <div className="max-w-[1400px] mx-auto px-6 md:px-12 lg:px-20 relative z-10">
         {/* Section header */}
         <div
-          className={`mb-12 lg:mb-16 transition-all duration-700 ${
+          className={`mb-12 lg:mb-16 transition-[opacity,transform] duration-700 ${
             isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
           }`}
           style={{ textAlign: 'center' }}
@@ -70,7 +70,7 @@ export function VideoPortfolioSection() {
 
         {/* Video grid */}
         <div
-          className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 transition-all duration-1000 ${
+          className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 transition-[opacity,transform] duration-1000 ${
             isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'
           }`}
           style={{ transitionDelay: '200ms' }}
@@ -102,11 +102,11 @@ export function VideoPortfolioSection() {
                   />
 
                   {/* Overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-fm-neutral-900/90 via-fm-neutral-900/30 to-transparent group-hover:from-fm-magenta-900/90 transition-all duration-300" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-fm-neutral-900/90 via-fm-neutral-900/30 to-transparent group-hover:from-fm-magenta-900/90 transition-[background] duration-300" />
 
                   {/* Play button */}
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center group-hover:bg-white/30 group-hover:scale-110 transition-all duration-300">
+                    <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center group-hover:bg-white/30 group-hover:scale-110 transition-[background-color,transform] duration-300">
                       <Play className="w-7 h-7 text-white ml-1" fill="white" />
                     </div>
                   </div>

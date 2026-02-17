@@ -1,22 +1,57 @@
 /**
  * Clients API Route
- * Handles client operations with Google Sheets integration
+ * Handles client operations with Supabase (single source of truth)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { googleSheetsService } from '@/lib/google-sheets';
-import { supabaseAdmin } from '@/lib/supabase';
+import { getSupabaseAdmin } from '@/lib/supabase';
 
 export async function GET(request: NextRequest) {
   try {
-    const clients = await googleSheetsService.getClients();
+    const supabase = getSupabaseAdmin();
+    const { data: clients, error } = await supabase
+      .from('clients')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    // Transform snake_case to camelCase for frontend compatibility
+    const formatted = (clients || []).map((c) => ({
+      id: c.id,
+      name: c.name,
+      email: c.email,
+      phone: c.phone,
+      address: c.address,
+      city: c.city,
+      state: c.state,
+      zipCode: c.zip_code,
+      country: c.country,
+      gstNumber: c.gst_number,
+      industry: c.industry,
+      companySize: c.company_size,
+      website: c.website,
+      status: c.status,
+      health: c.health,
+      accountManager: c.account_manager,
+      contractType: c.contract_type,
+      contractValue: c.contract_value,
+      contractStartDate: c.contract_start_date,
+      contractEndDate: c.contract_end_date,
+      billingCycle: c.billing_cycle,
+      services: c.services,
+      createdAt: c.created_at,
+      updatedAt: c.updated_at,
+      totalValue: c.total_value,
+      tags: c.tags,
+      notes: c.notes,
+    }));
 
     const response = NextResponse.json({
       success: true,
-      data: clients
+      data: formatted,
     });
 
-    // Prevent caching to ensure fresh data
     response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     response.headers.set('Pragma', 'no-cache');
     response.headers.set('Expires', '0');
@@ -34,22 +69,19 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.json();
-    
-    // Generate client ID if not provided
+
     if (!formData.id) {
       formData.id = `client-${Date.now()}`;
     }
-    
-    // Transform form data to proper ClientProfile structure
+
+    // Build the structured client data for the response
     const clientData = {
       id: formData.id,
-      name: formData.name || formData.company, // Use company as fallback for name
+      name: formData.name || formData.company,
       logo: formData.logo || undefined,
       industry: formData.industry || 'other',
       website: formData.website || undefined,
       description: formData.description || undefined,
-      
-      // Contact Information
       primaryContact: {
         id: `contact-${Date.now()}`,
         name: formData.name || 'Primary Contact',
@@ -58,11 +90,9 @@ export async function POST(request: NextRequest) {
         role: formData.contactRole || 'Primary Contact',
         department: formData.department || undefined,
         isPrimary: true,
-        linkedInUrl: formData.linkedIn || undefined
+        linkedInUrl: formData.linkedIn || undefined,
       },
       additionalContacts: [],
-      
-      // Business Details
       companySize: formData.companySize || 'medium',
       founded: formData.founded || undefined,
       headquarters: {
@@ -70,15 +100,11 @@ export async function POST(request: NextRequest) {
         city: formData.city || '',
         state: formData.state || '',
         zipCode: formData.zipCode || '',
-        country: formData.country || 'India'
+        country: formData.country || 'India',
       },
-      
-      // Account Management
       accountManager: formData.accountManager || 'admin',
       status: formData.status || 'active',
       health: formData.health || 'good',
-      
-      // Contract & Billing
       contractDetails: {
         type: formData.contractType || 'project',
         startDate: new Date().toISOString(),
@@ -89,98 +115,58 @@ export async function POST(request: NextRequest) {
         retainerAmount: formData.retainerAmount || undefined,
         services: formData.services || [],
         terms: formData.terms || undefined,
-        isActive: true
+        isActive: true,
       },
-      
-      // Tax & Legal
       gstNumber: formData.gstNumber || undefined,
-      
-      // Metadata
       onboardedAt: new Date().toISOString(),
       lastActivity: new Date().toISOString(),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       tags: formData.tags || [],
-      notes: []
-    };
-    
-    // Flatten the client data for Google Sheets storage
-    const flatClientData = {
-      id: clientData.id,
-      name: clientData.name,
-      email: clientData.primaryContact.email,
-      phone: clientData.primaryContact.phone,
-      address: clientData.headquarters.street,
-      city: clientData.headquarters.city,
-      state: clientData.headquarters.state,
-      zipCode: clientData.headquarters.zipCode,
-      country: clientData.headquarters.country,
-      gstNumber: clientData.gstNumber,
-      industry: clientData.industry,
-      companySize: clientData.companySize,
-      website: formData.website,
-      status: clientData.status,
-      health: clientData.health,
-      accountManager: clientData.accountManager,
-      contractType: clientData.contractDetails.type,
-      contractValue: clientData.contractDetails.value,
-      contractStartDate: clientData.contractDetails.startDate,
-      contractEndDate: formData.contractEndDate,
-      billingCycle: clientData.contractDetails.billingCycle,
-      services: Array.isArray(clientData.contractDetails.services) ? clientData.contractDetails.services.join(', ') : '',
-      createdAt: clientData.createdAt,
-      updatedAt: clientData.updatedAt,
-      totalValue: clientData.contractDetails.value,
-      tags: Array.isArray(clientData.tags) ? clientData.tags.join(', ') : '',
-      notes: ''
+      notes: [],
     };
 
-    const success = await googleSheetsService.addClient(flatClientData);
+    // Write to Supabase
+    const supabase = getSupabaseAdmin();
+    const { error } = await supabase.from('clients').upsert([
+      {
+        id: clientData.id,
+        name: clientData.name,
+        email: clientData.primaryContact.email,
+        phone: clientData.primaryContact.phone || null,
+        industry: clientData.industry,
+        website: formData.website || null,
+        address: clientData.headquarters.street || null,
+        city: clientData.headquarters.city || null,
+        state: clientData.headquarters.state || null,
+        zip_code: clientData.headquarters.zipCode || null,
+        country: clientData.headquarters.country || null,
+        gst_number: clientData.gstNumber || null,
+        company_size: clientData.companySize,
+        status: clientData.status,
+        health: clientData.health,
+        account_manager: clientData.accountManager,
+        contract_type: clientData.contractDetails.type,
+        contract_value: clientData.contractDetails.value,
+        contract_start_date: clientData.contractDetails.startDate,
+        contract_end_date: formData.contractEndDate || null,
+        billing_cycle: clientData.contractDetails.billingCycle,
+        total_value: clientData.contractDetails.value,
+        portal_password: formData.portalPassword || null,
+        services: Array.isArray(clientData.contractDetails.services)
+          ? clientData.contractDetails.services
+          : null,
+        tags: Array.isArray(clientData.tags) ? clientData.tags : null,
+      },
+    ]);
 
-    if (success) {
-      // Dual-write to Supabase for client portal access
-      try {
-        await supabaseAdmin.from('clients').upsert([{
-          id: clientData.id,
-          name: clientData.name,
-          email: clientData.primaryContact.email,
-          phone: clientData.primaryContact.phone || null,
-          industry: clientData.industry,
-          website: formData.website || null,
-          address: clientData.headquarters.street || null,
-          city: clientData.headquarters.city || null,
-          state: clientData.headquarters.state || null,
-          zip_code: clientData.headquarters.zipCode || null,
-          country: clientData.headquarters.country || null,
-          gst_number: clientData.gstNumber || null,
-          status: clientData.status,
-          health: clientData.health,
-          account_manager: clientData.accountManager,
-          contract_type: clientData.contractDetails.type,
-          contract_value: clientData.contractDetails.value,
-          contract_start_date: clientData.contractDetails.startDate,
-          contract_end_date: formData.contractEndDate || null,
-          billing_cycle: clientData.contractDetails.billingCycle,
-          total_value: clientData.contractDetails.value,
-          portal_password: formData.portalPassword || null,
-          created_at: clientData.createdAt,
-          updated_at: clientData.updatedAt,
-        }]);
-      } catch (supabaseError) {
-        console.warn('Supabase dual-write failed (non-blocking):', supabaseError);
-      }
+    if (error) throw error;
 
-      return NextResponse.json({
-        success: true,
-        data: clientData,
-        message: 'Client created successfully'
-      });
-    } else {
-      return NextResponse.json(
-        { success: false, error: 'Failed to create client' },
-        { status: 500 }
-      );
-    }
+    return NextResponse.json({
+      success: true,
+      data: clientData,
+      message: 'Client created successfully',
+    });
   } catch (error) {
     console.error('Error creating client:', error);
     return NextResponse.json(
@@ -193,54 +179,72 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const { id, ...formData } = await request.json();
-    
+
     if (!id) {
       return NextResponse.json(
         { success: false, error: 'Client ID is required' },
         { status: 400 }
       );
     }
-    
-    
-    // Transform flat form data to proper ClientProfile structure
+
+    const updates: Record<string, any> = {};
+    if (formData.name) updates.name = formData.name;
+    if (formData.email) updates.email = formData.email;
+    if (formData.phone !== undefined) updates.phone = formData.phone || null;
+    if (formData.industry) updates.industry = formData.industry;
+    if (formData.website !== undefined) updates.website = formData.website || null;
+    if (formData.address !== undefined) updates.address = formData.address || null;
+    if (formData.city !== undefined) updates.city = formData.city || null;
+    if (formData.state !== undefined) updates.state = formData.state || null;
+    if (formData.zipCode !== undefined) updates.zip_code = formData.zipCode || null;
+    if (formData.country !== undefined) updates.country = formData.country || null;
+    if (formData.gstNumber !== undefined) updates.gst_number = formData.gstNumber || null;
+    if (formData.companySize) updates.company_size = formData.companySize;
+    if (formData.status) updates.status = formData.status;
+    if (formData.health) updates.health = formData.health;
+    if (formData.accountManager) updates.account_manager = formData.accountManager;
+    if (formData.contractType) updates.contract_type = formData.contractType;
+    if (formData.contractValue !== undefined) updates.contract_value = parseFloat(formData.contractValue) || 0;
+    if (formData.contractStartDate) updates.contract_start_date = formData.contractStartDate;
+    if (formData.contractEndDate !== undefined) updates.contract_end_date = formData.contractEndDate || null;
+    if (formData.billingCycle) updates.billing_cycle = formData.billingCycle;
+    if (formData.totalValue !== undefined) updates.total_value = parseFloat(formData.totalValue) || 0;
+    if (formData.services) updates.services = formData.services;
+    if (formData.tags) updates.tags = formData.tags;
+    if (formData.portalPassword !== undefined) updates.portal_password = formData.portalPassword || null;
+
+    const supabase = getSupabaseAdmin();
+    const { error } = await supabase
+      .from('clients')
+      .update(updates)
+      .eq('id', id);
+
+    if (error) throw error;
+
+    // Build response data matching original format
     const clientData = {
-      id: id,
+      id,
       name: formData.name,
-      logo: formData.logo || undefined,
-      industry: formData.industry || 'other',
-      website: formData.website || undefined,
-      description: formData.description || undefined,
-      
-      // Contact Information
       primaryContact: {
         id: `contact-${Date.now()}`,
         name: formData.name || 'Primary Contact',
         email: formData.email,
         phone: formData.phone || undefined,
         role: formData.contactRole || 'Primary Contact',
-        department: formData.department || undefined,
         isPrimary: true,
-        linkedInUrl: formData.linkedIn || undefined
       },
       additionalContacts: [],
-      
-      // Business Details
       companySize: formData.companySize || 'medium',
-      founded: formData.founded || undefined,
       headquarters: {
         street: formData.address || '',
         city: formData.city || '',
         state: formData.state || '',
         zipCode: formData.zipCode || '',
-        country: formData.country || 'India'
+        country: formData.country || 'India',
       },
-      
-      // Account Management
       accountManager: formData.accountManager || 'admin',
       status: formData.status || 'active',
       health: formData.health || 'good',
-      
-      // Contract & Billing
       contractDetails: {
         type: formData.contractType || 'project',
         startDate: formData.contractStartDate || new Date().toISOString(),
@@ -248,39 +252,22 @@ export async function PUT(request: NextRequest) {
         value: parseFloat(formData.contractValue) || 0,
         currency: 'INR',
         billingCycle: formData.billingCycle || 'monthly',
-        retainerAmount: formData.retainerAmount || undefined,
         services: formData.services || [],
-        terms: formData.terms || undefined,
-        isActive: true
+        isActive: true,
       },
-      
-      // Tax & Legal
       gstNumber: formData.gstNumber || undefined,
-      
-      // Metadata
-      onboardedAt: formData.onboardedAt || new Date().toISOString(),
-      lastActivity: new Date().toISOString(),
-      createdAt: formData.createdAt || new Date().toISOString(),
+      industry: formData.industry || 'other',
+      website: formData.website || undefined,
       updatedAt: new Date().toISOString(),
       tags: formData.tags || [],
-      notes: formData.notes || []
+      notes: formData.notes || [],
     };
-    
-    
-    const success = await googleSheetsService.updateClient(id, clientData);
-    
-    if (success) {
-      return NextResponse.json({ 
-        success: true, 
-        data: clientData,
-        message: 'Client updated successfully' 
-      });
-    } else {
-      return NextResponse.json(
-        { success: false, error: 'Failed to update client' },
-        { status: 500 }
-      );
-    }
+
+    return NextResponse.json({
+      success: true,
+      data: clientData,
+      message: 'Client updated successfully',
+    });
   } catch (error) {
     console.error('Error updating client:', error);
     return NextResponse.json(
@@ -294,28 +281,23 @@ export async function DELETE(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const clientId = searchParams.get('id');
-    
+
     if (!clientId) {
       return NextResponse.json(
         { success: false, error: 'Client ID is required' },
         { status: 400 }
       );
     }
-    
-    
-    const success = await googleSheetsService.deleteClient(clientId);
-    
-    if (success) {
-      return NextResponse.json({ 
-        success: true,
-        message: `Client with ID ${clientId} deleted successfully` 
-      });
-    } else {
-      return NextResponse.json(
-        { success: false, error: 'Failed to delete client or client not found' },
-        { status: 404 }
-      );
-    }
+
+    const supabase = getSupabaseAdmin();
+    const { error } = await supabase.from('clients').delete().eq('id', clientId);
+
+    if (error) throw error;
+
+    return NextResponse.json({
+      success: true,
+      message: `Client with ID ${clientId} deleted successfully`,
+    });
   } catch (error) {
     console.error('Error deleting client:', error);
     return NextResponse.json(

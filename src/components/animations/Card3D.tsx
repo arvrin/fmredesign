@@ -92,7 +92,6 @@ export function Card3D({
       style={{
         transform: isHovered ? transform : 'none',
         transition: isHovered ? 'none' : 'transform 0.4s cubic-bezier(0.33, 1, 0.68, 1)',
-        transformStyle: 'preserve-3d',
         willChange: isHovered ? 'transform' : 'auto',
       }}
     >

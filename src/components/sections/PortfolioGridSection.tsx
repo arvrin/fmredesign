@@ -76,7 +76,7 @@ export function PortfolioGridSection() {
       <div className="max-w-[1400px] mx-auto px-6 md:px-12 lg:px-20 relative z-10">
         {/* Section header */}
         <div
-          className={`mb-10 transition-all duration-700 ${
+          className={`mb-10 transition-[opacity,transform] duration-700 ${
             isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
           }`}
           style={{ textAlign: 'center' }}
@@ -97,7 +97,7 @@ export function PortfolioGridSection() {
 
         {/* Tabs */}
         <div
-          className={`flex flex-wrap justify-center gap-3 mb-10 transition-all duration-700 ${
+          className={`flex flex-wrap justify-center gap-3 mb-10 transition-[opacity,transform] duration-700 ${
             isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
           }`}
           style={{ transitionDelay: '100ms' }}
@@ -106,7 +106,7 @@ export function PortfolioGridSection() {
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`px-6 py-3 rounded-full text-sm font-medium transition-all duration-300 ${
+              className={`px-6 py-3 rounded-full text-sm font-medium transition-[background-color,color,box-shadow] duration-300 ${
                 activeTab === tab.key
                   ? 'bg-fm-magenta-600 text-white shadow-lg shadow-fm-magenta-200/50'
                   : 'bg-fm-neutral-100 text-fm-neutral-600 hover:bg-fm-neutral-200'
@@ -122,7 +122,7 @@ export function PortfolioGridSection() {
 
         {/* Portfolio grid */}
         <div
-          className={`transition-all duration-700 ${
+          className={`transition-[opacity,transform] duration-700 ${
             isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'
           }`}
           style={{ transitionDelay: '200ms' }}
@@ -136,7 +136,7 @@ export function PortfolioGridSection() {
                   href={'url' in item ? item.url : '#'}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group relative aspect-[4/3] rounded-xl overflow-hidden bg-fm-neutral-100 shadow-lg hover:shadow-xl transition-all duration-300"
+                  className="group relative aspect-[4/3] rounded-xl overflow-hidden bg-fm-neutral-100 shadow-lg hover:shadow-xl transition-[box-shadow] duration-300"
                 >
                   <img
                     src={item.src}
@@ -157,7 +157,7 @@ export function PortfolioGridSection() {
               {currentItems.map((item) => (
                 <div
                   key={item.src}
-                  className="group relative aspect-square rounded-xl overflow-hidden bg-fm-neutral-50 border border-fm-neutral-100 hover:border-fm-magenta-200 hover:shadow-lg transition-all duration-300 p-4"
+                  className="group relative aspect-square rounded-xl overflow-hidden bg-fm-neutral-50 border border-fm-neutral-100 hover:border-fm-magenta-200 hover:shadow-lg transition-[border-color,box-shadow] duration-300 p-4"
                 >
                   <img
                     src={item.src}
@@ -173,7 +173,7 @@ export function PortfolioGridSection() {
               {currentItems.map((item) => (
                 <div
                   key={item.src}
-                  className="group relative aspect-square rounded-xl overflow-hidden bg-fm-neutral-100 shadow-md hover:shadow-xl transition-all duration-300"
+                  className="group relative aspect-square rounded-xl overflow-hidden bg-fm-neutral-100 shadow-md hover:shadow-xl transition-[box-shadow] duration-300"
                 >
                   <img
                     src={item.src}

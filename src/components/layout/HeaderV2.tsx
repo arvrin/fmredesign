@@ -128,9 +128,9 @@ export function HeaderV2() {
       <header
         ref={headerRef}
         className={cn(
-          'fixed top-0 left-0 right-0 transition-all duration-500',
+          'fixed top-0 left-0 right-0 transition-[background-color,box-shadow,border-color] duration-500',
           isScrolled || isMobileMenuOpen || activeDropdown
-            ? 'backdrop-blur-xl shadow-sm'
+            ? 'shadow-sm'
             : ''
         )}
         style={{
@@ -183,12 +183,12 @@ export function HeaderV2() {
                 </button>
 
                 <div className={cn(
-                  'absolute top-full left-0 pt-3 w-[520px] max-w-[calc(100vw-6rem)] transition-all duration-200',
+                  'absolute top-full left-0 pt-3 w-[520px] max-w-[calc(100vw-6rem)] transition-[opacity,transform,visibility] duration-200',
                   activeDropdown === 'services'
                     ? 'opacity-100 visible translate-y-0'
                     : 'opacity-0 invisible -translate-y-2'
                 )}>
-                  <div style={{ background: 'rgba(255,250,252,0.97)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: '1px solid rgba(201,50,93,0.1)' }} className="rounded-2xl p-6 shadow-xl shadow-black/5">
+                  <div style={{ background: 'rgba(255,250,252,0.99)', border: '1px solid rgba(201,50,93,0.1)' }} className="rounded-2xl p-6 shadow-xl shadow-black/5">
                     <div className="text-xs font-semibold uppercase tracking-wider mb-4" style={{ color: '#9a7888' }}>What We Do</div>
                     <div className="grid grid-cols-2 gap-2">
                       {services.map((service) => (
@@ -240,12 +240,12 @@ export function HeaderV2() {
                 </button>
 
                 <div className={cn(
-                  'absolute top-full left-1/2 -translate-x-1/2 pt-3 w-[420px] transition-all duration-200',
+                  'absolute top-full left-1/2 -translate-x-1/2 pt-3 w-[420px] transition-[opacity,transform,visibility] duration-200',
                   activeDropdown === 'products'
                     ? 'opacity-100 visible translate-y-0'
                     : 'opacity-0 invisible -translate-y-2'
                 )}>
-                  <div style={{ background: 'rgba(255,250,252,0.97)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: '1px solid rgba(201,50,93,0.1)' }} className="rounded-2xl p-5 shadow-xl shadow-black/5">
+                  <div style={{ background: 'rgba(255,250,252,0.99)', border: '1px solid rgba(201,50,93,0.1)' }} className="rounded-2xl p-5 shadow-xl shadow-black/5">
                     {/* Tools Section */}
                     <div className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: '#9a7888' }}>Tools</div>
                     <div className="grid grid-cols-2 gap-2 mb-5">
@@ -287,7 +287,7 @@ export function HeaderV2() {
                         <div className="font-semibold text-sm" style={{ color: '#1a0a12' }}>{talent.name}</div>
                         <div className="text-xs" style={{ color: '#9a7888' }}>{talent.desc}</div>
                       </div>
-                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-all" style={{ color: '#9a7888' }} />
+                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" style={{ color: '#9a7888' }} />
                     </Link>
                   </div>
                 </div>
@@ -305,12 +305,12 @@ export function HeaderV2() {
                 </button>
 
                 <div className={cn(
-                  'absolute top-full right-0 pt-3 w-[280px] transition-all duration-200',
+                  'absolute top-full right-0 pt-3 w-[280px] transition-[opacity,transform,visibility] duration-200',
                   activeDropdown === 'company'
                     ? 'opacity-100 visible translate-y-0'
                     : 'opacity-0 invisible -translate-y-2'
                 )}>
-                  <div style={{ background: 'rgba(255,250,252,0.97)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: '1px solid rgba(201,50,93,0.1)' }} className="rounded-2xl p-4 shadow-xl shadow-black/5">
+                  <div style={{ background: 'rgba(255,250,252,0.99)', border: '1px solid rgba(201,50,93,0.1)' }} className="rounded-2xl p-4 shadow-xl shadow-black/5">
                     <div className="space-y-1">
                       {company.map((item) => (
                         <Link
@@ -371,7 +371,7 @@ export function HeaderV2() {
         role="dialog"
         aria-label="Navigation menu"
         className={cn(
-          'lg:hidden transition-all duration-500 ease-out',
+          'lg:hidden transition-[opacity,visibility] duration-500 ease-out',
           isMobileMenuOpen
             ? 'opacity-100 visible'
             : 'opacity-0 invisible pointer-events-none'
@@ -404,7 +404,7 @@ export function HeaderV2() {
               {/* Services */}
               <div
                 className={cn(
-                  'transition-all duration-500',
+                  'transition-[opacity,transform] duration-500',
                   isMobileMenuOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
                 )}
                 style={{ transitionDelay: isMobileMenuOpen ? '100ms' : '0ms' }}
@@ -429,7 +429,7 @@ export function HeaderV2() {
               {/* Work */}
               <div
                 className={cn(
-                  'pt-4 transition-all duration-500',
+                  'pt-4 transition-[opacity,transform] duration-500',
                   isMobileMenuOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
                 )}
                 style={{ transitionDelay: isMobileMenuOpen ? '150ms' : '0ms', borderTop: '1px solid rgba(201,50,93,0.1)' }}
@@ -448,7 +448,7 @@ export function HeaderV2() {
               {/* Products - Tools + Talent */}
               <div
                 className={cn(
-                  'pt-4 transition-all duration-500',
+                  'pt-4 transition-[opacity,transform] duration-500',
                   isMobileMenuOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
                 )}
                 style={{ transitionDelay: isMobileMenuOpen ? '200ms' : '0ms', borderTop: '1px solid rgba(201,50,93,0.1)' }}
@@ -503,7 +503,7 @@ export function HeaderV2() {
               {/* Company */}
               <div
                 className={cn(
-                  'pt-4 transition-all duration-500',
+                  'pt-4 transition-[opacity,transform] duration-500',
                   isMobileMenuOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
                 )}
                 style={{ transitionDelay: isMobileMenuOpen ? '250ms' : '0ms', borderTop: '1px solid rgba(201,50,93,0.1)' }}
@@ -527,7 +527,7 @@ export function HeaderV2() {
               {/* CTA */}
               <div
                 className={cn(
-                  'pt-6 transition-all duration-500',
+                  'pt-6 transition-[opacity,transform] duration-500',
                   isMobileMenuOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
                 )}
                 style={{ transitionDelay: isMobileMenuOpen ? '300ms' : '0ms' }}

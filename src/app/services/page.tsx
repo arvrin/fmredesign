@@ -171,7 +171,7 @@ export default function ServicesPage() {
                 <div
                   key={service.title}
                   id={service.id}
-                  className="relative v2-paper rounded-2xl p-5 sm:p-6 md:p-8 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 scroll-mt-24 cursor-pointer"
+                  className="relative v2-paper rounded-2xl p-5 sm:p-6 md:p-8 hover:shadow-2xl transition-[box-shadow,transform] duration-300 hover:-translate-y-1 scroll-mt-24 cursor-pointer"
                   role="button"
                   tabIndex={0}
                   aria-label={`Learn more about ${service.title}`}

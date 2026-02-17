@@ -27,8 +27,7 @@ import {
   Settings,
   Eye
 } from 'lucide-react';
-import { AdminStorage } from '@/lib/admin/storage';
-import { Invoice, InvoiceUtils } from '@/lib/admin/types';
+import { InvoiceUtils } from '@/lib/admin/types';
 import {
   MetricCard,
   DashboardCard as Card,
@@ -38,6 +37,22 @@ import {
   CardTitle,
   DashboardButton as Button
 } from '@/design-system';
+
+interface DashboardInvoice {
+  id: string;
+  invoiceNumber: string;
+  clientId: string;
+  clientName: string;
+  date: string;
+  dueDate: string;
+  subtotal: number;
+  tax: number;
+  total: number;
+  status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled' | 'partial';
+  createdAt: string;
+  lineItems: any[];
+  notes: string;
+}
 
 interface DashboardStats {
   totalInvoices: number;
@@ -61,7 +76,7 @@ export default function AdminDashboard() {
     totalContent: 0,
     scheduledContent: 0,
   });
-  const [recentInvoices, setRecentInvoices] = useState<Invoice[]>([]);
+  const [recentInvoices, setRecentInvoices] = useState<DashboardInvoice[]>([]);
   const [recentProjects, setRecentProjects] = useState<any[]>([]);
   const [upcomingContent, setUpcomingContent] = useState<any[]>([]);
 
@@ -71,41 +86,43 @@ export default function AdminDashboard() {
 
   const loadDashboardData = async () => {
     try {
-      // Load existing data
-      const invoices = AdminStorage.getInvoices();
-      const clients = AdminStorage.getClients();
-
-      // Load projects and content data
-      const [projectsResponse, contentResponse] = await Promise.all([
+      // Fetch all data from Supabase-backed APIs in parallel
+      const [invoicesResponse, clientsResponse, projectsResponse, contentResponse] = await Promise.all([
+        fetch('/api/invoices').catch(() => ({ json: () => Promise.resolve({ success: false, data: [] }) })),
+        fetch('/api/clients').catch(() => ({ json: () => Promise.resolve({ success: false, data: [] }) })),
         fetch('/api/projects').catch(() => ({ json: () => Promise.resolve({ success: false, data: [] }) })),
         fetch('/api/content').catch(() => ({ json: () => Promise.resolve({ success: false, data: [] }) }))
       ]);
 
+      const invoicesResult = await invoicesResponse.json();
+      const clientsResult = await clientsResponse.json();
       const projectsResult = await projectsResponse.json();
       const contentResult = await contentResponse.json();
 
+      const invoices: DashboardInvoice[] = invoicesResult.success ? invoicesResult.data : [];
+      const clients = clientsResult.success ? clientsResult.data : [];
       const projects = projectsResult.success ? projectsResult.data : [];
       const content = contentResult.success ? contentResult.data : [];
 
       // Calculate stats
       const totalRevenue = invoices
         .filter(inv => inv.status === 'paid')
-        .reduce((sum, inv) => sum + inv.total, 0);
+        .reduce((sum, inv) => sum + (Number(inv.total) || 0), 0);
 
       const pendingInvoices = invoices.filter(
         inv => inv.status === 'sent' || inv.status === 'overdue'
       ).length;
 
       const activeProjects = projects.filter((p: any) => p.status === 'active').length;
-      
+
       // Get upcoming content (next 7 days)
       const now = new Date();
       const sevenDaysFromNow = new Date();
       sevenDaysFromNow.setDate(now.getDate() + 7);
-      
+
       const scheduledContent = content.filter((c: any) => {
         const scheduleDate = new Date(c.scheduledDate);
-        return scheduleDate >= now && scheduleDate <= sevenDaysFromNow && 
+        return scheduleDate >= now && scheduleDate <= sevenDaysFromNow &&
                ['approved', 'scheduled'].includes(c.status);
       }).length;
 
@@ -124,7 +141,7 @@ export default function AdminDashboard() {
       const recentInvoicesData = invoices
         .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
         .slice(0, 5);
-      
+
       const recentProjectsData = projects
         .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
         .slice(0, 5);
@@ -136,44 +153,16 @@ export default function AdminDashboard() {
         })
         .sort((a: any, b: any) => new Date(a.scheduledDate).getTime() - new Date(b.scheduledDate).getTime())
         .slice(0, 5);
-      
+
       setRecentInvoices(recentInvoicesData);
       setRecentProjects(recentProjectsData);
       setUpcomingContent(upcomingContentData);
     } catch (error) {
       console.error('Error loading dashboard data:', error);
-      // Fallback to existing data
-      const invoices = AdminStorage.getInvoices();
-      const clients = AdminStorage.getClients();
-      
-      const totalRevenue = invoices
-        .filter(inv => inv.status === 'paid')
-        .reduce((sum, inv) => sum + inv.total, 0);
-
-      const pendingInvoices = invoices.filter(
-        inv => inv.status === 'sent' || inv.status === 'overdue'
-      ).length;
-
-      setStats({
-        totalInvoices: invoices.length,
-        totalClients: clients.length,
-        totalRevenue,
-        pendingInvoices,
-        totalProjects: 0,
-        activeProjects: 0,
-        totalContent: 0,
-        scheduledContent: 0,
-      });
-
-      const recent = invoices
-        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-        .slice(0, 5);
-      
-      setRecentInvoices(recent);
     }
   };
 
-  const getStatusColor = (status: Invoice['status']) => {
+  const getStatusColor = (status: DashboardInvoice['status']) => {
     switch (status) {
       case 'paid':
         return 'bg-green-100 text-green-800';
@@ -462,7 +451,7 @@ export default function AdminDashboard() {
                             </span>
                           </div>
                           <div className="flex items-center space-x-4 text-sm text-gray-600 mt-1">
-                            <span>{invoice.client.name}</span>
+                            <span>{invoice.clientName}</span>
                             <span>•</span>
                             <span>{InvoiceUtils.formatDate(invoice.date)}</span>
                           </div>

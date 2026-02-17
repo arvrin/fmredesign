@@ -66,17 +66,17 @@ export function CreativeMindsSectionV2() {
       {/* Ambient background effects */}
       <div className="absolute inset-0 pointer-events-none" style={{ contain: 'layout style paint' }}>
         <div
-          className="absolute -left-1/4 top-1/4 w-[600px] h-[600px] rounded-full opacity-30"
+          className="absolute -left-1/4 top-1/4 w-[500px] h-[500px] rounded-full opacity-25"
           style={{
-            background: 'radial-gradient(circle, rgba(201, 50, 93, 0.15) 0%, transparent 70%)',
-            filter: 'blur(50px)',
+            background: 'radial-gradient(circle, rgba(201, 50, 93, 0.12) 0%, transparent 70%)',
+            filter: 'blur(30px)',
           }}
         />
         <div
-          className="absolute -right-1/4 bottom-1/4 w-[400px] h-[400px] rounded-full opacity-20"
+          className="absolute -right-1/4 bottom-1/4 w-[350px] h-[350px] rounded-full opacity-15"
           style={{
-            background: 'radial-gradient(circle, rgba(160, 30, 70, 0.1) 0%, transparent 70%)',
-            filter: 'blur(40px)',
+            background: 'radial-gradient(circle, rgba(160, 30, 70, 0.08) 0%, transparent 70%)',
+            filter: 'blur(25px)',
           }}
         />
       </div>
@@ -85,7 +85,7 @@ export function CreativeMindsSectionV2() {
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           {/* Left column - Content */}
           <div
-            className={`transition-all duration-1000 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}
+            className={`transition-[opacity,transform] duration-500 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
           >
             <div className="v2-badge v2-badge-glass mb-8">
               <Sparkles className="w-4 h-4 v2-text-primary" />
@@ -124,7 +124,7 @@ export function CreativeMindsSectionV2() {
 
           {/* Right column - Bento Grid */}
           <div
-            className={`relative transition-all duration-1000 delay-200 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}
+            className={`relative transition-[opacity,transform] duration-500 delay-100 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
           >
             {/* Mobile: 2-col grid */}
             <div className="grid grid-cols-2 gap-3 lg:hidden">
@@ -134,11 +134,11 @@ export function CreativeMindsSectionV2() {
                   <Link
                     key={category.name}
                     href="/creativeminds"
-                    className="group relative rounded-2xl p-5 overflow-hidden transition-all duration-500"
+                    className="group relative rounded-2xl p-5 overflow-hidden transition-[opacity,transform] duration-300"
                     style={{
                       opacity: isVisible ? 1 : 0,
-                      transform: isVisible ? 'translateY(0)' : 'translateY(20px)',
-                      transitionDelay: `${index * 80 + 300}ms`,
+                      transform: isVisible ? 'translateY(0)' : 'translateY(10px)',
+                      transitionDelay: `${index * 40 + 100}ms`,
                       background: `linear-gradient(145deg, rgba(255,255,255,0.95) 0%, rgba(245,243,248,0.92) 100%)`,
                       border: '1px solid rgba(201, 50, 93, 0.08)',
                     }}
@@ -178,12 +178,12 @@ export function CreativeMindsSectionV2() {
                   <Link
                     key={category.name}
                     href="/creativeminds"
-                    className="group relative rounded-2xl overflow-hidden transition-all duration-500 hover:scale-[1.02]"
+                    className="group relative rounded-2xl overflow-hidden transition-[opacity,transform] duration-300 hover:scale-[1.02]"
                     style={{
                       gridArea: category.area,
                       opacity: isVisible ? 1 : 0,
-                      transform: isVisible ? 'translateY(0) scale(1)' : 'translateY(24px) scale(0.96)',
-                      transitionDelay: `${index * 100 + 300}ms`,
+                      transform: isVisible ? 'translateY(0)' : 'translateY(10px)',
+                      transitionDelay: `${index * 50 + 100}ms`,
                       background: `linear-gradient(145deg, rgba(255,255,255,0.95) 0%, rgba(245,243,248,0.92) 100%)`,
                       border: '1px solid rgba(201, 50, 93, 0.08)',
                     }}
@@ -210,7 +210,7 @@ export function CreativeMindsSectionV2() {
                     </div>
 
                     {/* Hover arrow */}
-                    <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-1 group-hover:translate-x-0">
+                    <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-[opacity,transform] duration-300 translate-x-1 group-hover:translate-x-0">
                       <ArrowRight className="w-4 h-4 text-fm-neutral-400" />
                     </div>
 

@@ -1,89 +1,134 @@
 /**
  * Lead Management API Routes
- * Handles CRUD operations for leads with Google Sheets integration
+ * Handles CRUD operations for leads (Supabase)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { leadService } from '@/lib/admin/lead-service';
-import type { LeadInput, LeadUpdate, LeadFilters, LeadSortOptions } from '@/lib/admin/lead-types';
+import { getSupabaseAdmin } from '@/lib/supabase';
+import { calculateLeadScore, determineLeadPriority, toCamelCaseKeys } from '@/lib/supabase-utils';
+import type { LeadInput, LeadUpdate } from '@/lib/admin/lead-types';
 import { rateLimit, getClientIp } from '@/lib/rate-limiter';
 
 // GET /api/leads - Fetch leads with optional filtering and sorting
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
-    
-    // Parse filters from query parameters
-    const filters: LeadFilters = {};
-    
-    if (searchParams.get('status')) {
-      filters.status = searchParams.get('status')?.split(',') as any[];
+
+    const supabase = getSupabaseAdmin();
+    let query = supabase.from('leads').select('*');
+
+    // Apply Supabase-level filters
+    const statusFilter = searchParams.get('status');
+    if (statusFilter) {
+      query = query.in('status', statusFilter.split(','));
     }
-    
-    if (searchParams.get('priority')) {
-      filters.priority = searchParams.get('priority')?.split(',') as any[];
+
+    const priorityFilter = searchParams.get('priority');
+    if (priorityFilter) {
+      query = query.in('priority', priorityFilter.split(','));
     }
-    
-    if (searchParams.get('source')) {
-      filters.source = searchParams.get('source')?.split(',') as any[];
+
+    const sourceFilter = searchParams.get('source');
+    if (sourceFilter) {
+      query = query.in('source', sourceFilter.split(','));
     }
-    
-    if (searchParams.get('projectType')) {
-      filters.projectType = searchParams.get('projectType')?.split(',') as any[];
+
+    const projectTypeFilter = searchParams.get('projectType');
+    if (projectTypeFilter) {
+      query = query.in('project_type', projectTypeFilter.split(','));
     }
-    
-    if (searchParams.get('budgetRange')) {
-      filters.budgetRange = searchParams.get('budgetRange')?.split(',') as any[];
+
+    const budgetRangeFilter = searchParams.get('budgetRange');
+    if (budgetRangeFilter) {
+      query = query.in('budget_range', budgetRangeFilter.split(','));
     }
-    
-    if (searchParams.get('companySize')) {
-      filters.companySize = searchParams.get('companySize')?.split(',') as any[];
+
+    const companySizeFilter = searchParams.get('companySize');
+    if (companySizeFilter) {
+      query = query.in('company_size', companySizeFilter.split(','));
     }
-    
-    if (searchParams.get('assignedTo')) {
-      filters.assignedTo = searchParams.get('assignedTo')?.split(',');
+
+    const assignedToFilter = searchParams.get('assignedTo');
+    if (assignedToFilter) {
+      query = query.in('assigned_to', assignedToFilter.split(','));
     }
-    
-    if (searchParams.get('tags')) {
-      filters.tags = searchParams.get('tags')?.split(',');
+
+    // Date range
+    const startDate = searchParams.get('startDate');
+    const endDate = searchParams.get('endDate');
+    if (startDate) query = query.gte('created_at', startDate);
+    if (endDate) query = query.lte('created_at', endDate);
+
+    // Text search
+    const searchQuery = searchParams.get('search');
+    if (searchQuery) {
+      query = query.or(
+        `name.ilike.%${searchQuery}%,email.ilike.%${searchQuery}%,company.ilike.%${searchQuery}%,project_description.ilike.%${searchQuery}%`
+      );
     }
-    
-    if (searchParams.get('search')) {
-      filters.searchQuery = searchParams.get('search')!;
-    }
-    
-    // Parse date range
-    if (searchParams.get('startDate') && searchParams.get('endDate')) {
-      filters.dateRange = {
-        start: new Date(searchParams.get('startDate')!),
-        end: new Date(searchParams.get('endDate')!)
-      };
-    }
-    
-    // Parse sorting
-    let sort: LeadSortOptions | undefined;
-    if (searchParams.get('sortBy')) {
-      sort = {
-        field: searchParams.get('sortBy') as any,
-        direction: (searchParams.get('sortDirection') as 'asc' | 'desc') || 'desc'
-      };
-    }
-    
-    const leads = await leadService.getLeads(filters, sort);
-    
+
+    // Sorting
+    const sortBy = searchParams.get('sortBy');
+    const sortDirection = searchParams.get('sortDirection') || 'desc';
+    // Map camelCase sort fields to snake_case
+    const sortFieldMap: Record<string, string> = {
+      createdAt: 'created_at',
+      updatedAt: 'updated_at',
+      leadScore: 'lead_score',
+      companySize: 'company_size',
+      budgetRange: 'budget_range',
+      projectType: 'project_type',
+      followUpDate: 'follow_up_date',
+    };
+    const dbSortField = sortBy ? (sortFieldMap[sortBy] || sortBy) : 'created_at';
+    query = query.order(dbSortField, { ascending: sortDirection === 'asc' });
+
+    const { data, error } = await query;
+    if (error) throw error;
+
+    // Transform to camelCase for frontend
+    const leads = (data || []).map((row) => ({
+      id: row.id,
+      name: row.name,
+      email: row.email,
+      phone: row.phone,
+      company: row.company,
+      website: row.website,
+      jobTitle: row.job_title,
+      companySize: row.company_size,
+      industry: row.industry,
+      projectType: row.project_type,
+      projectDescription: row.project_description,
+      budgetRange: row.budget_range,
+      timeline: row.timeline,
+      primaryChallenge: row.primary_challenge,
+      additionalChallenges: row.additional_challenges || [],
+      specificRequirements: row.specific_requirements,
+      status: row.status,
+      priority: row.priority,
+      source: row.source,
+      leadScore: row.lead_score,
+      assignedTo: row.assigned_to,
+      nextAction: row.next_action,
+      followUpDate: row.follow_up_date,
+      notes: row.notes,
+      tags: row.tags || [],
+      customFields: row.custom_fields || {},
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+      convertedToClientAt: row.converted_to_client_at,
+      clientId: row.client_id,
+    }));
+
     return NextResponse.json({
       success: true,
       data: leads,
-      total: leads.length
+      total: leads.length,
     });
-    
   } catch (error) {
     console.error('Error fetching leads:', error);
     return NextResponse.json(
-      { 
-        success: false, 
-        error: 'Failed to fetch leads',
-      },
+      { success: false, error: 'Failed to fetch leads' },
       { status: 500 }
     );
   }
@@ -104,16 +149,15 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
 
     // Validate required fields
-    const requiredFields = ['name', 'email', 'company', 'projectType', 'projectDescription', 'budgetRange', 'timeline', 'primaryChallenge', 'companySize'];
-    const missingFields = requiredFields.filter(field => !body[field]);
+    const requiredFields = [
+      'name', 'email', 'company', 'projectType', 'projectDescription',
+      'budgetRange', 'timeline', 'primaryChallenge', 'companySize',
+    ];
+    const missingFields = requiredFields.filter((field) => !body[field]);
 
     if (missingFields.length > 0) {
       return NextResponse.json(
-        {
-          success: false,
-          error: 'Missing required fields',
-          missingFields
-        },
+        { success: false, error: 'Missing required fields', missingFields },
         { status: 400 }
       );
     }
@@ -127,8 +171,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create lead input object (strip HTML tags from text inputs)
     const stripHtml = (str: string) => str.replace(/<[^>]*>/g, '');
+
     const leadInput: LeadInput = {
       name: stripHtml(body.name.trim()),
       email: body.email.trim().toLowerCase(),
@@ -143,100 +187,188 @@ export async function POST(request: NextRequest) {
       budgetRange: body.budgetRange,
       timeline: body.timeline,
       primaryChallenge: stripHtml(body.primaryChallenge.trim()),
-      additionalChallenges: body.additionalChallenges?.filter((c: string) => c.trim()).map((c: string) => stripHtml(c)),
-      specificRequirements: body.specificRequirements ? stripHtml(body.specificRequirements.trim()) : undefined,
+      additionalChallenges: body.additionalChallenges
+        ?.filter((c: string) => c.trim())
+        .map((c: string) => stripHtml(c)),
+      specificRequirements: body.specificRequirements
+        ? stripHtml(body.specificRequirements.trim())
+        : undefined,
       source: body.source || 'website_form',
-      customFields: body.customFields || {}
+      customFields: body.customFields || {},
     };
-    
-    // Create the lead
-    const lead = await leadService.createLead(leadInput);
-    
-    // Send notification email (placeholder)
-    try {
-      await sendLeadNotification(lead);
-    } catch (notificationError) {
-      console.error('Failed to send notification:', notificationError);
-      // Don't fail the request if notification fails
-    }
-    
-    return NextResponse.json({
-      success: true,
-      data: lead,
-      message: 'Lead created successfully'
-    }, { status: 201 });
-    
+
+    // Calculate lead score and priority
+    const leadScore = calculateLeadScore({
+      budgetRange: leadInput.budgetRange,
+      timeline: leadInput.timeline,
+      companySize: leadInput.companySize,
+      industry: leadInput.industry,
+      primaryChallenge: leadInput.primaryChallenge,
+    });
+    const priority = determineLeadPriority(leadScore);
+
+    const timestamp = Date.now().toString(36);
+    const random = Math.random().toString(36).substr(2, 5);
+    const leadId = `lead_${timestamp}_${random}`;
+
+    const record = {
+      id: leadId,
+      name: leadInput.name,
+      email: leadInput.email,
+      phone: leadInput.phone || null,
+      company: leadInput.company,
+      website: leadInput.website || null,
+      job_title: leadInput.jobTitle || null,
+      company_size: leadInput.companySize,
+      industry: leadInput.industry || null,
+      project_type: leadInput.projectType,
+      project_description: leadInput.projectDescription,
+      budget_range: leadInput.budgetRange,
+      timeline: leadInput.timeline,
+      primary_challenge: leadInput.primaryChallenge,
+      additional_challenges: leadInput.additionalChallenges || [],
+      specific_requirements: leadInput.specificRequirements || null,
+      status: 'new',
+      priority,
+      source: leadInput.source || 'website_form',
+      lead_score: leadScore,
+      tags: [],
+      notes: '',
+      custom_fields: leadInput.customFields || {},
+    };
+
+    const supabase = getSupabaseAdmin();
+    const { data, error } = await supabase.from('leads').insert(record).select().single();
+
+    if (error) throw error;
+
+    // Build camelCase response
+    const lead = {
+      id: data.id,
+      name: data.name,
+      email: data.email,
+      phone: data.phone,
+      company: data.company,
+      website: data.website,
+      jobTitle: data.job_title,
+      companySize: data.company_size,
+      industry: data.industry,
+      projectType: data.project_type,
+      projectDescription: data.project_description,
+      budgetRange: data.budget_range,
+      timeline: data.timeline,
+      primaryChallenge: data.primary_challenge,
+      additionalChallenges: data.additional_challenges,
+      specificRequirements: data.specific_requirements,
+      status: data.status,
+      priority: data.priority,
+      source: data.source,
+      leadScore: data.lead_score,
+      tags: data.tags,
+      notes: data.notes,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at,
+    };
+
+    return NextResponse.json(
+      { success: true, data: lead, message: 'Lead created successfully' },
+      { status: 201 }
+    );
   } catch (error) {
     console.error('Error creating lead:', error);
     return NextResponse.json(
-      { 
-        success: false, 
-        error: 'Failed to create lead',
-      },
+      { success: false, error: 'Failed to create lead' },
       { status: 500 }
     );
   }
 }
 
-// PUT /api/leads - Update lead (requires lead ID in body)
+// PUT /api/leads - Update lead
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
-    
+
     if (!body.id) {
       return NextResponse.json(
         { success: false, error: 'Lead ID is required' },
         { status: 400 }
       );
     }
-    
-    // Extract update data (remove id from update object)
+
     const { id, ...updateData } = body;
-    const leadUpdate: LeadUpdate = updateData;
-    
-    const updatedLead = await leadService.updateLead(id, leadUpdate);
-    
-    if (!updatedLead) {
+
+    // Map camelCase fields to snake_case for Supabase
+    const updates: Record<string, any> = {};
+    if (updateData.status !== undefined) updates.status = updateData.status;
+    if (updateData.assignedTo !== undefined) updates.assigned_to = updateData.assignedTo;
+    if (updateData.nextAction !== undefined) updates.next_action = updateData.nextAction;
+    if (updateData.followUpDate !== undefined) updates.follow_up_date = updateData.followUpDate;
+    if (updateData.notes !== undefined) updates.notes = updateData.notes;
+    if (updateData.tags !== undefined) updates.tags = updateData.tags;
+    if (updateData.priority !== undefined) updates.priority = updateData.priority;
+    if (updateData.leadScore !== undefined) updates.lead_score = updateData.leadScore;
+    if (updateData.customFields !== undefined) updates.custom_fields = updateData.customFields;
+    if (updateData.convertedToClientAt !== undefined) updates.converted_to_client_at = updateData.convertedToClientAt;
+    if (updateData.clientId !== undefined) updates.client_id = updateData.clientId;
+
+    const supabase = getSupabaseAdmin();
+    const { data, error } = await supabase
+      .from('leads')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    if (!data) {
       return NextResponse.json(
         { success: false, error: 'Lead not found' },
         { status: 404 }
       );
     }
-    
+
+    // Transform response
+    const updatedLead = {
+      id: data.id,
+      name: data.name,
+      email: data.email,
+      phone: data.phone,
+      company: data.company,
+      website: data.website,
+      jobTitle: data.job_title,
+      companySize: data.company_size,
+      industry: data.industry,
+      projectType: data.project_type,
+      projectDescription: data.project_description,
+      budgetRange: data.budget_range,
+      timeline: data.timeline,
+      primaryChallenge: data.primary_challenge,
+      additionalChallenges: data.additional_challenges,
+      specificRequirements: data.specific_requirements,
+      status: data.status,
+      priority: data.priority,
+      source: data.source,
+      leadScore: data.lead_score,
+      assignedTo: data.assigned_to,
+      nextAction: data.next_action,
+      followUpDate: data.follow_up_date,
+      notes: data.notes,
+      tags: data.tags,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at,
+    };
+
     return NextResponse.json({
       success: true,
       data: updatedLead,
-      message: 'Lead updated successfully'
+      message: 'Lead updated successfully',
     });
-    
   } catch (error) {
     console.error('Error updating lead:', error);
     return NextResponse.json(
-      { 
-        success: false, 
-        error: 'Failed to update lead',
-      },
+      { success: false, error: 'Failed to update lead' },
       { status: 500 }
     );
-  }
-}
-
-// Helper function to send lead notifications
-async function sendLeadNotification(lead: any) {
-  try {
-    // In a real implementation, this would send:
-    // 1. Email notification to the team
-    // 2. Slack notification
-    // 3. Auto-response email to the lead
-    
-    
-    // Placeholder for actual notification implementation
-    // await emailService.sendTeamNotification(lead);
-    // await slackService.sendLeadAlert(lead);
-    // await emailService.sendAutoResponse(lead);
-    
-  } catch (error) {
-    console.error('Error sending lead notification:', error);
-    throw error;
   }
 }

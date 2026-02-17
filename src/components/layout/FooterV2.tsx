@@ -70,7 +70,7 @@ export function FooterV2() {
             </div>
             <Link
               href="/contact"
-              className="inline-flex items-center gap-3 px-8 py-4 rounded-2xl font-semibold text-sm transition-all duration-300 hover:brightness-110 shrink-0 group"
+              className="inline-flex items-center gap-3 px-8 py-4 rounded-2xl font-semibold text-sm transition-[filter] duration-300 hover:brightness-110 shrink-0 group"
               style={{
                 background: 'linear-gradient(135deg, #8c1d4a, #a82548)',
                 color: 'white',
@@ -228,7 +228,7 @@ export function FooterV2() {
                       href={social.href}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="w-10 h-10 rounded-xl flex items-center justify-center v2-text-secondary transition-all duration-300"
+                      className="w-10 h-10 rounded-xl flex items-center justify-center v2-text-secondary transition-[background-color,color] duration-300"
                       style={{
                         background: 'rgba(201, 50, 93, 0.06)',
                         border: '1px solid rgba(201, 50, 93, 0.1)',
@@ -272,7 +272,7 @@ export function FooterV2() {
                   }}
                 />
                 <button
-                  className="px-4 py-2.5 rounded-lg text-white text-[13px] font-medium transition-all hover:brightness-110"
+                  className="px-4 py-2.5 rounded-lg text-white text-[13px] font-medium transition-[filter] hover:brightness-110"
                   style={{ background: '#8c1d4a' }}
                 >
                   <Send className="w-4 h-4" />

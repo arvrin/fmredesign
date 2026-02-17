@@ -51,35 +51,33 @@ export function ClientsSectionV2() {
         const subtitle = headerRef.current.querySelector('p');
 
         gsap.from([badge, heading, subtitle], {
-          y: 50,
+          y: 25,
           opacity: 0,
-          duration: 0.9,
-          stagger: 0.15,
-          ease: 'power3.out',
+          duration: 0.45,
+          stagger: 0.06,
+          ease: 'power2.out',
           scrollTrigger: {
             trigger: headerRef.current,
-            start: 'top 80%',
-            toggleActions: 'play none none reverse',
+            start: 'top 85%',
+            toggleActions: 'play none none none',
           },
         });
       }
 
-      // Stats cards with 3D stagger
+      // Stats cards
       if (statsRef.current) {
         const statCards = statsRef.current.querySelectorAll('.stat-card');
 
         gsap.from(statCards, {
-          y: 60,
+          y: 25,
           opacity: 0,
-          scale: 0.9,
-          rotationX: 15,
-          duration: 0.7,
-          stagger: 0.1,
-          ease: 'back.out(1.5)',
+          duration: 0.4,
+          stagger: 0.06,
+          ease: 'power2.out',
           scrollTrigger: {
             trigger: statsRef.current,
             start: 'top 85%',
-            toggleActions: 'play none none reverse',
+            toggleActions: 'play none none none',
           },
         });
 
@@ -88,11 +86,11 @@ export function ClientsSectionV2() {
         statNumbers.forEach((num) => {
           gsap.from(num, {
             textContent: '0',
-            duration: 1.5,
+            duration: 0.8,
             ease: 'power2.out',
             scrollTrigger: {
               trigger: statsRef.current,
-              start: 'top 80%',
+              start: 'top 85%',
               toggleActions: 'play none none none',
             },
           });
@@ -102,14 +100,14 @@ export function ClientsSectionV2() {
       // Marquee entrance
       if (marqueeRef.current) {
         gsap.from(marqueeRef.current, {
-          y: 40,
+          y: 20,
           opacity: 0,
-          duration: 0.8,
-          ease: 'power3.out',
+          duration: 0.4,
+          ease: 'power2.out',
           scrollTrigger: {
             trigger: marqueeRef.current,
             start: 'top 90%',
-            toggleActions: 'play none none reverse',
+            toggleActions: 'play none none none',
           },
         });
       }
@@ -117,31 +115,29 @@ export function ClientsSectionV2() {
       // CTA animation
       if (ctaRef.current) {
         gsap.from(ctaRef.current, {
-          y: 40,
+          y: 20,
           opacity: 0,
-          duration: 0.8,
-          ease: 'power3.out',
+          duration: 0.4,
+          ease: 'power2.out',
           scrollTrigger: {
             trigger: ctaRef.current,
             start: 'top 90%',
-            toggleActions: 'play none none reverse',
+            toggleActions: 'play none none none',
           },
         });
       }
 
-      // Mascot floating entrance
+      // Mascot entrance
       if (mascotRef.current) {
         gsap.from(mascotRef.current, {
-          y: 100,
+          y: 30,
           opacity: 0,
-          scale: 0.8,
-          rotation: -10,
-          duration: 1.2,
-          ease: 'back.out(1.5)',
+          duration: 0.5,
+          ease: 'power2.out',
           scrollTrigger: {
             trigger: sectionRef.current,
-            start: 'bottom 70%',
-            toggleActions: 'play none none reverse',
+            start: 'bottom 75%',
+            toggleActions: 'play none none none',
           },
         });
       }
@@ -154,48 +150,26 @@ export function ClientsSectionV2() {
     <section
       ref={sectionRef}
       className="relative overflow-visible z-20"
-      style={{
-        transformStyle: 'preserve-3d',
-        perspective: '1000px',
-      }}
     >
-      {/* Ambient Gradient Orbs */}
+      {/* Ambient Gradient Orbs — reduced blur for scroll perf */}
       <GradientOrb
-        color="rgba(201, 50, 93, 0.2)"
-        size={600}
-        blur={50}
+        color="rgba(201, 50, 93, 0.15)"
+        size={500}
+        blur={20}
         position={{ top: '-200px', right: '-200px' }}
         drift={20}
       />
       <GradientOrb
-        color="rgba(160, 30, 70, 0.15)"
-        size={500}
-        blur={40}
+        color="rgba(160, 30, 70, 0.12)"
+        size={400}
+        blur={18}
         position={{ bottom: '-100px', left: '-150px' }}
         drift={15}
       />
 
-      {/* Decorative Brain */}
-      <div
-        className="absolute w-[300px] h-[300px] opacity-20 pointer-events-none hidden lg:block"
-        style={{
-          top: '15%',
-          right: '5%',
-          filter: 'blur(35px)',
-        }}
-      >
-        <img
-          src="/3dasset/brain-teaching.png"
-          alt=""
-          className="w-full h-full object-contain"
-          style={{ opacity: 0.5 }}
-        />
-      </div>
-
       {/* Content */}
       <div
         className="relative z-10 v2-section"
-        style={{ transform: 'translateZ(0)' }}
       >
         <div className="v2-container">
           {/* Section Header */}
@@ -220,7 +194,7 @@ export function ClientsSectionV2() {
 
           {/* Stats Row */}
           <div ref={statsRef} className="mb-16 max-w-3xl mx-auto">
-            <div className="rounded-2xl p-4 md:p-5" style={{ background: 'rgba(255,255,255,0.6)', border: '1px solid rgba(201, 50, 93, 0.1)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
+            <div className="rounded-2xl p-4 md:p-5" style={{ background: 'rgba(255,255,255,0.85)', border: '1px solid rgba(201, 50, 93, 0.1)' }}>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
                 {stats.map((stat) => {
                   const Icon = stat.icon;
@@ -253,7 +227,7 @@ export function ClientsSectionV2() {
                       width={140}
                       height={80}
                       style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-                      className="hover:opacity-100 transition-all duration-300 hover:scale-110"
+                      className="hover:opacity-100 transition-[opacity,transform] duration-300 hover:scale-110"
                     />
                   </div>
                 ))}
@@ -274,7 +248,7 @@ export function ClientsSectionV2() {
                       width={140}
                       height={80}
                       style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-                      className="hover:opacity-100 transition-all duration-300 hover:scale-110"
+                      className="hover:opacity-100 transition-[opacity,transform] duration-300 hover:scale-110"
                     />
                   </div>
                 ))}

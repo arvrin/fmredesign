@@ -56,30 +56,31 @@ const generateStars = (count: number): Star[] => {
   }));
 };
 
-// Generate mid-ground shapes (4 large blurred ellipses — reduced from 6 for GPU perf)
+// Perf note: Star count reduced from 60 → 25, accent stars removed (animated filter),
+// mid-ground shapes 4 → 2, particles 6 → 3 for better scroll performance.
+
+// Generate mid-ground shapes (2 large blurred ellipses — reduced from 4 for GPU perf)
 const generateMidGroundShapes = (): MidGroundShape[] => {
   const colors = [
     'rgba(180, 40, 80, 0.10)',
     'rgba(200, 60, 90, 0.08)',
-    'rgba(160, 30, 70, 0.12)',
-    'rgba(220, 80, 100, 0.09)',
   ];
-  return Array.from({ length: 4 }, (_, i) => ({
+  return Array.from({ length: 2 }, (_, i) => ({
     id: i,
-    left: 5 + Math.random() * 80,
-    top: 5 + (i * 22) + Math.random() * 10,
+    left: 10 + Math.random() * 70,
+    top: 10 + (i * 40) + Math.random() * 15,
     width: 250 + Math.random() * 200,
     height: 180 + Math.random() * 150,
     rotation: Math.random() * 40 - 20,
     opacity: 1,
-    blur: 30 + Math.random() * 15,
+    blur: 20 + Math.random() * 10,
     color: colors[i],
   }));
 };
 
-// Generate foreground particles (6 small bokeh circles — reduced from 10 for GPU perf)
+// Generate foreground particles (3 small bokeh circles — reduced from 6 for GPU perf)
 const generateForegroundParticles = (): ForegroundParticle[] => {
-  return Array.from({ length: 6 }, (_, i) => ({
+  return Array.from({ length: 3 }, (_, i) => ({
     id: i,
     left: Math.random() * 100,
     top: Math.random() * 100,
@@ -98,8 +99,8 @@ interface V2PageWrapperProps {
 
 export function V2PageWrapper({
   children,
-  starCount = 60,
-  showAccentStars = true
+  starCount = 25,
+  showAccentStars = false
 }: V2PageWrapperProps) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const midGroundRef = useRef<HTMLDivElement>(null);
@@ -156,12 +157,11 @@ export function V2PageWrapper({
         }}
       />
 
-      {/* Layer 1: Atmospheric Blooms — fixed with CSS breathing animation */}
+      {/* Layer 1: Atmospheric Blooms — fixed, static (animation removed for scroll perf) */}
       <div
         className="fixed inset-0 pointer-events-none"
         style={{
           zIndex: -10,
-          animation: 'v2BloomBreathe 60s ease-in-out infinite',
           background: `
             radial-gradient(ellipse 100% 80% at 20% 10%, rgba(120, 20, 60, 0.25) 0%, transparent 50%),
             radial-gradient(ellipse 80% 60% at 85% 30%, rgba(90, 15, 50, 0.2) 0%, transparent 45%),
@@ -192,7 +192,6 @@ export function V2PageWrapper({
               width: `${star.size}px`,
               height: `${star.size}px`,
               background: `radial-gradient(circle, rgba(140,20,65,${star.brightness}) 0%, rgba(140,20,65,${star.brightness * 0.6}) 50%, transparent 100%)`,
-              boxShadow: `0 0 ${star.size * 4}px rgba(140,20,65,${star.brightness * 0.7})`,
               animation: `v2StarTwinkle ${star.duration}s ease-in-out infinite`,
               animationDelay: `${star.delay}s`,
             }}
