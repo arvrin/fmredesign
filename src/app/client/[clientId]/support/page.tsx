@@ -1,46 +1,35 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { 
-  DashboardLayout,
+import { useState } from 'react';
+import {
   DashboardCard as Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
   DashboardButton as Button
 } from '@/design-system';
 import { Badge } from '@/components/ui/Badge';
 import { Input } from '@/components/ui/Input';
-// Using native textarea element
-import { 
+import {
   MessageSquare,
   Phone,
   Mail,
   Clock,
   User,
-  Calendar,
-  FileText,
   Send,
   Search,
   HelpCircle,
-  CheckCircle2,
-  AlertCircle,
   Info,
   BookOpen,
   Video,
   Download,
   ExternalLink,
-  Star,
-  BarChart3,
-  PieChart,
-  Briefcase,
-  Headphones,
   MessageCircle,
   ChevronRight,
   Plus
 } from 'lucide-react';
+import { useClientPortal } from '@/lib/client-portal/context';
+import { getStatusColor, getPriorityColor } from '@/lib/client-portal/status-colors';
 
 interface SupportTicket {
   id: string;
@@ -61,12 +50,45 @@ interface FAQ {
 }
 
 export default function ClientSupportPage() {
-  const params = useParams();
-  const router = useRouter();
-  const clientId = params.clientId as string;
+  const { profile, clientId } = useClientPortal();
 
-  const [profileData, setProfileData] = useState<{ name: string; email: string; industry: string } | null>(null);
-  const [tickets, setTickets] = useState<SupportTicket[]>([]);
+  const [tickets, setTickets] = useState<SupportTicket[]>([
+    {
+      id: '1',
+      title: 'Request for additional social media platforms',
+      description: 'Would like to expand our social media presence to include TikTok and Pinterest',
+      status: 'in-progress',
+      priority: 'medium',
+      createdDate: '2024-03-20',
+      lastUpdate: '2024-03-22',
+      assignedTo: 'Sarah Wilson',
+      category: 'Services'
+    },
+    {
+      id: '2',
+      title: 'Question about monthly report metrics',
+      description: 'Need clarification on how engagement rate is calculated in the reports',
+      status: 'resolved',
+      priority: 'low',
+      createdDate: '2024-03-15',
+      lastUpdate: '2024-03-16',
+      assignedTo: 'Mike Johnson',
+      category: 'Reports'
+    },
+    {
+      id: '3',
+      title: 'Website loading speed optimization',
+      description: 'Website seems to be loading slowly on mobile devices, especially on the homepage',
+      status: 'open',
+      priority: 'high',
+      createdDate: '2024-03-25',
+      lastUpdate: '2024-03-25',
+      assignedTo: 'Alex Chen',
+      category: 'Technical'
+    }
+  ]);
+  const [loading] = useState(false);
+
   const [faqs] = useState<FAQ[]>([
     {
       question: "How do I track my project progress?",
@@ -89,8 +111,7 @@ export default function ClientSupportPage() {
       category: "Billing"
     }
   ]);
-  
-  const [loading, setLoading] = useState(true);
+
   const [newTicket, setNewTicket] = useState({
     title: '',
     description: '',
@@ -100,98 +121,10 @@ export default function ClientSupportPage() {
   const [showNewTicketForm, setShowNewTicketForm] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const handleLogout = useCallback(async () => {
-    try {
-      await fetch('/api/client-portal/logout', { method: 'POST' });
-    } catch {}
-    router.push('/client/login');
-  }, [router]);
-
-  useEffect(() => {
-    if (clientId) {
-      fetch(`/api/client-portal/${clientId}/profile`)
-        .then(res => res.ok ? res.json() : null)
-        .then(json => {
-          if (json?.data) {
-            const p = json.data;
-            setProfileData({
-              name: p.name,
-              email: p.primaryContact?.email || '',
-              industry: p.industry
-            });
-          }
-        })
-        .catch(() => {});
-    }
-  }, [clientId]);
-
-  useEffect(() => {
-    // Local mock support tickets (no tickets table yet)
-    setTimeout(() => {
-      setTickets([
-        {
-          id: '1',
-          title: 'Request for additional social media platforms',
-          description: 'Would like to expand our social media presence to include TikTok and Pinterest',
-          status: 'in-progress',
-          priority: 'medium',
-          createdDate: '2024-03-20',
-          lastUpdate: '2024-03-22',
-          assignedTo: 'Sarah Wilson',
-          category: 'Services'
-        },
-        {
-          id: '2',
-          title: 'Question about monthly report metrics',
-          description: 'Need clarification on how engagement rate is calculated in the reports',
-          status: 'resolved',
-          priority: 'low',
-          createdDate: '2024-03-15',
-          lastUpdate: '2024-03-16',
-          assignedTo: 'Mike Johnson',
-          category: 'Reports'
-        },
-        {
-          id: '3',
-          title: 'Website loading speed optimization',
-          description: 'Website seems to be loading slowly on mobile devices, especially on the homepage',
-          status: 'open',
-          priority: 'high',
-          createdDate: '2024-03-25',
-          lastUpdate: '2024-03-25',
-          assignedTo: 'Alex Chen',
-          category: 'Technical'
-        }
-      ]);
-      setLoading(false);
-    }, 1000);
-  }, []);
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'open': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'in-progress': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'resolved': return 'bg-green-100 text-green-800 border-green-200';
-      case 'closed': return 'bg-gray-100 text-gray-800 border-gray-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
-  };
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'urgent': return 'bg-red-500';
-      case 'high': return 'bg-orange-500';
-      case 'medium': return 'bg-yellow-500';
-      case 'low': return 'bg-green-500';
-      default: return 'bg-gray-500';
-    }
-  };
-
   const handleSubmitTicket = (e: React.FormEvent) => {
     e.preventDefault();
-    // Here you would normally submit to an API
     const newTicketData: SupportTicket = {
-      id: (tickets.length + 1).toString(),
+      id: crypto.randomUUID(),
       title: newTicket.title,
       description: newTicket.description,
       status: 'open',
@@ -201,78 +134,46 @@ export default function ClientSupportPage() {
       assignedTo: 'Support Team',
       category: newTicket.category
     };
-    
+
     setTickets([newTicketData, ...tickets]);
     setNewTicket({ title: '', description: '', priority: 'medium', category: 'general' });
     setShowNewTicketForm(false);
   };
 
-  const filteredFAQs = faqs.filter(faq => 
+  const filteredFAQs = faqs.filter(faq =>
     faq.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
     faq.answer.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const navigationItems = [
-    {
-      label: 'Overview',
-      href: `/client/${clientId}`,
-      icon: <BarChart3 className="w-5 h-5" />
-    },
-    {
-      label: 'Projects',
-      href: `/client/${clientId}/projects`,
-      icon: <Briefcase className="w-5 h-5" />
-    },
-    {
-      label: 'Content',
-      href: `/client/${clientId}/content`,
-      icon: <Calendar className="w-5 h-5" />
-    },
-    {
-      label: 'Reports',
-      href: `/client/${clientId}/reports`,
-      icon: <PieChart className="w-5 h-5" />
-    },
-    {
-      label: 'Support',
-      href: `/client/${clientId}/support`,
-      icon: <MessageSquare className="w-5 h-5" />,
-      active: true
-    }
-  ];
-
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-fm-magenta-50 via-orange-50/30 to-fm-magenta-50 flex items-center justify-center">
-        <Card variant="glass" className="p-8 text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-fm-magenta-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600 font-medium">Loading support center...</p>
-        </Card>
+      <div className="flex items-center justify-center py-20">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-fm-magenta-600" />
       </div>
     );
   }
 
   return (
-    <DashboardLayout
-      variant="client"
-      navigation={navigationItems}
-      user={{
-        name: profileData?.name || 'Client',
-        email: profileData?.email || '',
-        role: profileData?.industry || ''
-      }}
-      onLogout={handleLogout}
-    >
+    <>
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-fm-magenta-600 to-fm-magenta-500 bg-clip-text text-transparent">
-              Support Center
+            <h1 className="text-3xl font-display font-bold text-fm-neutral-900">
+              Support <span className="v2-accent">Center</span>
             </h1>
-            <p className="text-gray-600 mt-1 font-medium">Get help and manage your support requests</p>
+            <p className="text-fm-neutral-600 mt-1 font-medium">Get help and manage your support requests</p>
           </div>
         </div>
+      </div>
+
+      {/* Sample Data Banner */}
+      <div className="mb-6 bg-fm-magenta-50 border border-fm-magenta-100 rounded-xl p-4 flex items-center space-x-3">
+        <Info className="w-5 h-5 text-fm-magenta-600 flex-shrink-0" />
+        <p className="text-sm text-fm-magenta-800">
+          <span className="font-semibold">Demo data.</span>{' '}
+          Support tickets shown below are sample data. Submit real requests via email or phone.
+        </p>
       </div>
 
       {/* Quick Actions */}
@@ -282,10 +183,10 @@ export default function ClientSupportPage() {
             <div className="w-12 h-12 rounded-full bg-gradient-to-br from-fm-magenta-500 to-fm-magenta-600 flex items-center justify-center mx-auto mb-4">
               <MessageCircle className="w-6 h-6 text-white" />
             </div>
-            <h3 className="font-semibold text-gray-900 mb-2">Live Chat</h3>
-            <p className="text-sm text-gray-600 mb-4">Chat with our support team in real-time</p>
-            <Button variant="client" size="sm" className="w-full">
-              Start Chat
+            <h3 className="font-semibold text-fm-neutral-900 mb-2">Live Chat</h3>
+            <p className="text-sm text-fm-neutral-600 mb-4">Chat with our support team in real-time</p>
+            <Button variant="client" size="sm" className="w-full" disabled title="Coming soon">
+              Start Chat (Coming Soon)
             </Button>
           </CardContent>
         </Card>
@@ -295,24 +196,28 @@ export default function ClientSupportPage() {
             <div className="w-12 h-12 rounded-full bg-gradient-to-br from-fm-magenta-500 to-fm-magenta-600 flex items-center justify-center mx-auto mb-4">
               <Phone className="w-6 h-6 text-white" />
             </div>
-            <h3 className="font-semibold text-gray-900 mb-2">Phone Support</h3>
-            <p className="text-sm text-gray-600 mb-4">Speak directly with your account manager</p>
-            <Button variant="ghost" size="sm" className="w-full text-fm-magenta-600">
-              Call Now
-            </Button>
+            <h3 className="font-semibold text-fm-neutral-900 mb-2">Phone Support</h3>
+            <p className="text-sm text-fm-neutral-600 mb-4">Speak directly with your account manager</p>
+            <a href="tel:+919876543210" className="w-full">
+              <Button variant="ghost" size="sm" className="w-full text-fm-magenta-600">
+                Call Now
+              </Button>
+            </a>
           </CardContent>
         </Card>
 
         <Card variant="client" hover className="cursor-pointer">
           <CardContent className="p-6 text-center">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center mx-auto mb-4">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-fm-magenta-500 to-fm-magenta-600 flex items-center justify-center mx-auto mb-4">
               <Mail className="w-6 h-6 text-white" />
             </div>
-            <h3 className="font-semibold text-gray-900 mb-2">Email Support</h3>
-            <p className="text-sm text-gray-600 mb-4">Send us a detailed message</p>
-            <Button variant="ghost" size="sm" className="w-full text-fm-magenta-600">
-              Send Email
-            </Button>
+            <h3 className="font-semibold text-fm-neutral-900 mb-2">Email Support</h3>
+            <p className="text-sm text-fm-neutral-600 mb-4">Send us a detailed message</p>
+            <a href="mailto:support@freakingminds.com" className="w-full">
+              <Button variant="ghost" size="sm" className="w-full text-fm-magenta-600">
+                Send Email
+              </Button>
+            </a>
           </CardContent>
         </Card>
       </div>
@@ -321,9 +226,9 @@ export default function ClientSupportPage() {
         {/* Support Tickets */}
         <div>
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold text-gray-900">Your Support Tickets</h2>
-            <Button 
-              variant="client" 
+            <h2 className="text-xl font-display font-semibold text-fm-neutral-900">Your Support Tickets</h2>
+            <Button
+              variant="client"
               size="sm"
               onClick={() => setShowNewTicketForm(true)}
             >
@@ -341,7 +246,7 @@ export default function ClientSupportPage() {
               <CardContent>
                 <form onSubmit={handleSubmitTicket} className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-fm-neutral-700 mb-1">
                       Subject
                     </label>
                     <Input
@@ -352,7 +257,7 @@ export default function ClientSupportPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-fm-neutral-700 mb-1">
                       Description
                     </label>
                     <textarea
@@ -361,18 +266,18 @@ export default function ClientSupportPage() {
                       placeholder="Provide detailed information about your issue or request"
                       rows={4}
                       required
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500 resize-vertical"
+                      className="w-full p-3 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500 resize-vertical"
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-fm-neutral-700 mb-1">
                         Priority
                       </label>
                       <select
                         value={newTicket.priority}
                         onChange={(e) => setNewTicket({ ...newTicket, priority: e.target.value as any })}
-                        className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                        className="w-full p-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
                       >
                         <option value="low">Low</option>
                         <option value="medium">Medium</option>
@@ -381,13 +286,13 @@ export default function ClientSupportPage() {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-fm-neutral-700 mb-1">
                         Category
                       </label>
                       <select
                         value={newTicket.category}
                         onChange={(e) => setNewTicket({ ...newTicket, category: e.target.value })}
-                        className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                        className="w-full p-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
                       >
                         <option value="general">General</option>
                         <option value="technical">Technical</option>
@@ -402,15 +307,18 @@ export default function ClientSupportPage() {
                       <Send className="w-4 h-4 mr-2" />
                       Submit Ticket
                     </Button>
-                    <Button 
-                      type="button" 
-                      variant="ghost" 
+                    <Button
+                      type="button"
+                      variant="ghost"
                       size="sm"
                       onClick={() => setShowNewTicketForm(false)}
                     >
                       Cancel
                     </Button>
                   </div>
+                  <p className="text-xs text-fm-neutral-500 pt-1">
+                    Tickets are saved locally for demo purposes.
+                  </p>
                 </form>
               </CardContent>
             </Card>
@@ -424,18 +332,21 @@ export default function ClientSupportPage() {
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
                       <div className="flex items-center space-x-2 mb-1">
-                        <h3 className="font-semibold text-gray-900">{ticket.title}</h3>
-                        <div className={`w-2 h-2 rounded-full ${getPriorityColor(ticket.priority)}`} 
-                             title={`${ticket.priority} priority`} />
+                        <h3 className="font-semibold text-fm-neutral-900">{ticket.title}</h3>
+                        <div
+                          className={`w-2 h-2 rounded-full ${getPriorityColor(ticket.priority)}`}
+                          role="img"
+                          aria-label={`${ticket.priority} priority`}
+                        />
                       </div>
-                      <p className="text-sm text-gray-600 line-clamp-2">{ticket.description}</p>
+                      <p className="text-sm text-fm-neutral-600 line-clamp-2">{ticket.description}</p>
                     </div>
                     <Badge className={getStatusColor(ticket.status)} variant="secondary">
                       {ticket.status}
                     </Badge>
                   </div>
-                  
-                  <div className="flex items-center justify-between text-sm text-gray-500">
+
+                  <div className="flex items-center justify-between text-sm text-fm-neutral-500">
                     <div className="flex items-center space-x-4">
                       <div className="flex items-center">
                         <User className="w-4 h-4 mr-1" />
@@ -457,9 +368,9 @@ export default function ClientSupportPage() {
 
             {tickets.length === 0 && (
               <Card variant="glass" className="p-8 text-center">
-                <MessageSquare className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">No support tickets</h3>
-                <p className="text-gray-600 mb-4">You don't have any open support tickets</p>
+                <MessageSquare className="w-12 h-12 text-fm-neutral-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-fm-neutral-900 mb-2">No support tickets</h3>
+                <p className="text-fm-neutral-600 mb-4">You don&apos;t have any open support tickets</p>
                 <Button variant="client" size="sm" onClick={() => setShowNewTicketForm(true)}>
                   Create Your First Ticket
                 </Button>
@@ -471,9 +382,9 @@ export default function ClientSupportPage() {
         {/* FAQ Section */}
         <div>
           <div className="mb-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Frequently Asked Questions</h2>
+            <h2 className="text-xl font-display font-semibold text-fm-neutral-900 mb-4">Frequently Asked Questions</h2>
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-fm-neutral-400" />
               <Input
                 type="text"
                 placeholder="Search FAQs..."
@@ -493,8 +404,8 @@ export default function ClientSupportPage() {
                       <HelpCircle className="w-4 h-4 text-fm-magenta-600" />
                     </div>
                     <div className="flex-1">
-                      <h3 className="font-medium text-gray-900 mb-2">{faq.question}</h3>
-                      <p className="text-sm text-gray-600">{faq.answer}</p>
+                      <h3 className="font-medium text-fm-neutral-900 mb-2">{faq.question}</h3>
+                      <p className="text-sm text-fm-neutral-600">{faq.answer}</p>
                       <Badge variant="secondary" className="mt-2 text-xs">
                         {faq.category}
                       </Badge>
@@ -506,9 +417,9 @@ export default function ClientSupportPage() {
 
             {filteredFAQs.length === 0 && searchQuery && (
               <Card variant="glass" className="p-8 text-center">
-                <Search className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">No results found</h3>
-                <p className="text-gray-600">Try different keywords or contact support for help</p>
+                <Search className="w-12 h-12 text-fm-neutral-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-fm-neutral-900 mb-2">No results found</h3>
+                <p className="text-fm-neutral-600">Try different keywords or contact support for help</p>
               </Card>
             )}
           </div>
@@ -537,6 +448,6 @@ export default function ClientSupportPage() {
           </Card>
         </div>
       </div>
-    </DashboardLayout>
+    </>
   );
 }

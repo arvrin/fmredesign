@@ -64,12 +64,14 @@ function ClientLoginForm() {
   const [error, setError] = useState<string | null>(
     sessionExpired ? 'Your session has expired. Please log in again.' : null
   );
+  const [errorKey, setErrorKey] = useState(0);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim() || !password.trim()) {
       setError('Please enter both email and password');
+      setErrorKey((k) => k + 1);
       return;
     }
 
@@ -89,9 +91,11 @@ function ClientLoginForm() {
         router.push(data.data.redirectUrl);
       } else {
         setError(data.error || 'Invalid email or password');
+        setErrorKey((k) => k + 1);
       }
     } catch {
       setError('An error occurred. Please try again.');
+      setErrorKey((k) => k + 1);
     } finally {
       setLoading(false);
     }
@@ -315,6 +319,7 @@ function ClientLoginForm() {
               {/* Error message */}
               {error && (
                 <div
+                  key={errorKey}
                   className="flex items-center gap-2.5 text-sm rounded-xl px-4 py-3"
                   role="alert"
                   style={{

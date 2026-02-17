@@ -12,51 +12,45 @@ export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 const cardVariants = {
-  // Base styles with glassmorphism support
+  // Base styles (no backdrop-blur — creates containing block for fixed children)
   base: [
     'rounded-xl transition-all duration-300 relative overflow-hidden',
-    'border backdrop-blur-sm'
+    'border'
   ].join(' '),
-  
+
   // Visual variants
   variant: {
     default: [
       'bg-white border-gray-200 shadow-md',
       'hover:shadow-lg hover:border-gray-300'
     ].join(' '),
-    
+
     glass: [
-      'bg-white/95 border-white/20 shadow-lg',
-      'backdrop-blur-md backdrop-saturate-150',
-      'hover:bg-white/98 hover:shadow-xl',
-      'before:absolute before:inset-0 before:bg-gradient-to-br before:from-white/10 before:to-transparent before:pointer-events-none'
+      'v2-paper-sm border-white/20'
     ].join(' '),
-    
+
     elevated: [
       'bg-white border-gray-100 shadow-xl',
       'hover:shadow-2xl hover:-translate-y-1'
     ].join(' '),
-    
+
     flat: [
       'bg-gray-50 border-gray-200 shadow-none',
       'hover:bg-white hover:shadow-sm'
     ].join(' '),
-    
+
     admin: [
       'bg-fm-magenta-50/80 border-fm-magenta-200 shadow-lg',
       'backdrop-blur-sm',
       'hover:bg-fm-magenta-50 hover:shadow-xl',
       'hover:border-fm-magenta-300'
     ].join(' '),
-    
+
     client: [
-      'bg-gradient-to-br from-fm-magenta-50/80 to-fm-neutral-50 border-fm-magenta-100 shadow-lg',
-      'backdrop-blur-sm',
-      'hover:from-fm-magenta-50 hover:to-white hover:shadow-xl',
-      'hover:border-fm-magenta-200'
+      'v2-paper border-fm-magenta-100/30'
     ].join(' ')
   },
-  
+
   // Padding variants
   padding: {
     none: 'p-0',
@@ -65,11 +59,11 @@ const cardVariants = {
     lg: 'p-8',
     xl: 'p-10'
   },
-  
+
   // Interactive states
   interactive: {
     hover: 'cursor-pointer hover:scale-[1.02] active:scale-[0.98]',
-    glow: 'hover:shadow-[0_0_30px_rgba(139,92,246,0.3)] transition-shadow duration-500'
+    glow: 'hover:shadow-[0_0_30px_rgba(168,37,72,0.3)] transition-shadow duration-500'
   }
 };
 
@@ -82,6 +76,9 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(({
   children,
   ...props
 }, ref) => {
+  // v2-paper / v2-paper-sm already have their own hover transitions
+  const skipInteractive = variant === 'client' || variant === 'glass';
+
   return (
     <div
       ref={ref}
@@ -89,8 +86,8 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(({
         cardVariants.base,
         cardVariants.variant[variant],
         cardVariants.padding[padding],
-        hover && cardVariants.interactive.hover,
-        glow && cardVariants.interactive.glow,
+        hover && !skipInteractive && cardVariants.interactive.hover,
+        glow && !skipInteractive && cardVariants.interactive.glow,
         className
       )}
       {...props}
@@ -125,7 +122,7 @@ export const CardTitle = React.forwardRef<HTMLParagraphElement, React.HTMLAttrib
 }, ref) => (
   <h3
     ref={ref}
-    className={cn('text-xl font-semibold leading-none tracking-tight text-gray-900', className)}
+    className={cn('text-xl font-semibold leading-none tracking-tight text-fm-neutral-900', className)}
     {...props}
   >
     {children}
@@ -140,7 +137,7 @@ export const CardDescription = React.forwardRef<HTMLParagraphElement, React.HTML
 }, ref) => (
   <p
     ref={ref}
-    className={cn('text-sm text-gray-600', className)}
+    className={cn('text-sm text-fm-neutral-600', className)}
     {...props}
   >
     {children}

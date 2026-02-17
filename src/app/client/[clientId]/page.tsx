@@ -1,61 +1,36 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
 import {
-  DashboardLayout,
   MetricCard,
   DashboardCard as Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-  DashboardButton as Button
+  IconBox,
 } from '@/design-system';
 import { Badge } from '@/components/ui/Badge';
 import {
-  Clock,
   Users,
   TrendingUp,
-  AlertCircle,
   FileText,
   MessageSquare,
   Shield,
-  BarChart3,
   Target,
   Calendar,
   Activity,
   Award,
   Briefcase,
-  PieChart,
   Handshake,
   CreditCard,
   CheckCircle2,
-  Timer
+  Timer,
 } from 'lucide-react';
 import { AGENCY_SERVICES } from '@/lib/admin/types';
-
-interface ClientProfile {
-  id: string;
-  name: string;
-  logo?: string;
-  industry: string;
-  status: string;
-  health: string;
-  accountManager: string;
-  onboardedAt: string;
-  contractDetails: {
-    type: string;
-    value: number;
-    currency: string;
-    startDate: string;
-    endDate?: string;
-    billingCycle: string;
-    retainerAmount: number;
-    services: string[];
-    isActive: boolean;
-  };
-}
+import { useClientPortal } from '@/lib/client-portal/context';
+import { getStatusColor, getHealthColor } from '@/lib/client-portal/status-colors';
 
 interface Project {
   id: string;
@@ -125,114 +100,50 @@ function getServiceName(serviceId: string): string {
 }
 
 export default function ClientDashboard() {
-  const params = useParams();
-  const router = useRouter();
-  const clientId = params.clientId as string;
+  const { profile, clientId } = useClientPortal();
 
-  const [clientProfile, setClientProfile] = useState<ClientProfile | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const [contentItems, setContentItems] = useState<ContentItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [pageLoading, setPageLoading] = useState(true);
 
   useEffect(() => {
     if (!clientId) return;
 
-    const fetchClientData = async () => {
+    const fetchPageData = async () => {
       try {
-        setLoading(true);
+        setPageLoading(true);
 
-        // Fetch client profile
-        const clientResponse = await fetch(`/api/client-portal/${clientId}/profile`);
-        if (!clientResponse.ok) {
-          if (clientResponse.status === 404) {
-            setError('Client not found. Please check your link.');
-            return;
-          }
-          throw new Error('Failed to fetch client profile');
-        }
-        const clientData = await clientResponse.json();
-        setClientProfile(clientData.data);
+        const [projectsResponse, contentResponse] = await Promise.all([
+          fetch(`/api/client-portal/${clientId}/projects`),
+          fetch(`/api/client-portal/${clientId}/content`),
+        ]);
 
-        // Fetch projects
-        const projectsResponse = await fetch(`/api/client-portal/${clientId}/projects`);
         if (projectsResponse.ok) {
           const projectsData = await projectsResponse.json();
           setProjects(projectsData.data || []);
         }
 
-        // Fetch content
-        const contentResponse = await fetch(`/api/client-portal/${clientId}/content`);
         if (contentResponse.ok) {
           const contentData = await contentResponse.json();
           setContentItems(contentData.data || []);
         }
-
       } catch (err) {
-        console.error('Error fetching client data:', err);
-        setError('Failed to load client data. Please try again later.');
+        console.error('Error fetching page data:', err);
       } finally {
-        setLoading(false);
+        setPageLoading(false);
       }
     };
 
-    fetchClientData();
+    fetchPageData();
   }, [clientId]);
 
-  const handleLogout = async () => {
-    try {
-      await fetch('/api/client-portal/logout', { method: 'POST' });
-    } catch {
-      // Ignore errors — redirect regardless
-    }
-    router.push('/client/login');
-  };
-
-  // Show loading while fetching data
-  if (loading) {
+  if (pageLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-fm-magenta-50 via-orange-50/30 to-fm-magenta-50 flex items-center justify-center">
-        <Card variant="glass" className="p-8 text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-fm-magenta-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600 font-medium">Loading your dashboard...</p>
-        </Card>
+      <div className="flex items-center justify-center py-20">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-fm-magenta-600" />
       </div>
     );
   }
-
-  if (error || !clientProfile) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-fm-magenta-50 via-orange-50/30 to-fm-magenta-50 flex items-center justify-center">
-        <Card variant="glass" className="p-8 text-center">
-          <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
-            <AlertCircle className="h-8 w-8 text-red-500" />
-          </div>
-          <p className="text-gray-900 font-semibold text-lg">{error || 'Client not found'}</p>
-          <p className="text-gray-600 mt-2">Please contact your account manager for assistance.</p>
-        </Card>
-      </div>
-    );
-  }
-
-  const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'active': return 'bg-green-100 text-green-800';
-      case 'completed': return 'bg-blue-100 text-blue-800';
-      case 'paused': return 'bg-yellow-100 text-yellow-800';
-      case 'planning': return 'bg-purple-100 text-purple-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getHealthColor = (health: string) => {
-    switch (health.toLowerCase()) {
-      case 'excellent': return 'text-green-600';
-      case 'good': return 'text-blue-600';
-      case 'warning': return 'text-yellow-600';
-      case 'critical': return 'text-red-600';
-      default: return 'text-gray-600';
-    }
-  };
 
   // Calculate metrics for the dashboard
   const activeProjects = projects.filter(p => p.status === 'active').length;
@@ -247,82 +158,41 @@ export default function ClientDashboard() {
   const avgProgress = projects.length > 0 ?
     Math.round(projects.reduce((sum, p) => sum + p.progress, 0) / projects.length) : 0;
 
-  const partnerDuration = formatPartnerDuration(clientProfile.onboardedAt);
-  const nextBilling = getNextBillingDate(clientProfile.contractDetails.startDate, clientProfile.contractDetails.billingCycle);
-  const contractProgress = getContractProgress(clientProfile.contractDetails.startDate, clientProfile.contractDetails.endDate);
-
-  // Navigation items for client dashboard
-  const navigationItems = [
-    {
-      label: 'Overview',
-      href: `/client/${clientId}`,
-      icon: <BarChart3 className="w-5 h-5" />,
-      active: true
-    },
-    {
-      label: 'Projects',
-      href: `/client/${clientId}/projects`,
-      icon: <Briefcase className="w-5 h-5" />,
-      badge: activeProjects > 0 ? activeProjects : undefined
-    },
-    {
-      label: 'Content',
-      href: `/client/${clientId}/content`,
-      icon: <Calendar className="w-5 h-5" />,
-      badge: thisMonthContent > 0 ? thisMonthContent : undefined
-    },
-    {
-      label: 'Reports',
-      href: `/client/${clientId}/reports`,
-      icon: <PieChart className="w-5 h-5" />
-    },
-    {
-      label: 'Support',
-      href: `/client/${clientId}/support`,
-      icon: <MessageSquare className="w-5 h-5" />
-    }
-  ];
+  const partnerDuration = formatPartnerDuration(profile.onboardedAt);
+  const nextBilling = getNextBillingDate(profile.contractDetails.startDate, profile.contractDetails.billingCycle);
+  const contractProgress = getContractProgress(profile.contractDetails.startDate, profile.contractDetails.endDate);
 
   return (
-    <DashboardLayout
-      variant="client"
-      navigation={navigationItems}
-      user={{
-        name: clientProfile.name,
-        email: `contact@${clientProfile.name.toLowerCase().replace(/\s+/g, '')}.com`,
-        role: clientProfile.industry
-      }}
-      onLogout={handleLogout}
-    >
+    <>
       {/* Welcome Header */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-4">
-            {clientProfile.logo && (
+            {profile.logo && (
               <div className="w-16 h-16 rounded-xl overflow-hidden ring-2 ring-fm-magenta-100 shadow-lg">
                 <img
-                  src={clientProfile.logo}
-                  alt={clientProfile.name}
+                  src={profile.logo}
+                  alt={profile.name}
                   className="w-full h-full object-cover"
                 />
               </div>
             )}
             <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-fm-magenta-600 to-fm-magenta-500 bg-clip-text text-transparent">
-                Welcome back, {clientProfile.name}
+              <h1 className="text-3xl font-display font-bold text-fm-neutral-900">
+                Welcome back, <span className="v2-accent">{profile.name}</span>
               </h1>
-              <p className="text-gray-600 mt-1 font-medium capitalize">
-                {clientProfile.industry} • Managed by {clientProfile.accountManager}
+              <p className="text-fm-neutral-600 mt-1 font-medium capitalize">
+                {profile.industry} • Managed by {profile.accountManager}
               </p>
             </div>
           </div>
           <div className="flex items-center space-x-4">
-            <Badge className={getStatusColor(clientProfile.status)} variant="secondary">
-              {clientProfile.status}
+            <Badge className={getStatusColor(profile.status)} variant="secondary">
+              {profile.status}
             </Badge>
-            <div className={`flex items-center px-3 py-1 rounded-full bg-white/80 backdrop-blur-sm border ${getHealthColor(clientProfile.health)}`}>
+            <div className={`flex items-center px-3 py-1 rounded-full bg-white/80 border ${getHealthColor(profile.health)}`}>
               <Activity className="w-4 h-4 mr-2" />
-              <span className="text-sm font-medium capitalize">{clientProfile.health}</span>
+              <span className="text-sm font-medium capitalize">{profile.health}</span>
             </div>
           </div>
         </div>
@@ -358,12 +228,12 @@ export default function ClientDashboard() {
 
         <MetricCard
           title="Contract Value"
-          value={clientProfile.contractDetails.value}
+          value={profile.contractDetails.value}
           subtitle={`Total project investment`}
           icon={<TrendingUp className="w-6 h-6" />}
           formatter={(val) => new Intl.NumberFormat('en-IN', {
             style: 'currency',
-            currency: clientProfile.contractDetails.currency,
+            currency: profile.contractDetails.currency,
             minimumFractionDigits: 0,
             notation: 'compact'
           }).format(Number(val))}
@@ -389,12 +259,12 @@ export default function ClientDashboard() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-fm-magenta-500 to-fm-magenta-600 flex items-center justify-center">
-                <Handshake className="w-5 h-5 text-white" />
-              </div>
+              <IconBox>
+                <Handshake className="w-5 h-5" />
+              </IconBox>
               <CardTitle className="text-xl">Partnership Details</CardTitle>
             </div>
-            {clientProfile.contractDetails.isActive && (
+            {profile.contractDetails.isActive && (
               <Badge variant="secondary" className="bg-green-50 text-green-700 border-green-200">
                 Active Partnership
               </Badge>
@@ -404,56 +274,56 @@ export default function ClientDashboard() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Left Column — Key Info */}
+            {/* Left Column -- Key Info */}
             <div className="space-y-4">
               {/* Partner Since */}
               <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 rounded-full bg-fm-magenta-100 flex items-center justify-center flex-shrink-0">
-                  <Timer className="w-4 h-4 text-fm-magenta-600" />
-                </div>
+                <IconBox size="sm">
+                  <Timer className="w-4 h-4" />
+                </IconBox>
                 <div>
-                  <p className="text-sm text-gray-500">Partner Since</p>
-                  <p className="font-medium text-gray-900">{partnerDuration.text} <span className="text-gray-500 font-normal">(since {partnerDuration.exact})</span></p>
+                  <p className="text-sm text-fm-neutral-500">Partner Since</p>
+                  <p className="font-medium text-fm-neutral-900">{partnerDuration.text} <span className="text-fm-neutral-500 font-normal">(since {partnerDuration.exact})</span></p>
                 </div>
               </div>
 
               {/* Package Type */}
               <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 rounded-full bg-fm-magenta-100 flex items-center justify-center flex-shrink-0">
-                  <Briefcase className="w-4 h-4 text-fm-magenta-600" />
-                </div>
+                <IconBox size="sm">
+                  <Briefcase className="w-4 h-4" />
+                </IconBox>
                 <div>
-                  <p className="text-sm text-gray-500">Package Type</p>
-                  <p className="font-medium text-gray-900 capitalize">{clientProfile.contractDetails.type.replace(/-/g, ' ')} Plan</p>
+                  <p className="text-sm text-fm-neutral-500">Package Type</p>
+                  <p className="font-medium text-fm-neutral-900 capitalize">{profile.contractDetails.type.replace(/-/g, ' ')} Plan</p>
                 </div>
               </div>
 
               {/* Billing Cycle */}
               <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 rounded-full bg-fm-magenta-100 flex items-center justify-center flex-shrink-0">
-                  <CreditCard className="w-4 h-4 text-fm-magenta-600" />
-                </div>
+                <IconBox size="sm">
+                  <CreditCard className="w-4 h-4" />
+                </IconBox>
                 <div>
-                  <p className="text-sm text-gray-500">Billing Cycle</p>
-                  <p className="font-medium text-gray-900 capitalize">
-                    {clientProfile.contractDetails.billingCycle.replace(/-/g, ' ')}
-                    {nextBilling && <span className="text-gray-500 font-normal"> — Next billing: {nextBilling}</span>}
+                  <p className="text-sm text-fm-neutral-500">Billing Cycle</p>
+                  <p className="font-medium text-fm-neutral-900 capitalize">
+                    {profile.contractDetails.billingCycle.replace(/-/g, ' ')}
+                    {nextBilling && <span className="text-fm-neutral-500 font-normal"> — Next billing: {nextBilling}</span>}
                   </p>
                 </div>
               </div>
 
               {/* Contract Value */}
               <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 rounded-full bg-fm-magenta-100 flex items-center justify-center flex-shrink-0">
-                  <TrendingUp className="w-4 h-4 text-fm-magenta-600" />
-                </div>
+                <IconBox size="sm">
+                  <TrendingUp className="w-4 h-4" />
+                </IconBox>
                 <div>
-                  <p className="text-sm text-gray-500">Contract Value</p>
-                  <p className="font-medium text-gray-900">
-                    {new Intl.NumberFormat('en-IN', { style: 'currency', currency: clientProfile.contractDetails.currency, minimumFractionDigits: 0 }).format(clientProfile.contractDetails.value)}
-                    {clientProfile.contractDetails.retainerAmount > 0 && (
-                      <span className="text-gray-500 font-normal">
-                        {' '}(Retainer: {new Intl.NumberFormat('en-IN', { style: 'currency', currency: clientProfile.contractDetails.currency, minimumFractionDigits: 0 }).format(clientProfile.contractDetails.retainerAmount)}/mo)
+                  <p className="text-sm text-fm-neutral-500">Contract Value</p>
+                  <p className="font-medium text-fm-neutral-900">
+                    {new Intl.NumberFormat('en-IN', { style: 'currency', currency: profile.contractDetails.currency, minimumFractionDigits: 0 }).format(profile.contractDetails.value)}
+                    {profile.contractDetails.retainerAmount > 0 && (
+                      <span className="text-fm-neutral-500 font-normal">
+                        {' '}(Retainer: {new Intl.NumberFormat('en-IN', { style: 'currency', currency: profile.contractDetails.currency, minimumFractionDigits: 0 }).format(profile.contractDetails.retainerAmount)}/mo)
                       </span>
                     )}
                   </p>
@@ -462,55 +332,55 @@ export default function ClientDashboard() {
 
               {/* Account Manager */}
               <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 rounded-full bg-fm-magenta-100 flex items-center justify-center flex-shrink-0">
-                  <Users className="w-4 h-4 text-fm-magenta-600" />
-                </div>
+                <IconBox size="sm">
+                  <Users className="w-4 h-4" />
+                </IconBox>
                 <div>
-                  <p className="text-sm text-gray-500">Account Manager</p>
-                  <p className="font-medium text-gray-900">{clientProfile.accountManager}</p>
+                  <p className="text-sm text-fm-neutral-500">Account Manager</p>
+                  <p className="font-medium text-fm-neutral-900">{profile.accountManager}</p>
                 </div>
               </div>
             </div>
 
-            {/* Right Column — Services & Timeline */}
+            {/* Right Column -- Services & Timeline */}
             <div className="space-y-6">
               {/* Services Subscribed */}
               <div>
-                <p className="text-sm text-gray-500 mb-3 font-medium">Services Subscribed</p>
-                {clientProfile.contractDetails.services.length > 0 ? (
+                <p className="text-sm text-fm-neutral-500 mb-3 font-medium">Services Subscribed</p>
+                {profile.contractDetails.services.length > 0 ? (
                   <div className="space-y-2">
-                    {clientProfile.contractDetails.services.map((serviceId) => (
+                    {profile.contractDetails.services.map((serviceId) => (
                       <div key={serviceId} className="flex items-center space-x-2">
                         <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />
-                        <span className="text-sm text-gray-700">{getServiceName(serviceId)}</span>
+                        <span className="text-sm text-fm-neutral-700">{getServiceName(serviceId)}</span>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-sm text-gray-400 italic">No specific services listed</p>
+                  <p className="text-sm text-fm-neutral-400 italic">No specific services listed</p>
                 )}
               </div>
 
               {/* Contract Timeline */}
               <div>
-                <p className="text-sm text-gray-500 mb-3 font-medium">Contract Period</p>
-                <div className="text-sm text-gray-700 mb-2">
-                  {new Date(clientProfile.contractDetails.startDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                <p className="text-sm text-fm-neutral-500 mb-3 font-medium">Contract Period</p>
+                <div className="text-sm text-fm-neutral-700 mb-2">
+                  {new Date(profile.contractDetails.startDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                   {' — '}
-                  {clientProfile.contractDetails.endDate
-                    ? new Date(clientProfile.contractDetails.endDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+                  {profile.contractDetails.endDate
+                    ? new Date(profile.contractDetails.endDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
                     : 'Ongoing'
                   }
                 </div>
                 {contractProgress !== null ? (
                   <div className="space-y-1">
-                    <div className="w-full bg-gray-200 rounded-full h-2.5">
+                    <div className="w-full bg-fm-neutral-200 rounded-full h-2.5">
                       <div
                         className="bg-gradient-to-r from-fm-magenta-500 to-fm-magenta-600 h-2.5 rounded-full transition-all duration-500"
                         style={{ width: `${contractProgress}%` }}
                       />
                     </div>
-                    <p className="text-xs text-gray-500">{contractProgress}% elapsed</p>
+                    <p className="text-xs text-fm-neutral-500">{contractProgress}% elapsed</p>
                   </div>
                 ) : (
                   <div className="flex items-center space-x-2">
@@ -534,9 +404,9 @@ export default function ClientDashboard() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-fm-magenta-500 to-fm-magenta-600 flex items-center justify-center">
-                  <Briefcase className="w-5 h-5 text-white" />
-                </div>
+                <IconBox>
+                  <Briefcase className="w-5 h-5" />
+                </IconBox>
                 <CardTitle className="text-xl">Recent Projects</CardTitle>
               </div>
               <Badge variant="secondary" className="bg-fm-magenta-50 text-fm-magenta-700 border-fm-magenta-200">
@@ -548,9 +418,9 @@ export default function ClientDashboard() {
           <CardContent className="space-y-4">
             {projects.length === 0 ? (
               <div className="text-center py-8">
-                <Briefcase className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600 font-medium">No projects yet</p>
-                <p className="text-gray-500 text-sm">New projects will appear here once set up</p>
+                <Briefcase className="h-12 w-12 text-fm-neutral-400 mx-auto mb-4" />
+                <p className="text-fm-neutral-600 font-medium">No projects yet</p>
+                <p className="text-fm-neutral-500 text-sm">New projects will appear here once set up</p>
               </div>
             ) : (
               projects.slice(0, 3).map((project) => (
@@ -558,21 +428,21 @@ export default function ClientDashboard() {
                   <CardContent className="p-4">
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
-                        <h4 className="font-semibold text-gray-900">{project.name}</h4>
+                        <h4 className="font-semibold text-fm-neutral-900">{project.name}</h4>
                         <Badge className={getStatusColor(project.status)} variant="secondary">
                           {project.status}
                         </Badge>
                       </div>
-                      <div className="text-sm text-gray-600">
+                      <div className="text-sm text-fm-neutral-600">
                         {new Date(project.startDate).toLocaleDateString()} -
                         {new Date(project.endDate).toLocaleDateString()}
                       </div>
                       <div className="space-y-2">
                         <div className="flex justify-between text-sm">
-                          <span className="text-gray-600">Progress</span>
+                          <span className="text-fm-neutral-600">Progress</span>
                           <span className="font-medium text-fm-magenta-600">{project.progress}%</span>
                         </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div className="w-full bg-fm-neutral-200 rounded-full h-2">
                           <div
                             className="bg-gradient-to-r from-fm-magenta-500 to-fm-magenta-600 h-2 rounded-full transition-all duration-300"
                             style={{ width: `${project.progress}%` }}
@@ -580,7 +450,7 @@ export default function ClientDashboard() {
                         </div>
                       </div>
                       <div className="flex justify-between items-center pt-2">
-                        <span className="text-sm text-gray-600">
+                        <span className="text-sm text-fm-neutral-600">
                           Budget: {new Intl.NumberFormat('en-IN', {
                             style: 'currency',
                             currency: 'INR',
@@ -588,9 +458,12 @@ export default function ClientDashboard() {
                             notation: 'compact'
                           }).format(project.budget)}
                         </span>
-                        <Button variant="ghost" size="sm" className="text-fm-magenta-600 hover:bg-fm-magenta-50">
+                        <Link
+                          href={`/client/${clientId}/projects`}
+                          className="text-sm font-medium text-fm-magenta-600 hover:text-fm-magenta-700 hover:bg-fm-magenta-50 px-3 py-1.5 rounded-md transition-colors"
+                        >
                           View Details
-                        </Button>
+                        </Link>
                       </div>
                     </div>
                   </CardContent>
@@ -598,10 +471,13 @@ export default function ClientDashboard() {
               ))
             )}
             {projects.length > 3 && (
-              <div className="pt-4 border-t border-gray-100">
-                <Button variant="ghost" size="sm" className="w-full text-fm-magenta-600 hover:bg-fm-magenta-50">
+              <div className="pt-4 border-t border-fm-neutral-100">
+                <Link
+                  href={`/client/${clientId}/projects`}
+                  className="flex items-center justify-center w-full text-sm font-medium text-fm-magenta-600 hover:text-fm-magenta-700 hover:bg-fm-magenta-50 py-2 rounded-md transition-colors"
+                >
                   View All {projects.length} Projects
-                </Button>
+                </Link>
               </div>
             )}
           </CardContent>
@@ -612,9 +488,9 @@ export default function ClientDashboard() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-fm-magenta-500 to-fm-magenta-600 flex items-center justify-center">
-                  <Calendar className="w-5 h-5 text-white" />
-                </div>
+                <IconBox>
+                  <Calendar className="w-5 h-5" />
+                </IconBox>
                 <CardTitle className="text-xl">Content Calendar</CardTitle>
               </div>
               <Badge variant="secondary" className="bg-fm-magenta-50 text-fm-magenta-700 border-fm-magenta-200">
@@ -626,9 +502,9 @@ export default function ClientDashboard() {
           <CardContent className="space-y-4">
             {contentItems.length === 0 ? (
               <div className="text-center py-8">
-                <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600 font-medium">No content scheduled</p>
-                <p className="text-gray-500 text-sm">Content items will appear here once created</p>
+                <Calendar className="h-12 w-12 text-fm-neutral-400 mx-auto mb-4" />
+                <p className="text-fm-neutral-600 font-medium">No content scheduled</p>
+                <p className="text-fm-neutral-500 text-sm">Content items will appear here once created</p>
               </div>
             ) : (
               contentItems.slice(0, 4).map((item) => (
@@ -636,8 +512,8 @@ export default function ClientDashboard() {
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div className="space-y-1 flex-1">
-                        <h4 className="font-medium text-gray-900">{item.title}</h4>
-                        <div className="flex items-center space-x-2 text-sm text-gray-600">
+                        <h4 className="font-medium text-fm-neutral-900">{item.title}</h4>
+                        <div className="flex items-center space-x-2 text-sm text-fm-neutral-600">
                           <span className="px-2 py-1 bg-blue-50 text-blue-700 rounded-md text-xs font-medium">
                             {item.platform}
                           </span>
@@ -656,10 +532,13 @@ export default function ClientDashboard() {
               ))
             )}
             {contentItems.length > 4 && (
-              <div className="pt-4 border-t border-gray-100">
-                <Button variant="ghost" size="sm" className="w-full text-fm-magenta-600 hover:bg-fm-magenta-50">
+              <div className="pt-4 border-t border-fm-neutral-100">
+                <Link
+                  href={`/client/${clientId}/content`}
+                  className="flex items-center justify-center w-full text-sm font-medium text-fm-magenta-600 hover:text-fm-magenta-700 hover:bg-fm-magenta-50 py-2 rounded-md transition-colors"
+                >
                   View Full Calendar
-                </Button>
+                </Link>
               </div>
             )}
           </CardContent>
@@ -672,35 +551,44 @@ export default function ClientDashboard() {
         <Card variant="glass" hover>
           <CardHeader>
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-fm-magenta-500 to-fm-magenta-600 flex items-center justify-center">
-                <Activity className="w-5 h-5 text-white" />
-              </div>
+              <IconBox>
+                <Activity className="w-5 h-5" />
+              </IconBox>
               <CardTitle className="text-xl">Quick Actions</CardTitle>
             </div>
             <CardDescription>Frequently used features and shortcuts</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <Button variant="ghost" size="lg" className="w-full justify-start text-left h-auto p-4">
-              <FileText className="w-5 h-5 mr-3 text-fm-magenta-600" />
+            <Link
+              href={`/client/${clientId}/reports`}
+              className="flex items-center w-full text-left h-auto p-4 rounded-md hover:bg-fm-neutral-50 transition-colors"
+            >
+              <FileText className="w-5 h-5 mr-3 text-fm-magenta-600 flex-shrink-0" />
               <div>
-                <div className="font-medium">Project Reports</div>
-                <div className="text-sm text-gray-500">View detailed progress reports</div>
+                <div className="font-medium text-fm-neutral-900">Project Reports</div>
+                <div className="text-sm text-fm-neutral-500">View detailed progress reports</div>
               </div>
-            </Button>
-            <Button variant="ghost" size="lg" className="w-full justify-start text-left h-auto p-4">
-              <MessageSquare className="w-5 h-5 mr-3 text-fm-magenta-600" />
+            </Link>
+            <Link
+              href={`/client/${clientId}/support`}
+              className="flex items-center w-full text-left h-auto p-4 rounded-md hover:bg-fm-neutral-50 transition-colors"
+            >
+              <MessageSquare className="w-5 h-5 mr-3 text-fm-magenta-600 flex-shrink-0" />
               <div>
-                <div className="font-medium">Contact Manager</div>
-                <div className="text-sm text-gray-500">Get in touch with {clientProfile.accountManager}</div>
+                <div className="font-medium text-fm-neutral-900">Contact Manager</div>
+                <div className="text-sm text-fm-neutral-500">Get in touch with {profile.accountManager}</div>
               </div>
-            </Button>
-            <Button variant="ghost" size="lg" className="w-full justify-start text-left h-auto p-4">
-              <Award className="w-5 h-5 mr-3 text-fm-magenta-600" />
+            </Link>
+            <Link
+              href={`/client/${clientId}/reports`}
+              className="flex items-center w-full text-left h-auto p-4 rounded-md hover:bg-fm-neutral-50 transition-colors"
+            >
+              <Award className="w-5 h-5 mr-3 text-fm-magenta-600 flex-shrink-0" />
               <div>
-                <div className="font-medium">Success Metrics</div>
-                <div className="text-sm text-gray-500">Track ROI and performance</div>
+                <div className="font-medium text-fm-neutral-900">Success Metrics</div>
+                <div className="text-sm text-fm-neutral-500">Track ROI and performance</div>
               </div>
-            </Button>
+            </Link>
           </CardContent>
         </Card>
 
@@ -708,25 +596,28 @@ export default function ClientDashboard() {
         <Card variant="glass" hover>
           <CardHeader>
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-fm-magenta-500 to-fm-magenta-600 flex items-center justify-center">
-                <Shield className="w-5 h-5 text-white" />
-              </div>
+              <IconBox>
+                <Shield className="w-5 h-5" />
+              </IconBox>
               <CardTitle className="text-xl">Support & Resources</CardTitle>
             </div>
             <CardDescription>Get help and access important information</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-sm text-gray-600">
-              Need help? Reach out to your account manager <span className="font-medium text-gray-900">{clientProfile.accountManager}</span> or submit a support request.
+            <p className="text-sm text-fm-neutral-600">
+              Need help? Reach out to your account manager <span className="font-medium text-fm-neutral-900">{profile.accountManager}</span> or submit a support request.
             </p>
 
-            <Button variant="client" size="lg" className="w-full">
+            <Link
+              href={`/client/${clientId}/support`}
+              className="inline-flex items-center justify-center w-full rounded-md bg-gradient-to-r from-fm-magenta-600 to-fm-magenta-700 px-6 py-3 text-sm font-medium text-white shadow-sm hover:from-fm-magenta-700 hover:to-fm-magenta-800 transition-all"
+            >
               <MessageSquare className="w-5 h-5 mr-2" />
               Get Support
-            </Button>
+            </Link>
           </CardContent>
         </Card>
       </div>
-    </DashboardLayout>
+    </>
   );
 }

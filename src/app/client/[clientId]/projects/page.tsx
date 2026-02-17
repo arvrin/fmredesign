@@ -1,9 +1,8 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { 
-  DashboardLayout,
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import {
   MetricCard,
   DashboardCard as Card,
   CardContent,
@@ -17,22 +16,14 @@ import {
   Briefcase,
   Calendar,
   Clock,
-  TrendingUp,
   Target,
-  Users,
   DollarSign,
-  AlertCircle,
   CheckCircle2,
-  ArrowRight,
-  Filter,
   Download,
-  Activity,
-  BarChart3,
-  PieChart,
-  MessageSquare,
-  ChevronRight,
-  Eye
+  ChevronRight
 } from 'lucide-react';
+import { useClientPortal } from '@/lib/client-portal/context';
+import { getStatusColor, getPriorityColor } from '@/lib/client-portal/status-colors';
 
 interface Project {
   id: string;
@@ -59,14 +50,11 @@ interface Project {
 }
 
 export default function ClientProjectsPage() {
-  const params = useParams();
-  const router = useRouter();
-  const clientId = params.clientId as string;
-  
+  const { clientId } = useClientPortal();
+
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'active' | 'completed'>('all');
-  const [profileData, setProfileData] = useState<{ name: string; email: string; industry: string } | null>(null);
 
   useEffect(() => {
     if (!clientId) return;
@@ -75,19 +63,6 @@ export default function ClientProjectsPage() {
       try {
         setLoading(true);
 
-        // Fetch profile for DashboardLayout user prop
-        const profileRes = await fetch(`/api/client-portal/${clientId}/profile`);
-        if (profileRes.ok) {
-          const profileJson = await profileRes.json();
-          const p = profileJson.data;
-          setProfileData({
-            name: p.name,
-            email: p.primaryContact?.email || '',
-            industry: p.industry
-          });
-        }
-
-        // Fetch projects
         const res = await fetch(`/api/client-portal/${clientId}/projects?limit=50`);
         if (res.ok) {
           const data = await res.json();
@@ -126,13 +101,6 @@ export default function ClientProjectsPage() {
     fetchData();
   }, [clientId]);
 
-  const handleLogout = useCallback(async () => {
-    try {
-      await fetch('/api/client-portal/logout', { method: 'POST' });
-    } catch {}
-    router.push('/client/login');
-  }, [router]);
-
   const filteredProjects = projects.filter(project => {
     if (filter === 'all') return true;
     if (filter === 'active') return ['active', 'planning', 'review'].includes(project.status);
@@ -140,63 +108,10 @@ export default function ClientProjectsPage() {
     return true;
   });
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active': return 'bg-green-100 text-green-800 border-green-200';
-      case 'completed': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'paused': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'planning': return 'bg-purple-100 text-purple-800 border-purple-200';
-      case 'review': return 'bg-orange-100 text-orange-800 border-orange-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
-  };
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'critical': return 'bg-red-500';
-      case 'high': return 'bg-orange-500';
-      case 'medium': return 'bg-yellow-500';
-      case 'low': return 'bg-green-500';
-      default: return 'bg-gray-500';
-    }
-  };
-
-  const navigationItems = [
-    {
-      label: 'Overview',
-      href: `/client/${clientId}`,
-      icon: <BarChart3 className="w-5 h-5" />
-    },
-    {
-      label: 'Projects',
-      href: `/client/${clientId}/projects`,
-      icon: <Briefcase className="w-5 h-5" />,
-      active: true
-    },
-    {
-      label: 'Content',
-      href: `/client/${clientId}/content`,
-      icon: <Calendar className="w-5 h-5" />
-    },
-    {
-      label: 'Reports',
-      href: `/client/${clientId}/reports`,
-      icon: <PieChart className="w-5 h-5" />
-    },
-    {
-      label: 'Support',
-      href: `/client/${clientId}/support`,
-      icon: <MessageSquare className="w-5 h-5" />
-    }
-  ];
-
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-fm-magenta-50 via-orange-50/30 to-fm-magenta-50 flex items-center justify-center">
-        <Card variant="glass" className="p-8 text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-fm-magenta-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600 font-medium">Loading projects...</p>
-        </Card>
+      <div className="flex items-center justify-center py-20">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-fm-magenta-600" />
       </div>
     );
   }
@@ -205,28 +120,20 @@ export default function ClientProjectsPage() {
   const activeProjects = projects.filter(p => ['active', 'planning', 'review'].includes(p.status)).length;
   const completedProjects = projects.filter(p => p.status === 'completed').length;
   const totalBudget = projects.reduce((sum, p) => sum + p.budget, 0);
-  const totalSpent = projects.reduce((sum, p) => sum + p.spent, 0);
-  const avgProgress = Math.round(projects.reduce((sum, p) => sum + p.progress, 0) / projects.length);
+  const avgProgress = projects.length > 0
+    ? Math.round(projects.reduce((sum, p) => sum + p.progress, 0) / projects.length)
+    : 0;
 
   return (
-    <DashboardLayout
-      variant="client"
-      navigation={navigationItems}
-      user={{
-        name: profileData?.name || 'Client',
-        email: profileData?.email || '',
-        role: profileData?.industry || ''
-      }}
-      onLogout={handleLogout}
-    >
+    <>
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-fm-magenta-600 to-fm-magenta-500 bg-clip-text text-transparent">
-              Your Projects
+            <h1 className="text-3xl font-display font-bold text-fm-neutral-900">
+              Your <span className="v2-accent">Projects</span>
             </h1>
-            <p className="text-gray-600 mt-1 font-medium">Track progress and milestones across all initiatives</p>
+            <p className="text-fm-neutral-600 mt-1 font-medium">Track progress and milestones across all initiatives</p>
           </div>
           <div className="flex items-center space-x-3">
             <Button variant="ghost" size="sm" className="text-fm-magenta-600">
@@ -251,7 +158,7 @@ export default function ClientProjectsPage() {
             period: 'this month'
           }}
         />
-        
+
         <MetricCard
           title="Completed"
           value={completedProjects}
@@ -259,7 +166,7 @@ export default function ClientProjectsPage() {
           icon={<CheckCircle2 className="w-6 h-6" />}
           variant="client"
         />
-        
+
         <MetricCard
           title="Total Investment"
           value={totalBudget}
@@ -272,7 +179,7 @@ export default function ClientProjectsPage() {
             notation: 'compact'
           }).format(Number(val))}
         />
-        
+
         <MetricCard
           title="Overall Progress"
           value={`${avgProgress}%`}
@@ -284,21 +191,21 @@ export default function ClientProjectsPage() {
 
       {/* Filter Tabs */}
       <div className="flex items-center space-x-4 mb-6">
-        <Button 
+        <Button
           variant={filter === 'all' ? 'client' : 'ghost'}
           size="sm"
           onClick={() => setFilter('all')}
         >
           All Projects ({projects.length})
         </Button>
-        <Button 
+        <Button
           variant={filter === 'active' ? 'client' : 'ghost'}
           size="sm"
           onClick={() => setFilter('active')}
         >
           Active ({activeProjects})
         </Button>
-        <Button 
+        <Button
           variant={filter === 'completed' ? 'client' : 'ghost'}
           size="sm"
           onClick={() => setFilter('completed')}
@@ -316,8 +223,11 @@ export default function ClientProjectsPage() {
                 <div className="flex-1">
                   <div className="flex items-center space-x-3 mb-2">
                     <CardTitle className="text-xl">{project.name}</CardTitle>
-                    <div className={`w-2 h-2 rounded-full ${getPriorityColor(project.priority)}`} 
-                         title={`${project.priority} priority`} />
+                    <div
+                      className={`w-2 h-2 rounded-full ${getPriorityColor(project.priority)}`}
+                      role="img"
+                      aria-label={`${project.priority} priority`}
+                    />
                   </div>
                   <CardDescription>{project.description}</CardDescription>
                 </div>
@@ -326,38 +236,38 @@ export default function ClientProjectsPage() {
                 </Badge>
               </div>
             </CardHeader>
-            
+
             <CardContent className="space-y-4">
               {/* Progress Bar */}
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Overall Progress</span>
+                  <span className="text-fm-neutral-600">Overall Progress</span>
                   <span className="font-semibold text-fm-magenta-600">{project.progress}%</span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div 
-                    className="bg-gradient-to-r from-fm-magenta-500 to-fm-magenta-400 h-2 rounded-full transition-all duration-500" 
+                <div className="w-full bg-fm-neutral-200 rounded-full h-2">
+                  <div
+                    className="bg-gradient-to-r from-fm-magenta-500 to-fm-magenta-600 h-2 rounded-full transition-all duration-500"
                     style={{ width: `${project.progress}%` }}
                   />
                 </div>
               </div>
 
               {/* Key Metrics */}
-              <div className="grid grid-cols-2 gap-4 py-3 border-y border-gray-100">
+              <div className="grid grid-cols-2 gap-4 py-3 border-y border-fm-neutral-100">
                 <div>
-                  <div className="text-sm text-gray-600 mb-1">Timeline</div>
+                  <div className="text-sm text-fm-neutral-600 mb-1">Timeline</div>
                   <div className="flex items-center text-sm font-medium">
-                    <Calendar className="w-4 h-4 mr-1 text-gray-400" />
-                    {new Date(project.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - 
+                    <Calendar className="w-4 h-4 mr-1 text-fm-neutral-400" />
+                    {new Date(project.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} -
                     {new Date(project.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                   </div>
                 </div>
                 <div>
-                  <div className="text-sm text-gray-600 mb-1">Budget Used</div>
+                  <div className="text-sm text-fm-neutral-600 mb-1">Budget Used</div>
                   <div className="flex items-center text-sm font-medium">
-                    <DollarSign className="w-4 h-4 mr-1 text-gray-400" />
-                    {Math.round((project.spent / project.budget) * 100)}% 
-                    <span className="text-gray-500 ml-1">
+                    <DollarSign className="w-4 h-4 mr-1 text-fm-neutral-400" />
+                    {project.budget > 0 ? Math.round((project.spent / project.budget) * 100) : 0}%
+                    <span className="text-fm-neutral-500 ml-1">
                       ({new Intl.NumberFormat('en-IN', {
                         style: 'currency',
                         currency: 'INR',
@@ -371,26 +281,26 @@ export default function ClientProjectsPage() {
               {/* Deliverables */}
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-sm text-gray-600 mb-1">Deliverables</div>
+                  <div className="text-sm text-fm-neutral-600 mb-1">Deliverables</div>
                   <div className="flex items-center space-x-2">
                     <span className="text-lg font-semibold text-fm-magenta-600">
                       {project.deliverables.completed}
                     </span>
-                    <span className="text-sm text-gray-500">of {project.deliverables.total} completed</span>
+                    <span className="text-sm text-fm-neutral-500">of {project.deliverables.total} completed</span>
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">
                   <div className="flex -space-x-2">
                     {project.team.slice(0, 3).map((member, idx) => (
-                      <div key={idx} className="w-8 h-8 rounded-full bg-gradient-to-br from-fm-magenta-400 to-fm-magenta-300 border-2 border-white flex items-center justify-center">
+                      <div key={idx} className="w-8 h-8 rounded-full bg-gradient-to-br from-fm-magenta-500 to-fm-magenta-600 border-2 border-white flex items-center justify-center">
                         <span className="text-xs text-white font-medium">
                           {member.split(' ').map(n => n[0]).join('')}
                         </span>
                       </div>
                     ))}
                     {project.team.length > 3 && (
-                      <div className="w-8 h-8 rounded-full bg-gray-200 border-2 border-white flex items-center justify-center">
-                        <span className="text-xs text-gray-600 font-medium">+{project.team.length - 3}</span>
+                      <div className="w-8 h-8 rounded-full bg-fm-neutral-200 border-2 border-white flex items-center justify-center">
+                        <span className="text-xs text-fm-neutral-600 font-medium">+{project.team.length - 3}</span>
                       </div>
                     )}
                   </div>
@@ -399,7 +309,7 @@ export default function ClientProjectsPage() {
 
               {/* Milestones */}
               <div className="pt-3">
-                <div className="text-sm font-medium text-gray-700 mb-3">Upcoming Milestones</div>
+                <div className="text-sm font-medium text-fm-neutral-700 mb-3">Upcoming Milestones</div>
                 <div className="space-y-2">
                   {project.milestones
                     .filter(m => m.status !== 'completed')
@@ -410,13 +320,13 @@ export default function ClientProjectsPage() {
                           {milestone.status === 'in-progress' ? (
                             <Clock className="w-4 h-4 text-yellow-500" />
                           ) : (
-                            <Target className="w-4 h-4 text-gray-400" />
+                            <Target className="w-4 h-4 text-fm-neutral-400" />
                           )}
-                          <span className={milestone.status === 'in-progress' ? 'font-medium' : 'text-gray-600'}>
+                          <span className={milestone.status === 'in-progress' ? 'font-medium' : 'text-fm-neutral-600'}>
                             {milestone.name}
                           </span>
                         </div>
-                        <span className="text-gray-500">
+                        <span className="text-fm-neutral-500">
                           {new Date(milestone.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                         </span>
                       </div>
@@ -426,16 +336,14 @@ export default function ClientProjectsPage() {
 
               {/* Actions */}
               <div className="flex items-center justify-between pt-4">
-                <span className="text-xs text-gray-500">Updated {project.lastUpdate}</span>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="text-fm-magenta-600 hover:bg-fm-magenta-50"
-                  onClick={() => router.push(`/client/${clientId}/projects/${project.id}`)}
+                <span className="text-xs text-fm-neutral-500">Updated {project.lastUpdate}</span>
+                <Link
+                  href={`/client/${clientId}/projects/${project.id}`}
+                  className="text-sm font-medium text-fm-magenta-600 hover:text-fm-magenta-700 flex items-center"
                 >
                   View Details
                   <ChevronRight className="w-4 h-4 ml-1" />
-                </Button>
+                </Link>
               </div>
             </CardContent>
           </Card>
@@ -444,15 +352,20 @@ export default function ClientProjectsPage() {
 
       {filteredProjects.length === 0 && (
         <Card variant="glass" className="p-12 text-center">
-          <Briefcase className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">No projects found</h3>
-          <p className="text-gray-600">
-            {filter === 'all' 
+          <Briefcase className="w-16 h-16 text-fm-neutral-400 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-fm-neutral-900 mb-2">No projects found</h3>
+          <p className="text-fm-neutral-600">
+            {filter === 'all'
               ? "You don't have any projects yet"
               : `No ${filter} projects at the moment`}
           </p>
+          {filter !== 'all' && (
+            <Button variant="ghost" size="sm" onClick={() => setFilter('all')} className="mt-4 text-fm-magenta-600">
+              View All Projects
+            </Button>
+          )}
         </Card>
       )}
-    </DashboardLayout>
+    </>
   );
 }

@@ -1,19 +1,15 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { 
-  DashboardLayout,
+import { useState, useEffect } from 'react';
+import {
   MetricCard,
   DashboardCard as Card,
   CardContent,
-  CardDescription,
   CardHeader,
-  CardTitle,
   DashboardButton as Button
 } from '@/design-system';
 import { Badge } from '@/components/ui/Badge';
-import { 
+import {
   Calendar,
   FileText,
   Video,
@@ -22,17 +18,11 @@ import {
   PenTool,
   Clock,
   CheckCircle2,
-  AlertCircle,
   TrendingUp,
   Eye,
   Heart,
-  MessageSquare,
   Share2,
   Download,
-  Filter,
-  BarChart3,
-  PieChart,
-  Briefcase,
   Instagram,
   Facebook,
   Twitter,
@@ -40,6 +30,8 @@ import {
   Youtube,
   Globe
 } from 'lucide-react';
+import { useClientPortal } from '@/lib/client-portal/context';
+import { getStatusColor } from '@/lib/client-portal/status-colors';
 
 interface ContentItem {
   id: string;
@@ -62,15 +54,12 @@ interface ContentItem {
 }
 
 export default function ClientContentPage() {
-  const params = useParams();
-  const router = useRouter();
-  const clientId = params.clientId as string;
+  const { clientId } = useClientPortal();
 
   const [contentItems, setContentItems] = useState<ContentItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'published' | 'scheduled' | 'draft'>('all');
   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
-  const [profileData, setProfileData] = useState<{ name: string; email: string; industry: string } | null>(null);
 
   useEffect(() => {
     if (!clientId) return;
@@ -79,19 +68,6 @@ export default function ClientContentPage() {
       try {
         setLoading(true);
 
-        // Fetch profile
-        const profileRes = await fetch(`/api/client-portal/${clientId}/profile`);
-        if (profileRes.ok) {
-          const profileJson = await profileRes.json();
-          const p = profileJson.data;
-          setProfileData({
-            name: p.name,
-            email: p.primaryContact?.email || '',
-            industry: p.industry
-          });
-        }
-
-        // Fetch content
         const res = await fetch(`/api/client-portal/${clientId}/content?limit=50`);
         if (res.ok) {
           const data = await res.json();
@@ -125,13 +101,6 @@ export default function ClientContentPage() {
     fetchData();
   }, [clientId]);
 
-  const handleLogout = useCallback(async () => {
-    try {
-      await fetch('/api/client-portal/logout', { method: 'POST' });
-    } catch {}
-    router.push('/client/login');
-  }, [router]);
-
   const getTypeIcon = (type: string) => {
     switch (type) {
       case 'blog': return <PenTool className="w-4 h-4" />;
@@ -141,16 +110,6 @@ export default function ClientContentPage() {
       case 'podcast': return <Mic className="w-4 h-4" />;
       case 'email': return <FileText className="w-4 h-4" />;
       default: return <FileText className="w-4 h-4" />;
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'published': return 'bg-green-100 text-green-800 border-green-200';
-      case 'scheduled': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'review': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'draft': return 'bg-gray-100 text-gray-800 border-gray-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
 
@@ -165,76 +124,36 @@ export default function ClientContentPage() {
   };
 
   const filteredContent = contentItems.filter(item => {
-    if (filter === 'all') return true;
-    return item.status === filter;
+    const matchesStatus = filter === 'all' || item.status === filter;
+    const matchesMonth = !selectedMonth || item.scheduledDate.startsWith(selectedMonth);
+    return matchesStatus && matchesMonth;
   });
 
   const publishedContent = contentItems.filter(item => item.status === 'published');
   const scheduledContent = contentItems.filter(item => item.status === 'scheduled');
-  const totalEngagement = publishedContent.reduce((sum, item) => 
+  const totalEngagement = publishedContent.reduce((sum, item) =>
     sum + (item.performance?.engagement || 0), 0) / publishedContent.length || 0;
-  const totalViews = publishedContent.reduce((sum, item) => 
+  const totalViews = publishedContent.reduce((sum, item) =>
     sum + (item.performance?.views || 0), 0);
-
-  const navigationItems = [
-    {
-      label: 'Overview',
-      href: `/client/${clientId}`,
-      icon: <BarChart3 className="w-5 h-5" />
-    },
-    {
-      label: 'Projects',
-      href: `/client/${clientId}/projects`,
-      icon: <Briefcase className="w-5 h-5" />
-    },
-    {
-      label: 'Content',
-      href: `/client/${clientId}/content`,
-      icon: <Calendar className="w-5 h-5" />,
-      active: true
-    },
-    {
-      label: 'Reports',
-      href: `/client/${clientId}/reports`,
-      icon: <PieChart className="w-5 h-5" />
-    },
-    {
-      label: 'Support',
-      href: `/client/${clientId}/support`,
-      icon: <MessageSquare className="w-5 h-5" />
-    }
-  ];
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-fm-magenta-50 via-orange-50/30 to-fm-magenta-50 flex items-center justify-center">
-        <Card variant="glass" className="p-8 text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-fm-magenta-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600 font-medium">Loading content calendar...</p>
-        </Card>
+      <div className="flex items-center justify-center py-20">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-fm-magenta-600" />
       </div>
     );
   }
 
   return (
-    <DashboardLayout
-      variant="client"
-      navigation={navigationItems}
-      user={{
-        name: profileData?.name || 'Client',
-        email: profileData?.email || '',
-        role: profileData?.industry || ''
-      }}
-      onLogout={handleLogout}
-    >
+    <>
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-fm-magenta-600 to-fm-magenta-500 bg-clip-text text-transparent">
-              Content Calendar
+            <h1 className="text-3xl font-display font-bold text-fm-neutral-900">
+              Content <span className="v2-accent">Calendar</span>
             </h1>
-            <p className="text-gray-600 mt-1 font-medium">Manage and track your content publishing schedule</p>
+            <p className="text-fm-neutral-600 mt-1 font-medium">Manage and track your content publishing schedule</p>
           </div>
           <div className="flex items-center space-x-3">
             <Button variant="ghost" size="sm" className="text-fm-magenta-600">
@@ -259,7 +178,7 @@ export default function ClientContentPage() {
             period: 'vs last month'
           }}
         />
-        
+
         <MetricCard
           title="Scheduled"
           value={scheduledContent.length}
@@ -267,7 +186,7 @@ export default function ClientContentPage() {
           icon={<Clock className="w-6 h-6" />}
           variant="client"
         />
-        
+
         <MetricCard
           title="Total Views"
           value={totalViews}
@@ -278,7 +197,7 @@ export default function ClientContentPage() {
             notation: 'compact'
           }).format(Number(val))}
         />
-        
+
         <MetricCard
           title="Avg Engagement"
           value={`${totalEngagement.toFixed(1)}%`}
@@ -296,28 +215,28 @@ export default function ClientContentPage() {
       {/* Filter Tabs */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-4">
-          <Button 
+          <Button
             variant={filter === 'all' ? 'client' : 'ghost'}
             size="sm"
             onClick={() => setFilter('all')}
           >
             All Content ({contentItems.length})
           </Button>
-          <Button 
+          <Button
             variant={filter === 'published' ? 'client' : 'ghost'}
             size="sm"
             onClick={() => setFilter('published')}
           >
             Published ({publishedContent.length})
           </Button>
-          <Button 
+          <Button
             variant={filter === 'scheduled' ? 'client' : 'ghost'}
             size="sm"
             onClick={() => setFilter('scheduled')}
           >
             Scheduled ({scheduledContent.length})
           </Button>
-          <Button 
+          <Button
             variant={filter === 'draft' ? 'client' : 'ghost'}
             size="sm"
             onClick={() => setFilter('draft')}
@@ -329,7 +248,7 @@ export default function ClientContentPage() {
           type="month"
           value={selectedMonth}
           onChange={(e) => setSelectedMonth(e.target.value)}
-          className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-fm-magenta-500"
+          className="px-3 py-1.5 text-sm border border-fm-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-300"
         />
       </div>
 
@@ -347,23 +266,23 @@ export default function ClientContentPage() {
                     {item.status}
                   </Badge>
                 </div>
-                <div className="text-gray-400">
+                <div className="text-fm-neutral-400">
                   {getPlatformIcon(item.platform)}
                 </div>
               </div>
             </CardHeader>
-            
+
             <CardContent className="space-y-3">
               <div>
-                <h3 className="font-semibold text-gray-900 line-clamp-1">{item.title}</h3>
-                <p className="text-sm text-gray-600 line-clamp-2 mt-1">{item.description}</p>
+                <h3 className="font-semibold text-fm-neutral-900 line-clamp-1">{item.title}</h3>
+                <p className="text-sm text-fm-neutral-600 line-clamp-2 mt-1">{item.description}</p>
               </div>
 
-              <div className="flex items-center justify-between text-sm text-gray-600">
+              <div className="flex items-center justify-between text-sm text-fm-neutral-600">
                 <div className="flex items-center">
                   <Calendar className="w-4 h-4 mr-1" />
-                  {new Date(item.scheduledDate).toLocaleDateString('en-US', { 
-                    month: 'short', 
+                  {new Date(item.scheduledDate).toLocaleDateString('en-US', {
+                    month: 'short',
                     day: 'numeric',
                     hour: '2-digit',
                     minute: '2-digit'
@@ -374,12 +293,12 @@ export default function ClientContentPage() {
 
               {/* Performance Metrics (for published content) */}
               {item.status === 'published' && item.performance && (
-                <div className="pt-3 border-t border-gray-100">
+                <div className="pt-3 border-t border-fm-neutral-100">
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <div className="text-xs text-gray-500 mb-1">Views</div>
+                      <div className="text-xs text-fm-neutral-500 mb-1">Views</div>
                       <div className="flex items-center">
-                        <Eye className="w-4 h-4 mr-1 text-gray-400" />
+                        <Eye className="w-4 h-4 mr-1 text-fm-neutral-400" />
                         <span className="text-sm font-medium">
                           {new Intl.NumberFormat('en-US', {
                             notation: 'compact'
@@ -388,23 +307,23 @@ export default function ClientContentPage() {
                       </div>
                     </div>
                     <div>
-                      <div className="text-xs text-gray-500 mb-1">Engagement</div>
+                      <div className="text-xs text-fm-neutral-500 mb-1">Engagement</div>
                       <div className="flex items-center">
-                        <Heart className="w-4 h-4 mr-1 text-gray-400" />
+                        <Heart className="w-4 h-4 mr-1 text-fm-neutral-400" />
                         <span className="text-sm font-medium">{item.performance.engagement}%</span>
                       </div>
                     </div>
                     <div>
-                      <div className="text-xs text-gray-500 mb-1">Shares</div>
+                      <div className="text-xs text-fm-neutral-500 mb-1">Shares</div>
                       <div className="flex items-center">
-                        <Share2 className="w-4 h-4 mr-1 text-gray-400" />
+                        <Share2 className="w-4 h-4 mr-1 text-fm-neutral-400" />
                         <span className="text-sm font-medium">{item.performance.shares}</span>
                       </div>
                     </div>
                     <div>
-                      <div className="text-xs text-gray-500 mb-1">Conversions</div>
+                      <div className="text-xs text-fm-neutral-500 mb-1">Conversions</div>
                       <div className="flex items-center">
-                        <TrendingUp className="w-4 h-4 mr-1 text-gray-400" />
+                        <TrendingUp className="w-4 h-4 mr-1 text-fm-neutral-400" />
                         <span className="text-sm font-medium">{item.performance.conversions}</span>
                       </div>
                     </div>
@@ -415,7 +334,7 @@ export default function ClientContentPage() {
               {/* Tags */}
               <div className="flex flex-wrap gap-1 pt-2">
                 {item.tags.map((tag, idx) => (
-                  <span key={idx} className="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded-full">
+                  <span key={idx} className="px-2 py-1 text-xs bg-fm-neutral-100 text-fm-neutral-600 rounded-full">
                     {tag}
                   </span>
                 ))}
@@ -426,9 +345,9 @@ export default function ClientContentPage() {
                 <span className="text-xs uppercase tracking-wider font-medium text-fm-magenta-600">
                   {item.type}
                 </span>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
+                <Button
+                  variant="ghost"
+                  size="sm"
                   className="text-fm-magenta-600 hover:bg-fm-magenta-50"
                 >
                   View Details
@@ -441,15 +360,15 @@ export default function ClientContentPage() {
 
       {filteredContent.length === 0 && (
         <Card variant="glass" className="p-12 text-center">
-          <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">No content found</h3>
-          <p className="text-gray-600">
-            {filter === 'all' 
+          <FileText className="w-16 h-16 text-fm-neutral-400 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-fm-neutral-900 mb-2">No content found</h3>
+          <p className="text-fm-neutral-600">
+            {filter === 'all'
               ? "No content items scheduled yet"
               : `No ${filter} content at the moment`}
           </p>
         </Card>
       )}
-    </DashboardLayout>
+    </>
   );
 }

@@ -96,6 +96,8 @@ export {
   CardFooter 
 } from './components/primitives/Card';
 export { MetricCard, MetricCardSkeleton } from './components/patterns/MetricCard';
+export { IconBox } from './components/patterns/IconBox';
+export type { IconBoxProps } from './components/patterns/IconBox';
 export { DashboardLayout } from './components/layouts/DashboardLayout';
 
 // Dashboard Types
