@@ -18,22 +18,18 @@ const tools = [
   { name: 'WebCraft', icon: PenTool, desc: '7-day website builder', href: 'https://fmwebdemo-fgto.vercel.app', gradient: 'linear-gradient(135deg, #c9325d, #8c213d)', comingSoon: true },
 ];
 
-// Shimmer "Coming Soon" pill
-function ComingSoonBadge({ className = '' }: { className?: string }) {
+// Pulsing dot indicator for unreleased products
+function ComingSoonDot() {
   return (
     <span
-      className={`inline-flex items-center text-[9px] font-bold uppercase tracking-wider leading-none rounded-full ${className}`}
+      className="inline-block w-2 h-2 rounded-full flex-shrink-0"
       style={{
-        padding: '2.5px 7px',
-        color: '#c9325d',
-        background: 'linear-gradient(90deg, rgba(201,50,93,0.08) 0%, rgba(201,50,93,0.15) 50%, rgba(201,50,93,0.08) 100%)',
-        backgroundSize: '200% 100%',
-        animation: 'shimmer-badge 2s ease-in-out infinite',
-        border: '1px solid rgba(201,50,93,0.15)',
+        background: '#c9325d',
+        animation: 'pulse-dot 2s ease-in-out infinite',
+        boxShadow: '0 0 0 0 rgba(201,50,93,0.4)',
       }}
-    >
-      Coming Soon
-    </span>
+      title="Coming Soon"
+    />
   );
 }
 
@@ -289,7 +285,7 @@ export function HeaderV2() {
                           <div>
                             <div className="flex items-center gap-1.5">
                               <span className="font-medium text-sm" style={{ color: '#1a0a12' }}>{tool.name}</span>
-                              {tool.comingSoon && <ComingSoonBadge />}
+                              {tool.comingSoon && <ComingSoonDot />}
                             </div>
                             <div className="text-[11px] leading-tight" style={{ color: '#9a7888' }}>{tool.desc}</div>
                           </div>
@@ -503,7 +499,7 @@ export function HeaderV2() {
                         <div>
                           <div className="flex items-center gap-1.5">
                             <span className="text-sm font-medium" style={{ color: '#1a0a12' }}>{tool.name}</span>
-                            {tool.comingSoon && <ComingSoonBadge />}
+                            {tool.comingSoon && <ComingSoonDot />}
                           </div>
                           <div className="text-xs" style={{ color: '#9a7888' }}>{tool.desc}</div>
                         </div>
