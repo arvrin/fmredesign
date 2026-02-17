@@ -15,7 +15,7 @@ const tools = [
   { name: 'Deep Dive', icon: Brain, desc: 'AI-powered brand analysis', href: '/tools/deep-dive', gradient: 'linear-gradient(135deg, #c9325d, #4a1942)' },
   { name: 'Brand Skits', icon: Video, desc: 'Viral video creator', href: '/tools/brand-skits', gradient: 'linear-gradient(135deg, #e04d7d, #c9325d)' },
   { name: 'WeBuild', icon: Code, desc: 'Website builder', href: '/tools/webuild', gradient: 'linear-gradient(135deg, #7a2155, #4a1942)' },
-  { name: 'WeCraft', icon: PenTool, desc: 'Design system generator', href: '/tools/wecraft', gradient: 'linear-gradient(135deg, #c9325d, #8c213d)' },
+  { name: 'WebCraft', icon: PenTool, desc: 'Design system generator', href: 'https://fmwebdemo-fgto.vercel.app', gradient: 'linear-gradient(135deg, #c9325d, #8c213d)' },
 ];
 
 // Talent data
@@ -259,6 +259,7 @@ export function HeaderV2() {
                         <Link
                           key={tool.name}
                           href={tool.href}
+                          {...(tool.href.startsWith('http') ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
                           className="flex items-center gap-3 p-2.5 rounded-xl transition-colors group"
                           onMouseEnter={e => (e.currentTarget.style.background = 'rgba(201,50,93,0.05)')}
                           onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
@@ -469,6 +470,7 @@ export function HeaderV2() {
                       <Link
                         key={tool.name}
                         href={tool.href}
+                        {...(tool.href.startsWith('http') ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
                         className="flex items-center gap-3 p-2 rounded-lg"
                         style={{ color: '#3d2030' }}
                         onClick={() => setIsMobileMenuOpen(false)}
