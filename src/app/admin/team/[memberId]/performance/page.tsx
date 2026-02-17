@@ -66,9 +66,9 @@ export default function TeamMemberPerformancePage({ params }: TeamMemberPerforma
   if (!member) {
     return (
       <div className="max-w-4xl mx-auto text-center py-12">
-        <User className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-        <h2 className="text-xl font-semibold text-gray-900 mb-2">Team Member Not Found</h2>
-        <p className="text-gray-600 mb-6">The requested team member could not be found.</p>
+        <User className="w-16 h-16 text-fm-neutral-400 mx-auto mb-4" />
+        <h2 className="text-xl font-semibold text-fm-neutral-900 mb-2">Team Member Not Found</h2>
+        <p className="text-fm-neutral-600 mb-6">The requested team member could not be found.</p>
         <Button onClick={() => router.push('/admin/team')}>
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Team
@@ -158,9 +158,9 @@ export default function TeamMemberPerformancePage({ params }: TeamMemberPerforma
           </CardDescription>
         </CardHeader>
         <CardContent className="text-center py-12">
-          <BarChart3 className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Performance Analytics Coming Soon</h3>
-          <p className="text-gray-500 mb-6">
+          <BarChart3 className="w-16 h-16 text-fm-neutral-400 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-fm-neutral-900 mb-2">Performance Analytics Coming Soon</h3>
+          <p className="text-fm-neutral-500 mb-6">
             Advanced performance tracking, detailed analytics, time tracking integration, 
             and productivity metrics will be available here.
           </p>

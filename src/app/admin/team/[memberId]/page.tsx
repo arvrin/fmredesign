@@ -82,10 +82,10 @@ export default function TeamMemberProfilePage({ params }: TeamMemberProfileProps
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active': return 'text-green-600 bg-green-100';
-      case 'inactive': return 'text-gray-600 bg-gray-100';
+      case 'inactive': return 'text-fm-neutral-600 bg-fm-neutral-100';
       case 'on-leave': return 'text-yellow-600 bg-yellow-100';
       case 'terminated': return 'text-red-600 bg-red-100';
-      default: return 'text-gray-600 bg-gray-100';
+      default: return 'text-fm-neutral-600 bg-fm-neutral-100';
     }
   };
 
@@ -116,9 +116,9 @@ export default function TeamMemberProfilePage({ params }: TeamMemberProfileProps
   if (!member) {
     return (
       <div className="max-w-4xl mx-auto text-center py-12">
-        <User className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-        <h2 className="text-xl font-semibold text-gray-900 mb-2">Team Member Not Found</h2>
-        <p className="text-gray-600 mb-6">The requested team member could not be found.</p>
+        <User className="w-16 h-16 text-fm-neutral-400 mx-auto mb-4" />
+        <h2 className="text-xl font-semibold text-fm-neutral-900 mb-2">Team Member Not Found</h2>
+        <p className="text-fm-neutral-600 mb-6">The requested team member could not be found.</p>
         <Button onClick={() => router.push('/admin/team')}>
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Team
@@ -321,7 +321,7 @@ export default function TeamMemberProfilePage({ params }: TeamMemberProfileProps
                 </div>
               ) : (
                 <div className="text-center py-6">
-                  <Users className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                  <Users className="w-12 h-12 text-fm-neutral-400 mx-auto mb-3" />
                   <p className="text-fm-neutral-500">No clients assigned yet</p>
                 </div>
               )}

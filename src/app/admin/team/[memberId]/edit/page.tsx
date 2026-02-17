@@ -158,9 +158,9 @@ export default function EditTeamMemberPage({ params }: EditTeamMemberProps) {
   if (!originalMember || !formData.name) {
     return (
       <div className="max-w-4xl mx-auto text-center py-12">
-        <User className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-        <h2 className="text-xl font-semibold text-gray-900 mb-2">Team Member Not Found</h2>
-        <p className="text-gray-600 mb-6">The requested team member could not be found.</p>
+        <User className="w-16 h-16 text-fm-neutral-400 mx-auto mb-4" />
+        <h2 className="text-xl font-semibold text-fm-neutral-900 mb-2">Team Member Not Found</h2>
+        <p className="text-fm-neutral-600 mb-6">The requested team member could not be found.</p>
         <Button onClick={() => router.push('/admin/team')}>
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Team
@@ -212,9 +212,9 @@ export default function EditTeamMemberPage({ params }: EditTeamMemberProps) {
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
             <div className="flex items-center gap-3 mb-4">
               <AlertTriangle className="w-6 h-6 text-red-600" />
-              <h3 className="text-lg font-semibold text-gray-900">Delete Team Member</h3>
+              <h3 className="text-lg font-semibold text-fm-neutral-900">Delete Team Member</h3>
             </div>
-            <p className="text-gray-600 mb-6">
+            <p className="text-fm-neutral-600 mb-6">
               Are you sure you want to delete {originalMember.name}? This action cannot be undone and will remove all their assignments and data.
             </p>
             <div className="flex items-center justify-end gap-3">
@@ -271,52 +271,52 @@ export default function EditTeamMemberPage({ params }: EditTeamMemberProps) {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
                   Full Name *
                 </label>
                 <input
                   type="text"
                   value={formData.name || ''}
                   onChange={(e) => handleInputChange('name', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
                   required
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
                   Email Address *
                 </label>
                 <input
                   type="email"
                   value={formData.email || ''}
                   onChange={(e) => handleInputChange('email', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
                   required
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
                   Phone Number *
                 </label>
                 <input
                   type="tel"
                   value={formData.phone || ''}
                   onChange={(e) => handleInputChange('phone', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
                   required
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
                   Status *
                 </label>
                 <select
                   value={formData.status || 'active'}
                   onChange={(e) => handleInputChange('status', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
                   required
                 >
                   <option value="active">Active</option>
@@ -340,13 +340,13 @@ export default function EditTeamMemberPage({ params }: EditTeamMemberProps) {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
                   Employment Type *
                 </label>
                 <select
                   value={formData.type || 'employee'}
                   onChange={(e) => handleInputChange('type', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
                   required
                 >
                   <option value="employee">Employee</option>
@@ -356,13 +356,13 @@ export default function EditTeamMemberPage({ params }: EditTeamMemberProps) {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
                   Department *
                 </label>
                 <select
                   value={formData.department || 'creative'}
                   onChange={(e) => handleInputChange('department', e.target.value as TeamDepartment)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
                   required
                 >
                   {Object.entries(TEAM_DEPARTMENTS).map(([key, value]) => (
@@ -372,13 +372,13 @@ export default function EditTeamMemberPage({ params }: EditTeamMemberProps) {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
                   Seniority Level *
                 </label>
                 <select
                   value={formData.seniority || 'junior'}
                   onChange={(e) => handleInputChange('seniority', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
                   required
                 >
                   <option value="junior">Junior</option>
@@ -391,13 +391,13 @@ export default function EditTeamMemberPage({ params }: EditTeamMemberProps) {
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
                 Job Role *
               </label>
               <select
                 value={formData.role || 'content-writer'}
                 onChange={(e) => handleInputChange('role', e.target.value as TeamRole)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
                 required
               >
                 {Object.entries(TEAM_ROLES).map(([key, value]) => (
@@ -419,13 +419,13 @@ export default function EditTeamMemberPage({ params }: EditTeamMemberProps) {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
                   Work Type *
                 </label>
                 <select
                   value={formData.workType || 'full-time'}
                   onChange={(e) => handleInputChange('workType', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
                   required
                 >
                   <option value="full-time">Full-time</option>
@@ -436,13 +436,13 @@ export default function EditTeamMemberPage({ params }: EditTeamMemberProps) {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
                   Location *
                 </label>
                 <select
                   value={formData.location || 'office'}
                   onChange={(e) => handleInputChange('location', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
                   required
                 >
                   <option value="office">Office</option>
@@ -452,7 +452,7 @@ export default function EditTeamMemberPage({ params }: EditTeamMemberProps) {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
                   Weekly Capacity (Hours) *
                 </label>
                 <input
@@ -461,7 +461,7 @@ export default function EditTeamMemberPage({ params }: EditTeamMemberProps) {
                   max="60"
                   value={formData.capacity || 40}
                   onChange={(e) => handleInputChange('capacity', parseInt(e.target.value) || 40)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
                   required
                 />
               </div>
@@ -480,13 +480,13 @@ export default function EditTeamMemberPage({ params }: EditTeamMemberProps) {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
                   Compensation Type *
                 </label>
                 <select
                   value={formData.compensation?.type || 'salary'}
                   onChange={(e) => handleCompensationChange('type', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
                   required
                 >
                   <option value="salary">Salary</option>
@@ -496,7 +496,7 @@ export default function EditTeamMemberPage({ params }: EditTeamMemberProps) {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
                   Amount (₹) *
                 </label>
                 <input
@@ -504,13 +504,13 @@ export default function EditTeamMemberPage({ params }: EditTeamMemberProps) {
                   min="0"
                   value={formData.compensation?.amount || 0}
                   onChange={(e) => handleCompensationChange('amount', parseFloat(e.target.value) || 0)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
                   required
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
                   Client Billing Rate (₹/hour)
                 </label>
                 <input
@@ -518,7 +518,7 @@ export default function EditTeamMemberPage({ params }: EditTeamMemberProps) {
                   min="0"
                   value={formData.compensation?.billingRate || 0}
                   onChange={(e) => handleCompensationChange('billingRate', parseFloat(e.target.value) || 0)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
                 />
               </div>
             </div>
@@ -536,7 +536,7 @@ export default function EditTeamMemberPage({ params }: EditTeamMemberProps) {
           <CardContent>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">
+                <label className="block text-sm font-medium text-fm-neutral-700 mb-3">
                   Update Skills
                 </label>
                 <div className="flex flex-wrap gap-2">
@@ -548,7 +548,7 @@ export default function EditTeamMemberPage({ params }: EditTeamMemberProps) {
                       className={`px-3 py-1 text-sm rounded-full border transition-colors ${
                         selectedSkills.includes(skill)
                           ? 'bg-fm-magenta-100 text-fm-magenta-700 border-fm-magenta-300'
-                          : 'bg-white text-gray-700 border-gray-300 hover:border-fm-magenta-300'
+                          : 'bg-white text-fm-neutral-700 border-fm-neutral-300 hover:border-fm-magenta-300'
                       }`}
                     >
                       {skill}
@@ -567,14 +567,14 @@ export default function EditTeamMemberPage({ params }: EditTeamMemberProps) {
           </CardHeader>
           <CardContent>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
                 Notes (Optional)
               </label>
               <textarea
                 rows={4}
                 value={formData.notes || ''}
                 onChange={(e) => handleInputChange('notes', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500 resize-none"
+                className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500 resize-none"
                 placeholder="Any additional notes about this team member..."
               />
             </div>
@@ -582,7 +582,7 @@ export default function EditTeamMemberPage({ params }: EditTeamMemberProps) {
         </Card>
 
         {/* Submit Buttons */}
-        <div className="flex items-center justify-end gap-4 pt-6 border-t border-gray-200">
+        <div className="flex items-center justify-end gap-4 pt-6 border-t border-fm-neutral-200">
           <Button 
             type="button" 
             variant="ghost" 

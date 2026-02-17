@@ -11,6 +11,7 @@ import { DiscoveryWizard } from '@/components/admin/discovery/DiscoveryWizard';
 import { DiscoverySession, DiscoveryTemplate, DISCOVERY_TEMPLATES } from '@/lib/admin/discovery-types';
 import { DiscoveryService } from '@/lib/admin/discovery-service';
 import { Button } from '@/design-system/components/primitives/Button';
+import { adminToast } from '@/lib/admin/toast';
 import { ArrowLeft, FileText, Users, Target } from 'lucide-react';
 
 export default function NewDiscoveryPage() {
@@ -55,7 +56,7 @@ export default function NewDiscoveryPage() {
       setShowTemplateSelection(false);
     } catch (error) {
       console.error('Error creating discovery session:', error);
-      alert('Failed to create discovery session');
+      adminToast.error('Failed to create discovery session');
     } finally {
       setIsCreating(false);
     }

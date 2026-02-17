@@ -178,13 +178,13 @@ export default function TeamDashboardPage() {
           <div className="flex flex-col sm:flex-row gap-4">
             {/* Search */}
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-fm-neutral-400 w-4 h-4" />
               <input
                 type="text"
                 placeholder="Search team members..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                className="w-full pl-10 pr-4 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
               />
             </div>
 
@@ -192,7 +192,7 @@ export default function TeamDashboardPage() {
             <select
               value={selectedDepartment}
               onChange={(e) => setSelectedDepartment(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+              className="px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
             >
               <option value="all">All Departments</option>
               {Object.entries(TEAM_DEPARTMENTS).map(([key, value]) => (
@@ -204,7 +204,7 @@ export default function TeamDashboardPage() {
             <select
               value={selectedType}
               onChange={(e) => setSelectedType(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+              className="px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
             >
               <option value="all">All Types</option>
               <option value="employee">Employees</option>
@@ -343,9 +343,9 @@ export default function TeamDashboardPage() {
 
             {filteredTeamMembers.length === 0 && (
               <div className="text-center py-12">
-                <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No team members found</h3>
-                <p className="text-gray-500">Try adjusting your search or filters</p>
+                <Users className="w-12 h-12 text-fm-neutral-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-fm-neutral-900 mb-2">No team members found</h3>
+                <p className="text-fm-neutral-500">Try adjusting your search or filters</p>
               </div>
             )}
           </div>

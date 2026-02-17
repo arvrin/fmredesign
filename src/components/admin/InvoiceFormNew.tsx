@@ -30,6 +30,7 @@ import {
 } from '@/design-system';
 import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
+import { adminToast } from '@/lib/admin/toast';
 import { SimplePDFGenerator } from '@/lib/admin/pdf-simple';
 import { AdminStorage } from '@/lib/admin/storage';
 import { ClientService } from '@/lib/admin/client-service';
@@ -120,35 +121,6 @@ export function InvoiceFormNew() {
   const [pdfGenerator] = useState(() => new SimplePDFGenerator());
 
   // Load clients from multiple sources with proper fallbacks
-  // Function to dump raw localStorage data
-  const dumpClientData = () => {
-    try {
-      // Check all possible localStorage keys
-      const keys = ['fm_admin_clients', 'fm_clients', 'fm_client_data'];
-      keys.forEach(key => {
-        const data = localStorage.getItem(key);
-      });
-      
-      // Focus on HARSH client
-      const rawData = localStorage.getItem('fm_admin_clients');
-      if (rawData) {
-        const parsedData = JSON.parse(rawData);
-        const harshClient = parsedData.find((c: any) => 
-          c.name && (c.name.includes('HARSH') || c.name.includes('harsh'))
-        );
-        
-        if (harshClient) {
-          
-          if (harshClient.headquarters) {
-          }
-        } else {
-        }
-      }
-    } catch (error) {
-      console.error('Error in data dump:', error);
-    }
-  };
-
   const loadClients = async () => {
     // Clear localStorage cache to ensure fresh data
     localStorage.removeItem('fm_admin_clients');
@@ -157,16 +129,6 @@ export function InvoiceFormNew() {
     try {
       // Use ClientService.getInvoiceClients() which handles both API and localStorage properly
       const invoiceClients = await ClientService.getInvoiceClients();
-      
-      // Filter for HARSH client specifically to debug
-      const harshClient = invoiceClients?.find(c => 
-        c.name && c.name.includes('HARSH')
-      );
-      
-      if (harshClient) {
-      } else {
-      }
-
       setClients(invoiceClients || []);
     } catch (error) {
       console.error('InvoiceFormNew: Error loading clients:', error);
@@ -293,10 +255,10 @@ export function InvoiceFormNew() {
       // Also save via API for Google Sheets sync
       saveToAPI(invoice);
       
-      alert('Invoice saved successfully!');
+      adminToast.success('Invoice saved successfully!');
     } catch (error) {
       console.error('Error saving invoice:', error);
-      alert('Error saving invoice. Please try again.');
+      adminToast.error('Error saving invoice. Please try again.');
     }
   };
 
@@ -320,12 +282,12 @@ export function InvoiceFormNew() {
     try {
       // Basic validation
       if (!invoice.client.name) {
-        alert('Please select a client before generating preview.');
+        adminToast.error('Please select a client before generating preview.');
         return;
       }
-      
+
       if (invoice.lineItems.length === 0 || !invoice.lineItems.some(item => item.description.trim())) {
-        alert('Please add at least one line item with description.');
+        adminToast.error('Please add at least one line item with description.');
         return;
       }
 
@@ -347,7 +309,7 @@ export function InvoiceFormNew() {
       }
     } catch (error) {
       console.error('Error generating PDF preview:', error);
-      alert(`Error generating PDF preview: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      adminToast.error(`Error generating PDF preview: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
@@ -356,7 +318,7 @@ export function InvoiceFormNew() {
       await pdfGenerator.downloadPDF(invoice);
     } catch (error) {
       console.error('Error downloading PDF:', error);
-      alert('Error downloading PDF. Please check the console for details.');
+      adminToast.error('Error downloading PDF. Please check the console for details.');
     }
   };
 
@@ -372,7 +334,7 @@ export function InvoiceFormNew() {
                 <div className="flex items-center space-x-4">
                   <div>
                     <div className="flex items-center space-x-2">
-                      <label className="text-sm font-medium text-gray-700">Invoice #</label>
+                      <label className="text-sm font-medium text-fm-neutral-700">Invoice #</label>
                       <input
                         type="text"
                         value={invoice.invoiceNumber}
@@ -385,12 +347,12 @@ export function InvoiceFormNew() {
                             InvoiceNumbering.updateFromManualInvoice(newNumber);
                           }
                         }}
-                        className="px-2 py-1 border border-gray-300 rounded text-sm font-semibold text-gray-900 w-32"
+                        className="px-2 py-1 border border-fm-neutral-300 rounded text-sm font-semibold text-fm-neutral-900 w-32"
                         placeholder="FM164/2025"
                       />
                     </div>
-                    <p className="text-sm text-gray-600">Draft • Created {new Date().toLocaleDateString()}</p>
-                    <p className="text-xs text-gray-500">Next auto: {InvoiceNumbering.previewNextInvoiceNumber()}</p>
+                    <p className="text-sm text-fm-neutral-600">Draft • Created {new Date().toLocaleDateString()}</p>
+                    <p className="text-xs text-fm-neutral-500">Next auto: {InvoiceNumbering.previewNextInvoiceNumber()}</p>
                   </div>
                   <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
                     {invoice.status}
@@ -426,26 +388,10 @@ export function InvoiceFormNew() {
               {/* Client Selection */}
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-fm-neutral-700">
                     Select Client
                   </label>
                   <div className="flex items-center space-x-1">
-                    <button
-                      onClick={dumpClientData}
-                      className="text-fm-blue-600 hover:text-fm-blue-700 text-xs px-2 py-1 bg-blue-50 rounded"
-                      type="button"
-                    >
-                      Debug
-                    </button>
-                    <button
-                      onClick={() => {
-                        loadClients();
-                      }}
-                      className="text-fm-green-600 hover:text-fm-green-700 text-xs px-2 py-1 bg-green-50 rounded"
-                      type="button"
-                    >
-                      Reload
-                    </button>
                     <button
                       onClick={loadClients}
                       className="text-fm-magenta-600 hover:text-fm-magenta-700 flex items-center text-sm"
@@ -459,7 +405,7 @@ export function InvoiceFormNew() {
                 <select
                   value={invoice.client.id}
                   onChange={(e) => selectClient(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
                 >
                   <option value="">Choose a client... ({clients.length} available)</option>
                   {clients.map(client => (
@@ -472,30 +418,30 @@ export function InvoiceFormNew() {
 
               {/* Client Details Grid */}
               {invoice.client.name && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-gray-200">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-fm-neutral-200">
                   <div>
-                    <p className="text-sm font-medium text-gray-700">Name</p>
-                    <p className="text-gray-900">{invoice.client.name}</p>
+                    <p className="text-sm font-medium text-fm-neutral-700">Name</p>
+                    <p className="text-fm-neutral-900">{invoice.client.name}</p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-700">Email</p>
-                    <p className="text-gray-900">{invoice.client.email}</p>
+                    <p className="text-sm font-medium text-fm-neutral-700">Email</p>
+                    <p className="text-fm-neutral-900">{invoice.client.email}</p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-700">Phone</p>
-                    <p className="text-gray-900">{invoice.client.phone}</p>
+                    <p className="text-sm font-medium text-fm-neutral-700">Phone</p>
+                    <p className="text-fm-neutral-900">{invoice.client.phone}</p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-700">GST Number</p>
-                    <p className="text-gray-900">
+                    <p className="text-sm font-medium text-fm-neutral-700">GST Number</p>
+                    <p className="text-fm-neutral-900">
                       {invoice.client.gstNumber || (
-                        <span className="text-gray-400 italic">Not provided</span>
+                        <span className="text-fm-neutral-400 italic">Not provided</span>
                       )}
                     </p>
                   </div>
                   <div className="md:col-span-2">
-                    <p className="text-sm font-medium text-gray-700">Address</p>
-                    <p className="text-gray-900">
+                    <p className="text-sm font-medium text-fm-neutral-700">Address</p>
+                    <p className="text-fm-neutral-900">
                       {invoice.client.address && (
                         <>
                           {invoice.client.address}
@@ -514,7 +460,7 @@ export function InvoiceFormNew() {
                         </>
                       )}
                       {!invoice.client.address && !invoice.client.city && !invoice.client.state && (
-                        <span className="text-gray-400 italic">No address information available</span>
+                        <span className="text-fm-neutral-400 italic">No address information available</span>
                       )}
                     </p>
                   </div>
@@ -534,25 +480,25 @@ export function InvoiceFormNew() {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
                     Invoice Date
                   </label>
                   <input
                     type="date"
                     value={invoice.date}
                     onChange={(e) => setInvoice(prev => ({ ...prev, date: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                    className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
                     Due Date
                   </label>
                   <input
                     type="date"
                     value={invoice.dueDate}
                     onChange={(e) => setInvoice(prev => ({ ...prev, dueDate: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                    className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
                   />
                 </div>
               </div>
@@ -575,11 +521,11 @@ export function InvoiceFormNew() {
             </CardHeader>
             <CardContent className="space-y-4">
               {invoice.lineItems.map((item, index) => (
-                <div key={item.id} className="p-4 border border-gray-200 rounded-lg bg-gray-50">
+                <div key={item.id} className="p-4 border border-fm-neutral-200 rounded-lg bg-fm-neutral-50">
                   <div className="space-y-4">
                     {/* Service Selection */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-fm-neutral-700 mb-1">
                         Select Service (Optional)
                       </label>
                       <select
@@ -591,7 +537,7 @@ export function InvoiceFormNew() {
                             updateLineItem(item.id, 'serviceId', '');
                           }
                         }}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                        className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
                       >
                         <option value="">Choose a service or enter custom details below...</option>
                         {AGENCY_SERVICES.map(service => (
@@ -604,7 +550,7 @@ export function InvoiceFormNew() {
 
                     {/* Description */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-fm-neutral-700 mb-1">
                         Description
                       </label>
                       <textarea
@@ -612,14 +558,14 @@ export function InvoiceFormNew() {
                         value={item.description}
                         onChange={(e) => updateLineItem(item.id, 'description', e.target.value)}
                         placeholder="Describe the service or product..."
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500 resize-none"
+                        className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500 resize-none"
                       />
                     </div>
 
                     {/* Quantity, Rate, Amount */}
                     <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 items-end">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="block text-sm font-medium text-fm-neutral-700 mb-1">
                           Qty
                         </label>
                         <input
@@ -627,11 +573,11 @@ export function InvoiceFormNew() {
                           min="1"
                           value={item.quantity}
                           onChange={(e) => updateLineItem(item.id, 'quantity', parseInt(e.target.value) || 1)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                          className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="block text-sm font-medium text-fm-neutral-700 mb-1">
                           Rate (₹)
                         </label>
                         <input
@@ -640,14 +586,14 @@ export function InvoiceFormNew() {
                           step="0.01"
                           value={item.rate}
                           onChange={(e) => updateLineItem(item.id, 'rate', parseFloat(e.target.value) || 0)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                          className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="block text-sm font-medium text-fm-neutral-700 mb-1">
                           Amount (₹)
                         </label>
-                        <div className="px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-900 font-medium">
+                        <div className="px-3 py-2 bg-fm-neutral-100 border border-fm-neutral-300 rounded-lg text-fm-neutral-900 font-medium">
                           ₹{item.amount.toLocaleString('en-IN')}
                         </div>
                       </div>
@@ -677,26 +623,26 @@ export function InvoiceFormNew() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
                   Notes
                 </label>
                 <textarea
                   rows={3}
                   value={invoice.notes}
                   onChange={(e) => setInvoice(prev => ({ ...prev, notes: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500 resize-none"
+                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500 resize-none"
                   placeholder="Any additional notes or information..."
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
                   Payment Terms
                 </label>
                 <textarea
                   rows={3}
                   value={invoice.terms}
                   onChange={(e) => setInvoice(prev => ({ ...prev, terms: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500 resize-none"
+                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500 resize-none"
                   placeholder="Payment terms and conditions..."
                 />
               </div>
@@ -732,7 +678,7 @@ export function InvoiceFormNew() {
             <CardContent>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
                     Tax Rate (%)
                   </label>
                   <input
@@ -742,9 +688,9 @@ export function InvoiceFormNew() {
                     step="0.1"
                     value={invoice.taxRate}
                     onChange={(e) => setInvoice(prev => ({ ...prev, taxRate: parseFloat(e.target.value) || 0 }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                    className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
                   />
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-fm-neutral-500 mt-1">
                     Tax Amount: ₹{invoice.taxAmount.toLocaleString('en-IN')}
                   </p>
                 </div>
@@ -759,7 +705,7 @@ export function InvoiceFormNew() {
               <CardDescription>This is how your invoice will look</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="bg-white border-2 border-gray-200 rounded-lg p-6 text-sm">
+              <div className="bg-white border-2 border-fm-neutral-200 rounded-lg p-6 text-sm">
                 {/* Preview Header */}
                 <div className="border-b pb-4 mb-4">
                   <div className="flex justify-between items-start">
@@ -771,12 +717,12 @@ export function InvoiceFormNew() {
                       />
                       <div>
                         <h3 className="text-lg font-bold text-fm-magenta-600">FREAKING MINDS</h3>
-                        <p className="text-xs text-gray-600">Creative Digital Agency</p>
+                        <p className="text-xs text-fm-neutral-600">Creative Digital Agency</p>
                       </div>
                     </div>
                     <div className="text-right">
                       <h4 className="text-lg font-bold">INVOICE</h4>
-                      <p className="text-gray-600">#{invoice.invoiceNumber}</p>
+                      <p className="text-fm-neutral-600">#{invoice.invoiceNumber}</p>
                     </div>
                   </div>
                 </div>
@@ -784,9 +730,9 @@ export function InvoiceFormNew() {
                 {/* Preview Client Info */}
                 {invoice.client.name && (
                   <div className="mb-4">
-                    <p className="font-semibold text-gray-900">{invoice.client.name}</p>
-                    <p className="text-gray-600">{invoice.client.email}</p>
-                    <div className="text-gray-600">
+                    <p className="font-semibold text-fm-neutral-900">{invoice.client.name}</p>
+                    <p className="text-fm-neutral-600">{invoice.client.email}</p>
+                    <div className="text-fm-neutral-600">
                       {invoice.client.address && <p>{invoice.client.address}</p>}
                       <p>
                         {invoice.client.city && invoice.client.state ? 

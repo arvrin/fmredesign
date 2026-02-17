@@ -330,7 +330,7 @@ export function AdminSystem() {
       case 'admin': return <ShieldCheck className="h-4 w-4 text-blue-600" />;
       case 'manager': return <UserCheck className="h-4 w-4 text-green-600" />;
       case 'editor': return <Edit className="h-4 w-4 text-orange-600" />;
-      case 'viewer': return <Eye className="h-4 w-4 text-gray-600" />;
+      case 'viewer': return <Eye className="h-4 w-4 text-fm-neutral-600" />;
       default: return <Users className="h-4 w-4" />;
     }
   };
@@ -341,7 +341,7 @@ export function AdminSystem() {
       admin: 'bg-blue-100 text-blue-800',
       manager: 'bg-green-100 text-green-800',
       editor: 'bg-orange-100 text-orange-800',
-      viewer: 'bg-gray-100 text-gray-800'
+      viewer: 'bg-fm-neutral-100 text-fm-neutral-800'
     };
     
     return (
@@ -354,7 +354,7 @@ export function AdminSystem() {
   const getStatusBadge = (status: string) => {
     const colors = {
       active: 'bg-green-100 text-green-800',
-      inactive: 'bg-gray-100 text-gray-800',
+      inactive: 'bg-fm-neutral-100 text-fm-neutral-800',
       suspended: 'bg-red-100 text-red-800'
     };
     
@@ -370,7 +370,7 @@ export function AdminSystem() {
       case 'healthy': return <CheckCircle className="h-5 w-5 text-green-600" />;
       case 'warning': return <AlertTriangle className="h-5 w-5 text-yellow-600" />;
       case 'critical': return <AlertTriangle className="h-5 w-5 text-red-600" />;
-      default: return <Clock className="h-5 w-5 text-gray-600" />;
+      default: return <Clock className="h-5 w-5 text-fm-neutral-600" />;
     }
   };
 
@@ -528,10 +528,10 @@ export function AdminSystem() {
                 <div className="flex items-center space-x-1">
                   {metric.trend === 'up' && <TrendingUp className="h-4 w-4 text-green-600" />}
                   {metric.trend === 'down' && <TrendingUp className="h-4 w-4 text-red-600 rotate-180" />}
-                  {metric.trend === 'stable' && <Activity className="h-4 w-4 text-gray-600" />}
+                  {metric.trend === 'stable' && <Activity className="h-4 w-4 text-fm-neutral-600" />}
                   <span className={`text-sm ${
                     metric.trend === 'up' ? 'text-green-600' : 
-                    metric.trend === 'down' ? 'text-red-600' : 'text-gray-600'
+                    metric.trend === 'down' ? 'text-red-600' : 'text-fm-neutral-600'
                   }`}>
                     {metric.trend}
                   </span>

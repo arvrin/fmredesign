@@ -9,6 +9,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, Calendar, DollarSign, Users, Target, Save, CheckCircle } from 'lucide-react';
 import { Button } from '@/design-system/components/primitives/Button';
+import { adminToast } from '@/lib/admin/toast';
 import type { ProjectInput, ProjectType } from '@/lib/admin/project-types';
 import { PROJECT_TEMPLATES } from '@/lib/admin/project-types';
 
@@ -184,11 +185,11 @@ export default function NewProjectPage() {
       if (result.success) {
         router.push('/admin/projects');
       } else {
-        alert(`Error creating project: ${result.error}`);
+        adminToast.error(`Error creating project: ${result.error}`);
       }
     } catch (error) {
       console.error('Error creating project:', error);
-      alert('Failed to create project. Please try again.');
+      adminToast.error('Failed to create project. Please try again.');
     } finally {
       setSaving(false);
     }

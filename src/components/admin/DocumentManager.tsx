@@ -165,7 +165,7 @@ export function DocumentManager({ clientId, campaignId }: DocumentManagerProps) 
     if (type.includes('document') || type.includes('word')) {
       return <FileText className={`${iconSize} text-blue-600`} />;
     }
-    return <File className={`${iconSize} text-gray-600`} />;
+    return <File className={`${iconSize} text-fm-neutral-600`} />;
   };
 
   const formatFileSize = (bytes: number): string => {
@@ -178,14 +178,14 @@ export function DocumentManager({ clientId, campaignId }: DocumentManagerProps) 
 
   const getStatusBadge = (status: string) => {
     const colors = {
-      draft: 'bg-gray-100 text-gray-800',
+      draft: 'bg-fm-neutral-100 text-fm-neutral-800',
       review: 'bg-yellow-100 text-yellow-800',
       approved: 'bg-green-100 text-green-800',
       final: 'bg-blue-100 text-blue-800'
     };
     
     return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${colors[status as keyof typeof colors] || 'bg-gray-100 text-gray-800'}`}>
+      <span className={`px-2 py-1 rounded-full text-xs font-medium ${colors[status as keyof typeof colors] || 'bg-fm-neutral-100 text-fm-neutral-800'}`}>
         {status}
       </span>
     );

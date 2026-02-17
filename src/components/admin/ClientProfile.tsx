@@ -56,6 +56,7 @@ import {
   ClientHealth 
 } from '@/lib/admin/client-types';
 import { ClientService } from '@/lib/admin/client-service';
+import { adminToast } from '@/lib/admin/toast';
 import { CommunicationHub } from './CommunicationHub';
 import { DocumentManager } from './DocumentManager';
 import { GrowthEngine } from './GrowthEngine';
@@ -315,10 +316,10 @@ export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
       setClient(updatedClient);
       setIsEditing(false);
       
-      alert('Client updated successfully!');
+      adminToast.success('Client updated successfully!');
     } catch (error) {
       console.error('Error updating client:', error);
-      alert('Error updating client. Please try again.');
+      adminToast.error('Error updating client. Please try again.');
     }
   };
 
@@ -920,7 +921,7 @@ export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
                             campaign.status === 'active' ? 'bg-green-100 text-green-800' :
                             campaign.status === 'completed' ? 'bg-blue-100 text-blue-800' :
                             campaign.status === 'paused' ? 'bg-yellow-100 text-yellow-800' :
-                            'bg-gray-100 text-gray-800'
+                            'bg-fm-neutral-100 text-fm-neutral-800'
                           }`}>
                             {campaign.status}
                           </span>

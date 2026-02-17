@@ -193,56 +193,56 @@ export default function NewTeamMemberPage() {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
                   Full Name *
                 </label>
                 <input
                   type="text"
                   value={formData.name || ''}
                   onChange={(e) => handleInputChange('name', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
                   placeholder="Enter full name"
                   required
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
                   Email Address *
                 </label>
                 <input
                   type="email"
                   value={formData.email || ''}
                   onChange={(e) => handleInputChange('email', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
                   placeholder="Enter email address"
                   required
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
                   Phone Number *
                 </label>
                 <input
                   type="tel"
                   value={formData.phone || ''}
                   onChange={(e) => handleInputChange('phone', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
                   placeholder="Enter phone number"
                   required
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
                   Start Date *
                 </label>
                 <input
                   type="date"
                   value={formData.startDate || new Date().toISOString().split('T')[0]}
                   onChange={(e) => handleInputChange('startDate', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
                   required
                 />
               </div>
@@ -261,13 +261,13 @@ export default function NewTeamMemberPage() {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
                   Employment Type *
                 </label>
                 <select
                   value={formData.type || 'employee'}
                   onChange={(e) => handleInputChange('type', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
                   required
                 >
                   <option value="employee">Employee</option>
@@ -277,13 +277,13 @@ export default function NewTeamMemberPage() {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
                   Department *
                 </label>
                 <select
                   value={formData.department || 'creative'}
                   onChange={(e) => handleInputChange('department', e.target.value as TeamDepartment)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
                   required
                 >
                   {Object.entries(TEAM_DEPARTMENTS).map(([key, value]) => (
@@ -293,13 +293,13 @@ export default function NewTeamMemberPage() {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
                   Seniority Level *
                 </label>
                 <select
                   value={formData.seniority || 'junior'}
                   onChange={(e) => handleInputChange('seniority', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
                   required
                 >
                   <option value="junior">Junior</option>
@@ -312,13 +312,13 @@ export default function NewTeamMemberPage() {
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
                 Job Role *
               </label>
               <select
                 value={formData.role || 'content-writer'}
                 onChange={(e) => handleInputChange('role', e.target.value as TeamRole)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
                 required
               >
                 {Object.entries(TEAM_ROLES).map(([key, value]) => (
@@ -340,13 +340,13 @@ export default function NewTeamMemberPage() {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
                   Work Type *
                 </label>
                 <select
                   value={formData.workType || 'full-time'}
                   onChange={(e) => handleInputChange('workType', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
                   required
                 >
                   <option value="full-time">Full-time</option>
@@ -357,13 +357,13 @@ export default function NewTeamMemberPage() {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
                   Location *
                 </label>
                 <select
                   value={formData.location || 'office'}
                   onChange={(e) => handleInputChange('location', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
                   required
                 >
                   <option value="office">Office</option>
@@ -373,7 +373,7 @@ export default function NewTeamMemberPage() {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
                   Weekly Capacity (Hours) *
                 </label>
                 <input
@@ -382,7 +382,7 @@ export default function NewTeamMemberPage() {
                   max="60"
                   value={formData.capacity || 40}
                   onChange={(e) => handleInputChange('capacity', parseInt(e.target.value) || 40)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
                   required
                 />
               </div>
@@ -401,13 +401,13 @@ export default function NewTeamMemberPage() {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
                   Compensation Type *
                 </label>
                 <select
                   value={formData.compensation?.type || 'salary'}
                   onChange={(e) => handleCompensationChange('type', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
                   required
                 >
                   <option value="salary">Salary</option>
@@ -417,7 +417,7 @@ export default function NewTeamMemberPage() {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
                   Amount (₹) *
                 </label>
                 <input
@@ -425,14 +425,14 @@ export default function NewTeamMemberPage() {
                   min="0"
                   value={formData.compensation?.amount || 0}
                   onChange={(e) => handleCompensationChange('amount', parseFloat(e.target.value) || 0)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
                   placeholder="Enter amount"
                   required
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
                   Client Billing Rate (₹/hour)
                 </label>
                 <input
@@ -440,7 +440,7 @@ export default function NewTeamMemberPage() {
                   min="0"
                   value={formData.compensation?.billingRate || 0}
                   onChange={(e) => handleCompensationChange('billingRate', parseFloat(e.target.value) || 0)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
                   placeholder="Enter billing rate"
                 />
               </div>
@@ -459,7 +459,7 @@ export default function NewTeamMemberPage() {
           <CardContent>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">
+                <label className="block text-sm font-medium text-fm-neutral-700 mb-3">
                   Select Skills
                 </label>
                 <div className="flex flex-wrap gap-2">
@@ -471,7 +471,7 @@ export default function NewTeamMemberPage() {
                       className={`px-3 py-1 text-sm rounded-full border transition-colors ${
                         selectedSkills.includes(skill)
                           ? 'bg-fm-magenta-100 text-fm-magenta-700 border-fm-magenta-300'
-                          : 'bg-white text-gray-700 border-gray-300 hover:border-fm-magenta-300'
+                          : 'bg-white text-fm-neutral-700 border-fm-neutral-300 hover:border-fm-magenta-300'
                       }`}
                     >
                       {skill}
@@ -490,14 +490,14 @@ export default function NewTeamMemberPage() {
           </CardHeader>
           <CardContent>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
                 Notes (Optional)
               </label>
               <textarea
                 rows={4}
                 value={formData.notes || ''}
                 onChange={(e) => handleInputChange('notes', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500 resize-none"
+                className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500 resize-none"
                 placeholder="Any additional notes about this team member..."
               />
             </div>
@@ -505,7 +505,7 @@ export default function NewTeamMemberPage() {
         </Card>
 
         {/* Submit Buttons */}
-        <div className="flex items-center justify-end gap-4 pt-6 border-t border-gray-200">
+        <div className="flex items-center justify-end gap-4 pt-6 border-t border-fm-neutral-200">
           <Button 
             type="button" 
             variant="ghost" 

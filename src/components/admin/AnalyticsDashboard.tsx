@@ -85,7 +85,7 @@ export function AnalyticsDashboard({ clientId, campaigns }: AnalyticsDashboardPr
     switch (trend) {
       case 'up': return 'text-green-600';
       case 'down': return 'text-red-600';
-      case 'stable': return 'text-gray-600';
+      case 'stable': return 'text-fm-neutral-600';
     }
   };
 
@@ -93,7 +93,7 @@ export function AnalyticsDashboard({ clientId, campaigns }: AnalyticsDashboardPr
     switch (trend) {
       case 'up': return <ArrowUpRight className="h-4 w-4" />;
       case 'down': return <ArrowDownRight className="h-4 w-4" />;
-      case 'stable': return <div className="h-4 w-4 border-t-2 border-gray-400"></div>;
+      case 'stable': return <div className="h-4 w-4 border-t-2 border-fm-neutral-400"></div>;
     }
   };
 

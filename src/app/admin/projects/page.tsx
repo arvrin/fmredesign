@@ -7,14 +7,14 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { 
-  Plus, 
-  Search, 
-  Filter, 
+import {
+  Plus,
+  Search,
+  Filter,
   Calendar,
-  Users, 
-  DollarSign, 
-  Clock, 
+  Users,
+  DollarSign,
+  Clock,
   MoreVertical,
   Edit,
   Eye,
@@ -23,6 +23,7 @@ import {
   AlertCircle,
   Circle
 } from 'lucide-react';
+import { adminToast } from '@/lib/admin/toast';
 import { 
   DashboardButton, 
   DashboardCard, 
@@ -128,14 +129,14 @@ export default function ProjectsPage({}: ProjectsPageProps) {
       case 'cancelled':
         return <Circle className="h-4 w-4 text-red-500" />;
       default:
-        return <Circle className="h-4 w-4 text-gray-400" />;
+        return <Circle className="h-4 w-4 text-fm-neutral-400" />;
     }
   };
 
   const getStatusColor = (status: ProjectStatus) => {
     switch (status) {
       case 'planning':
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-fm-neutral-100 text-fm-neutral-800';
       case 'active':
         return 'bg-blue-100 text-blue-800';
       case 'review':
@@ -147,7 +148,7 @@ export default function ProjectsPage({}: ProjectsPageProps) {
       case 'cancelled':
         return 'bg-red-100 text-red-800';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-fm-neutral-100 text-fm-neutral-800';
     }
   };
 
@@ -162,7 +163,7 @@ export default function ProjectsPage({}: ProjectsPageProps) {
       case 'low':
         return 'bg-green-500';
       default:
-        return 'bg-gray-500';
+        return 'bg-fm-neutral-500';
     }
   };
 
@@ -177,11 +178,11 @@ export default function ProjectsPage({}: ProjectsPageProps) {
       if (response.ok) {
         setProjects(projects.filter(p => p.id !== projectId));
       } else {
-        alert('Failed to delete project');
+        adminToast.error('Failed to delete project');
       }
     } catch (error) {
       console.error('Error deleting project:', error);
-      alert('Error deleting project');
+      adminToast.error('Error deleting project');
     }
   };
 
@@ -203,7 +204,7 @@ export default function ProjectsPage({}: ProjectsPageProps) {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-bold bg-gradient-to-r from-fm-magenta-600 to-fm-magenta-700 bg-clip-text text-transparent">Projects</h1>
-            <p className="text-gray-600 font-medium">Manage client projects and deliverables</p>
+            <p className="text-fm-neutral-600 font-medium">Manage client projects and deliverables</p>
           </div>
           <DashboardButton
             variant="admin"

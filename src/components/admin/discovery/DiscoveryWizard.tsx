@@ -10,6 +10,7 @@ import { useRouter } from 'next/navigation';
 import { DiscoverySession, DISCOVERY_SECTIONS } from '@/lib/admin/discovery-types';
 import { DiscoveryService } from '@/lib/admin/discovery-service';
 import { Button } from '@/design-system/components/primitives/Button';
+import { adminToast } from '@/lib/admin/toast';
 import { 
   ArrowLeft, 
   ArrowRight, 
@@ -129,7 +130,7 @@ export function DiscoveryWizard({ session, onUpdate, onComplete }: DiscoveryWiza
       onComplete();
     } catch (error) {
       console.error('Error completing discovery:', error);
-      alert('Failed to complete discovery');
+      adminToast.error('Failed to complete discovery');
     } finally {
       setIsLoading(false);
     }

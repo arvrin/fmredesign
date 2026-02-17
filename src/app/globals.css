@@ -68,7 +68,7 @@
   --font-size-display-xl: 4rem;
   --font-size-display-lg: 3.5rem;
   --font-size-display-md: 3rem;
-  
+
   /* Custom Font Sizes - Headings */
   --font-size-h1: 2.5rem;
   --font-size-h2: 2rem;
@@ -174,46 +174,46 @@
     line-height: var(--line-height-display-xl);
     letter-spacing: var(--letter-spacing-display);
   }
-  
+
   .text-display-lg {
     font-size: var(--font-size-display-lg);
     line-height: var(--line-height-display-lg);
     letter-spacing: var(--letter-spacing-display);
   }
-  
+
   .text-display-md {
     font-size: var(--font-size-display-md);
     line-height: var(--line-height-display-md);
     letter-spacing: var(--letter-spacing-display);
   }
-  
+
   .text-h1 {
     font-size: var(--font-size-h1);
     line-height: var(--line-height-h1);
     letter-spacing: var(--letter-spacing-heading);
   }
-  
+
   .text-h2 {
     font-size: var(--font-size-h2);
     line-height: var(--line-height-h2);
     letter-spacing: var(--letter-spacing-heading);
   }
-  
+
   .text-h3 {
     font-size: var(--font-size-h3);
     line-height: var(--line-height-h3);
   }
-  
+
   .text-h4 {
     font-size: var(--font-size-h4);
     line-height: var(--line-height-h4);
   }
-  
+
   .text-h5 {
     font-size: var(--font-size-h5);
     line-height: var(--line-height-h5);
   }
-  
+
   .text-h6 {
     font-size: var(--font-size-h6);
     line-height: var(--line-height-h6);
@@ -252,7 +252,7 @@
       font-size: 2rem;
       line-height: 2.5rem;
     }
-    
+
     .text-display-lg {
       font-size: 1.75rem;
       line-height: 2.25rem;
@@ -323,8 +323,13 @@ body {
   p {
     margin: 0;
   }
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
 }
-
 
 /* Link styling removed - handled in components */
 
@@ -472,7 +477,7 @@ section:not(.v2-section):not([class*="v2-"]):not([class*="pt-"]):not([class*="py
     align-items: center;
     justify-content: center;
   }
-  
+
   /* Prevent iOS zoom on focus — only for inputs without explicit sizing */
   input:not([class*="text-"]),
   select:not([class*="text-"]),
@@ -483,7 +488,7 @@ section:not(.v2-section):not([class*="v2-"]):not([class*="pt-"]):not([class*="py
   input, select, textarea {
     padding: 0.75rem;
   }
-  
+
   /* Mobile menu button only */
   .mobile-menu-button {
     min-height: 48px;
@@ -963,6 +968,54 @@ section:not(.v2-section):not([class*="v2-"]):not([class*="pt-"]):not([class*="py
   --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
   --ease-smooth-out: cubic-bezier(0, 0, 0.2, 1);
   --ease-smooth-in: cubic-bezier(0.4, 0, 1, 1);
+  --radius: 0.625rem;
+  /* shadcn/ui tokens — themed to FM brand */
+  --background: #fafaf9;
+  --foreground: #0f0f0f;
+  --card: #ffffff;
+  --card-foreground: #0f0f0f;
+  --popover: #ffffff;
+  --popover-foreground: #0f0f0f;
+  --primary: #a82548;
+  --primary-foreground: #ffffff;
+  --secondary: #f5f5f4;
+  --secondary-foreground: #0f0f0f;
+  --muted: #f5f5f4;
+  --muted-foreground: #525251;
+  --accent: #fef5f8;
+  --accent-foreground: #a82548;
+  --destructive: #dc2626;
+  --border: #e5e5e4;
+  --input: #e5e5e4;
+  --ring: #a82548;
+  --chart-1: #a82548;
+  --chart-2: #8c1d4a;
+  --chart-3: #e04d7d;
+  --chart-4: #ff7f50;
+  --chart-5: #5a1a38;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #0f0f0f;
+  --sidebar-primary: #a82548;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #fef5f8;
+  --sidebar-accent-foreground: #a82548;
+  --sidebar-border: #e5e5e4;
+  --sidebar-ring: #a82548;
+
+  /* Admin dashboard tokens */
+  --admin-bg: #fafaf9;
+  --admin-surface: #ffffff;
+  --admin-border: #e5e5e4;
+  --admin-border-hover: #d4d4d3;
+  --admin-text-primary: #0f0f0f;
+  --admin-text-secondary: #525251;
+  --admin-text-muted: #a3a3a2;
+  --admin-accent: #a82548;
+  --admin-accent-hover: #8c1d4a;
+  --admin-sidebar-width: 256px;
+  --admin-sidebar-collapsed: 72px;
+  --admin-header-height: 56px;
+  --admin-transition: 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 /*
@@ -2304,3 +2357,82 @@ button.v2-btn-outline {
 
 /* CRITICAL PERFORMANCE FIXES - LOADED LAST FOR MAXIMUM SPECIFICITY */
 @import "../styles/performance-fixes.css";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+.dark {
+  --background: #0f0f0f;
+  --foreground: #fafaf9;
+  --card: #1f1f1f;
+  --card-foreground: #fafaf9;
+  --popover: #1f1f1f;
+  --popover-foreground: #fafaf9;
+  --primary: #e04d7d;
+  --primary-foreground: #ffffff;
+  --secondary: #2d2d2d;
+  --secondary-foreground: #fafaf9;
+  --muted: #2d2d2d;
+  --muted-foreground: #a3a3a2;
+  --accent: #2d2d2d;
+  --accent-foreground: #fafaf9;
+  --destructive: #dc2626;
+  --border: rgba(255, 255, 255, 0.1);
+  --input: rgba(255, 255, 255, 0.15);
+  --ring: #e04d7d;
+  --chart-1: #e04d7d;
+  --chart-2: #a82548;
+  --chart-3: #ff7f50;
+  --chart-4: #f4a9c4;
+  --chart-5: #ec75a0;
+  --sidebar: #1f1f1f;
+  --sidebar-foreground: #fafaf9;
+  --sidebar-primary: #e04d7d;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #2d2d2d;
+  --sidebar-accent-foreground: #fafaf9;
+  --sidebar-border: rgba(255, 255, 255, 0.1);
+  --sidebar-ring: #e04d7d;
+}

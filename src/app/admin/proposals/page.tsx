@@ -32,10 +32,10 @@ export default function AdminProposalsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-fm-neutral-50">
       {/* Navigation */}
       {currentView !== 'dashboard' && (
-        <div className="bg-white border-b border-gray-200 px-4 py-4">
+        <div className="bg-white border-b border-fm-neutral-200 px-4 py-4">
           <div className="max-w-7xl mx-auto">
             <Button
               variant="ghost"
@@ -62,10 +62,10 @@ export default function AdminProposalsPage() {
         {(currentView === 'create' || currentView === 'edit') && (
           <div>
             <div className="mb-6">
-              <h1 className="text-2xl font-bold text-gray-900">
+              <h1 className="text-2xl font-bold text-fm-neutral-900">
                 {currentView === 'create' ? 'Create New Proposal' : 'Edit Proposal'}
               </h1>
-              <p className="text-gray-600">
+              <p className="text-fm-neutral-600">
                 {currentView === 'create' 
                   ? 'Create a professional digital marketing proposal for your client'
                   : `Editing proposal: ${editingProposal?.proposalNumber}`

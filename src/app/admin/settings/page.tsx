@@ -238,7 +238,7 @@ export default function SettingsPage() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-fm-magenta-600 to-fm-magenta-700 bg-clip-text text-transparent">Settings</h1>
-          <p className="text-gray-600 font-medium mt-2">
+          <p className="text-fm-neutral-600 font-medium mt-2">
             Manage your admin panel preferences and account settings
           </p>
         </div>
@@ -625,7 +625,7 @@ export default function SettingsPage() {
                         key === 'google_analytics' && "bg-orange-100 text-orange-600",
                         key === 'email_service' && "bg-blue-100 text-blue-600",
                         key === 'payment_gateway' && "bg-purple-100 text-purple-600",
-                        key === 'crm_integration' && "bg-indigo-100 text-indigo-600"
+                        key === 'crm_integration' && "bg-fm-magenta-100 text-fm-magenta-700"
                       )}>
                         <Globe className="h-5 w-5" />
                       </div>

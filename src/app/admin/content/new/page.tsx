@@ -22,6 +22,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { Button } from '@/design-system/components/primitives/Button';
+import { adminToast } from '@/lib/admin/toast';
 import type { ContentInput, ContentType, Platform, Project } from '@/lib/admin/project-types';
 
 interface NewContentPageProps {}
@@ -204,11 +205,11 @@ export default function NewContentPage({}: NewContentPageProps) {
       if (result.success) {
         router.push('/admin/content?created=true');
       } else {
-        alert(result.error || 'Failed to create content');
+        adminToast.error(result.error || 'Failed to create content');
       }
     } catch (error) {
       console.error('Error creating content:', error);
-      alert('Error creating content');
+      adminToast.error('Error creating content');
     } finally {
       setLoading(false);
     }

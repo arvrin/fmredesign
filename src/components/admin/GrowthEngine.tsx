@@ -298,7 +298,7 @@ export function GrowthEngine({ clientId }: GrowthEngineProps) {
       case 'high': return 'text-red-600 bg-red-50';
       case 'medium': return 'text-yellow-600 bg-yellow-50';
       case 'low': return 'text-green-600 bg-green-50';
-      default: return 'text-gray-600 bg-gray-50';
+      default: return 'text-fm-neutral-600 bg-fm-neutral-50';
     }
   };
 

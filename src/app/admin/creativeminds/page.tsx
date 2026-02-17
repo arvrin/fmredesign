@@ -381,7 +381,7 @@ function ApplicationCard({
       case 'rejected':
         return 'bg-red-100 text-red-800';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-fm-neutral-100 text-fm-neutral-800';
     }
   };
 
@@ -588,7 +588,7 @@ function ApplicationCard({
                         href={application.socialMedia.behance.profileUrl}
                         icon={Globe}
                         label="Behance"
-                        color="bg-indigo-50 text-indigo-700 border-indigo-200"
+                        color="bg-fm-magenta-50 text-fm-magenta-800 border-fm-magenta-200"
                       />
                     )}
                     {application.socialMedia.dribbble && (

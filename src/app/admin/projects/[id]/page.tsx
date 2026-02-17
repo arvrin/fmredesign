@@ -116,7 +116,7 @@ function getDeliverableStatusColor(status: string): string {
       return 'bg-yellow-100 text-yellow-800';
     case 'pending':
     default:
-      return 'bg-gray-100 text-gray-800';
+      return 'bg-fm-neutral-100 text-fm-neutral-800';
   }
 }
 

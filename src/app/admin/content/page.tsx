@@ -7,14 +7,14 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { 
-  Plus, 
-  Search, 
-  Filter, 
+import {
+  Plus,
+  Search,
+  Filter,
   Calendar,
-  Users, 
+  Users,
   BarChart3,
-  Clock, 
+  Clock,
   MoreVertical,
   Edit,
   Eye,
@@ -29,6 +29,7 @@ import {
   Hash,
   AtSign
 } from 'lucide-react';
+import { adminToast } from '@/lib/admin/toast';
 import { 
   DashboardButton, 
   DashboardCard, 
@@ -154,14 +155,14 @@ export default function ContentCalendarPage({}: ContentCalendarPageProps) {
       case 'revision_needed':
         return <AlertCircle className="h-4 w-4 text-red-500" />;
       default:
-        return <Circle className="h-4 w-4 text-gray-400" />;
+        return <Circle className="h-4 w-4 text-fm-neutral-400" />;
     }
   };
 
   const getStatusColor = (status: ContentStatus) => {
     switch (status) {
       case 'draft':
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-fm-neutral-100 text-fm-neutral-800';
       case 'review':
         return 'bg-yellow-100 text-yellow-800';
       case 'approved':
@@ -173,7 +174,7 @@ export default function ContentCalendarPage({}: ContentCalendarPageProps) {
       case 'revision_needed':
         return 'bg-red-100 text-red-800';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-fm-neutral-100 text-fm-neutral-800';
     }
   };
 
@@ -210,7 +211,7 @@ export default function ContentCalendarPage({}: ContentCalendarPageProps) {
       case 'email':
         return 'bg-purple-100 text-purple-800';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-fm-neutral-100 text-fm-neutral-800';
     }
   };
 
@@ -225,11 +226,11 @@ export default function ContentCalendarPage({}: ContentCalendarPageProps) {
       if (response.ok) {
         setContentItems(contentItems.filter(c => c.id !== contentId));
       } else {
-        alert('Failed to delete content');
+        adminToast.error('Failed to delete content');
       }
     } catch (error) {
       console.error('Error deleting content:', error);
-      alert('Error deleting content');
+      adminToast.error('Error deleting content');
     }
   };
 
@@ -267,7 +268,7 @@ export default function ContentCalendarPage({}: ContentCalendarPageProps) {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-bold bg-gradient-to-r from-fm-magenta-600 to-fm-magenta-700 bg-clip-text text-transparent">Content Calendar</h1>
-            <p className="text-gray-600 font-medium">Plan, create, and schedule your content across all platforms</p>
+            <p className="text-fm-neutral-600 font-medium">Plan, create, and schedule your content across all platforms</p>
           </div>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1 bg-white border border-fm-neutral-200 rounded-lg p-1">

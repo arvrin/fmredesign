@@ -35,6 +35,7 @@ import {
 } from '@/design-system';
 import { Badge } from '@/components/ui/Badge';
 import { Proposal } from '@/lib/admin/proposal-types';
+import { adminToast } from '@/lib/admin/toast';
 import { ProposalPDFGenerator } from '@/lib/admin/proposal-pdf-generator';
 
 interface ProposalStats {
@@ -169,7 +170,7 @@ export function ProposalDashboard({ onCreateNew, onEditProposal }: ProposalDashb
       }
     } catch (error) {
       console.error('Error previewing proposal:', error);
-      alert('Error generating preview');
+      adminToast.error('Error generating preview');
     }
   };
 
@@ -206,8 +207,8 @@ export function ProposalDashboard({ onCreateNew, onEditProposal }: ProposalDashb
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Proposal Dashboard</h1>
-          <p className="text-gray-600">Manage and track your client proposals</p>
+          <h1 className="text-2xl font-bold text-fm-neutral-900">Proposal Dashboard</h1>
+          <p className="text-fm-neutral-600">Manage and track your client proposals</p>
         </div>
         <Button variant="admin" onClick={onCreateNew}>
           <Plus className="w-4 h-4 mr-2" />
@@ -254,13 +255,13 @@ export function ProposalDashboard({ onCreateNew, onEditProposal }: ProposalDashb
             {/* Search */}
             <div className="flex-1">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-fm-neutral-400" />
                 <input
                   type="text"
                   placeholder="Search proposals..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
+                  className="pl-10 pr-4 py-2 w-full border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
                 />
               </div>
             </div>
@@ -270,7 +271,7 @@ export function ProposalDashboard({ onCreateNew, onEditProposal }: ProposalDashb
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
+                className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
               >
                 <option value="all">All Status</option>
                 <option value="draft">Draft</option>
@@ -288,7 +289,7 @@ export function ProposalDashboard({ onCreateNew, onEditProposal }: ProposalDashb
               <select
                 value={typeFilter}
                 onChange={(e) => setTypeFilter(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
+                className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
               >
                 <option value="all">All Types</option>
                 <option value="retainer">Retainer</option>
@@ -307,11 +308,11 @@ export function ProposalDashboard({ onCreateNew, onEditProposal }: ProposalDashb
         {filteredProposals.length === 0 ? (
           <Card variant="admin">
             <CardContent className="p-8 text-center">
-              <FileText className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              <FileText className="w-16 h-16 mx-auto mb-4 text-fm-neutral-300" />
+              <h3 className="text-lg font-semibold text-fm-neutral-900 mb-2">
                 {proposals.length === 0 ? 'No proposals yet' : 'No proposals match your filters'}
               </h3>
-              <p className="text-gray-600 mb-4">
+              <p className="text-fm-neutral-600 mb-4">
                 {proposals.length === 0 
                   ? 'Create your first proposal to get started'
                   : 'Try adjusting your search or filter criteria'
@@ -332,7 +333,7 @@ export function ProposalDashboard({ onCreateNew, onEditProposal }: ProposalDashb
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
-                      <h3 className="text-lg font-semibold text-gray-900">
+                      <h3 className="text-lg font-semibold text-fm-neutral-900">
                         {proposal.title}
                       </h3>
                       <Badge 
@@ -347,7 +348,7 @@ export function ProposalDashboard({ onCreateNew, onEditProposal }: ProposalDashb
                       </Badge>
                     </div>
 
-                    <div className="flex items-center gap-4 text-sm text-gray-600 mb-3">
+                    <div className="flex items-center gap-4 text-sm text-fm-neutral-600 mb-3">
                       <span className="flex items-center gap-1">
                         <FileText className="w-4 h-4" />
                         {proposal.proposalNumber}
@@ -368,24 +369,24 @@ export function ProposalDashboard({ onCreateNew, onEditProposal }: ProposalDashb
                       )}
                     </div>
 
-                    <div className="text-sm text-gray-700">
+                    <div className="text-sm text-fm-neutral-700">
                       <span className="font-medium">Client: </span>
                       {proposal.client.prospectInfo?.company || 
                        proposal.client.prospectInfo?.name || 
                        'Existing Client'}
                       {proposal.client.prospectInfo?.email && (
-                        <span className="text-gray-500 ml-2">
+                        <span className="text-fm-neutral-500 ml-2">
                           ({proposal.client.prospectInfo.email})
                         </span>
                       )}
                     </div>
 
                     {proposal.servicePackages.length > 0 && (
-                      <div className="mt-2 text-sm text-gray-600">
+                      <div className="mt-2 text-sm text-fm-neutral-600">
                         <span className="font-medium">Services: </span>
                         {proposal.servicePackages.slice(0, 2).map(pkg => pkg.name).join(', ')}
                         {proposal.servicePackages.length > 2 && (
-                          <span className="text-gray-500">
+                          <span className="text-fm-neutral-500">
                             {' '}and {proposal.servicePackages.length - 2} more
                           </span>
                         )}

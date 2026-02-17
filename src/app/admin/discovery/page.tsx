@@ -79,7 +79,7 @@ export default function DiscoveryDashboardPage() {
       case 'draft': return 'bg-yellow-100 text-yellow-800';
       case 'in_progress': return 'bg-blue-100 text-blue-800';
       case 'completed': return 'bg-green-100 text-green-800';
-      case 'archived': return 'bg-gray-100 text-gray-800';
+      case 'archived': return 'bg-fm-neutral-100 text-fm-neutral-800';
       default: return 'bg-fm-neutral-100 text-fm-neutral-800';
     }
   };
@@ -103,7 +103,7 @@ export default function DiscoveryDashboardPage() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold bg-gradient-to-r from-fm-magenta-600 to-fm-magenta-700 bg-clip-text text-transparent">Discovery Sessions</h1>
-              <p className="text-gray-600 font-medium">Comprehensive client analysis and requirement gathering</p>
+              <p className="text-fm-neutral-600 font-medium">Comprehensive client analysis and requirement gathering</p>
             </div>
             
             <DashboardButton

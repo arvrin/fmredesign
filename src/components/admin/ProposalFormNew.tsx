@@ -35,6 +35,7 @@ import {
   MetricCard
 } from '@/design-system';
 import { Badge } from '@/components/ui/Badge';
+import { adminToast } from '@/lib/admin/toast';
 import { ClientService } from '@/lib/admin/client-service';
 import { ProposalNumbering } from '@/lib/admin/proposal-numbering';
 import { ProposalPDFGenerator } from '@/lib/admin/proposal-pdf-generator';
@@ -298,16 +299,16 @@ export function ProposalFormNew({ initialProposal, onSaveSuccess }: ProposalForm
         if (result.data?.proposalNumber) {
           ProposalNumbering.updateFromManualProposal(result.data.proposalNumber);
         }
-        alert('Proposal saved successfully!');
+        adminToast.success('Proposal saved successfully!');
         if (onSaveSuccess) {
           onSaveSuccess();
         }
       } else {
-        alert('Error saving proposal: ' + (result.error || 'Unknown error'));
+        adminToast.error('Error saving proposal: ' + (result.error || 'Unknown error'));
       }
     } catch (error) {
       console.error('Error saving proposal:', error);
-      alert('Error saving proposal. Please try again.');
+      adminToast.error('Error saving proposal. Please try again.');
     }
   };
 
@@ -315,12 +316,12 @@ export function ProposalFormNew({ initialProposal, onSaveSuccess }: ProposalForm
     try {
       // Basic validation
       if (!proposal.client.clientId && !proposal.client.prospectInfo?.company) {
-        alert('Please select a client or add prospect information before generating preview.');
+        adminToast.error('Please select a client or add prospect information before generating preview.');
         return;
       }
-      
+
       if (selectedPackages.length === 0) {
-        alert('Please add at least one service package.');
+        adminToast.error('Please add at least one service package.');
         return;
       }
 
@@ -346,7 +347,7 @@ export function ProposalFormNew({ initialProposal, onSaveSuccess }: ProposalForm
       }
     } catch (error) {
       console.error('Error generating PDF preview:', error);
-      alert(`Error generating PDF preview: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      adminToast.error(`Error generating PDF preview: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
@@ -354,19 +355,19 @@ export function ProposalFormNew({ initialProposal, onSaveSuccess }: ProposalForm
     try {
       // Basic validation
       if (!proposal.client.clientId && !proposal.client.prospectInfo?.company) {
-        alert('Please select a client or add prospect information before downloading.');
+        adminToast.error('Please select a client or add prospect information before downloading.');
         return;
       }
-      
+
       if (selectedPackages.length === 0) {
-        alert('Please add at least one service package.');
+        adminToast.error('Please add at least one service package.');
         return;
       }
 
       await pdfGenerator.downloadProposal(proposal, proposal.template);
     } catch (error) {
       console.error('Error downloading PDF:', error);
-      alert('Error downloading PDF. Please check the console for details.');
+      adminToast.error('Error downloading PDF. Please check the console for details.');
     }
   };
 
@@ -382,7 +383,7 @@ export function ProposalFormNew({ initialProposal, onSaveSuccess }: ProposalForm
                 <div className="flex items-center space-x-4">
                   <div>
                     <div className="flex items-center space-x-2">
-                      <label className="text-sm font-medium text-gray-700">Proposal #</label>
+                      <label className="text-sm font-medium text-fm-neutral-700">Proposal #</label>
                       <input
                         type="text"
                         value={proposal.proposalNumber}
@@ -394,12 +395,12 @@ export function ProposalFormNew({ initialProposal, onSaveSuccess }: ProposalForm
                             ProposalNumbering.updateFromManualProposal(newNumber);
                           }
                         }}
-                        className="px-2 py-1 border border-gray-300 rounded text-sm font-semibold text-gray-900 w-32"
+                        className="px-2 py-1 border border-fm-neutral-300 rounded text-sm font-semibold text-fm-neutral-900 w-32"
                         placeholder="PM164/2025"
                       />
                     </div>
-                    <p className="text-sm text-gray-600">{proposal.status} • Created {new Date().toLocaleDateString()}</p>
-                    <p className="text-xs text-gray-500">Next auto: {ProposalNumbering.previewNextProposalNumber()}</p>
+                    <p className="text-sm text-fm-neutral-600">{proposal.status} • Created {new Date().toLocaleDateString()}</p>
+                    <p className="text-xs text-fm-neutral-500">Next auto: {ProposalNumbering.previewNextProposalNumber()}</p>
                   </div>
                   <Badge variant="secondary" className="bg-blue-100 text-blue-800">
                     {proposal.proposalType}
@@ -433,27 +434,27 @@ export function ProposalFormNew({ initialProposal, onSaveSuccess }: ProposalForm
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
                   Proposal Title
                 </label>
                 <input
                   type="text"
                   value={proposal.title}
                   onChange={(e) => setProposal(prev => ({ ...prev, title: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
+                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
                   placeholder="Digital Marketing Strategy Proposal"
                 />
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
                     Proposal Type
                   </label>
                   <select
                     value={proposal.proposalType}
                     onChange={(e) => setProposal(prev => ({ ...prev, proposalType: e.target.value as any }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
+                    className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
                   >
                     <option value="retainer">Monthly Retainer</option>
                     <option value="project">One-time Project</option>
@@ -463,14 +464,14 @@ export function ProposalFormNew({ initialProposal, onSaveSuccess }: ProposalForm
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
                     Valid Until
                   </label>
                   <input
                     type="date"
                     value={proposal.validUntil}
                     onChange={(e) => setProposal(prev => ({ ...prev, validUntil: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
+                    className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
                   />
                 </div>
               </div>
@@ -493,13 +494,13 @@ export function ProposalFormNew({ initialProposal, onSaveSuccess }: ProposalForm
             <CardContent className="space-y-4">
               {proposal.client.isExisting ? (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
                     Select Existing Client
                   </label>
                   <select
                     value={proposal.client.clientId || ''}
                     onChange={(e) => selectClient(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
+                    className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
                   >
                     <option value="">Choose a client... ({clients.length} available)</option>
                     {clients.map(client => (
@@ -512,42 +513,42 @@ export function ProposalFormNew({ initialProposal, onSaveSuccess }: ProposalForm
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Company Name</label>
+                    <label className="block text-sm font-medium text-fm-neutral-700 mb-2">Company Name</label>
                     <input
                       type="text"
                       value={proposal.client.prospectInfo?.company || ''}
                       onChange={(e) => updateProspectInfo('company', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
+                      className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
                       placeholder="Company Name"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Contact Name</label>
+                    <label className="block text-sm font-medium text-fm-neutral-700 mb-2">Contact Name</label>
                     <input
                       type="text"
                       value={proposal.client.prospectInfo?.name || ''}
                       onChange={(e) => updateProspectInfo('name', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
+                      className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
                       placeholder="Contact Person"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                    <label className="block text-sm font-medium text-fm-neutral-700 mb-2">Email</label>
                     <input
                       type="email"
                       value={proposal.client.prospectInfo?.email || ''}
                       onChange={(e) => updateProspectInfo('email', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
+                      className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
                       placeholder="email@company.com"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Industry</label>
+                    <label className="block text-sm font-medium text-fm-neutral-700 mb-2">Industry</label>
                     <input
                       type="text"
                       value={proposal.client.prospectInfo?.industry || ''}
                       onChange={(e) => updateProspectInfo('industry', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
+                      className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
                       placeholder="Technology, Healthcare, etc."
                     />
                   </div>
@@ -572,7 +573,7 @@ export function ProposalFormNew({ initialProposal, onSaveSuccess }: ProposalForm
                         e.target.value = '';
                       }
                     }}
-                    className="px-3 py-1 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-fm-magenta-500"
+                    className="px-3 py-1 text-sm border border-fm-neutral-300 rounded-md focus:ring-2 focus:ring-fm-magenta-500"
                   >
                     <option value="">Add Service Package...</option>
                     {DIGITAL_MARKETING_PACKAGES.map(pkg => (
@@ -587,11 +588,11 @@ export function ProposalFormNew({ initialProposal, onSaveSuccess }: ProposalForm
             </CardHeader>
             <CardContent className="space-y-4">
               {selectedPackages.map((selected, index) => (
-                <div key={index} className="p-4 border border-gray-200 rounded-lg bg-gray-50">
+                <div key={index} className="p-4 border border-fm-neutral-200 rounded-lg bg-fm-neutral-50">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
-                      <h4 className="font-semibold text-gray-900">{selected.package.name}</h4>
-                      <p className="text-sm text-gray-600 mt-1">{selected.package.description}</p>
+                      <h4 className="font-semibold text-fm-neutral-900">{selected.package.name}</h4>
+                      <p className="text-sm text-fm-neutral-600 mt-1">{selected.package.description}</p>
                       <Badge variant="outline" className="mt-2">
                         {selected.package.category.replace('-', ' ')}
                       </Badge>
@@ -609,11 +610,11 @@ export function ProposalFormNew({ initialProposal, onSaveSuccess }: ProposalForm
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     {selected.package.variants && selected.package.variants.length > 0 && (
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Variant</label>
+                        <label className="block text-sm font-medium text-fm-neutral-700 mb-1">Variant</label>
                         <select
                           value={selected.variant || ''}
                           onChange={(e) => updateSelectedPackage(index, { variant: e.target.value || undefined })}
-                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
+                          className="w-full px-3 py-2 text-sm border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
                         >
                           <option value="">Standard</option>
                           {selected.package.variants.map(variant => (
@@ -625,31 +626,31 @@ export function ProposalFormNew({ initialProposal, onSaveSuccess }: ProposalForm
                       </div>
                     )}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
+                      <label className="block text-sm font-medium text-fm-neutral-700 mb-1">Quantity</label>
                       <input
                         type="number"
                         min="1"
                         value={selected.quantity}
                         onChange={(e) => updateSelectedPackage(index, { quantity: parseInt(e.target.value) || 1 })}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
+                        className="w-full px-3 py-2 text-sm border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Custom Price (Optional)</label>
+                      <label className="block text-sm font-medium text-fm-neutral-700 mb-1">Custom Price (Optional)</label>
                       <input
                         type="number"
                         placeholder={`${selected.package.basePrice}`}
                         value={selected.customPrice || ''}
                         onChange={(e) => updateSelectedPackage(index, { customPrice: parseFloat(e.target.value) || undefined })}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
+                        className="w-full px-3 py-2 text-sm border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
                       />
                     </div>
                   </div>
                   
                   {/* Deliverables */}
                   <div className="mt-3">
-                    <p className="text-sm font-medium text-gray-700 mb-2">Deliverables:</p>
-                    <ul className="text-sm text-gray-600 space-y-1">
+                    <p className="text-sm font-medium text-fm-neutral-700 mb-2">Deliverables:</p>
+                    <ul className="text-sm text-fm-neutral-600 space-y-1">
                       {selected.package.deliverables.map((deliverable, i) => (
                         <li key={i} className="flex items-center">
                           <CheckCircle className="w-3 h-3 text-green-500 mr-2 flex-shrink-0" />
@@ -672,8 +673,8 @@ export function ProposalFormNew({ initialProposal, onSaveSuccess }: ProposalForm
               ))}
               
               {selectedPackages.length === 0 && (
-                <div className="text-center py-8 text-gray-500">
-                  <Target className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                <div className="text-center py-8 text-fm-neutral-500">
+                  <Target className="w-12 h-12 mx-auto mb-4 text-fm-neutral-300" />
                   <p>No service packages selected yet.</p>
                   <p className="text-sm">Choose from our pre-built packages above.</p>
                 </div>
@@ -702,11 +703,11 @@ export function ProposalFormNew({ initialProposal, onSaveSuccess }: ProposalForm
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Client Size</label>
+                    <label className="block text-sm font-medium text-fm-neutral-700 mb-2">Client Size</label>
                     <select
                       value={clientSizeMultiplier}
                       onChange={(e) => setClientSizeMultiplier(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
+                      className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
                     >
                       <option value="startup">Startup ({Math.round(PRICING_MODIFIERS.clientSize.startup * 100 - 100)}%)</option>
                       <option value="small">Small Business ({Math.round(PRICING_MODIFIERS.clientSize.small * 100 - 100)}%)</option>
@@ -716,11 +717,11 @@ export function ProposalFormNew({ initialProposal, onSaveSuccess }: ProposalForm
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Timeline</label>
+                    <label className="block text-sm font-medium text-fm-neutral-700 mb-2">Timeline</label>
                     <select
                       value={urgencyMultiplier}
                       onChange={(e) => setUrgencyMultiplier(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
+                      className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
                     >
                       <option value="standard">Standard Timeline</option>
                       <option value="priority">Priority (+{Math.round(PRICING_MODIFIERS.urgency.priority * 100 - 100)}%)</option>
@@ -729,11 +730,11 @@ export function ProposalFormNew({ initialProposal, onSaveSuccess }: ProposalForm
                   </div>
                   {proposal.proposalType === 'retainer' && (
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Retainer Period</label>
+                      <label className="block text-sm font-medium text-fm-neutral-700 mb-2">Retainer Period</label>
                       <select
                         value={retainerDuration}
                         onChange={(e) => setRetainerDuration(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
+                        className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
                       >
                         <option value="3-months">3 Months (-{Math.round(PRICING_MODIFIERS.retainerDiscount['3-months'] * 100)}%)</option>
                         <option value="6-months">6 Months (-{Math.round(PRICING_MODIFIERS.retainerDiscount['6-months'] * 100)}%)</option>
@@ -745,14 +746,14 @@ export function ProposalFormNew({ initialProposal, onSaveSuccess }: ProposalForm
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Payment Terms</label>
+                  <label className="block text-sm font-medium text-fm-neutral-700 mb-2">Payment Terms</label>
                   <select
                     value={proposal.investment.paymentTerms}
                     onChange={(e) => setProposal(prev => ({
                       ...prev,
                       investment: { ...prev.investment, paymentTerms: e.target.value as any }
                     }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 max-w-md"
+                    className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 max-w-md"
                   >
                     <option value="50-50">50% Advance, 50% on Delivery</option>
                     <option value="monthly">Monthly Billing (Retainer)</option>
@@ -803,7 +804,7 @@ export function ProposalFormNew({ initialProposal, onSaveSuccess }: ProposalForm
               <CardDescription>Live preview of your proposal</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="bg-white border-2 border-gray-200 rounded-lg p-6 text-sm max-h-96 overflow-y-auto">
+              <div className="bg-white border-2 border-fm-neutral-200 rounded-lg p-6 text-sm max-h-96 overflow-y-auto">
                 {/* Header */}
                 <div className="border-b pb-4 mb-4">
                   <div className="flex justify-between items-start">
@@ -815,23 +816,23 @@ export function ProposalFormNew({ initialProposal, onSaveSuccess }: ProposalForm
                       />
                       <div>
                         <h3 className="text-lg font-bold text-fm-magenta-600">FREAKING MINDS</h3>
-                        <p className="text-xs text-gray-600">Digital Marketing Proposal</p>
+                        <p className="text-xs text-fm-neutral-600">Digital Marketing Proposal</p>
                       </div>
                     </div>
                     <div className="text-right">
                       <h4 className="text-lg font-bold">PROPOSAL</h4>
-                      <p className="text-gray-600">#{proposal.proposalNumber}</p>
+                      <p className="text-fm-neutral-600">#{proposal.proposalNumber}</p>
                     </div>
                   </div>
                 </div>
 
                 {/* Title */}
-                <h2 className="text-xl font-bold text-gray-900 mb-4">{proposal.title}</h2>
+                <h2 className="text-xl font-bold text-fm-neutral-900 mb-4">{proposal.title}</h2>
 
                 {/* Client Info */}
                 {(proposal.client.clientId || proposal.client.prospectInfo?.company) && (
                   <div className="mb-6">
-                    <h3 className="font-semibold text-gray-900 mb-2">Prepared for:</h3>
+                    <h3 className="font-semibold text-fm-neutral-900 mb-2">Prepared for:</h3>
                     {proposal.client.isExisting && proposal.client.clientId ? (
                       <div>
                         {(() => {
@@ -839,7 +840,7 @@ export function ProposalFormNew({ initialProposal, onSaveSuccess }: ProposalForm
                           return client ? (
                             <div>
                               <p className="font-medium">{client.name}</p>
-                              <p className="text-gray-600">{client.email}</p>
+                              <p className="text-fm-neutral-600">{client.email}</p>
                             </div>
                           ) : null;
                         })()}
@@ -847,8 +848,8 @@ export function ProposalFormNew({ initialProposal, onSaveSuccess }: ProposalForm
                     ) : proposal.client.prospectInfo && (
                       <div>
                         <p className="font-medium">{proposal.client.prospectInfo.company}</p>
-                        <p className="text-gray-600">{proposal.client.prospectInfo.name}</p>
-                        <p className="text-gray-600">{proposal.client.prospectInfo.email}</p>
+                        <p className="text-fm-neutral-600">{proposal.client.prospectInfo.name}</p>
+                        <p className="text-fm-neutral-600">{proposal.client.prospectInfo.email}</p>
                       </div>
                     )}
                   </div>
@@ -857,13 +858,13 @@ export function ProposalFormNew({ initialProposal, onSaveSuccess }: ProposalForm
                 {/* Services Overview */}
                 {selectedPackages.length > 0 && (
                   <div className="mb-6">
-                    <h3 className="font-semibold text-gray-900 mb-3">Proposed Services:</h3>
+                    <h3 className="font-semibold text-fm-neutral-900 mb-3">Proposed Services:</h3>
                     <div className="space-y-3">
                       {selectedPackages.map((selected, index) => (
                         <div key={index} className="border-l-4 border-fm-magenta-500 pl-3">
-                          <h4 className="font-medium text-gray-900">{selected.package.name}</h4>
-                          <p className="text-sm text-gray-600">{selected.package.description}</p>
-                          <div className="flex items-center mt-1 space-x-4 text-xs text-gray-500">
+                          <h4 className="font-medium text-fm-neutral-900">{selected.package.name}</h4>
+                          <p className="text-sm text-fm-neutral-600">{selected.package.description}</p>
+                          <div className="flex items-center mt-1 space-x-4 text-xs text-fm-neutral-500">
                             <span className="flex items-center">
                               <Clock className="w-3 h-3 mr-1" />
                               {selected.package.timeline}
@@ -881,8 +882,8 @@ export function ProposalFormNew({ initialProposal, onSaveSuccess }: ProposalForm
                 )}
 
                 {/* Investment Summary */}
-                <div className="bg-gray-50 rounded-lg p-4 mb-6">
-                  <h3 className="font-semibold text-gray-900 mb-3">Investment Summary:</h3>
+                <div className="bg-fm-neutral-50 rounded-lg p-4 mb-6">
+                  <h3 className="font-semibold text-fm-neutral-900 mb-3">Investment Summary:</h3>
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span>Subtotal:</span>
@@ -902,7 +903,7 @@ export function ProposalFormNew({ initialProposal, onSaveSuccess }: ProposalForm
                 </div>
 
                 {/* Valid Until */}
-                <div className="text-center text-sm text-gray-600 border-t pt-4">
+                <div className="text-center text-sm text-fm-neutral-600 border-t pt-4">
                   <p>This proposal is valid until: {new Date(proposal.validUntil).toLocaleDateString()}</p>
                   <p className="mt-2 text-xs">Thank you for considering Freaking Minds for your digital marketing needs.</p>
                 </div>

@@ -10,6 +10,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { DiscoverySession } from '@/lib/admin/discovery-types';
 import { DiscoveryService } from '@/lib/admin/discovery-service';
 import { Button } from '@/design-system/components/primitives/Button';
+import { adminToast } from '@/lib/admin/toast';
 import { ArrowLeft, FileText, Download, Eye, Users } from 'lucide-react';
 
 export default function DiscoveryReportPage() {
@@ -102,7 +103,7 @@ export default function DiscoveryReportPage() {
       doc.save(`discovery-report-${session.companyFundamentals.companyName.replace(/\s+/g, '-').toLowerCase()}.pdf`);
     } catch (error) {
       console.error('Error generating PDF:', error);
-      alert('Failed to generate PDF. Please try again.');
+      adminToast.error('Failed to generate PDF. Please try again.');
     } finally {
       setIsGeneratingPDF(false);
     }

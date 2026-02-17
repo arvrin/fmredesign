@@ -139,9 +139,9 @@ export default function TeamAssignmentManagementPage({ params }: TeamAssignmentM
   if (!member) {
     return (
       <div className="max-w-4xl mx-auto text-center py-12">
-        <User className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-        <h2 className="text-xl font-semibold text-gray-900 mb-2">Team Member Not Found</h2>
-        <p className="text-gray-600 mb-6">The requested team member could not be found.</p>
+        <User className="w-16 h-16 text-fm-neutral-400 mx-auto mb-4" />
+        <h2 className="text-xl font-semibold text-fm-neutral-900 mb-2">Team Member Not Found</h2>
+        <p className="text-fm-neutral-600 mb-6">The requested team member could not be found.</p>
         <Button onClick={() => router.push('/admin/team')}>
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Team
@@ -257,13 +257,13 @@ export default function TeamAssignmentManagementPage({ params }: TeamAssignmentM
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
                   Select Client *
                 </label>
                 <select
                   value={newAssignment.clientId}
                   onChange={(e) => setNewAssignment(prev => ({ ...prev, clientId: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
                   required
                 >
                   <option value="">Choose a client...</option>
@@ -276,7 +276,7 @@ export default function TeamAssignmentManagementPage({ params }: TeamAssignmentM
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
                   Weekly Hours *
                 </label>
                 <input
@@ -285,13 +285,13 @@ export default function TeamAssignmentManagementPage({ params }: TeamAssignmentM
                   max={member.capacity}
                   value={newAssignment.hoursAllocated}
                   onChange={(e) => setNewAssignment(prev => ({ ...prev, hoursAllocated: parseInt(e.target.value) || 1 }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
                   required
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
                   Role
                 </label>
                 <div className="flex items-center gap-4 pt-2">
@@ -300,15 +300,15 @@ export default function TeamAssignmentManagementPage({ params }: TeamAssignmentM
                       type="checkbox"
                       checked={newAssignment.isLead}
                       onChange={(e) => setNewAssignment(prev => ({ ...prev, isLead: e.target.checked }))}
-                      className="rounded border-gray-300 text-fm-magenta-600 focus:ring-fm-magenta-500"
+                      className="rounded border-fm-neutral-300 text-fm-magenta-600 focus:ring-fm-magenta-500"
                     />
-                    <span className="text-sm text-gray-700">Account Lead</span>
+                    <span className="text-sm text-fm-neutral-700">Account Lead</span>
                   </label>
                 </div>
               </div>
             </div>
             
-            <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200">
+            <div className="flex items-center justify-end gap-3 pt-4 border-t border-fm-neutral-200">
               <Button
                 variant="ghost"
                 onClick={() => setShowAddForm(false)}
@@ -401,9 +401,9 @@ export default function TeamAssignmentManagementPage({ params }: TeamAssignmentM
             </div>
           ) : (
             <div className="text-center py-8">
-              <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No Client Assignments</h3>
-              <p className="text-gray-500 mb-4">
+              <Users className="w-12 h-12 text-fm-neutral-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-fm-neutral-900 mb-2">No Client Assignments</h3>
+              <p className="text-fm-neutral-500 mb-4">
                 This team member hasn't been assigned to any clients yet.
               </p>
               <Button 
@@ -432,8 +432,8 @@ export default function TeamAssignmentManagementPage({ params }: TeamAssignmentM
         </CardHeader>
         <CardContent>
           <div className="text-center py-6">
-            <Clock className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-            <p className="text-gray-500">Assignment history tracking coming soon</p>
+            <Clock className="w-12 h-12 text-fm-neutral-400 mx-auto mb-3" />
+            <p className="text-fm-neutral-500">Assignment history tracking coming soon</p>
           </div>
         </CardContent>
       </Card>

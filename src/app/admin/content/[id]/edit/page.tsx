@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft, Save, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { DashboardButton, DashboardCard, CardContent, CardHeader, CardTitle } from '@/design-system';
+import { adminToast } from '@/lib/admin/toast';
 import type { ContentItem, ContentStatus, ContentType, Platform } from '@/lib/admin/project-types';
 
 export default function EditContentPage({ params }: { params: Promise<{ id: string }> }) {
@@ -62,11 +63,11 @@ export default function EditContentPage({ params }: { params: Promise<{ id: stri
       if (result.success) {
         router.push(`/admin/content/${id}`);
       } else {
-        alert('Error saving: ' + (result.error || 'Unknown error'));
+        adminToast.error('Error saving: ' + (result.error || 'Unknown error'));
       }
     } catch (error) {
       console.error('Error saving content:', error);
-      alert('Failed to save content');
+      adminToast.error('Failed to save content');
     } finally {
       setSaving(false);
     }
@@ -124,7 +125,7 @@ export default function EditContentPage({ params }: { params: Promise<{ id: stri
               type="text"
               value={item.title}
               onChange={(e) => updateField('title', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+              className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
             />
           </div>
           <div>
@@ -133,7 +134,7 @@ export default function EditContentPage({ params }: { params: Promise<{ id: stri
               value={item.description || ''}
               onChange={(e) => updateField('description', e.target.value)}
               rows={2}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+              className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
             />
           </div>
           <div>
@@ -142,7 +143,7 @@ export default function EditContentPage({ params }: { params: Promise<{ id: stri
               value={item.content || ''}
               onChange={(e) => updateField('content', e.target.value)}
               rows={6}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+              className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
             />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -151,7 +152,7 @@ export default function EditContentPage({ params }: { params: Promise<{ id: stri
               <select
                 value={item.status}
                 onChange={(e) => updateField('status', e.target.value as ContentStatus)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
+                className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
               >
                 <option value="draft">Draft</option>
                 <option value="review">Review</option>
@@ -166,7 +167,7 @@ export default function EditContentPage({ params }: { params: Promise<{ id: stri
               <select
                 value={item.platform}
                 onChange={(e) => updateField('platform', e.target.value as Platform)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
+                className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
               >
                 <option value="instagram">Instagram</option>
                 <option value="facebook">Facebook</option>
@@ -183,7 +184,7 @@ export default function EditContentPage({ params }: { params: Promise<{ id: stri
               <select
                 value={item.type}
                 onChange={(e) => updateField('type', e.target.value as ContentType)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
+                className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
               >
                 <option value="post">Post</option>
                 <option value="story">Story</option>
@@ -201,7 +202,7 @@ export default function EditContentPage({ params }: { params: Promise<{ id: stri
                 type="date"
                 value={item.scheduledDate || ''}
                 onChange={(e) => updateField('scheduledDate', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
+                className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
               />
             </div>
           </div>
@@ -221,7 +222,7 @@ export default function EditContentPage({ params }: { params: Promise<{ id: stri
                 type="text"
                 value={item.assignedDesigner || ''}
                 onChange={(e) => updateField('assignedDesigner', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
+                className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
                 placeholder="Designer name"
               />
             </div>
@@ -231,7 +232,7 @@ export default function EditContentPage({ params }: { params: Promise<{ id: stri
                 type="text"
                 value={item.assignedWriter || ''}
                 onChange={(e) => updateField('assignedWriter', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
+                className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
                 placeholder="Writer name"
               />
             </div>
@@ -252,7 +253,7 @@ export default function EditContentPage({ params }: { params: Promise<{ id: stri
                 type="url"
                 value={item.imageUrl || ''}
                 onChange={(e) => updateField('imageUrl', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
+                className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
                 placeholder="https://..."
               />
             </div>
@@ -262,7 +263,7 @@ export default function EditContentPage({ params }: { params: Promise<{ id: stri
                 type="url"
                 value={item.videoUrl || ''}
                 onChange={(e) => updateField('videoUrl', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
+                className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
                 placeholder="https://..."
               />
             </div>
@@ -282,7 +283,7 @@ export default function EditContentPage({ params }: { params: Promise<{ id: stri
               type="text"
               value={(item.hashtags || []).join(', ')}
               onChange={(e) => updateField('hashtags', e.target.value.split(',').map(t => t.trim()).filter(Boolean))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
+              className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
               placeholder="#marketing, #design, #socialmedia"
             />
           </div>
@@ -292,7 +293,7 @@ export default function EditContentPage({ params }: { params: Promise<{ id: stri
               type="text"
               value={(item.mentions || []).join(', ')}
               onChange={(e) => updateField('mentions', e.target.value.split(',').map(t => t.trim()).filter(Boolean))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
+              className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
               placeholder="@user1, @brand"
             />
           </div>
@@ -302,7 +303,7 @@ export default function EditContentPage({ params }: { params: Promise<{ id: stri
               type="text"
               value={(item.tags || []).join(', ')}
               onChange={(e) => updateField('tags', e.target.value.split(',').map(t => t.trim()).filter(Boolean))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
+              className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
               placeholder="campaign-name, q1-2026"
             />
           </div>
@@ -321,7 +322,7 @@ export default function EditContentPage({ params }: { params: Promise<{ id: stri
               value={item.clientFeedback || ''}
               onChange={(e) => updateField('clientFeedback', e.target.value)}
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+              className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
               placeholder="Client feedback or comments..."
             />
           </div>
@@ -331,7 +332,7 @@ export default function EditContentPage({ params }: { params: Promise<{ id: stri
               value={item.revisionNotes || ''}
               onChange={(e) => updateField('revisionNotes', e.target.value)}
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+              className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
               placeholder="Notes on revisions needed..."
             />
           </div>

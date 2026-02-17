@@ -52,9 +52,9 @@ function getStatusColor(status: string) {
     case 'resolved':
       return 'bg-green-100 text-green-800 border-green-200';
     case 'closed':
-      return 'bg-gray-100 text-gray-800 border-gray-200';
+      return 'bg-fm-neutral-100 text-fm-neutral-800 border-fm-neutral-200';
     default:
-      return 'bg-gray-100 text-gray-800 border-gray-200';
+      return 'bg-fm-neutral-100 text-fm-neutral-800 border-fm-neutral-200';
   }
 }
 
@@ -69,7 +69,7 @@ function getPriorityColor(priority: string) {
     case 'low':
       return 'bg-green-100 text-green-800 border-green-200';
     default:
-      return 'bg-gray-100 text-gray-800 border-gray-200';
+      return 'bg-fm-neutral-100 text-fm-neutral-800 border-fm-neutral-200';
   }
 }
 

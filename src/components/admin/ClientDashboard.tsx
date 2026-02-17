@@ -166,7 +166,7 @@ export function ClientDashboard({ onClientSelect }: ClientDashboardProps) {
   const getStatusBadge = (status: ClientStatus) => {
     const colors = {
       active: 'bg-green-100 text-green-800',
-      inactive: 'bg-gray-100 text-gray-800',
+      inactive: 'bg-fm-neutral-100 text-fm-neutral-800',
       paused: 'bg-yellow-100 text-yellow-800',
       churned: 'bg-red-100 text-red-800'
     };
@@ -194,7 +194,7 @@ export function ClientDashboard({ onClientSelect }: ClientDashboardProps) {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold bg-gradient-to-r from-fm-magenta-600 to-fm-magenta-700 bg-clip-text text-transparent">Client Management</h1>
-            <p className="text-gray-600 mt-1 font-medium">
+            <p className="text-fm-neutral-600 mt-1 font-medium">
               Manage your agency relationships and track client success
             </p>
           </div>

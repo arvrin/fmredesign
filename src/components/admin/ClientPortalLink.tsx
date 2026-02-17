@@ -15,15 +15,7 @@ import {
   ExternalLink,
   Calendar
 } from 'lucide-react';
-// Simple toast replacement
-const toast = {
-  success: (message: string) => {
-    alert('✅ ' + message);
-  },
-  error: (message: string) => {
-    alert('❌ ' + message);
-  }
-};
+import { adminToast } from '@/lib/admin/toast';
 
 interface ClientPortalLinkProps {
   clientId: string;
@@ -79,11 +71,11 @@ export default function ClientPortalLink({
       };
 
       setGeneratedLinks(prev => [newLink, ...prev.filter(link => link.email !== email)]);
-      toast.success('Portal link generated successfully');
+      adminToast.success('Portal link generated successfully');
 
     } catch (error) {
       console.error('Error generating portal link:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to generate portal link');
+      adminToast.error(error instanceof Error ? error.message : 'Failed to generate portal link');
     } finally {
       setIsGenerating(false);
     }
@@ -92,9 +84,9 @@ export default function ClientPortalLink({
   const copyToClipboard = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
-      toast.success('Copied to clipboard');
+      adminToast.success('Copied to clipboard');
     } catch (error) {
-      toast.error('Failed to copy to clipboard');
+      adminToast.error('Failed to copy to clipboard');
     }
   };
 
@@ -151,14 +143,14 @@ FreakingMinds Team`);
         {/* Generate New Link */}
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
               Generate Portal Link For:
             </label>
             <div className="flex gap-2">
               <select 
                 value={selectedEmail}
                 onChange={(e) => setSelectedEmail(e.target.value)}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="flex-1 px-3 py-2 border border-fm-neutral-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 {allEmails.map((email) => (
                   <option key={email} value={email}>
@@ -190,13 +182,13 @@ FreakingMinds Team`);
         {/* Generated Links */}
         {generatedLinks.length > 0 && (
           <div className="space-y-4">
-            <h4 className="text-sm font-medium text-gray-900">Generated Portal Links</h4>
+            <h4 className="text-sm font-medium text-fm-neutral-900">Generated Portal Links</h4>
             <div className="space-y-3">
               {generatedLinks.map((link, index) => (
                 <div key={`${link.email}-${index}`} className="border rounded-lg p-4">
                   <div className="flex items-start justify-between mb-3">
                     <div>
-                      <p className="text-sm font-medium text-gray-900">{link.email}</p>
+                      <p className="text-sm font-medium text-fm-neutral-900">{link.email}</p>
                       <div className="flex items-center mt-1">
                         {isLinkExpired(link.expires) ? (
                           <Badge variant="destructive" className="text-xs">
@@ -236,7 +228,7 @@ FreakingMinds Team`);
                     </div>
                   </div>
                   
-                  <div className="bg-gray-50 rounded p-2">
+                  <div className="bg-fm-neutral-50 rounded p-2">
                     <Input
                       value={link.portalUrl}
                       readOnly
@@ -244,7 +236,7 @@ FreakingMinds Team`);
                     />
                   </div>
                   
-                  <p className="text-xs text-gray-500 mt-2">
+                  <p className="text-xs text-fm-neutral-500 mt-2">
                     Link expires: {new Date(link.expires).toLocaleString()}
                   </p>
                 </div>

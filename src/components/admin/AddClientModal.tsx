@@ -8,6 +8,7 @@
 import { useState } from 'react';
 import { X, Loader } from 'lucide-react';
 import { Button } from '@/design-system/components/primitives/Button';
+import { adminToast } from '@/lib/admin/toast';
 
 interface AddClientModalProps {
   isOpen: boolean;
@@ -123,11 +124,11 @@ export function AddClientModal({ isOpen, onClose, onClientAdded }: AddClientModa
         onClientAdded();
         onClose();
       } else {
-        alert(`Error: ${result.error || 'Failed to create client'}`);
+        adminToast.error(result.error || 'Failed to create client');
       }
     } catch (error) {
       console.error('Error creating client:', error);
-      alert('Failed to create client. Please try again.');
+      adminToast.error('Failed to create client. Please try again.');
     } finally {
       setIsSubmitting(false);
     }

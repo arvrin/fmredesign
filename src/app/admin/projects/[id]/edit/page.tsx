@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft, Save, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { DashboardButton, DashboardCard, CardContent, CardHeader, CardTitle } from '@/design-system';
+import { adminToast } from '@/lib/admin/toast';
 import type { Project, ProjectStatus, ProjectPriority, ProjectType } from '@/lib/admin/project-types';
 
 export default function EditProjectPage({ params }: { params: Promise<{ id: string }> }) {
@@ -56,11 +57,11 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
       if (result.success) {
         router.push(`/admin/projects/${id}`);
       } else {
-        alert('Error saving: ' + (result.error || 'Unknown error'));
+        adminToast.error('Error saving: ' + (result.error || 'Unknown error'));
       }
     } catch (error) {
       console.error('Error saving project:', error);
-      alert('Failed to save project');
+      adminToast.error('Failed to save project');
     } finally {
       setSaving(false);
     }
@@ -118,7 +119,7 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
               type="text"
               value={project.name}
               onChange={(e) => updateField('name', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+              className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
             />
           </div>
           <div>
@@ -127,7 +128,7 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
               value={project.description || ''}
               onChange={(e) => updateField('description', e.target.value)}
               rows={4}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+              className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
             />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -136,7 +137,7 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
               <select
                 value={project.status}
                 onChange={(e) => updateField('status', e.target.value as ProjectStatus)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
+                className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
               >
                 <option value="planning">Planning</option>
                 <option value="active">Active</option>
@@ -151,7 +152,7 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
               <select
                 value={project.priority}
                 onChange={(e) => updateField('priority', e.target.value as ProjectPriority)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
+                className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
               >
                 <option value="low">Low</option>
                 <option value="medium">Medium</option>
@@ -167,7 +168,7 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
                 max={100}
                 value={project.progress}
                 onChange={(e) => updateField('progress', parseInt(e.target.value) || 0)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
+                className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
               />
             </div>
           </div>
@@ -178,7 +179,7 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
                 type="date"
                 value={project.endDate || ''}
                 onChange={(e) => updateField('endDate', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
+                className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
               />
             </div>
             <div>
@@ -189,7 +190,7 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
                 max={100}
                 value={project.clientSatisfaction || ''}
                 onChange={(e) => updateField('clientSatisfaction', parseInt(e.target.value) || 0)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
+                className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
               />
             </div>
           </div>
@@ -208,7 +209,7 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
               value={project.notes || ''}
               onChange={(e) => updateField('notes', e.target.value)}
               rows={4}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+              className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
             />
           </div>
           <div>
@@ -217,7 +218,7 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
               type="text"
               value={(project.tags || []).join(', ')}
               onChange={(e) => updateField('tags', e.target.value.split(',').map(t => t.trim()).filter(Boolean))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
+              className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
               placeholder="e.g. urgent, redesign, phase-2"
             />
           </div>
