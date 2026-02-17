@@ -251,19 +251,19 @@ export function HeroSectionV2() {
             {/* CTA Buttons */}
             <div
               ref={ctaRef}
-              className="flex flex-col sm:flex-row items-stretch sm:items-start gap-4 w-full sm:w-auto"
+              className="flex flex-col sm:flex-row items-center sm:items-start gap-3 sm:gap-4 w-full sm:w-auto"
               style={{ opacity: 0 }}
             >
               <Link
                 href="/get-started"
-                className="v2-btn v2-btn-primary v2-btn-lg group"
+                className="v2-btn v2-btn-primary group"
               >
                 Get a Free Strategy Call
                 <ArrowRight className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" />
               </Link>
               <Link
                 href="/work"
-                className="v2-btn v2-btn-secondary v2-btn-lg"
+                className="v2-btn v2-btn-secondary"
               >
                 See Our Results
               </Link>
