@@ -319,12 +319,12 @@ export class SimplePDFGenerator {
   private addItemsTable(invoice: Invoice): void {
     const startY = 100;
 
-    const headers = ['Description', 'Qty', 'Rate (₹)', 'Amount (₹)'];
+    const headers = ['Description', 'Qty', 'Rate (Rs)', 'Amount (Rs)'];
     const data = invoice.lineItems.map(item => [
       item.description,
       item.quantity.toString(),
-      `₹${item.rate.toLocaleString('en-IN')}`,
-      `₹${item.amount.toLocaleString('en-IN')}`,
+      `Rs ${item.rate.toLocaleString('en-IN')}`,
+      `Rs ${item.amount.toLocaleString('en-IN')}`,
     ]);
 
     autoTable(this.doc, {
@@ -346,10 +346,10 @@ export class SimplePDFGenerator {
         fontSize: 9,
       },
       columnStyles: {
-        0: { cellWidth: 85 },
+        0: { cellWidth: 80 },
         1: { cellWidth: 20, halign: 'center' },
-        2: { cellWidth: 40, halign: 'right' },
-        3: { cellWidth: 40, halign: 'right', fontStyle: 'bold' },
+        2: { cellWidth: 35, halign: 'right' },
+        3: { cellWidth: 35, halign: 'right', fontStyle: 'bold' },
       },
       alternateRowStyles: {
         fillColor: MAGENTA_TINT,
@@ -385,13 +385,13 @@ export class SimplePDFGenerator {
     this.doc.setTextColor(...GREY);
     this.doc.text('Subtotal', labelX, y);
     this.doc.setTextColor(...DARK);
-    this.doc.text(`₹${invoice.subtotal.toLocaleString('en-IN')}`, rightEdge, y, { align: 'right' });
+    this.doc.text(`Rs ${invoice.subtotal.toLocaleString('en-IN')}`, rightEdge, y, { align: 'right' });
 
     // Tax
     this.doc.setTextColor(...GREY);
     this.doc.text(`GST (${invoice.taxRate}%)`, labelX, y + 6);
     this.doc.setTextColor(...DARK);
-    this.doc.text(`₹${invoice.taxAmount.toLocaleString('en-IN')}`, rightEdge, y + 6, { align: 'right' });
+    this.doc.text(`Rs ${invoice.taxAmount.toLocaleString('en-IN')}`, rightEdge, y + 6, { align: 'right' });
 
     // Divider
     this.doc.setDrawColor(...LIGHT_GREY);
@@ -408,7 +408,7 @@ export class SimplePDFGenerator {
     this.doc.setFontSize(13);
     this.doc.setTextColor(...WHITE);
     this.doc.text('TOTAL', MARGIN_L + 4, ribbonY + 7);
-    this.doc.text(`₹${invoice.total.toLocaleString('en-IN')}`, rightEdge - 4, ribbonY + 7, { align: 'right' });
+    this.doc.text(`Rs ${invoice.total.toLocaleString('en-IN')}`, rightEdge - 4, ribbonY + 7, { align: 'right' });
 
     // Amount in words below ribbon
     const wordsY = ribbonY + ribbonH + 5;
@@ -593,6 +593,7 @@ export class SimplePDFGenerator {
     const teens = ['Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
     const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
 
+    /** Convert 0–999 to words */
     function convertHundreds(num: number): string {
       let result = '';
       if (num >= 100) {
@@ -610,32 +611,46 @@ export class SimplePDFGenerator {
       return result.trim();
     }
 
+    /**
+     * Convert any positive integer to Indian-style words.
+     * Indian numbering: Crore (10^7), Lakh (10^5), Thousand (10^3), Hundred…
+     */
+    function convertIndian(num: number): string {
+      if (num === 0) return '';
+      let result = '';
+
+      // Crores (≥ 1,00,00,000)
+      if (num >= 10000000) {
+        result += convertHundreds(Math.floor(num / 10000000)) + ' Crore ';
+        num %= 10000000;
+      }
+      // Lakhs (≥ 1,00,000)
+      if (num >= 100000) {
+        result += convertHundreds(Math.floor(num / 100000)) + ' Lakh ';
+        num %= 100000;
+      }
+      // Thousands (≥ 1,000)
+      if (num >= 1000) {
+        result += convertHundreds(Math.floor(num / 1000)) + ' Thousand ';
+        num %= 1000;
+      }
+      // Hundreds and below
+      if (num > 0) {
+        result += convertHundreds(num) + ' ';
+      }
+
+      return result.trim();
+    }
+
     if (amount === 0) return 'Zero Rupees Only';
 
     const rupees = Math.floor(amount);
     const paise = Math.round((amount - rupees) * 100);
-    let result = '';
+    let result = convertIndian(rupees) + ' Rupees';
 
-    if (rupees >= 10000000) {
-      result += convertHundreds(Math.floor(rupees / 10000000)) + ' Crore ';
-      const rem = rupees % 10000000;
-      if (rem >= 100000) {
-        result += convertHundreds(Math.floor(rem / 100000)) + ' Lakh ';
-        const remT = rem % 100000;
-        if (remT > 0) result += convertHundreds(remT) + ' ';
-      } else if (rem > 0) {
-        result += convertHundreds(rem) + ' ';
-      }
-    } else if (rupees >= 100000) {
-      result += convertHundreds(Math.floor(rupees / 100000)) + ' Lakh ';
-      const rem = rupees % 100000;
-      if (rem > 0) result += convertHundreds(rem) + ' ';
-    } else if (rupees > 0) {
-      result += convertHundreds(rupees) + ' ';
+    if (paise > 0) {
+      result += ' and ' + convertHundreds(paise) + ' Paise';
     }
-
-    result += 'Rupees';
-    if (paise > 0) result += ' and ' + convertHundreds(paise) + ' Paise';
 
     return result.trim() + ' Only';
   }
