@@ -82,10 +82,23 @@ export async function POST(request: NextRequest) {
       .update({ last_login: new Date().toISOString() })
       .eq('id', user.id);
 
-    return NextResponse.json({
+    // Set admin session cookie so API calls pass requireAdminAuth middleware
+    const adminPassword = process.env.ADMIN_PASSWORD;
+    const response = NextResponse.json({
       success: true,
       user,
     });
+    if (adminPassword) {
+      const token = Buffer.from(`${adminPassword}:${Date.now()}`).toString('base64');
+      response.cookies.set('fm-admin-session', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 24 * 60 * 60,
+      });
+    }
+    return response;
   } catch (error) {
     console.error('Mobile authentication error:', error);
     return NextResponse.json(

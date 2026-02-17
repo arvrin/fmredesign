@@ -22,7 +22,17 @@ export async function POST(request: NextRequest) {
     }
 
     if (password === adminPassword) {
-      return NextResponse.json({ success: true });
+      // Create session token: base64(password:timestamp) — matches admin-auth-middleware
+      const token = Buffer.from(`${adminPassword}:${Date.now()}`).toString('base64');
+      const response = NextResponse.json({ success: true });
+      response.cookies.set('fm-admin-session', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 24 * 60 * 60, // 24 hours in seconds
+      });
+      return response;
     }
 
     return NextResponse.json(
