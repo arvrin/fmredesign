@@ -28,6 +28,7 @@ export interface ClientProfile {
 interface ClientPortalContextType {
   profile: ClientProfile;
   clientId: string;
+  slug: string;
 }
 
 const ClientPortalContext = createContext<ClientPortalContextType | null>(null);

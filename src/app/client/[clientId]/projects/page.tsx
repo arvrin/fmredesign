@@ -50,7 +50,7 @@ interface Project {
 }
 
 export default function ClientProjectsPage() {
-  const { clientId } = useClientPortal();
+  const { clientId, slug } = useClientPortal();
 
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
@@ -338,7 +338,7 @@ export default function ClientProjectsPage() {
               <div className="flex items-center justify-between pt-4">
                 <span className="text-xs text-fm-neutral-500">Updated {project.lastUpdate}</span>
                 <Link
-                  href={`/client/${clientId}/projects/${project.id}`}
+                  href={`/client/${slug}/projects/${project.id}`}
                   className="text-sm font-medium text-fm-magenta-600 hover:text-fm-magenta-700 flex items-center"
                 >
                   View Details

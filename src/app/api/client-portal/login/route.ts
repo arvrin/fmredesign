@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     // Look up client by email and portal_password
     const { data: client, error } = await supabaseAdmin
       .from('clients')
-      .select('id, name, email, portal_password')
+      .select('id, name, email, slug, portal_password')
       .eq('email', email.trim().toLowerCase())
       .single();
 
@@ -41,6 +41,7 @@ export async function POST(request: NextRequest) {
     const sessionData: SessionData = {
       sessionId,
       clientId: client.id,
+      slug: client.slug,
       email: client.email,
       clientName: client.name,
       expires: Date.now() + 7 * 24 * 60 * 60 * 1000,
@@ -50,8 +51,9 @@ export async function POST(request: NextRequest) {
       success: true,
       data: {
         clientId: client.id,
+        slug: client.slug,
         name: client.name,
-        redirectUrl: `/client/${client.id}`,
+        redirectUrl: `/client/${client.slug}`,
       },
     });
 

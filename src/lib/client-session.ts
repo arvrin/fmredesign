@@ -7,6 +7,7 @@ const SESSION_DURATION_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 export interface SessionData {
   sessionId: string;
   clientId: string;
+  slug: string;
   email: string;
   clientName: string;
   expires: number; // unix ms

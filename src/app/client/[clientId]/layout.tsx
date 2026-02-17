@@ -27,19 +27,19 @@ export default function ClientDashboardLayout({
   const params = useParams();
   const pathname = usePathname();
   const router = useRouter();
-  const clientId = params.clientId as string;
+  const slug = params.clientId as string; // URL param contains the slug
 
   const [profile, setProfile] = useState<ClientProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!clientId) return;
+    if (!slug) return;
 
     const fetchProfile = async () => {
       try {
         setLoading(true);
-        const res = await fetch(`/api/client-portal/${clientId}/profile`);
+        const res = await fetch(`/api/client-portal/${slug}/profile`);
         if (!res.ok) {
           if (res.status === 404) {
             setError('Client not found. Please check your link.');
@@ -58,7 +58,7 @@ export default function ClientDashboardLayout({
     };
 
     fetchProfile();
-  }, [clientId]);
+  }, [slug]);
 
   const handleLogout = useCallback(async () => {
     try {
@@ -70,7 +70,7 @@ export default function ClientDashboardLayout({
   }, [router]);
 
   // Navigation items with active detection from pathname
-  const basePath = `/client/${clientId}`;
+  const basePath = `/client/${slug}`;
   const navigationItems = [
     {
       label: 'Overview',
@@ -136,7 +136,7 @@ export default function ClientDashboardLayout({
   }
 
   return (
-    <ClientPortalProvider value={{ profile, clientId }}>
+    <ClientPortalProvider value={{ profile, clientId: profile.id, slug }}>
       <DashboardLayout
         variant="client"
         navigation={navigationItems}

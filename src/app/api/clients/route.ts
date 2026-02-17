@@ -7,6 +7,32 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { requireAdminAuth } from '@/lib/admin-auth-middleware';
 
+/** Generate a URL-safe slug from a company name */
+function slugify(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
+/** Ensure slug is unique by appending a counter if needed */
+async function uniqueSlug(base: string, excludeId?: string): Promise<string> {
+  const supabase = getSupabaseAdmin();
+  let slug = base;
+  let counter = 1;
+
+  while (true) {
+    let query = supabase.from('clients').select('id').eq('slug', slug);
+    if (excludeId) query = query.neq('id', excludeId);
+    const { data } = await query.limit(1);
+    if (!data || data.length === 0) return slug;
+    counter++;
+    slug = `${base}-${counter}`;
+  }
+}
+
 export async function GET(request: NextRequest) {
   const authError = await requireAdminAuth(request);
   if (authError) return authError;
@@ -160,6 +186,7 @@ export async function POST(request: NextRequest) {
         billing_cycle: clientData.contractDetails.billingCycle,
         total_value: clientData.contractDetails.value,
         portal_password: formData.portalPassword || null,
+        slug: await uniqueSlug(slugify(clientData.name)),
         services: Array.isArray(clientData.contractDetails.services)
           ? clientData.contractDetails.services
           : null,
@@ -198,7 +225,10 @@ export async function PUT(request: NextRequest) {
     }
 
     const updates: Record<string, any> = {};
-    if (formData.name) updates.name = formData.name;
+    if (formData.name) {
+      updates.name = formData.name;
+      updates.slug = await uniqueSlug(slugify(formData.name), id);
+    }
     if (formData.email) updates.email = formData.email;
     if (formData.phone !== undefined) updates.phone = formData.phone || null;
     if (formData.industry) updates.industry = formData.industry;

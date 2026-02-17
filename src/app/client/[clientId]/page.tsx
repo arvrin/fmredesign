@@ -100,7 +100,7 @@ function getServiceName(serviceId: string): string {
 }
 
 export default function ClientDashboard() {
-  const { profile, clientId } = useClientPortal();
+  const { profile, clientId, slug } = useClientPortal();
 
   const [projects, setProjects] = useState<Project[]>([]);
   const [contentItems, setContentItems] = useState<ContentItem[]>([]);
@@ -459,7 +459,7 @@ export default function ClientDashboard() {
                           }).format(project.budget)}
                         </span>
                         <Link
-                          href={`/client/${clientId}/projects`}
+                          href={`/client/${slug}/projects`}
                           className="text-sm font-medium text-fm-magenta-600 hover:text-fm-magenta-700 hover:bg-fm-magenta-50 px-3 py-1.5 rounded-md transition-colors"
                         >
                           View Details
@@ -473,7 +473,7 @@ export default function ClientDashboard() {
             {projects.length > 3 && (
               <div className="pt-4 border-t border-fm-neutral-100">
                 <Link
-                  href={`/client/${clientId}/projects`}
+                  href={`/client/${slug}/projects`}
                   className="flex items-center justify-center w-full text-sm font-medium text-fm-magenta-600 hover:text-fm-magenta-700 hover:bg-fm-magenta-50 py-2 rounded-md transition-colors"
                 >
                   View All {projects.length} Projects
@@ -534,7 +534,7 @@ export default function ClientDashboard() {
             {contentItems.length > 4 && (
               <div className="pt-4 border-t border-fm-neutral-100">
                 <Link
-                  href={`/client/${clientId}/content`}
+                  href={`/client/${slug}/content`}
                   className="flex items-center justify-center w-full text-sm font-medium text-fm-magenta-600 hover:text-fm-magenta-700 hover:bg-fm-magenta-50 py-2 rounded-md transition-colors"
                 >
                   View Full Calendar
@@ -560,7 +560,7 @@ export default function ClientDashboard() {
           </CardHeader>
           <CardContent className="space-y-3">
             <Link
-              href={`/client/${clientId}/reports`}
+              href={`/client/${slug}/reports`}
               className="flex items-center w-full text-left h-auto p-4 rounded-md hover:bg-fm-neutral-50 transition-colors"
             >
               <FileText className="w-5 h-5 mr-3 text-fm-magenta-600 flex-shrink-0" />
@@ -570,7 +570,7 @@ export default function ClientDashboard() {
               </div>
             </Link>
             <Link
-              href={`/client/${clientId}/support`}
+              href={`/client/${slug}/support`}
               className="flex items-center w-full text-left h-auto p-4 rounded-md hover:bg-fm-neutral-50 transition-colors"
             >
               <MessageSquare className="w-5 h-5 mr-3 text-fm-magenta-600 flex-shrink-0" />
@@ -580,7 +580,7 @@ export default function ClientDashboard() {
               </div>
             </Link>
             <Link
-              href={`/client/${clientId}/reports`}
+              href={`/client/${slug}/reports`}
               className="flex items-center w-full text-left h-auto p-4 rounded-md hover:bg-fm-neutral-50 transition-colors"
             >
               <Award className="w-5 h-5 mr-3 text-fm-magenta-600 flex-shrink-0" />
@@ -609,7 +609,7 @@ export default function ClientDashboard() {
             </p>
 
             <Link
-              href={`/client/${clientId}/support`}
+              href={`/client/${slug}/support`}
               className="inline-flex items-center justify-center w-full rounded-md bg-gradient-to-r from-fm-magenta-600 to-fm-magenta-700 px-6 py-3 text-sm font-medium text-white shadow-sm hover:from-fm-magenta-700 hover:to-fm-magenta-800 transition-all"
             >
               <MessageSquare className="w-5 h-5 mr-2" />

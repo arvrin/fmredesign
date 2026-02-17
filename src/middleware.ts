@@ -59,14 +59,14 @@ export function middleware(request: NextRequest) {
         return response;
       }
 
-      // Extract clientId from URL: /client/[clientId]/...
+      // Extract slug from URL: /client/[slug]/...
       const urlParts = pathname.split('/');
-      const urlClientId = urlParts[2]; // /client/[clientId]
+      const urlSlug = urlParts[2]; // /client/[slug]
 
-      if (urlClientId && urlClientId !== sessionData.clientId) {
+      if (urlSlug && urlSlug !== sessionData.slug && urlSlug !== sessionData.clientId) {
         // Client trying to access another client's portal — redirect to their own
         return NextResponse.redirect(
-          new URL(`/client/${sessionData.clientId}`, request.url)
+          new URL(`/client/${sessionData.slug}`, request.url)
         );
       }
 

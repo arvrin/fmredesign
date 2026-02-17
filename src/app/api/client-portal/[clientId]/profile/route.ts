@@ -21,11 +21,26 @@ export async function GET(
       );
     }
 
-    const { data: client, error } = await supabaseAdmin
+    // Try slug first, fall back to id for backward compatibility
+    let client, error;
+    const slugResult = await supabaseAdmin
       .from('clients')
       .select('*')
-      .eq('id', clientId)
+      .eq('slug', clientId)
       .single();
+
+    if (slugResult.data) {
+      client = slugResult.data;
+      error = null;
+    } else {
+      const idResult = await supabaseAdmin
+        .from('clients')
+        .select('*')
+        .eq('id', clientId)
+        .single();
+      client = idResult.data;
+      error = idResult.error;
+    }
 
     if (error || !client) {
       return NextResponse.json(
