@@ -141,10 +141,16 @@ export function HeaderV2() {
           zIndex: 50,
           backgroundColor: isScrolled || isMobileMenuOpen || activeDropdown
             ? 'var(--v2-header-bg)'
-            : 'transparent',
+            : 'rgba(255, 255, 255, 0.6)',
+          backdropFilter: isScrolled || isMobileMenuOpen || activeDropdown
+            ? undefined
+            : 'blur(12px)',
+          WebkitBackdropFilter: isScrolled || isMobileMenuOpen || activeDropdown
+            ? undefined
+            : 'blur(12px)',
           borderBottom: isScrolled || isMobileMenuOpen || activeDropdown
             ? '1px solid rgba(201, 50, 93, 0.08)'
-            : '1px solid transparent',
+            : '1px solid rgba(201, 50, 93, 0.04)',
         }}
       >
         <div className="max-w-[1400px] mx-auto px-6 md:px-12 lg:px-16">

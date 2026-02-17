@@ -128,7 +128,7 @@ export default function ContactPage() {
             </div>
 
             {/* Headline */}
-            <h1 className="font-display text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold v2-text-primary mb-8 leading-tight">
+            <h1 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold v2-text-primary mb-8 leading-tight">
               Let's Talk About{' '}
               <span className="v2-accent">Your Growth</span>
             </h1>
@@ -193,7 +193,7 @@ export default function ContactPage() {
                         background: '#faf9f9',
                         border: '1.5px solid #e5e2e2',
                         outline: 'none',
-                        fontSize: '15px',
+                        fontSize: '16px',
                         color: '#0f0f0f',
                       }}
                       onFocus={(e) => { e.target.style.border = '1.5px solid #c9325d'; e.target.style.boxShadow = '0 0 0 4px rgba(201,50,93,0.08)'; e.target.style.background = '#fff'; }}
@@ -214,7 +214,7 @@ export default function ContactPage() {
                         background: '#faf9f9',
                         border: '1.5px solid #e5e2e2',
                         outline: 'none',
-                        fontSize: '15px',
+                        fontSize: '16px',
                         color: '#0f0f0f',
                       }}
                       onFocus={(e) => { e.target.style.border = '1.5px solid #c9325d'; e.target.style.boxShadow = '0 0 0 4px rgba(201,50,93,0.08)'; e.target.style.background = '#fff'; }}
@@ -237,7 +237,7 @@ export default function ContactPage() {
                         background: '#faf9f9',
                         border: '1.5px solid #e5e2e2',
                         outline: 'none',
-                        fontSize: '15px',
+                        fontSize: '16px',
                         color: '#0f0f0f',
                       }}
                       onFocus={(e) => { e.target.style.border = '1.5px solid #c9325d'; e.target.style.boxShadow = '0 0 0 4px rgba(201,50,93,0.08)'; e.target.style.background = '#fff'; }}
@@ -257,7 +257,7 @@ export default function ContactPage() {
                         background: '#faf9f9',
                         border: '1.5px solid #e5e2e2',
                         outline: 'none',
-                        fontSize: '15px',
+                        fontSize: '16px',
                         color: '#0f0f0f',
                       }}
                       onFocus={(e) => { e.target.style.border = '1.5px solid #c9325d'; e.target.style.boxShadow = '0 0 0 4px rgba(201,50,93,0.08)'; e.target.style.background = '#fff'; }}
@@ -280,10 +280,10 @@ export default function ContactPage() {
                         background: '#faf9f9',
                         border: '1.5px solid #e5e2e2',
                         outline: 'none',
-                        fontSize: '15px',
+                        fontSize: '16px',
                         color: '#0f0f0f',
                         appearance: 'none',
-                        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`,
+                        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`,
                         backgroundRepeat: 'no-repeat',
                         backgroundPosition: 'right 16px center',
                         paddingRight: '44px',
@@ -308,10 +308,10 @@ export default function ContactPage() {
                         background: '#faf9f9',
                         border: '1.5px solid #e5e2e2',
                         outline: 'none',
-                        fontSize: '15px',
+                        fontSize: '16px',
                         color: '#0f0f0f',
                         appearance: 'none',
-                        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`,
+                        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`,
                         backgroundRepeat: 'no-repeat',
                         backgroundPosition: 'right 16px center',
                         paddingRight: '44px',
@@ -340,7 +340,7 @@ export default function ContactPage() {
                       background: '#faf9f9',
                       border: '1.5px solid #e5e2e2',
                       outline: 'none',
-                      fontSize: '15px',
+                      fontSize: '16px',
                       color: '#0f0f0f',
                       resize: 'none',
                     }}

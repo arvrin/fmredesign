@@ -863,17 +863,6 @@ section:not(.v2-section):not([class*="v2-"]):not([class*="pt-"]):not([class*="py
   animation: testimonialFadeOut 0.3s ease-out forwards;
 }
 
-/* Smooth image loading */
-img[loading="lazy"] {
-  opacity: 0;
-  transition: opacity 0.4s ease-out;
-}
-
-img[loading="lazy"].loaded,
-img:not([loading="lazy"]) {
-  opacity: 1;
-}
-
 /* Page transitions - smooth fade effect */
 .page-transition-enter {
   opacity: 0;

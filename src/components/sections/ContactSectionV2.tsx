@@ -163,7 +163,7 @@ export function ContactSectionV2() {
         className="relative z-10 v2-section"
       >
         <div className="v2-container">
-          <div className="grid md:grid-cols-2 gap-8 md:gap-10 lg:gap-12 items-center">
+          <div className="grid md:grid-cols-2 gap-6 md:gap-10 lg:gap-12 items-center">
             {/* Left: Content */}
             <div ref={contentRef}>
               {/* Badge */}
@@ -243,7 +243,7 @@ export function ContactSectionV2() {
             >
               {/* Glow Effect Behind Mascot — magenta tint for light bg */}
               <div
-                className="absolute w-[400px] h-[400px] rounded-full"
+                className="absolute w-[280px] h-[280px] md:w-[400px] md:h-[400px] rounded-full"
                 style={{
                   background: 'radial-gradient(circle, rgba(180,35,75,0.2) 0%, rgba(201,50,93,0.08) 50%, transparent 70%)',
                   filter: 'blur(25px)',
@@ -259,7 +259,7 @@ export function ContactSectionV2() {
                   height={420}
                   className="relative max-w-full"
                   style={{
-                    width: 'min(420px, 80vw)',
+                    width: 'min(420px, 60vw)',
                     height: 'auto',
                     filter: 'drop-shadow(0 25px 50px rgba(140,25,60,0.25))',
                   }}
@@ -272,9 +272,9 @@ export function ContactSectionV2() {
           <div
             ref={contactBarRef}
             className="v2-paper rounded-2xl p-6"
-            style={{ marginTop: '80px' }}
+            style={{ marginTop: '48px' }}
           >
-            <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6 text-center sm:text-left">
+            <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 text-center sm:text-left">
               {/* Email */}
               <div className="contact-item flex items-center justify-center md:justify-start gap-3 group">
                 <div className="contact-icon w-10 h-10 rounded-full bg-fm-magenta-50 flex items-center justify-center transition-[transform,background-color] duration-300 group-hover:scale-110 group-hover:bg-fm-magenta-100">
@@ -282,7 +282,7 @@ export function ContactSectionV2() {
                 </div>
                 <div>
                   <div className="text-fm-neutral-400 text-xs uppercase tracking-wide">Email</div>
-                  <a href="mailto:freakingmindsdigital@gmail.com" className="text-fm-neutral-900 font-medium hover:text-fm-magenta-600 transition-colors">
+                  <a href="mailto:freakingmindsdigital@gmail.com" className="text-fm-neutral-900 font-medium hover:text-fm-magenta-600 transition-colors text-sm sm:text-base break-all sm:break-normal">
                     freakingmindsdigital@gmail.com
                   </a>
                 </div>

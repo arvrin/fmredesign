@@ -70,20 +70,20 @@ const inputBase: React.CSSProperties = {
   background: '#faf9f9',
   border: '1.5px solid #e5e2e2',
   outline: 'none',
-  fontSize: '15px',
+  fontSize: '16px',
   color: '#0f0f0f',
   width: '100%',
   borderRadius: '12px',
   transition: 'border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease',
 };
 
-const inputWithIcon: React.CSSProperties = { ...inputBase, paddingLeft: '48px' };
+const inputWithIcon: React.CSSProperties = { ...inputBase, paddingLeft: '44px' };
 
 const selectStyle: React.CSSProperties = {
   ...inputBase,
   appearance: 'none' as const,
   cursor: 'pointer',
-  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`,
+  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`,
   backgroundRepeat: 'no-repeat',
   backgroundPosition: 'right 16px center',
   paddingRight: '44px',
@@ -357,7 +357,7 @@ export default function GetStartedPage() {
                             Email Address *
                           </label>
                           <div className="relative">
-                            <Mail className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-fm-neutral-400" />
+                            <Mail className="w-5 h-5 absolute left-[14px] top-1/2 transform -translate-y-1/2 text-fm-neutral-500" />
                             <input
                               type="email"
                               value={formData.email || ''}
@@ -376,7 +376,7 @@ export default function GetStartedPage() {
                             Company Name *
                           </label>
                           <div className="relative">
-                            <Building className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-fm-neutral-400" />
+                            <Building className="w-5 h-5 absolute left-[14px] top-1/2 transform -translate-y-1/2 text-fm-neutral-500" />
                             <input
                               type="text"
                               value={formData.company || ''}
@@ -395,7 +395,7 @@ export default function GetStartedPage() {
                             Phone Number
                           </label>
                           <div className="relative">
-                            <Phone className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-fm-neutral-400" />
+                            <Phone className="w-5 h-5 absolute left-[14px] top-1/2 transform -translate-y-1/2 text-fm-neutral-500" />
                             <input
                               type="tel"
                               value={formData.phone || ''}
@@ -414,7 +414,7 @@ export default function GetStartedPage() {
                           Website (Optional)
                         </label>
                         <div className="relative">
-                          <Globe className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-fm-neutral-400" />
+                          <Globe className="w-5 h-5 absolute left-[14px] top-1/2 transform -translate-y-1/2 text-fm-neutral-500" />
                           <input
                             type="url"
                             value={formData.website || ''}

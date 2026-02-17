@@ -4,18 +4,22 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 
 export function PageLoader() {
-  const [visible, setVisible] = useState(false);
+  // Start visible so loader is in the initial paint (no flash of content)
+  const [visible, setVisible] = useState(true);
   const [fadeOut, setFadeOut] = useState(false);
 
   useEffect(() => {
-    // Only show on first visit this session
-    if (sessionStorage.getItem('fm-loaded')) return;
-    sessionStorage.setItem('fm-loaded', '1');
+    // Repeat visit in same tab — hide immediately
+    if (sessionStorage.getItem('fm-loaded')) {
+      setVisible(false);
+      return;
+    }
 
-    setVisible(true);
-    const timer = setTimeout(() => setFadeOut(true), 1000);
-    const removeTimer = setTimeout(() => setVisible(false), 1500);
-    return () => { clearTimeout(timer); clearTimeout(removeTimer); };
+    // First visit — mark as loaded, then fade out after 1s
+    sessionStorage.setItem('fm-loaded', '1');
+    const fadeTimer = setTimeout(() => setFadeOut(true), 1000);
+    const hideTimer = setTimeout(() => setVisible(false), 1700);
+    return () => { clearTimeout(fadeTimer); clearTimeout(hideTimer); };
   }, []);
 
   if (!visible) return null;
@@ -32,9 +36,9 @@ export function PageLoader() {
         gap: '60px',
         background: `
           linear-gradient(135deg,
-            #fef5f8 0%, #fce8ef 10%, #f9dce6 20%, #f5d0de 30%,
-            #f2c6d7 40%, #f0bfd2 50%, #f2c6d7 60%, #f5d0de 70%,
-            #f9dce6 80%, #fce8ef 90%, #fef5f8 100%
+            #fef7f9 0%, #fceef3 10%, #fae4ec 20%, #f7dbe5 30%,
+            #f5d4e0 40%, #f5e0e8 50%, #f5d4e0 60%, #f7dbe5 70%,
+            #fae4ec 80%, #fceef3 90%, #fef7f9 100%
           )
         `,
         opacity: fadeOut ? 0 : 1,
