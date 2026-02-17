@@ -3,14 +3,13 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
-import { Button } from '../primitives/Button';
 import {
   Menu,
   X,
-  ChevronLeft,
+  PanelLeftClose,
+  PanelLeftOpen,
   Bell,
   User,
-  Settings,
   HelpCircle,
   LogOut
 } from 'lucide-react';
@@ -41,8 +40,8 @@ export interface NavigationItem {
 const layoutVariants = {
   admin: {
     bg: 'bg-gradient-to-br from-fm-magenta-50 via-white to-fm-magenta-50/50',
-    sidebar: 'bg-white/95 backdrop-blur-md border-r border-fm-magenta-200',
-    header: 'bg-white/80 backdrop-blur-md border-b border-fm-magenta-200',
+    sidebar: 'bg-white/95 border-r border-fm-magenta-200',
+    header: 'bg-white/95 border-b border-fm-magenta-200',
     accent: 'text-fm-magenta-700',
     logo: 'FreakingMinds Admin',
     theme: 'Command Center'
@@ -59,6 +58,26 @@ const layoutVariants = {
 
 const SIDEBAR_STORAGE_KEY = 'fm-sidebar-collapsed';
 
+/* ── Tiny icon button for sidebar / header chrome ── */
+const IconBtn: React.FC<
+  React.ButtonHTMLAttributes<HTMLButtonElement> & { label: string }
+> = ({ className, label, children, ...props }) => (
+  <button
+    className={cn(
+      'flex items-center justify-center w-8 h-8 rounded-lg shrink-0',
+      'text-fm-neutral-400 hover:text-fm-neutral-700 hover:bg-fm-neutral-100',
+      'transition-colors duration-150',
+      className
+    )}
+    aria-label={label}
+    {...props}
+  >
+    {children}
+  </button>
+);
+
+/* ======================================================================== */
+
 export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   children,
   variant = 'admin',
@@ -67,215 +86,266 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   onLogout,
   className
 }) => {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
   const styles = layoutVariants[variant];
 
-  // Persist sidebar collapsed state in localStorage
+  /* Persist collapsed preference */
   useEffect(() => {
-    const stored = localStorage.getItem(SIDEBAR_STORAGE_KEY);
-    if (stored === 'true') setSidebarCollapsed(true);
+    try {
+      if (localStorage.getItem(SIDEBAR_STORAGE_KEY) === 'true') setCollapsed(true);
+    } catch { /* SSR / privacy mode */ }
   }, []);
 
   useEffect(() => {
-    localStorage.setItem(SIDEBAR_STORAGE_KEY, String(sidebarCollapsed));
-  }, [sidebarCollapsed]);
+    try { localStorage.setItem(SIDEBAR_STORAGE_KEY, String(collapsed)); } catch {}
+  }, [collapsed]);
 
-  const defaultNavigation: NavigationItem[] = [
-    {
-      label: 'Dashboard',
-      href: variant === 'admin' ? '/admin' : '/client',
-      icon: <div className="w-5 h-5 rounded bg-current opacity-20" />,
-      active: true
-    }
-  ];
+  const defaultNav: NavigationItem[] = [{
+    label: 'Dashboard',
+    href: variant === 'admin' ? '/admin' : '/client',
+    icon: <div className="w-5 h-5 rounded bg-current opacity-20" />,
+    active: true
+  }];
 
-  const navItems = navigation.length > 0 ? navigation : defaultNavigation;
+  const navItems = navigation.length > 0 ? navigation : defaultNav;
 
   return (
     <div className={cn('min-h-screen flex', styles.bg, className)}>
-      {/* Sidebar */}
+      {/* ─────────────── Sidebar ─────────────── */}
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 flex flex-col transition-all duration-300',
+          'fixed inset-y-0 left-0 flex flex-col',
+          'transition-[width,transform] duration-300 ease-in-out',
           styles.sidebar,
-          sidebarCollapsed ? 'w-16' : 'w-64',
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+          /* Width: always 256 on mobile, 72 or 256 on desktop */
+          'w-64',
+          collapsed && 'lg:w-[72px]',
+          /* Slide: hidden off-screen on mobile until opened */
+          mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         )}
         style={{ zIndex: 50 }}
       >
-        {/* Sidebar Header */}
-        {sidebarCollapsed ? (
-          <div className="flex flex-col items-center py-3 gap-1 border-b border-fm-neutral-100">
-            <Link href="/" aria-label="FreakingMinds home">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-fm-magenta-600 to-fm-magenta-700 flex items-center justify-center text-white font-bold text-sm hover:opacity-80 transition-opacity">
-                FM
-              </div>
-            </Link>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setSidebarCollapsed(false)}
+        {/* ── Header ── */}
+        <div className={cn(
+          'shrink-0 flex items-center h-14 border-b border-fm-neutral-100',
+          collapsed ? 'px-4 lg:justify-center lg:px-0' : 'px-4 justify-between'
+        )}>
+          {/* Logo */}
+          <Link
+            href="/"
+            className={cn(
+              'flex items-center gap-3 hover:opacity-80 transition-opacity min-w-0',
+              collapsed && 'lg:gap-0'
+            )}
+          >
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-fm-magenta-600 to-fm-magenta-700 flex items-center justify-center text-white font-bold text-sm shrink-0">
+              FM
+            </div>
+            {/* Text: always on mobile, hidden on desktop when collapsed */}
+            <div className={cn('min-w-0', collapsed && 'lg:hidden')}>
+              <h1 className="font-display font-bold text-[15px] leading-tight text-fm-neutral-900 truncate">
+                {styles.logo}
+              </h1>
+              <p className="text-[11px] text-fm-neutral-500 truncate">{styles.theme}</p>
+            </div>
+          </Link>
+
+          {/* Push controls right */}
+          <div className={cn('flex-1', collapsed && 'lg:hidden')} />
+
+          {/* Desktop: collapse button (only when expanded) */}
+          {!collapsed && (
+            <IconBtn
+              onClick={() => setCollapsed(true)}
+              label="Collapse sidebar"
               className="hidden lg:flex"
-              style={{ height: '28px', width: '28px', padding: 0 }}
-              aria-label="Expand sidebar"
             >
-              <ChevronLeft className="w-3.5 h-3.5 rotate-180" />
-            </Button>
-          </div>
-        ) : (
-          <div className="flex items-center justify-between p-4 border-b border-fm-neutral-100">
-            <Link href="/" className="flex items-center space-x-3 hover:opacity-80 transition-opacity">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-fm-magenta-600 to-fm-magenta-700 flex items-center justify-center text-white font-bold text-sm">
-                FM
-              </div>
-              <div>
-                <h1 className="font-display font-bold text-lg text-fm-neutral-900">{styles.logo}</h1>
-                <p className="text-xs text-fm-neutral-500">{styles.theme}</p>
-              </div>
-            </Link>
+              <PanelLeftClose className="w-4 h-4" />
+            </IconBtn>
+          )}
 
-            {/* Collapse toggle — desktop */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setSidebarCollapsed(true)}
-              className="hidden lg:flex"
-              aria-label="Collapse sidebar"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </Button>
+          {/* Mobile close */}
+          <IconBtn
+            onClick={() => setMobileOpen(false)}
+            label="Close menu"
+            className="lg:hidden"
+          >
+            <X className="w-4 h-4" />
+          </IconBtn>
+        </div>
 
-            {/* Mobile close */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setSidebarOpen(false)}
-              className="lg:hidden"
-              aria-label="Close sidebar"
-            >
-              <X className="w-4 h-4" />
-            </Button>
-          </div>
-        )}
-
-        {/* Navigation */}
-        <nav className="flex-1 p-4 space-y-2" aria-label="Dashboard navigation">
+        {/* ── Navigation ── */}
+        <nav
+          className={cn(
+            'flex-1 overflow-y-auto overflow-x-hidden',
+            'py-3 space-y-0.5',
+            collapsed ? 'px-3 lg:px-2' : 'px-3'
+          )}
+          aria-label="Dashboard navigation"
+        >
           {navItems.map((item, index) => (
             <Link
               key={index}
               href={item.href}
               aria-current={item.active ? 'page' : undefined}
+              onClick={() => setMobileOpen(false)}
               className={cn(
-                'flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200',
-                'hover:bg-fm-magenta-50/60 hover:scale-105 active:scale-95',
+                'group/nav relative flex items-center rounded-xl text-[13px] font-medium',
+                'transition-all duration-200',
+                /* Layout */
+                collapsed
+                  ? 'gap-3 px-3 py-2.5 lg:justify-center lg:px-0 lg:py-2.5'
+                  : 'gap-3 px-3 py-2.5',
+                /* Active / inactive */
                 item.active
-                  ? 'bg-gradient-to-r from-fm-magenta-600 to-fm-magenta-700 shadow-[0_4px_12px_rgba(168,37,72,0.3)] text-white'
-                  : 'text-fm-neutral-700 hover:text-fm-neutral-900'
+                  ? 'bg-gradient-to-r from-fm-magenta-600 to-fm-magenta-700 text-white shadow-[0_4px_12px_rgba(168,37,72,0.25)]'
+                  : 'text-fm-neutral-600 hover:text-fm-neutral-900 hover:bg-fm-magenta-50/50'
               )}
             >
               {item.icon && (
-                <span className={cn('flex-shrink-0 relative', item.active ? 'text-white' : styles.accent)}>
+                <span className={cn(
+                  'shrink-0 relative flex items-center justify-center',
+                  item.active ? 'text-white' : styles.accent
+                )}>
                   {item.icon}
-                  {/* Badge dot when sidebar is collapsed */}
-                  {sidebarCollapsed && item.badge && (
-                    <span className="absolute -top-1 -right-1 w-2 h-2 bg-fm-magenta-500 rounded-full" />
+                  {/* Badge dot — collapsed desktop only */}
+                  {collapsed && item.badge && (
+                    <span className="hidden lg:block absolute -top-1 -right-1.5 w-2 h-2 bg-fm-magenta-500 rounded-full ring-2 ring-white" />
                   )}
                 </span>
               )}
-              {!sidebarCollapsed && (
-                <>
-                  <span className="truncate">{item.label}</span>
-                  {item.badge && (
-                    <span className="ml-auto bg-fm-magenta-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                      {item.badge}
-                    </span>
+
+              {/* Label: always on mobile, hidden on desktop when collapsed */}
+              <span className={cn('truncate', collapsed && 'lg:hidden')}>
+                {item.label}
+              </span>
+
+              {/* Badge pill */}
+              {item.badge && (
+                <span className={cn(
+                  'ml-auto text-[11px] font-semibold rounded-full px-1.5 py-0.5 shrink-0',
+                  item.active
+                    ? 'bg-white/20 text-white'
+                    : 'bg-fm-magenta-100 text-fm-magenta-700',
+                  collapsed && 'lg:hidden'
+                )}>
+                  {item.badge}
+                </span>
+              )}
+
+              {/* Tooltip — collapsed desktop only */}
+              {collapsed && (
+                <span
+                  className={cn(
+                    'hidden lg:block absolute left-full ml-3 px-2.5 py-1 rounded-lg',
+                    'bg-fm-neutral-900 text-white text-xs font-medium whitespace-nowrap',
+                    'opacity-0 pointer-events-none',
+                    'group-hover/nav:opacity-100',
+                    'transition-opacity duration-150',
+                    'shadow-lg'
                   )}
-                </>
+                  style={{ zIndex: 60 }}
+                >
+                  {item.label}
+                </span>
               )}
             </Link>
           ))}
         </nav>
 
-        {/* User Section */}
+        {/* ── Expand toggle — collapsed desktop only ── */}
+        {collapsed && (
+          <div className="hidden lg:flex shrink-0 justify-center py-2 border-t border-fm-neutral-100">
+            <IconBtn onClick={() => setCollapsed(false)} label="Expand sidebar">
+              <PanelLeftOpen className="w-4 h-4" />
+            </IconBtn>
+          </div>
+        )}
+
+        {/* ── User section ── */}
         {user && (
-          <div className="p-4 border-t border-fm-neutral-100">
-            {!sidebarCollapsed ? (
-              <div className="flex items-center gap-3 p-2 rounded-xl hover:bg-fm-magenta-50/30 transition-colors">
-                <div className="w-8 h-8 rounded-full bg-fm-magenta-100 flex items-center justify-center">
-                  {user.avatar ? (
-                    <img src={user.avatar} alt={user.name} className="w-full h-full rounded-full" />
-                  ) : (
-                    <User className="w-4 h-4 text-fm-magenta-600" />
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-fm-neutral-900 truncate">{user.name}</p>
-                  <p className="text-xs text-fm-neutral-500 truncate">{user.email}</p>
-                </div>
-                {onLogout && (
-                  <Button variant="ghost" size="sm" onClick={onLogout} aria-label="Log out">
-                    <LogOut className="w-4 h-4" />
-                  </Button>
-                )}
-              </div>
-            ) : (
-              <div className="flex flex-col items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-fm-magenta-100 flex items-center justify-center">
+          <div className={cn(
+            'shrink-0 border-t border-fm-neutral-100',
+            collapsed ? 'p-3 lg:py-3 lg:px-2' : 'p-3'
+          )}>
+            <div className={cn(
+              'flex items-center rounded-xl transition-colors',
+              collapsed
+                ? 'gap-3 px-1.5 py-1 lg:flex-col lg:items-center lg:gap-1.5 lg:px-0 lg:py-0'
+                : 'gap-3 px-1.5 py-1 hover:bg-fm-magenta-50/30'
+            )}>
+              {/* Avatar */}
+              <div
+                className="w-8 h-8 rounded-full bg-fm-magenta-100 flex items-center justify-center shrink-0"
+                title={collapsed ? user.name : undefined}
+              >
+                {user.avatar ? (
+                  <img src={user.avatar} alt="" className="w-full h-full rounded-full object-cover" />
+                ) : (
                   <User className="w-4 h-4 text-fm-magenta-600" />
-                </div>
-                {onLogout && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={onLogout}
-                    aria-label="Log out"
-                    style={{ height: '28px', width: '28px', padding: 0 }}
-                  >
-                    <LogOut className="w-3.5 h-3.5" />
-                  </Button>
                 )}
               </div>
-            )}
+
+              {/* Info: always on mobile, hidden on desktop when collapsed */}
+              <div className={cn('flex-1 min-w-0', collapsed && 'lg:hidden')}>
+                <p className="text-sm font-medium text-fm-neutral-900 truncate">{user.name}</p>
+                <p className="text-[11px] text-fm-neutral-500 truncate">{user.email}</p>
+              </div>
+
+              {/* Logout */}
+              {onLogout && (
+                <IconBtn
+                  onClick={onLogout}
+                  label="Log out"
+                  title="Log out"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                </IconBtn>
+              )}
+            </div>
           </div>
         )}
       </aside>
 
-      {/* Main Content Area */}
-      <div className={cn('flex-1 flex flex-col', sidebarCollapsed ? 'lg:ml-16' : 'lg:ml-64')}>
-        {/* Header */}
-        <header className={cn('flex items-center justify-between p-4 lg:px-6', styles.header)}>
-          <div className="flex items-center gap-4">
-            {/* Mobile menu button */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setSidebarOpen(true)}
-              className="lg:hidden"
-              aria-label="Open sidebar menu"
-            >
-              <Menu className="w-5 h-5" />
-            </Button>
-          </div>
+      {/* ─────────────── Main content ─────────────── */}
+      <div className={cn(
+        'flex-1 flex flex-col min-w-0',
+        'transition-[margin-left] duration-300 ease-in-out',
+        collapsed ? 'lg:ml-[72px]' : 'lg:ml-64'
+      )}>
+        {/* Top bar */}
+        <header
+          className={cn(
+            'sticky top-0 flex items-center justify-between h-14 px-4 lg:px-6',
+            styles.header
+          )}
+          style={{ zIndex: 30 }}
+        >
+          {/* Left — mobile menu toggle */}
+          <button
+            onClick={() => setMobileOpen(true)}
+            className="lg:hidden flex items-center justify-center w-9 h-9 rounded-lg text-fm-neutral-600 hover:text-fm-neutral-900 hover:bg-fm-neutral-100 transition-colors"
+            aria-label="Open menu"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+          {/* Spacer on desktop */}
+          <div className="hidden lg:block" />
 
-          {/* Header Actions */}
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" className="relative" aria-label="Notifications">
-              <Bell className="w-5 h-5" />
-              <span className="absolute -top-1 -right-1 w-2 h-2 bg-fm-magenta-500 rounded-full" />
-            </Button>
-
-            <Button variant="ghost" size="sm" aria-label="Help center">
-              <HelpCircle className="w-5 h-5" />
-            </Button>
-
-            <Button variant="ghost" size="sm" aria-label="Settings">
-              <Settings className="w-5 h-5" />
-            </Button>
+          {/* Right — actions */}
+          <div className="flex items-center gap-1">
+            <IconBtn label="Notifications" className="relative w-9 h-9">
+              <Bell className="w-[18px] h-[18px]" />
+              <span className="absolute top-1 right-1 w-2 h-2 bg-fm-magenta-500 rounded-full" />
+            </IconBtn>
+            <IconBtn label="Help center" className="w-9 h-9">
+              <HelpCircle className="w-[18px] h-[18px]" />
+            </IconBtn>
           </div>
         </header>
 
-        {/* Page Content */}
+        {/* Page content */}
         <main className="flex-1 p-4 lg:p-6 overflow-auto">
           <div className="max-w-7xl mx-auto">
             {children}
@@ -283,12 +353,12 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         </main>
       </div>
 
-      {/* Mobile sidebar overlay */}
-      {sidebarOpen && (
+      {/* ─────────────── Mobile overlay ─────────────── */}
+      {mobileOpen && (
         <div
-          className="fixed inset-0 bg-black/20 backdrop-blur-sm lg:hidden"
+          className="fixed inset-0 bg-black/20 lg:hidden"
           style={{ zIndex: 40 }}
-          onClick={() => setSidebarOpen(false)}
+          onClick={() => setMobileOpen(false)}
           aria-hidden="true"
         />
       )}
