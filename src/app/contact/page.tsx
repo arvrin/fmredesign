@@ -118,7 +118,7 @@ export default function ContactPage() {
   return (
     <V2PageWrapper>
       {/* Hero Section */}
-      <section className="relative z-10 v2-section pt-32 lg:pt-40">
+      <section className="relative z-10 v2-section pt-40">
         <div className="v2-container v2-container-wide">
           <div className="max-w-4xl mx-auto" style={{ textAlign: 'center' }}>
             {/* Badge */}

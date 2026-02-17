@@ -151,7 +151,7 @@ export default function CreativeMindsPage() {
   if (showApplicationForm) {
     return (
       <V2PageWrapper>
-        <section className="relative z-10 v2-section pt-32 lg:pt-40 pb-32">
+        <section className="relative z-10 v2-section pt-40 pb-32">
           <div className="v2-container">
             {/* Page Header */}
             <div style={{ textAlign: 'center', marginBottom: '48px' }}>
@@ -227,7 +227,7 @@ export default function CreativeMindsPage() {
   return (
     <V2PageWrapper>
       {/* ── Section 1: Hero — Asymmetric 2-col ──────────────────────── */}
-      <section className="relative z-10 v2-section pt-32 lg:pt-40">
+      <section className="relative z-10 v2-section pt-40">
         <div className="v2-container v2-container-wide">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
 

@@ -249,7 +249,7 @@ export default function GetStartedPage() {
 
   return (
     <V2PageWrapper>
-      <section className="relative z-10 v2-section pt-32 lg:pt-40 pb-32">
+      <section className="relative z-10 v2-section pt-40 pb-32">
         <div className="v2-container">
           {/* 3D Brain Decoration */}
           <div className="absolute right-8 lg:right-20 top-36 hidden lg:block" style={{ zIndex: 10 }}>

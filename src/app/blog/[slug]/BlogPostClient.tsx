@@ -110,7 +110,7 @@ export default function BlogPostClient({ slug }: { slug: string }) {
   if (!post) {
     return (
       <V2PageWrapper>
-        <section className="relative z-10 v2-section pt-32 lg:pt-40 pb-20">
+        <section className="relative z-10 v2-section pt-40 pb-20">
           <div className="v2-container v2-container-narrow" style={{ textAlign: 'center' }}>
             <h1 className="font-display text-4xl font-bold v2-text-primary mb-6">
               Article Not Found
@@ -136,7 +136,7 @@ export default function BlogPostClient({ slug }: { slug: string }) {
   return (
     <V2PageWrapper>
       {/* Hero */}
-      <section className="relative z-10 v2-section pt-32 lg:pt-40">
+      <section className="relative z-10 v2-section pt-40">
         <div className="v2-container v2-container-narrow">
           <Link
             href="/blog"
