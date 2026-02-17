@@ -1,6 +1,7 @@
 'use client';
 
 import { ArrowRight, Users, Target, Award, Heart, Lightbulb, Star } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { V2PageWrapper } from "@/components/layouts/V2PageWrapper";
 
@@ -86,7 +87,7 @@ export default function AboutPage() {
 
       {/* Wave Divider */}
       <div className="relative" style={{ zIndex: 10, marginTop: '-1px' }}>
-        <img src="/textures/wave-divider.svg" alt="" className="w-full" style={{ height: '60px', display: 'block' }} />
+        <Image src="/textures/wave-divider.svg" alt="" width={1920} height={60} className="w-full" style={{ height: '60px', display: 'block' }} />
       </div>
 
       {/* Values Section */}
@@ -94,12 +95,15 @@ export default function AboutPage() {
         <div className="v2-container">
           {/* Floating Brain Decoration */}
           <div className="absolute left-4 lg:left-16 top-8 hidden lg:block" style={{ zIndex: 10 }}>
-            <img
+            <Image
               src="/3dasset/brain-strategy.png"
               alt="Strategic Innovation"
+              width={180}
+              height={180}
               className="h-auto animate-v2-hero-float"
               style={{
                 width: 'min(180px, 30vw)',
+                height: 'auto',
                 filter: 'drop-shadow(0 20px 40px rgba(140,25,60,0.2))',
               }}
             />
@@ -152,9 +156,11 @@ export default function AboutPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto">
             {teamMembers.map((member) => (
               <div key={member.name} className="v2-paper rounded-2xl p-8 text-center hover:shadow-2xl transition-[box-shadow,transform] duration-300 hover:-translate-y-2">
-                <img
+                <Image
                   src={member.image}
                   alt={member.name}
+                  width={96}
+                  height={96}
                   className="w-24 h-24 rounded-full mx-auto mb-6 object-cover border-4 border-fm-magenta-100"
                 />
                 <h3 className="font-display text-xl font-bold text-fm-neutral-900 mb-1">{member.name}</h3>
@@ -169,7 +175,7 @@ export default function AboutPage() {
 
       {/* Wave Divider */}
       <div className="relative" style={{ zIndex: 10, marginTop: '-1px' }}>
-        <img src="/textures/wave-divider.svg" alt="" className="w-full" style={{ height: '60px', display: 'block', transform: 'scaleX(-1)' }} />
+        <Image src="/textures/wave-divider.svg" alt="" width={1920} height={60} className="w-full" style={{ height: '60px', display: 'block', transform: 'scaleX(-1)' }} />
       </div>
 
       {/* CTA Section */}

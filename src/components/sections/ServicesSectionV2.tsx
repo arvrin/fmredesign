@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   ArrowRight,
   Search,
@@ -107,9 +108,11 @@ function ServiceCard({
         {/* Background image (if provided) */}
         {service.bgImage && (
           <div className="absolute inset-0 pointer-events-none overflow-hidden">
-            <img
+            <Image
               src={service.bgImage}
               alt=""
+              width={400}
+              height={400}
               style={{
                 opacity: 0.25,
                 mixBlendMode: 'luminosity',

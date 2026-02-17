@@ -13,6 +13,7 @@ import {
   PenTool,
   Users,
   Briefcase,
+  ClipboardList,
   LineChart,
   Video,
   Camera,
@@ -149,10 +150,30 @@ export default function CreativeMindsPage() {
 
   if (showApplicationForm) {
     return (
-      <TalentApplicationForm
-        onSubmit={handleApplicationSubmit}
-        onCancel={() => setShowApplicationForm(false)}
-      />
+      <V2PageWrapper>
+        <section className="relative z-10 v2-section pt-32 lg:pt-40 pb-32">
+          <div className="v2-container">
+            {/* Page Header */}
+            <div style={{ textAlign: 'center', marginBottom: '48px' }}>
+              <div className="v2-badge v2-badge-glass" style={{ marginBottom: '24px' }}>
+                <Sparkles className="w-4 h-4 v2-text-primary" />
+                <span className="v2-text-primary">Join CreativeMinds</span>
+              </div>
+              <h1 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold v2-text-primary leading-tight" style={{ marginBottom: '16px' }}>
+                Apply to the <span className="v2-accent">Network</span>
+              </h1>
+              <p className="text-base md:text-lg v2-text-secondary leading-relaxed max-w-2xl mx-auto">
+                Four quick steps. Our team reviews every application within 48 hours.
+              </p>
+            </div>
+
+            <TalentApplicationForm
+              onSubmit={handleApplicationSubmit}
+              onCancel={() => setShowApplicationForm(false)}
+            />
+          </div>
+        </section>
+      </V2PageWrapper>
     );
   }
 
@@ -241,7 +262,7 @@ export default function CreativeMindsPage() {
               <div className="flex flex-wrap gap-x-6 gap-y-3">
                 {['500+ Verified Creatives', '150+ Projects Delivered', '48hr Matching'].map((item) => (
                   <div key={item} className="flex items-center gap-2 text-sm v2-text-secondary">
-                    <Check className="w-4 h-4 text-fm-magenta-400" />
+                    <Check className="w-4 h-4 text-fm-magenta-600" />
                     <span>{item}</span>
                   </div>
                 ))}
@@ -278,7 +299,7 @@ export default function CreativeMindsPage() {
         </div>
       </section>
 
-      {/* ── Section 2: How It Works — with connecting arrows ────────── */}
+      {/* ── Section 2: How It Works — dashed circle process ──────────── */}
       <section className="relative z-10 v2-section v2-texture-mesh">
         <div className="v2-container">
           <div className="max-w-3xl mx-auto" style={{ textAlign: 'center', marginBottom: '64px' }}>
@@ -289,29 +310,135 @@ export default function CreativeMindsPage() {
             <h2 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold v2-text-primary mb-8 leading-tight">
               How It <span className="v2-accent">Works</span>
             </h2>
+            <p className="text-lg v2-text-secondary leading-relaxed max-w-2xl mx-auto">
+              Three simple steps to connect you with the perfect creative talent for your project.
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
-            {processSteps.map((item, index) => {
-              const Icon = [Target, Users, Zap][index];
-              return (
-                <div
-                  key={item.step}
-                  className="v2-paper rounded-2xl p-8 relative overflow-hidden"
-                  style={{ textAlign: 'center' }}
-                >
-                  <div className="font-display text-5xl font-bold text-fm-magenta-100 mb-4">{item.step}</div>
-                  <div className={`w-14 h-14 v2-gradient-brand rounded-xl flex items-center justify-center mx-auto mb-6`}>
-                    <Icon className="w-7 h-7 text-white" />
-                  </div>
-                  <h3 className="font-display text-xl font-bold text-fm-neutral-900 mb-3">{item.title}</h3>
-                  <p className="text-fm-neutral-600 text-sm leading-relaxed">{item.description}</p>
+          {/* Desktop: horizontal with dashed circles and curved connectors */}
+          <div className="hidden md:block max-w-4xl mx-auto">
+            <div className="relative">
+              {/* Curved dashed connector 1→2 */}
+              <svg
+                className="absolute pointer-events-none"
+                style={{ top: '56px', left: '23%', width: '20%', height: '40px', zIndex: 1 }}
+                viewBox="0 0 200 40"
+                fill="none"
+                preserveAspectRatio="xMidYMid meet"
+              >
+                <path
+                  d="M 0 20 C 50 40, 150 0, 200 20"
+                  stroke="rgba(201, 50, 93, 0.35)"
+                  strokeWidth="2"
+                  strokeDasharray="8 6"
+                  fill="none"
+                />
+              </svg>
+              {/* Curved dashed connector 2→3 */}
+              <svg
+                className="absolute pointer-events-none"
+                style={{ top: '56px', right: '23%', width: '20%', height: '40px', zIndex: 1 }}
+                viewBox="0 0 200 40"
+                fill="none"
+                preserveAspectRatio="xMidYMid meet"
+              >
+                <path
+                  d="M 0 20 C 50 40, 150 0, 200 20"
+                  stroke="rgba(201, 50, 93, 0.35)"
+                  strokeWidth="2"
+                  strokeDasharray="8 6"
+                  fill="none"
+                />
+              </svg>
 
-                  {/* Connecting arrow */}
-                  {index < processSteps.length - 1 && (
-                    <div className="hidden md:block absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2" style={{ zIndex: 10 }}>
-                      <ArrowRight className="w-6 h-6 text-fm-neutral-300" />
+              <div className="grid grid-cols-3 gap-8" style={{ position: 'relative', zIndex: 2 }}>
+                {processSteps.map((item, index) => {
+                  const icons = [ClipboardList, Users, Sparkles];
+                  const StepIcon = icons[index];
+                  return (
+                    <div key={item.step} style={{ textAlign: 'center' }}>
+                      <div className="relative inline-block mb-8">
+                        {/* Step number badge */}
+                        <div
+                          className="absolute w-8 h-8 rounded-full v2-gradient-brand flex items-center justify-center text-white text-sm font-bold shadow-lg"
+                          style={{ top: '-4px', left: '-4px', zIndex: 3 }}
+                        >
+                          {index + 1}
+                        </div>
+                        {/* Dashed outer circle */}
+                        <div
+                          className="w-28 h-28 lg:w-32 lg:h-32 rounded-full flex items-center justify-center"
+                          style={{
+                            border: '2px dashed rgba(201, 50, 93, 0.3)',
+                            background: 'rgba(255, 255, 255, 0.03)',
+                          }}
+                        >
+                          {/* Inner icon circle */}
+                          <div
+                            className="w-14 h-14 lg:w-16 lg:h-16 rounded-full flex items-center justify-center"
+                            style={{
+                              background: 'linear-gradient(135deg, rgba(201, 50, 93, 0.15), rgba(74, 25, 66, 0.12))',
+                            }}
+                          >
+                            <StepIcon className="w-7 h-7 text-fm-magenta-600" />
+                          </div>
+                        </div>
+                      </div>
+                      <h3 className="font-display text-xl font-bold v2-text-primary mb-3">{item.title}</h3>
+                      <p className="v2-text-secondary text-sm leading-relaxed max-w-[240px] mx-auto">{item.description}</p>
                     </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* Mobile: vertical with dashed circles */}
+          <div className="md:hidden flex flex-col items-center">
+            {processSteps.map((item, index) => {
+              const icons = [ClipboardList, Users, Sparkles];
+              const StepIcon = icons[index];
+              return (
+                <div key={item.step} className="flex flex-col items-center" style={{ textAlign: 'center' }}>
+                  <div className="relative inline-block mb-5">
+                    {/* Step number badge */}
+                    <div
+                      className="absolute w-7 h-7 rounded-full v2-gradient-brand flex items-center justify-center text-white text-xs font-bold shadow-lg"
+                      style={{ top: '-2px', left: '-2px', zIndex: 3 }}
+                    >
+                      {index + 1}
+                    </div>
+                    {/* Dashed circle */}
+                    <div
+                      className="w-24 h-24 rounded-full flex items-center justify-center"
+                      style={{
+                        border: '2px dashed rgba(201, 50, 93, 0.3)',
+                        background: 'rgba(255, 255, 255, 0.03)',
+                      }}
+                    >
+                      <div
+                        className="w-12 h-12 rounded-full flex items-center justify-center"
+                        style={{
+                          background: 'linear-gradient(135deg, rgba(201, 50, 93, 0.15), rgba(74, 25, 66, 0.12))',
+                        }}
+                      >
+                        <StepIcon className="w-6 h-6 text-fm-magenta-600" />
+                      </div>
+                    </div>
+                  </div>
+                  <h3 className="font-display text-lg font-bold v2-text-primary mb-2">{item.title}</h3>
+                  <p className="v2-text-secondary text-sm leading-relaxed max-w-[260px] mb-2">{item.description}</p>
+                  {/* Vertical dashed connector */}
+                  {index < processSteps.length - 1 && (
+                    <div
+                      className="my-4"
+                      style={{
+                        width: '2px',
+                        height: '40px',
+                        backgroundImage: 'linear-gradient(to bottom, rgba(201,50,93,0.3) 50%, transparent 50%)',
+                        backgroundSize: '2px 8px',
+                      }}
+                    />
                   )}
                 </div>
               );
@@ -360,7 +487,7 @@ export default function CreativeMindsPage() {
               <div className="flex flex-wrap gap-x-6 gap-y-3 mb-10">
                 {['Verified Profiles', 'Quality Assured', 'Fast Matching'].map((item) => (
                   <div key={item} className="flex items-center gap-2 text-sm v2-text-secondary">
-                    <Check className="w-4 h-4 text-fm-magenta-400" />
+                    <Check className="w-4 h-4 text-fm-magenta-600" />
                     <span>{item}</span>
                   </div>
                 ))}

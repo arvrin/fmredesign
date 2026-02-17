@@ -215,8 +215,8 @@ export function TalentApplicationForm({ onSubmit, onCancel }: TalentApplicationF
 
   if (submitStatus === 'success') {
     return (
-      <div className="min-h-screen bg-fm-neutral-50 flex items-center justify-center px-4">
-        <div className="max-w-lg w-full bg-white rounded-2xl shadow-lg p-10" style={{ textAlign: 'center' }}>
+      <div className="max-w-lg mx-auto" style={{ textAlign: 'center' }}>
+        <div className="bg-white rounded-2xl shadow-lg p-10">
           <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <CheckCircle className="w-10 h-10 text-green-600" />
           </div>
@@ -233,166 +233,90 @@ export function TalentApplicationForm({ onSubmit, onCancel }: TalentApplicationF
   }
 
   return (
-    <div className="min-h-screen bg-fm-neutral-50">
-      {/* Header */}
-      <div className="bg-white border-b border-fm-neutral-200 sticky top-0 z-40">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3 sm:gap-4">
-              <button
-                onClick={onCancel}
-                className="flex items-center gap-1 px-3 py-1.5 text-sm border border-fm-neutral-300 rounded-lg hover:bg-fm-neutral-50 transition-colors"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                <span className="hidden sm:inline">Exit</span>
-              </button>
-              <div>
-                <h1 className="text-base sm:text-lg font-semibold text-fm-neutral-900">
-                  Join CreativeMinds Network
-                </h1>
-                <p className="text-xs sm:text-sm text-fm-neutral-600">
-                  Step {currentStep} of {totalSteps}: {steps[currentStep - 1].title}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Mobile Progress Dots */}
-          <div className="flex lg:hidden items-center justify-center gap-2 mt-3">
-            {steps.map((step) => (
-              <div
-                key={step.number}
-                className={`h-2.5 rounded-full transition-all duration-300 ${
-                  step.number === currentStep
-                    ? 'w-8 bg-fm-magenta-600'
-                    : step.number < currentStep
-                    ? 'w-2.5 bg-green-500'
-                    : 'w-2.5 bg-fm-neutral-300'
-                }`}
-              />
-            ))}
-          </div>
-
-          {/* Desktop Progress Bar */}
-          <div className="hidden lg:block mt-4">
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-sm text-fm-neutral-600">
-                Progress: {currentStep}/{totalSteps} steps
-              </span>
-              <span className="text-sm font-medium text-fm-magenta-600">
-                {Math.round((currentStep / totalSteps) * 100)}%
-              </span>
-            </div>
-            <div className="w-full bg-fm-neutral-200 rounded-full h-2">
-              <div
-                className="bg-fm-magenta-600 h-2 rounded-full transition-all duration-300"
-                style={{ width: `${(currentStep / totalSteps) * 100}%` }}
-              ></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="flex">
-        {/* Desktop Sidebar */}
-        <div className="hidden lg:block w-72 bg-white border-r border-fm-neutral-200 min-h-screen">
-          <div className="p-6">
-            <h3 className="text-sm font-semibold text-fm-neutral-900 mb-4">Application Steps</h3>
-            <div className="space-y-2">
-              {steps.map((step) => {
-                const isCompleted = currentStep > step.number;
-                const isCurrent = currentStep === step.number;
-                const StepIcon = step.icon;
-
-                return (
+    <div className="max-w-3xl mx-auto">
+      <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl">
+        <div className="p-5 sm:p-8 md:p-10">
+          {/* Progress Circles */}
+          <div style={{ marginBottom: '40px' }}>
+            <div className="flex items-center justify-between" style={{ marginBottom: '20px' }}>
+              {steps.map((step) => (
+                <div key={step.number} className="flex flex-col items-center">
                   <div
-                    key={step.number}
-                    className={`flex items-center gap-3 p-3 rounded-lg ${
-                      isCurrent
-                        ? 'bg-fm-magenta-50 border border-fm-magenta-200'
-                        : 'hover:bg-fm-neutral-50'
-                    }`}
+                    className={`flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 transition-[background-color,border-color,color,box-shadow] duration-300 font-semibold
+                      ${currentStep >= step.number
+                        ? 'bg-fm-magenta-700 border-fm-magenta-700 text-white shadow-lg'
+                        : 'border-fm-neutral-300 text-fm-neutral-500 bg-white'}`}
                   >
-                    {isCompleted ? (
-                      <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
+                    {currentStep > step.number ? (
+                      <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5" />
                     ) : (
-                      <StepIcon
-                        className={`h-4 w-4 flex-shrink-0 ${
-                          isCurrent ? 'text-fm-magenta-600' : 'text-fm-neutral-400'
-                        }`}
-                      />
+                      <span className="text-xs sm:text-sm">{step.number}</span>
                     )}
-                    <div>
-                      <div
-                        className={`text-sm font-medium ${
-                          isCurrent ? 'text-fm-magenta-900' : 'text-fm-neutral-900'
-                        }`}
-                      >
-                        {step.number}. {step.title}
-                      </div>
-                      {isCompleted && <div className="text-xs text-green-600">Completed</div>}
-                    </div>
                   </div>
-                );
-              })}
+                  <span className={`text-[11px] sm:text-xs mt-1 sm:mt-2 font-medium ${
+                    currentStep >= step.number ? 'text-fm-magenta-700' : 'text-fm-neutral-500'
+                  }`}>
+                    {step.title}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <div className="w-full bg-fm-neutral-200 rounded-full" style={{ height: '6px' }}>
+              <div
+                className="bg-gradient-to-r from-fm-magenta-700 to-fm-magenta-400 rounded-full transition-[width] duration-500 ease-out"
+                style={{ width: `${((currentStep - 1) / (totalSteps - 1)) * 100}%`, height: '6px' }}
+              />
             </div>
           </div>
-        </div>
 
-        {/* Form Content */}
-        <div className="flex-1">
-          <div className="max-w-2xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
-            {/* Submit error banner */}
-            {submitStatus === 'error' && submitError && (
-              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3">
-                <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0" />
-                <p className="text-sm text-red-700">{submitError}</p>
-              </div>
-            )}
-
-            {currentStep === 1 && (
-              <PersonalInfoStep formData={formData} updateData={updateData} errors={errors} />
-            )}
-            {currentStep === 2 && (
-              <ExpertiseStep formData={formData} updateData={updateData} errors={errors} />
-            )}
-            {currentStep === 3 && (
-              <OnlinePresenceStep formData={formData} updateData={updateData} errors={errors} />
-            )}
-            {currentStep === 4 && (
-              <AvailabilityPricingStep formData={formData} updateData={updateData} errors={errors} />
-            )}
-
-            {/* Navigation */}
-            <div className="flex justify-between items-center mt-8 pt-8 border-t border-fm-neutral-200">
-              <button
-                onClick={handlePrev}
-                disabled={currentStep === 1}
-                className="flex items-center gap-2 px-4 py-2 text-sm border border-fm-neutral-300 rounded-lg hover:bg-fm-neutral-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                Previous
-              </button>
-
-              {currentStep === totalSteps ? (
-                <button
-                  onClick={handleSubmit}
-                  disabled={submitStatus === 'submitting'}
-                  className="v2-btn v2-btn-magenta disabled:opacity-60"
-                >
-                  {submitStatus === 'submitting' ? 'Submitting...' : 'Submit Application'}
-                </button>
-              ) : (
-                <button
-                  onClick={handleNext}
-                  className="flex items-center gap-2 px-5 py-2.5 bg-fm-magenta-600 text-white text-sm font-medium rounded-lg hover:bg-fm-magenta-700 transition-colors"
-                >
-                  Next Step
-                  <ArrowRight className="h-4 w-4" />
-                </button>
-              )}
+          {/* Submit error banner */}
+          {submitStatus === 'error' && submitError && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3">
+              <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0" />
+              <p className="text-sm text-red-700">{submitError}</p>
             </div>
+          )}
+
+          {currentStep === 1 && (
+            <PersonalInfoStep formData={formData} updateData={updateData} errors={errors} />
+          )}
+          {currentStep === 2 && (
+            <ExpertiseStep formData={formData} updateData={updateData} errors={errors} />
+          )}
+          {currentStep === 3 && (
+            <OnlinePresenceStep formData={formData} updateData={updateData} errors={errors} />
+          )}
+          {currentStep === 4 && (
+            <AvailabilityPricingStep formData={formData} updateData={updateData} errors={errors} />
+          )}
+
+          {/* Navigation */}
+          <div className="flex justify-between items-center mt-8 pt-8 border-t border-fm-neutral-200">
+            <button
+              onClick={currentStep === 1 ? onCancel : handlePrev}
+              className="flex items-center gap-2 px-4 py-2 text-sm border border-fm-neutral-300 rounded-lg hover:bg-fm-neutral-50 transition-colors"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              {currentStep === 1 ? 'Cancel' : 'Previous'}
+            </button>
+
+            {currentStep === totalSteps ? (
+              <button
+                onClick={handleSubmit}
+                disabled={submitStatus === 'submitting'}
+                className="v2-btn v2-btn-magenta disabled:opacity-60"
+              >
+                {submitStatus === 'submitting' ? 'Submitting...' : 'Submit Application'}
+              </button>
+            ) : (
+              <button
+                onClick={handleNext}
+                className="flex items-center gap-2 px-5 py-2.5 bg-fm-magenta-600 text-white text-sm font-medium rounded-lg hover:bg-fm-magenta-700 transition-colors"
+              >
+                Next Step
+                <ArrowRight className="h-4 w-4" />
+              </button>
+            )}
           </div>
         </div>
       </div>

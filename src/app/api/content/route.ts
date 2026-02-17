@@ -6,9 +6,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { ProjectUtils } from '@/lib/admin/project-types';
+import { requireAdminAuth } from '@/lib/admin-auth-middleware';
 
 // GET /api/content
 export async function GET(request: NextRequest) {
+  const authError = await requireAdminAuth(request);
+  if (authError) return authError;
+
   try {
     const searchParams = request.nextUrl.searchParams;
     const projectId = searchParams.get('projectId');
@@ -89,6 +93,9 @@ export async function GET(request: NextRequest) {
 
 // POST /api/content
 export async function POST(request: NextRequest) {
+  const authError = await requireAdminAuth(request);
+  if (authError) return authError;
+
   try {
     const body = await request.json();
 
@@ -162,6 +169,9 @@ export async function POST(request: NextRequest) {
 
 // PUT /api/content
 export async function PUT(request: NextRequest) {
+  const authError = await requireAdminAuth(request);
+  if (authError) return authError;
+
   try {
     const body = await request.json();
 
@@ -251,6 +261,9 @@ export async function PUT(request: NextRequest) {
 
 // DELETE /api/content
 export async function DELETE(request: NextRequest) {
+  const authError = await requireAdminAuth(request);
+  if (authError) return authError;
+
   try {
     const searchParams = request.nextUrl.searchParams;
     const contentId = searchParams.get('id');

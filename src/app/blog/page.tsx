@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react';
 import { ArrowRight, Search, TrendingUp, Lightbulb, Target, BookOpen, Star, Clock, User, Tag, ChevronRight } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { V2PageWrapper } from "@/components/layouts/V2PageWrapper";
 import { blogPosts, getAllCategories, getAllTags } from '@/lib/blog-data';
 
@@ -116,12 +117,15 @@ export default function BlogPage() {
 
         {/* 3D Brain Decoration */}
         <div className="absolute left-8 lg:left-20 top-1/3 hidden lg:block" style={{ zIndex: 10 }}>
-          <img
+          <Image
             src="/3dasset/brain-learning.png"
             alt="Learning & Insights"
+            width={180}
+            height={180}
             className="h-auto animate-v2-hero-float"
             style={{
               width: 'min(180px, 30vw)',
+              height: 'auto',
               filter: 'drop-shadow(0 20px 40px rgba(140,25,60,0.2))',
             }}
           />

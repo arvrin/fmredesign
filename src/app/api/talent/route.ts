@@ -6,8 +6,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { rateLimit, getClientIp } from '@/lib/rate-limiter';
+import { requireAdminAuth } from '@/lib/admin-auth-middleware';
 
 export async function GET(request: NextRequest) {
+  const authError = await requireAdminAuth(request);
+  if (authError) return authError;
+
   try {
     const { searchParams } = new URL(request.url);
     const type = searchParams.get('type');
@@ -190,6 +194,9 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
+  const authError = await requireAdminAuth(request);
+  if (authError) return authError;
+
   try {
     const body = await request.json();
     const { type, id, updates } = body;

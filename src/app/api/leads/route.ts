@@ -8,9 +8,13 @@ import { getSupabaseAdmin } from '@/lib/supabase';
 import { calculateLeadScore, determineLeadPriority, toCamelCaseKeys } from '@/lib/supabase-utils';
 import type { LeadInput, LeadUpdate } from '@/lib/admin/lead-types';
 import { rateLimit, getClientIp } from '@/lib/rate-limiter';
+import { requireAdminAuth } from '@/lib/admin-auth-middleware';
 
 // GET /api/leads - Fetch leads with optional filtering and sorting
 export async function GET(request: NextRequest) {
+  const authError = await requireAdminAuth(request);
+  if (authError) return authError;
+
   try {
     const searchParams = request.nextUrl.searchParams;
 
@@ -285,6 +289,9 @@ export async function POST(request: NextRequest) {
 
 // PUT /api/leads - Update lead
 export async function PUT(request: NextRequest) {
+  const authError = await requireAdminAuth(request);
+  if (authError) return authError;
+
   try {
     const body = await request.json();
 

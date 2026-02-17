@@ -5,13 +5,17 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
+import { requireAdminAuth } from '@/lib/admin-auth-middleware';
 
 export async function GET(request: NextRequest) {
+  const authError = await requireAdminAuth(request);
+  if (authError) return authError;
+
   try {
     const supabase = getSupabaseAdmin();
     const { data: clients, error } = await supabase
       .from('clients')
-      .select('*')
+      .select('id, name, email, phone, address, city, state, zip_code, country, gst_number, industry, company_size, website, status, health, account_manager, contract_type, contract_value, contract_start_date, contract_end_date, billing_cycle, services, created_at, updated_at, total_value, tags, notes')
       .order('created_at', { ascending: false });
 
     if (error) throw error;
@@ -67,6 +71,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const authError = await requireAdminAuth(request);
+  if (authError) return authError;
+
   try {
     const formData = await request.json();
 
@@ -177,6 +184,9 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
+  const authError = await requireAdminAuth(request);
+  if (authError) return authError;
+
   try {
     const { id, ...formData } = await request.json();
 
@@ -278,6 +288,9 @@ export async function PUT(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+  const authError = await requireAdminAuth(request);
+  if (authError) return authError;
+
   try {
     const { searchParams } = new URL(request.url);
     const clientId = searchParams.get('id');

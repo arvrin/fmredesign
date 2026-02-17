@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ArrowRight, Search, Megaphone, Palette, BarChart3, Globe, Video, Zap, Target, Award, CheckCircle2 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { V2PageWrapper } from "@/components/layouts/V2PageWrapper";
 import { ServiceDeepDiveModal } from "@/components/services/ServiceDeepDiveModal";
@@ -225,7 +226,7 @@ export default function ServicesPage() {
 
       {/* Wave Divider */}
       <div className="relative" style={{ zIndex: 10, marginTop: '-1px' }}>
-        <img src="/textures/wave-divider.svg" alt="" className="w-full" style={{ height: '60px', display: 'block', transform: 'scaleX(-1)' }} />
+        <Image src="/textures/wave-divider.svg" alt="" width={1920} height={60} className="w-full" style={{ height: '60px', display: 'block', transform: 'scaleX(-1)' }} />
       </div>
 
       {/* Process Section */}
@@ -233,12 +234,15 @@ export default function ServicesPage() {
         <div className="v2-container">
           {/* Floating Brain */}
           <div className="absolute right-8 lg:right-20 top-0 hidden lg:block" style={{ zIndex: 10 }}>
-            <img
+            <Image
               src="/3dasset/brain-teaching.png"
               alt="Our Proven Process"
+              width={180}
+              height={180}
               className="h-auto animate-v2-hero-float"
               style={{
                 width: 'min(180px, 30vw)',
+                height: 'auto',
                 filter: 'drop-shadow(0 20px 40px rgba(140,25,60,0.2))',
               }}
             />
@@ -277,7 +281,7 @@ export default function ServicesPage() {
 
       {/* Wave Divider */}
       <div className="relative" style={{ zIndex: 10, marginTop: '-1px' }}>
-        <img src="/textures/wave-divider.svg" alt="" className="w-full" style={{ height: '60px', display: 'block' }} />
+        <Image src="/textures/wave-divider.svg" alt="" width={1920} height={60} className="w-full" style={{ height: '60px', display: 'block' }} />
       </div>
 
       {/* Pricing Section */}

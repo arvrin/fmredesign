@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 
 export function PageLoader() {
   const [visible, setVisible] = useState(false);
@@ -12,8 +13,8 @@ export function PageLoader() {
     sessionStorage.setItem('fm-loaded', '1');
 
     setVisible(true);
-    const timer = setTimeout(() => setFadeOut(true), 2200);
-    const removeTimer = setTimeout(() => setVisible(false), 2900);
+    const timer = setTimeout(() => setFadeOut(true), 1000);
+    const removeTimer = setTimeout(() => setVisible(false), 1500);
     return () => { clearTimeout(timer); clearTimeout(removeTimer); };
   }, []);
 
@@ -56,9 +57,12 @@ export function PageLoader() {
       />
 
       {/* Logo on left */}
-      <img
+      <Image
         src="/logo.png"
         alt="Freaking Minds"
+        width={320}
+        height={120}
+        priority
         style={{
           width: 'min(320px, 35vw)',
           height: 'auto',
@@ -67,9 +71,12 @@ export function PageLoader() {
       />
 
       {/* 3D Brain mascot on right */}
-      <img
+      <Image
         src="/3dasset/brain-loading.png"
         alt="Loading..."
+        width={300}
+        height={300}
+        priority
         style={{
           width: 'min(300px, 30vw)',
           height: 'auto',

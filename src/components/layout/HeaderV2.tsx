@@ -12,10 +12,10 @@ import {
 
 // Tools data
 const tools = [
-  { name: 'Deep Dive', icon: Brain, desc: 'AI-powered brand analysis', href: '/tools/deep-dive', color: 'from-violet-500 to-purple-600' },
-  { name: 'Brand Skits', icon: Video, desc: 'Viral video creator', href: '/tools/brand-skits', color: 'from-pink-500 to-rose-600' },
-  { name: 'WeBuild', icon: Code, desc: 'Website builder', href: '/tools/webuild', color: 'from-cyan-500 to-blue-600' },
-  { name: 'WeCraft', icon: PenTool, desc: 'Design system generator', href: '/tools/wecraft', color: 'from-orange-500 to-amber-600' },
+  { name: 'Deep Dive', icon: Brain, desc: 'AI-powered brand analysis', href: '/tools/deep-dive', gradient: 'linear-gradient(135deg, #c9325d, #4a1942)' },
+  { name: 'Brand Skits', icon: Video, desc: 'Viral video creator', href: '/tools/brand-skits', gradient: 'linear-gradient(135deg, #e04d7d, #c9325d)' },
+  { name: 'WeBuild', icon: Code, desc: 'Website builder', href: '/tools/webuild', gradient: 'linear-gradient(135deg, #7a2155, #4a1942)' },
+  { name: 'WeCraft', icon: PenTool, desc: 'Design system generator', href: '/tools/wecraft', gradient: 'linear-gradient(135deg, #c9325d, #8c213d)' },
 ];
 
 // Talent data
@@ -24,7 +24,7 @@ const talent = {
   icon: Users,
   desc: '500+ verified creative professionals',
   href: '/creativeminds',
-  color: 'from-emerald-500 to-teal-600'
+  gradient: 'linear-gradient(135deg, #a82548, #4a1942)'
 };
 
 // Services data
@@ -257,7 +257,7 @@ export function HeaderV2() {
                           onMouseEnter={e => (e.currentTarget.style.background = 'rgba(201,50,93,0.05)')}
                           onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                         >
-                          <div className={`w-9 h-9 rounded-lg bg-gradient-to-br ${tool.color} flex items-center justify-center shadow-md`}>
+                          <div className="w-9 h-9 rounded-lg flex items-center justify-center shadow-md" style={{ background: tool.gradient }}>
                             <tool.icon className="w-4 h-4 text-white" />
                           </div>
                           <div>
@@ -280,7 +280,7 @@ export function HeaderV2() {
                       onMouseEnter={e => (e.currentTarget.style.background = 'rgba(201,50,93,0.06)')}
                       onMouseLeave={e => (e.currentTarget.style.background = 'rgba(201,50,93,0.03)')}
                     >
-                      <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${talent.color} flex items-center justify-center shadow-lg`}>
+                      <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-lg" style={{ background: talent.gradient }}>
                         <talent.icon className="w-6 h-6 text-white" />
                       </div>
                       <div className="flex-1">
@@ -467,7 +467,7 @@ export function HeaderV2() {
                         style={{ color: '#3d2030' }}
                         onClick={() => setIsMobileMenuOpen(false)}
                       >
-                        <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${tool.color} flex items-center justify-center`}>
+                        <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: tool.gradient }}>
                           <tool.icon className="w-4 h-4 text-white" />
                         </div>
                         <div>
@@ -488,7 +488,7 @@ export function HeaderV2() {
                     style={{ color: '#3d2030', background: 'rgba(201,50,93,0.04)' }}
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
-                    <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${talent.color} flex items-center justify-center`}>
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: talent.gradient }}>
                       <talent.icon className="w-5 h-5 text-white" />
                     </div>
                     <div className="flex-1">

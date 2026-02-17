@@ -5,8 +5,12 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
+import { requireAdminAuth } from '@/lib/admin-auth-middleware';
 
 export async function GET(request: NextRequest) {
+  const authError = await requireAdminAuth(request);
+  if (authError) return authError;
+
   try {
     const { searchParams } = new URL(request.url);
     const sessionId = searchParams.get('sessionId');
@@ -57,6 +61,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const authError = await requireAdminAuth(request);
+  if (authError) return authError;
+
   try {
     const body = await request.json();
     const { action, session } = body;
@@ -108,6 +115,9 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
+  const authError = await requireAdminAuth(request);
+  if (authError) return authError;
+
   try {
     const body = await request.json();
     const { action, sessionId, updates } = body;

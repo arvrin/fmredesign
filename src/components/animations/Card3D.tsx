@@ -22,9 +22,9 @@ export function Card3D({
   perspective = 1000,
 }: Card3DProps) {
   const cardRef = useRef<HTMLDivElement>(null);
+  const glareRef = useRef<HTMLDivElement>(null);
   const rafRef = useRef<number | null>(null);
-  const [transform, setTransform] = useState('');
-  const [glarePos, setGlarePos] = useState({ x: 50, y: 50 });
+  const isHoveredRef = useRef(false);
   const [isHovered, setIsHovered] = useState(false);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 
@@ -42,40 +42,58 @@ export function Card3D({
 
   const handleMouseMove = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
-      if (!cardRef.current || prefersReducedMotion) return;
+      if (!cardRef.current || prefersReducedMotion || !isHoveredRef.current) return;
 
       // Throttle with RAF for 60fps max
       if (rafRef.current) return;
 
+      const clientX = e.clientX;
+      const clientY = e.clientY;
+
       rafRef.current = requestAnimationFrame(() => {
-        if (!cardRef.current) return;
+        if (!cardRef.current) { rafRef.current = null; return; }
 
         const rect = cardRef.current.getBoundingClientRect();
-        const x = (e.clientX - rect.left) / rect.width;
-        const y = (e.clientY - rect.top) / rect.height;
+        const x = (clientX - rect.left) / rect.width;
+        const y = (clientY - rect.top) / rect.height;
 
         const rotateX = (y - 0.5) * intensity * -1;
         const rotateY = (x - 0.5) * intensity;
 
-        setTransform(
-          `perspective(${perspective}px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(${scale})`
-        );
-        setGlarePos({ x: x * 100, y: y * 100 });
+        // Direct DOM manipulation instead of React state
+        cardRef.current.style.transform =
+          `perspective(${perspective}px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(${scale})`;
+
+        if (glareRef.current) {
+          glareRef.current.style.background =
+            `radial-gradient(circle at ${x * 100}% ${y * 100}%, rgba(255,255,255,${glareOpacity}), transparent 50%)`;
+        }
+
         rafRef.current = null;
       });
     },
-    [intensity, perspective, scale, prefersReducedMotion]
+    [intensity, perspective, scale, glareOpacity, prefersReducedMotion]
   );
 
   const handleMouseEnter = () => {
     if (!prefersReducedMotion) {
+      isHoveredRef.current = true;
       setIsHovered(true);
+      if (cardRef.current) {
+        cardRef.current.style.transition = 'none';
+        cardRef.current.style.willChange = 'transform';
+      }
     }
   };
 
   const handleMouseLeave = () => {
+    isHoveredRef.current = false;
     setIsHovered(false);
-    setTransform('');
+    if (cardRef.current) {
+      cardRef.current.style.transform = 'none';
+      cardRef.current.style.transition = 'transform 0.4s cubic-bezier(0.33, 1, 0.68, 1)';
+      cardRef.current.style.willChange = 'auto';
+    }
     if (rafRef.current) {
       cancelAnimationFrame(rafRef.current);
       rafRef.current = null;
@@ -90,19 +108,21 @@ export function Card3D({
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       style={{
-        transform: isHovered ? transform : 'none',
-        transition: isHovered ? 'none' : 'transform 0.4s cubic-bezier(0.33, 1, 0.68, 1)',
-        willChange: isHovered ? 'transform' : 'auto',
+        transform: 'none',
+        transition: 'transform 0.4s cubic-bezier(0.33, 1, 0.68, 1)',
+        willChange: 'auto',
       }}
     >
       {children}
 
-      {/* Glare effect */}
-      {glareEnabled && isHovered && !prefersReducedMotion && (
+      {/* Glare effect — ref-based, no re-renders */}
+      {glareEnabled && !prefersReducedMotion && (
         <div
+          ref={glareRef}
           className="absolute inset-0 pointer-events-none"
           style={{
-            background: `radial-gradient(circle at ${glarePos.x}% ${glarePos.y}%, rgba(255,255,255,${glareOpacity}), transparent 50%)`,
+            opacity: isHovered ? 1 : 0,
+            transition: isHovered ? 'none' : 'opacity 0.3s ease',
           }}
           aria-hidden="true"
         />

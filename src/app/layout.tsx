@@ -9,7 +9,7 @@ const playfair = Playfair_Display({
   variable: "--font-display",
   subsets: ["latin"],
   display: "swap",
-  weight: ["400", "500", "600", "700", "800", "900"],
+  weight: ["400", "600", "700", "900"],
 });
 
 // Body font - modern, highly readable sans

@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ArrowRight, ChevronDown } from 'lucide-react';
 import { gsap } from 'gsap';
 import { GradientOrb } from '@/components/animations/ParallaxLayer';
@@ -120,15 +121,19 @@ export function HeroSectionV2() {
   useEffect(() => {
     if (prefersReducedMotion) return;
 
+    let timeoutId: ReturnType<typeof setTimeout>;
     const interval = setInterval(() => {
       setIsAnimating(true);
-      setTimeout(() => {
+      timeoutId = setTimeout(() => {
         setCurrentPhraseIndex((prev) => (prev + 1) % rotatingPhrases.length);
         setIsAnimating(false);
       }, 300);
     }, 3000);
 
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      clearTimeout(timeoutId);
+    };
   }, [prefersReducedMotion]);
 
   // Mouse parallax for mascot — ref-based direct DOM update (zero re-renders)
@@ -284,9 +289,12 @@ export function HeroSectionV2() {
                   filter: 'blur(25px)',
                 }}
               />
-              <img
+              <Image
                 src="/3dasset/brain-rocket.png"
                 alt="Launch Your Brand"
+                width={420}
+                height={420}
+                priority
                 className="max-w-full"
                 style={{
                   width: 'min(420px, 80vw)',

@@ -6,9 +6,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { normalizeMobileNumber, getRolePermissions } from '@/lib/supabase-utils';
+import { requireAdminAuth } from '@/lib/admin-auth-middleware';
 
 // GET - List all authorized users
 export async function GET(request: NextRequest) {
+  const authError = await requireAdminAuth(request);
+  if (authError) return authError;
+
   try {
     const supabase = getSupabaseAdmin();
     const { data: users, error } = await supabase
@@ -48,6 +52,9 @@ export async function GET(request: NextRequest) {
 
 // POST - Create new authorized user
 export async function POST(request: NextRequest) {
+  const authError = await requireAdminAuth(request);
+  if (authError) return authError;
+
   try {
     const body = await request.json();
     const { name, email, mobileNumber, role, notes } = body;
@@ -98,6 +105,9 @@ export async function POST(request: NextRequest) {
 
 // PUT - Update authorized user
 export async function PUT(request: NextRequest) {
+  const authError = await requireAdminAuth(request);
+  if (authError) return authError;
+
   try {
     const body = await request.json();
     const { id, name, email, mobileNumber, role, status, notes } = body;
@@ -140,6 +150,9 @@ export async function PUT(request: NextRequest) {
 
 // DELETE - Remove authorized user
 export async function DELETE(request: NextRequest) {
+  const authError = await requireAdminAuth(request);
+  if (authError) return authError;
+
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('id');

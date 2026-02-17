@@ -141,17 +141,17 @@ export function V2PageWrapper({
           zIndex: -10,
           background: `
             linear-gradient(135deg,
-              #fef5f8 0%,
-              #fce8ef 10%,
-              #f9dce6 20%,
-              #f5d0de 30%,
-              #f2c6d7 40%,
-              #f0bfd2 50%,
-              #f2c6d7 60%,
-              #f5d0de 70%,
-              #f9dce6 80%,
-              #fce8ef 90%,
-              #fef5f8 100%
+              #fef7f9 0%,
+              #fceef3 10%,
+              #fae4ec 20%,
+              #f7dbe5 30%,
+              #f5d4e0 40%,
+              #f5e0e8 50%,
+              #f5d4e0 60%,
+              #f7dbe5 70%,
+              #fae4ec 80%,
+              #fceef3 90%,
+              #fef7f9 100%
             )
           `,
         }}
@@ -163,10 +163,10 @@ export function V2PageWrapper({
         style={{
           zIndex: -10,
           background: `
-            radial-gradient(ellipse 100% 80% at 20% 10%, rgba(120, 20, 60, 0.25) 0%, transparent 50%),
-            radial-gradient(ellipse 80% 60% at 85% 30%, rgba(90, 15, 50, 0.2) 0%, transparent 45%),
-            radial-gradient(ellipse 90% 70% at 50% 90%, rgba(100, 10, 55, 0.28) 0%, transparent 50%),
-            radial-gradient(ellipse 60% 50% at 10% 70%, rgba(130, 25, 65, 0.18) 0%, transparent 40%)
+            radial-gradient(ellipse 100% 80% at 20% 10%, rgba(120, 20, 60, 0.15) 0%, transparent 50%),
+            radial-gradient(ellipse 80% 60% at 85% 30%, rgba(90, 15, 50, 0.12) 0%, transparent 45%),
+            radial-gradient(ellipse 90% 70% at 50% 90%, rgba(100, 10, 55, 0.16) 0%, transparent 50%),
+            radial-gradient(ellipse 60% 50% at 10% 70%, rgba(130, 25, 65, 0.10) 0%, transparent 40%)
           `,
         }}
       />
@@ -176,7 +176,7 @@ export function V2PageWrapper({
         className="fixed inset-0 pointer-events-none"
         style={{
           zIndex: -10,
-          background: 'radial-gradient(ellipse 80% 80% at 50% 50%, transparent 0%, rgba(100, 15, 50, 0.16) 100%)',
+          background: 'radial-gradient(ellipse 80% 80% at 50% 50%, transparent 0%, rgba(100, 15, 50, 0.10) 100%)',
         }}
       />
 

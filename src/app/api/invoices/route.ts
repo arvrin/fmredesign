@@ -5,14 +5,18 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
+import { requireAdminAuth } from '@/lib/admin-auth-middleware';
 
 export async function GET(request: NextRequest) {
+  const authError = await requireAdminAuth(request);
+  if (authError) return authError;
+
   try {
     const { searchParams } = new URL(request.url);
     const clientId = searchParams.get('clientId');
 
     const supabase = getSupabaseAdmin();
-    let query = supabase.from('invoices').select('*').order('created_at', { ascending: false });
+    let query = supabase.from('invoices').select('id, invoice_number, client_id, client_name, date, due_date, subtotal, tax, total, status, created_at, line_items, notes').order('created_at', { ascending: false });
 
     if (clientId) {
       query = query.eq('client_id', clientId);
@@ -52,6 +56,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const authError = await requireAdminAuth(request);
+  if (authError) return authError;
+
   try {
     const invoiceData = await request.json();
 
@@ -100,6 +107,9 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
+  const authError = await requireAdminAuth(request);
+  if (authError) return authError;
+
   try {
     const { invoiceId, status } = await request.json();
 

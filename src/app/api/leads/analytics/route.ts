@@ -7,9 +7,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { BUDGET_VALUES } from '@/lib/admin/lead-types';
 import type { LeadSource, LeadStatus, LeadPriority, BudgetRange } from '@/lib/admin/lead-types';
+import { requireAdminAuth } from '@/lib/admin-auth-middleware';
 
 // GET /api/leads/analytics
 export async function GET(request: NextRequest) {
+  const authError = await requireAdminAuth(request);
+  if (authError) return authError;
+
   try {
     const searchParams = request.nextUrl.searchParams;
     const type = searchParams.get('type') || 'full';
@@ -17,7 +21,7 @@ export async function GET(request: NextRequest) {
     const supabase = getSupabaseAdmin();
     const { data: leads, error } = await supabase
       .from('leads')
-      .select('*')
+      .select('id, status, priority, source, lead_score, budget_range, created_at, updated_at, converted_to_client_at, assigned_to')
       .order('created_at', { ascending: false });
 
     if (error) throw error;

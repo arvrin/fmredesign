@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ArrowRight, Mail, Phone, MapPin, Sparkles, Zap, Heart } from 'lucide-react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -251,9 +252,11 @@ export function ContactSectionV2() {
 
               {/* Main Mascot */}
               <FloatingElement amplitude={15} duration={4}>
-                <img
+                <Image
                   src="/3dasset/brain-support.png"
                   alt="We're Here to Help"
+                  width={420}
+                  height={420}
                   className="relative max-w-full"
                   style={{
                     width: 'min(420px, 80vw)',

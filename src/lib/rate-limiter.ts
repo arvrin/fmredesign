@@ -1,22 +1,12 @@
 /**
- * Simple in-memory rate limiter for API routes.
- * Uses a sliding window approach.
+ * Rate limiter for API routes.
+ * Uses in-memory sliding window with awareness of serverless limitations.
+ * On serverless (Vercel), each cold start resets the map — this provides
+ * basic protection within a single instance lifetime. For stronger
+ * rate limiting, use Vercel KV or Supabase-based counters.
  */
 
 const requestMap = new Map<string, number[]>();
-
-// Clean up old entries every 5 minutes
-setInterval(() => {
-  const now = Date.now();
-  for (const [key, timestamps] of requestMap.entries()) {
-    const valid = timestamps.filter((t) => now - t < 60_000);
-    if (valid.length === 0) {
-      requestMap.delete(key);
-    } else {
-      requestMap.set(key, valid);
-    }
-  }
-}, 5 * 60_000);
 
 /**
  * Check if a request should be rate-limited.
@@ -42,6 +32,17 @@ export function rateLimit(
 
   recent.push(now);
   requestMap.set(identifier, recent);
+
+  // Lazy cleanup: if map grows too large, prune old entries
+  if (requestMap.size > 10000) {
+    for (const [key, ts] of requestMap.entries()) {
+      const valid = ts.filter((t) => now - t < windowMs);
+      if (valid.length === 0) {
+        requestMap.delete(key);
+      }
+    }
+  }
+
   return true; // Allowed
 }
 
