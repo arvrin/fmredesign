@@ -183,6 +183,11 @@ export function FeaturesSectionV2() {
     // Measure once on mount
     measureDimensions();
 
+    // Re-measure after GSAP ScrollTrigger pins are set up (pin spacers shift element positions)
+    ScrollTrigger.addEventListener('refresh', measureDimensions);
+    // Fallback delayed re-measure in case refresh fires before this listener is attached
+    const delayedMeasure = setTimeout(measureDimensions, 400);
+
     // Re-measure on resize (debounced)
     let resizeTimer: ReturnType<typeof setTimeout>;
     const handleResize = () => {
@@ -266,8 +271,10 @@ export function FeaturesSectionV2() {
     return () => {
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', handleResize);
+      ScrollTrigger.removeEventListener('refresh', measureDimensions);
       cancelAnimationFrame(rafId);
       clearTimeout(resizeTimer);
+      clearTimeout(delayedMeasure);
     };
   }, [isMobile, prefersReducedMotion]);
 
