@@ -224,6 +224,7 @@ export function ClientsSectionV2() {
                     <img
                       src={`/clients/${logo}`}
                       alt="Client"
+                      loading="lazy"
                       width={140}
                       height={80}
                       style={{ width: '100%', height: '100%', objectFit: 'contain' }}
@@ -245,6 +246,7 @@ export function ClientsSectionV2() {
                     <img
                       src={`/clients/${logo}`}
                       alt="Client"
+                      loading="lazy"
                       width={140}
                       height={80}
                       style={{ width: '100%', height: '100%', objectFit: 'contain' }}
@@ -280,6 +282,7 @@ export function ClientsSectionV2() {
         <img
           src="/3dasset/brain-creative.png"
           alt="Creative Energy"
+          loading="lazy"
           className="animate-v2-clients-float"
           style={{
             width: 'min(288px, 45vw)',

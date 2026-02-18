@@ -1,6 +1,7 @@
 'use client';
 
-import type { HookData, LucideIcon } from '@/data/serviceDeepDiveData';
+import type { HookData } from '@/data/serviceDeepDiveData';
+import type { LucideIcon } from 'lucide-react';
 
 interface HookSlideProps {
   data: HookData;

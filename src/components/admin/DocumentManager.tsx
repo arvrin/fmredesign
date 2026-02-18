@@ -75,7 +75,7 @@ export function DocumentManager({ clientId, campaignId }: DocumentManagerProps) 
     loadData();
   }, [clientId, campaignId]);
 
-  const loadData = () => {
+  const loadData = async () => {
     // Load sample file data (in real app, this would come from API)
     const sampleFiles: FileWithMetadata[] = [
       {
@@ -139,7 +139,7 @@ export function DocumentManager({ clientId, campaignId }: DocumentManagerProps) 
     setFiles(sampleFiles);
     
     if (clientId) {
-      const clientData = ClientService.getClientById(clientId);
+      const clientData = await ClientService.getClientById(clientId);
       setClient(clientData);
     }
   };

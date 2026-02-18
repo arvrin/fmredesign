@@ -370,6 +370,7 @@ export function FeaturesSectionV2() {
                       <img
                         src={feature.mascot}
                         alt={feature.mascotAlt}
+                        loading="lazy"
                         width={200}
                         height={200}
                         className="w-44"

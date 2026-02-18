@@ -78,8 +78,8 @@ export function CampaignManager({ clientId, showClientColumn = true }: CampaignM
     filterCampaigns();
   }, [campaigns, searchQuery, statusFilter, typeFilter, clientFilter]);
 
-  const loadData = () => {
-    const allClients = ClientService.getAllClients();
+  const loadData = async () => {
+    const allClients = await ClientService.getAllClients();
     setClients(allClients);
 
     let campaignData: Campaign[];

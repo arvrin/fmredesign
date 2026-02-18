@@ -237,6 +237,7 @@ function ClientLoginForm() {
                 src="/3dasset/brain-strategy.png"
                 alt=""
                 role="presentation"
+                loading="lazy"
                 className="w-28 xl:w-36 h-auto animate-v2-hero-float"
                 style={{ filter: 'drop-shadow(0 20px 40px rgba(140,25,60,0.25))' }}
               />

@@ -6,25 +6,21 @@ import { V2PageWrapper } from "@/components/layouts/V2PageWrapper";
 import { PageLoader } from "@/components/ui/PageLoader";
 
 // Dynamically import below-the-fold sections to reduce initial bundle
+// SSR enabled so search engines see full content
 const ServicesSectionV2 = dynamic(
-  () => import("@/components/sections/ServicesSectionV2").then(m => ({ default: m.ServicesSectionV2 })),
-  { ssr: false }
+  () => import("@/components/sections/ServicesSectionV2").then(m => ({ default: m.ServicesSectionV2 }))
 );
 const FeaturesSectionV2 = dynamic(
-  () => import("@/components/sections/FeaturesSectionV2").then(m => ({ default: m.FeaturesSectionV2 })),
-  { ssr: false }
+  () => import("@/components/sections/FeaturesSectionV2").then(m => ({ default: m.FeaturesSectionV2 }))
 );
 const ClientsSectionV2 = dynamic(
-  () => import("@/components/sections/ClientsSectionV2").then(m => ({ default: m.ClientsSectionV2 })),
-  { ssr: false }
+  () => import("@/components/sections/ClientsSectionV2").then(m => ({ default: m.ClientsSectionV2 }))
 );
 const CreativeMindsSectionV2 = dynamic(
-  () => import("@/components/sections/CreativeMindsSectionV2").then(m => ({ default: m.CreativeMindsSectionV2 })),
-  { ssr: false }
+  () => import("@/components/sections/CreativeMindsSectionV2").then(m => ({ default: m.CreativeMindsSectionV2 }))
 );
 const ContactSectionV2 = dynamic(
-  () => import("@/components/sections/ContactSectionV2").then(m => ({ default: m.ContactSectionV2 })),
-  { ssr: false }
+  () => import("@/components/sections/ContactSectionV2").then(m => ({ default: m.ContactSectionV2 }))
 );
 
 export default function Home() {

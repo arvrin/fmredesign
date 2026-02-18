@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ClientPortalLink from '@/components/admin/ClientPortalLink';
 import { TeamService } from '@/lib/admin/team-service';
-import { TEAM_ROLES } from '@/lib/admin/types';
+import { TEAM_ROLES, type TeamRole } from '@/lib/admin/types';
 import { 
   ArrowLeft,
   Building,
@@ -103,12 +103,12 @@ export default function AdminClientDetail() {
         setClientProfile(data.data);
         
         // Load team assignments for this client
-        const assignedMembers = TeamService.getClientTeamMembers(clientId);
+        const assignedMembers = TeamService.getTeamMembersForClient(clientId);
         setAssignedTeamMembers(assignedMembers);
-        
+
         // Load available team members (not assigned to this client)
         const allTeamMembers = TeamService.getAllTeamMembers();
-        const assignedMemberIds = assignedMembers.map(m => m.id);
+        const assignedMemberIds = assignedMembers.map((m: any) => m.id);
         const available = allTeamMembers.filter(member => 
           member.status === 'active' && !assignedMemberIds.includes(member.id)
         );
@@ -157,16 +157,16 @@ export default function AdminClientDetail() {
       );
       
       // Reload team data
-      const assignedMembers = TeamService.getClientTeamMembers(clientId);
+      const assignedMembers = TeamService.getTeamMembersForClient(clientId);
       setAssignedTeamMembers(assignedMembers);
-      
+
       const allTeamMembers = TeamService.getAllTeamMembers();
-      const assignedMemberIds = assignedMembers.map(m => m.id);
-      const available = allTeamMembers.filter(member => 
+      const assignedMemberIds = assignedMembers.map((m: any) => m.id);
+      const available = allTeamMembers.filter(member =>
         member.status === 'active' && !assignedMemberIds.includes(member.id)
       );
       setAvailableTeamMembers(available);
-      
+
       setShowAddTeamForm(false);
       setNewTeamAssignment({
         teamMemberId: '',
@@ -183,13 +183,13 @@ export default function AdminClientDetail() {
     
     try {
       TeamService.removeTeamMemberFromClient(teamMemberId, clientId);
-      
+
       // Reload team data
-      const assignedMembers = TeamService.getClientTeamMembers(clientId);
+      const assignedMembers = TeamService.getTeamMembersForClient(clientId);
       setAssignedTeamMembers(assignedMembers);
-      
+
       const allTeamMembers = TeamService.getAllTeamMembers();
-      const assignedMemberIds = assignedMembers.map(m => m.id);
+      const assignedMemberIds = assignedMembers.map((m: any) => m.id);
       const available = allTeamMembers.filter(member => 
         member.status === 'active' && !assignedMemberIds.includes(member.id)
       );
@@ -457,9 +457,9 @@ export default function AdminClientDetail() {
                         required
                       >
                         <option value="">Choose a team member...</option>
-                        {availableTeamMembers.map(member => (
+                        {availableTeamMembers.map((member: any) => (
                           <option key={member.id} value={member.id}>
-                            {member.name} - {TEAM_ROLES[member.role]}
+                            {member.name} - {TEAM_ROLES[member.role as TeamRole]}
                           </option>
                         ))}
                       </select>
@@ -545,7 +545,7 @@ export default function AdminClientDetail() {
                       >
                         <div className="flex items-center space-x-4">
                           <div className="h-10 w-10 rounded-full bg-fm-magenta-100 flex items-center justify-center text-fm-magenta-600 font-medium">
-                            {member.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                            {member.name.split(' ').map((n: any) => n[0]).join('').toUpperCase()}
                           </div>
                           <div>
                             <div className="flex items-center space-x-2">
@@ -559,7 +559,7 @@ export default function AdminClientDetail() {
                             <div className="flex items-center space-x-4 text-sm text-fm-neutral-600">
                               <span className="flex items-center">
                                 <Briefcase className="h-4 w-4 mr-1" />
-                                {TEAM_ROLES[member.role]}
+                                {TEAM_ROLES[member.role as TeamRole]}
                               </span>
                               <span className="flex items-center">
                                 <Clock className="h-4 w-4 mr-1" />

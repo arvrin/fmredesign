@@ -122,6 +122,7 @@ export default function BlogPage() {
             alt="Learning & Insights"
             width={180}
             height={180}
+            loading="lazy"
             className="h-auto animate-v2-hero-float"
             style={{
               width: 'min(180px, 30vw)',

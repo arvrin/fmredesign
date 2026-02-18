@@ -49,9 +49,7 @@ import type {
   LeadFilters 
 } from '@/lib/admin/lead-types';
 
-interface LeadDashboardProps {}
-
-export default function LeadDashboard({}: LeadDashboardProps) {
+export default function LeadDashboard() {
   const [leads, setLeads] = useState<LeadProfile[]>([]);
   const [analytics, setAnalytics] = useState<LeadAnalytics | null>(null);
   const [dashboardStats, setDashboardStats] = useState<LeadDashboardStats | null>(null);

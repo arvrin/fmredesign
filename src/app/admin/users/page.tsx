@@ -1,6 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { useAdminAuth, MobileUser } from '@/lib/admin/auth';
 import { ROLES, Role } from '@/lib/admin/permissions';
 import { Button } from '@/design-system/components/primitives/Button';
@@ -16,9 +19,11 @@ import {
   Check,
   X,
   Search,
-  Filter
 } from 'lucide-react';
 import { adminToast } from '@/lib/admin/toast';
+import { createUserSchema } from '@/lib/validations/schemas';
+
+type UserFormData = z.infer<typeof createUserSchema>;
 
 interface AuthorizedUser {
   id: string;
@@ -353,26 +358,28 @@ export default function UsersManagementPage() {
 
       {/* Modals */}
       {showAddModal && (
-        <AddUserModal
+        <UserFormModal
+          mode="create"
           onClose={() => setShowAddModal(false)}
           onSuccess={() => {
             setShowAddModal(false);
             loadUsers();
           }}
-          currentUserRole={currentUser?.user?.data?.role || 'super_admin'}
+          currentUserRole={currentUser?.role || 'super_admin'}
           canManagePermissions={canManagePermissions}
         />
       )}
 
       {editingUser && (
-        <EditUserModal
+        <UserFormModal
+          mode="edit"
           user={editingUser}
           onClose={() => setEditingUser(null)}
           onSuccess={() => {
             setEditingUser(null);
             loadUsers();
           }}
-          currentUserRole={currentUser?.user?.data?.role || 'super_admin'}
+          currentUserRole={currentUser?.role || 'super_admin'}
           canManagePermissions={canManagePermissions}
         />
       )}
@@ -419,383 +426,132 @@ function StatusBadge({
   );
 }
 
-// Add User Modal Component
-function AddUserModal({
-  onClose,
-  onSuccess,
-  currentUserRole,
-  canManagePermissions
-}: {
-  onClose: () => void;
-  onSuccess: () => void;
-  currentUserRole: string;
-  canManagePermissions: boolean;
-}) {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    mobileNumber: '',
-    role: 'viewer',
-    notes: ''
-  });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-
-  // Get assignable roles based on current user role
-  const getAssignableRoles = (currentRole: string): Role[] => {
-    const currentRoleObj = ROLES.find(r => r.key === currentRole);
-    if (!currentRoleObj) return [];
-
-    // Super admin can assign all roles  
-    if (currentRole === 'super_admin') {
-      return ROLES;
-    }
-
-    // Can only assign roles with lower hierarchy
-    return ROLES.filter(role => role.hierarchy < currentRoleObj.hierarchy);
-  };
-
-  const availableRoles = getAssignableRoles(currentUserRole);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-
-    try {
-      const response = await fetch('/api/admin/users', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          mobileNumber: formData.mobileNumber,
-          role: formData.role,
-          notes: formData.notes
-        }),
-      });
-
-      const result = await response.json();
-      
-      if (result.success) {
-        onSuccess();
-      } else {
-        setError(result.error || 'Failed to add user. Please try again.');
-      }
-    } catch (error) {
-      console.error('Error adding user:', error);
-      setError('Error adding user. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold">Add New User</h3>
-            <button
-              type="button"
-              onClick={onClose}
-              className="text-fm-neutral-400 hover:text-fm-neutral-600"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-
-          {error && (
-            <div className="bg-red-50 border border-red-200 rounded p-3 text-sm text-red-600">
-              {error}
-            </div>
-          )}
-
-          <div>
-            <label className="block text-sm font-medium text-fm-neutral-700 mb-1">
-              Name *
-            </label>
-            <input
-              type="text"
-              required
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-3 py-2 border border-fm-neutral-300 rounded focus:ring-2 focus:ring-fm-magenta-700 focus:border-fm-magenta-700"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-fm-neutral-700 mb-1">
-              Email *
-            </label>
-            <input
-              type="email"
-              required
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              className="w-full px-3 py-2 border border-fm-neutral-300 rounded focus:ring-2 focus:ring-fm-magenta-700 focus:border-fm-magenta-700"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-fm-neutral-700 mb-1">
-              Mobile Number *
-            </label>
-            <input
-              type="tel"
-              required
-              placeholder="+91 98765 43210"
-              value={formData.mobileNumber}
-              onChange={(e) => setFormData({ ...formData, mobileNumber: e.target.value })}
-              className="w-full px-3 py-2 border border-fm-neutral-300 rounded focus:ring-2 focus:ring-fm-magenta-700 focus:border-fm-magenta-700"
-            />
-          </div>
-
-          {canManagePermissions && (
-            <div>
-              <label className="block text-sm font-medium text-fm-neutral-700 mb-1">
-                Role *
-              </label>
-              <select
-                required
-                value={formData.role}
-                onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                className="w-full px-3 py-2 border border-fm-neutral-300 rounded focus:ring-2 focus:ring-fm-magenta-700 focus:border-fm-magenta-700"
-              >
-                {availableRoles.map(role => (
-                  <option key={role.key} value={role.key}>
-                    {role.name}
-                  </option>
-                ))}
-              </select>
-              <p className="text-xs text-fm-neutral-500 mt-1">
-                {ROLES.find(r => r.key === formData.role)?.description}
-              </p>
-            </div>
-          )}
-
-          <div>
-            <label className="block text-sm font-medium text-fm-neutral-700 mb-1">
-              Notes
-            </label>
-            <textarea
-              value={formData.notes}
-              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-              className="w-full px-3 py-2 border border-fm-neutral-300 rounded focus:ring-2 focus:ring-fm-magenta-700 focus:border-fm-magenta-700"
-              rows={3}
-            />
-          </div>
-
-          <div className="flex gap-3 pt-4">
-            <Button
-              type="submit"
-              disabled={loading}
-              className="flex-1"
-            >
-              {loading ? 'Adding...' : 'Add User'}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              className="flex-1"
-            >
-              Cancel
-            </Button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-}
-
-// Edit User Modal (similar to Add User Modal but for editing)
-function EditUserModal({
+// Unified User Form Modal (react-hook-form + Zod)
+function UserFormModal({
+  mode,
   user,
   onClose,
   onSuccess,
   currentUserRole,
-  canManagePermissions
+  canManagePermissions,
 }: {
-  user: AuthorizedUser;
+  mode: 'create' | 'edit';
+  user?: AuthorizedUser;
   onClose: () => void;
   onSuccess: () => void;
   currentUserRole: string;
   canManagePermissions: boolean;
 }) {
-  const [formData, setFormData] = useState({
-    name: user.name,
-    email: user.email,
-    mobileNumber: user.mobileNumber,
-    role: user.role,
-    notes: user.notes || ''
-  });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [serverError, setServerError] = useState('');
+  const isEdit = mode === 'edit';
 
-  // Get assignable roles based on current user role
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors, isSubmitting },
+  } = useForm<UserFormData>({
+    resolver: zodResolver(createUserSchema),
+    defaultValues: {
+      name: user?.name || '',
+      email: user?.email || '',
+      mobileNumber: user?.mobileNumber || '',
+      role: (user?.role as UserFormData['role']) || 'viewer',
+      notes: user?.notes || '',
+    },
+  });
+
+  const selectedRole = watch('role');
+
   const getAssignableRoles = (currentRole: string): Role[] => {
     const currentRoleObj = ROLES.find(r => r.key === currentRole);
     if (!currentRoleObj) return [];
-
-    // Super admin can assign all roles  
-    if (currentRole === 'super_admin') {
-      return ROLES;
-    }
-
-    // Can only assign roles with lower hierarchy
+    if (currentRole === 'super_admin') return ROLES;
     return ROLES.filter(role => role.hierarchy < currentRoleObj.hierarchy);
   };
 
   const availableRoles = getAssignableRoles(currentUserRole);
+  const inputClass = 'w-full px-3 py-2 border border-fm-neutral-300 rounded focus:ring-2 focus:ring-fm-magenta-700 focus:border-fm-magenta-700';
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-
+  const onSubmit = async (data: UserFormData) => {
+    setServerError('');
     try {
+      const body = isEdit ? { id: user!.id, ...data } : data;
       const response = await fetch('/api/admin/users', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          id: user.id,
-          name: formData.name,
-          email: formData.email,
-          mobileNumber: formData.mobileNumber,
-          role: formData.role,
-          notes: formData.notes
-        }),
+        method: isEdit ? 'PUT' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
       });
-
       const result = await response.json();
-      
       if (result.success) {
         onSuccess();
       } else {
-        setError(result.error || 'Failed to update user. Please try again.');
+        setServerError(result.error || `Failed to ${isEdit ? 'update' : 'add'} user.`);
       }
     } catch (error) {
-      console.error('Error updating user:', error);
-      setError('Error updating user. Please try again.');
-    } finally {
-      setLoading(false);
+      console.error(`Error ${isEdit ? 'updating' : 'adding'} user:`, error);
+      setServerError(`Error ${isEdit ? 'updating' : 'adding'} user. Please try again.`);
     }
   };
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold">Edit User</h3>
-            <button
-              type="button"
-              onClick={onClose}
-              className="text-fm-neutral-400 hover:text-fm-neutral-600"
-            >
+            <h3 className="text-lg font-semibold">{isEdit ? 'Edit User' : 'Add New User'}</h3>
+            <button type="button" onClick={onClose} className="text-fm-neutral-400 hover:text-fm-neutral-600">
               <X className="w-5 h-5" />
             </button>
           </div>
 
-          {error && (
-            <div className="bg-red-50 border border-red-200 rounded p-3 text-sm text-red-600">
-              {error}
-            </div>
+          {serverError && (
+            <div className="bg-red-50 border border-red-200 rounded p-3 text-sm text-red-600">{serverError}</div>
           )}
 
           <div>
-            <label className="block text-sm font-medium text-fm-neutral-700 mb-1">
-              Name *
-            </label>
-            <input
-              type="text"
-              required
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-3 py-2 border border-fm-neutral-300 rounded focus:ring-2 focus:ring-fm-magenta-700 focus:border-fm-magenta-700"
-            />
+            <label className="block text-sm font-medium text-fm-neutral-700 mb-1">Name *</label>
+            <input {...register('name')} className={inputClass} />
+            {errors.name && <p className="text-xs text-red-600 mt-1">{errors.name.message}</p>}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-fm-neutral-700 mb-1">
-              Email *
-            </label>
-            <input
-              type="email"
-              required
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              className="w-full px-3 py-2 border border-fm-neutral-300 rounded focus:ring-2 focus:ring-fm-magenta-700 focus:border-fm-magenta-700"
-            />
+            <label className="block text-sm font-medium text-fm-neutral-700 mb-1">Email *</label>
+            <input {...register('email')} type="email" className={inputClass} />
+            {errors.email && <p className="text-xs text-red-600 mt-1">{errors.email.message}</p>}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-fm-neutral-700 mb-1">
-              Mobile Number *
-            </label>
-            <input
-              type="tel"
-              required
-              value={formData.mobileNumber}
-              onChange={(e) => setFormData({ ...formData, mobileNumber: e.target.value })}
-              className="w-full px-3 py-2 border border-fm-neutral-300 rounded focus:ring-2 focus:ring-fm-magenta-700 focus:border-fm-magenta-700"
-            />
+            <label className="block text-sm font-medium text-fm-neutral-700 mb-1">Mobile Number *</label>
+            <input {...register('mobileNumber')} type="tel" placeholder="+91 98765 43210" className={inputClass} />
+            {errors.mobileNumber && <p className="text-xs text-red-600 mt-1">{errors.mobileNumber.message}</p>}
           </div>
 
           {canManagePermissions && (
             <div>
-              <label className="block text-sm font-medium text-fm-neutral-700 mb-1">
-                Role *
-              </label>
-              <select
-                required
-                value={formData.role}
-                onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                className="w-full px-3 py-2 border border-fm-neutral-300 rounded focus:ring-2 focus:ring-fm-magenta-700 focus:border-fm-magenta-700"
-              >
+              <label className="block text-sm font-medium text-fm-neutral-700 mb-1">Role *</label>
+              <select {...register('role')} className={inputClass}>
                 {availableRoles.map(role => (
-                  <option key={role.key} value={role.key}>
-                    {role.name}
-                  </option>
+                  <option key={role.key} value={role.key}>{role.name}</option>
                 ))}
               </select>
               <p className="text-xs text-fm-neutral-500 mt-1">
-                {ROLES.find(r => r.key === formData.role)?.description}
+                {ROLES.find(r => r.key === selectedRole)?.description}
               </p>
+              {errors.role && <p className="text-xs text-red-600 mt-1">{errors.role.message}</p>}
             </div>
           )}
 
           <div>
-            <label className="block text-sm font-medium text-fm-neutral-700 mb-1">
-              Notes
-            </label>
-            <textarea
-              value={formData.notes}
-              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-              className="w-full px-3 py-2 border border-fm-neutral-300 rounded focus:ring-2 focus:ring-fm-magenta-700 focus:border-fm-magenta-700"
-              rows={3}
-            />
+            <label className="block text-sm font-medium text-fm-neutral-700 mb-1">Notes</label>
+            <textarea {...register('notes')} className={inputClass} rows={3} />
           </div>
 
           <div className="flex gap-3 pt-4">
-            <Button
-              type="submit"
-              disabled={loading}
-              className="flex-1"
-            >
-              {loading ? 'Updating...' : 'Update User'}
+            <Button type="submit" disabled={isSubmitting} className="flex-1">
+              {isSubmitting ? (isEdit ? 'Updating...' : 'Adding...') : (isEdit ? 'Update User' : 'Add User')}
             </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              className="flex-1"
-            >
+            <Button type="button" variant="outline" onClick={onClose} className="flex-1">
               Cancel
             </Button>
           </div>

@@ -25,9 +25,7 @@ import { Button } from '@/design-system/components/primitives/Button';
 import { adminToast } from '@/lib/admin/toast';
 import type { ContentInput, ContentType, Platform, Project } from '@/lib/admin/project-types';
 
-interface NewContentPageProps {}
-
-export default function NewContentPage({}: NewContentPageProps) {
+export default function NewContentPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const projectId = searchParams?.get('projectId');

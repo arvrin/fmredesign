@@ -106,6 +106,7 @@ export function ServicesSection() {
             <img
               src="/3dasset/happy brain.png"
               alt="Freaking Minds Mascot"
+              loading="lazy"
               className="w-36 lg:w-48 h-auto hover:scale-110 transition-transform duration-500 brain-animate-float-glow"
               style={{ '--brain-rotate': '8deg', mixBlendMode: 'multiply' } as React.CSSProperties}
             />

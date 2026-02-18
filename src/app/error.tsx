@@ -25,6 +25,7 @@ export default function Error({
             <img
               src="/3dasset/brain-confused.png"
               alt="Something went wrong"
+              loading="lazy"
               className="mx-auto mb-8"
               style={{
                 width: 'min(160px, 40vw)',

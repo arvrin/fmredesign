@@ -54,9 +54,21 @@ export async function validateSession(sessionId: string): Promise<SessionData | 
     return null;
   }
 
+  // Resolve slug from clients table
+  let slug = data.client_id;
+  const { data: clientRow } = await supabaseAdmin
+    .from('clients')
+    .select('slug')
+    .eq('id', data.client_id)
+    .single();
+  if (clientRow?.slug) {
+    slug = clientRow.slug;
+  }
+
   return {
     sessionId: data.id,
     clientId: data.client_id,
+    slug,
     email: data.email,
     clientName: data.client_name,
     expires: expiresAt,

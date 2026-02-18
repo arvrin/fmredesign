@@ -35,9 +35,7 @@ import {
 import type { Project, ProjectStatus, ProjectType } from '@/lib/admin/project-types';
 import { ProjectUtils } from '@/lib/admin/project-types';
 
-interface ProjectsPageProps {}
-
-export default function ProjectsPage({}: ProjectsPageProps) {
+export default function ProjectsPage() {
   const router = useRouter();
   const [projects, setProjects] = useState<Project[]>([]);
   const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);

@@ -9,6 +9,7 @@ import type { ProjectInput, Project } from '@/lib/admin/project-types';
 import { ProjectUtils } from '@/lib/admin/project-types';
 import { requireAdminAuth } from '@/lib/admin-auth-middleware';
 import { createProjectSchema, updateProjectSchema, validateBody } from '@/lib/validations/schemas';
+import { logAuditEvent, getAuditUser, getClientIP } from '@/lib/admin/audit-log';
 
 // GET /api/projects
 export async function GET(request: NextRequest) {
@@ -112,8 +113,8 @@ export async function POST(request: NextRequest) {
       end_date: body.endDate,
       estimated_hours: body.estimatedHours || 0,
       project_manager: body.projectManager,
-      budget: parseFloat(body.budget),
-      hourly_rate: parseFloat(body.hourlyRate) || 0,
+      budget: parseFloat(String(body.budget)),
+      hourly_rate: parseFloat(String(body.hourlyRate ?? '0')) || 0,
       progress: 0,
       milestones: [],
       deliverables: [],
@@ -153,6 +154,16 @@ export async function POST(request: NextRequest) {
       createdAt: data.created_at,
       updatedAt: data.updated_at,
     };
+
+    // Fire-and-forget audit log
+    logAuditEvent({
+      ...getAuditUser(request),
+      action: 'create',
+      resource_type: 'project',
+      resource_id: data.id,
+      details: { name: data.name, clientId: data.client_id },
+      ip_address: getClientIP(request),
+    });
 
     return NextResponse.json(
       { success: true, data: responseProject, message: 'Project created successfully' },
@@ -246,6 +257,16 @@ export async function PUT(request: NextRequest) {
       updatedAt: data.updated_at,
     };
 
+    // Fire-and-forget audit log
+    logAuditEvent({
+      ...getAuditUser(request),
+      action: 'update',
+      resource_type: 'project',
+      resource_id: data.id,
+      details: { name: data.name, updatedFields: Object.keys(updates) },
+      ip_address: getClientIP(request),
+    });
+
     return NextResponse.json({
       success: true,
       data: responseProject,
@@ -280,6 +301,16 @@ export async function DELETE(request: NextRequest) {
     const { error } = await supabase.from('projects').delete().eq('id', projectId);
 
     if (error) throw error;
+
+    // Fire-and-forget audit log
+    logAuditEvent({
+      ...getAuditUser(request),
+      action: 'delete',
+      resource_type: 'project',
+      resource_id: projectId,
+      details: {},
+      ip_address: getClientIP(request),
+    });
 
     return NextResponse.json({
       success: true,

@@ -107,7 +107,7 @@ export interface Proposal {
   createdBy: string;
   
   // Presentation
-  template: 'professional' | 'creative' | 'minimal' | 'detailed';
+  template: 'professional' | 'creative' | 'technical' | 'startup';
   brandColors?: { primary: string; secondary: string };
   includeCaseStudies?: boolean;
   includeTestimonials?: boolean;

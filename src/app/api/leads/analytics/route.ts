@@ -124,10 +124,10 @@ function buildDashboardStats(leads: any[]) {
   const topSources = Object.entries(analytics.leadsBySource)
     .map(([source, count]) => ({
       source: source as LeadSource,
-      count,
-      percentage: analytics.totalLeads > 0 ? (count / analytics.totalLeads) * 100 : 0,
+      count: count as number,
+      percentage: analytics.totalLeads > 0 ? ((count as number) / analytics.totalLeads) * 100 : 0,
     }))
-    .sort((a, b) => b.count - a.count)
+    .sort((a, b) => (b.count as number) - (a.count as number))
     .slice(0, 5);
 
   const recentActivity = leads

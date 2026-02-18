@@ -240,6 +240,7 @@ export default function AdminLoginPage() {
                 src="/3dasset/brain-teaching.png"
                 alt=""
                 role="presentation"
+                loading="lazy"
                 className="w-28 xl:w-36 h-auto animate-v2-hero-float"
                 style={{ filter: 'drop-shadow(0 20px 40px rgba(74,25,66,0.25))' }}
               />

@@ -11,6 +11,7 @@ export default function PrivacyPolicyPage() {
             <img
               src="/3dasset/brain-learning.png"
               alt="Your Privacy Matters"
+              loading="lazy"
               className="h-auto animate-v2-hero-float"
               style={{
                 width: 'min(160px, 25vw)',

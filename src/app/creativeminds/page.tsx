@@ -285,6 +285,7 @@ export default function CreativeMindsPage() {
                 <img
                   src="/3dasset/brain-celebrating.png"
                   alt="CreativeMinds Network"
+                  loading="lazy"
                   className="max-w-full"
                   style={{
                     width: 'min(380px, 70vw)',

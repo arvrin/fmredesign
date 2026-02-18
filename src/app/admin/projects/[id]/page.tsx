@@ -249,10 +249,10 @@ export default function ProjectDetailPage({
                 <h1 className="text-2xl sm:text-3xl font-bold text-fm-neutral-900 truncate">
                   {project.name}
                 </h1>
-                <Badge variant={getStatusBadgeVariant(project.status)} size="md">
+                <Badge variant={getStatusBadgeVariant(project.status)}>
                   {getStatusLabel(project.status)}
                 </Badge>
-                <Badge variant={getPriorityBadgeVariant(project.priority)} size="sm">
+                <Badge variant={getPriorityBadgeVariant(project.priority)}>
                   {getPriorityLabel(project.priority)} Priority
                 </Badge>
               </div>
@@ -658,7 +658,7 @@ export default function ProjectDetailPage({
                       </p>
                       <div className="flex flex-wrap gap-2">
                         {project.contentRequirements.platforms.map((platform, index) => (
-                          <Badge key={index} variant="info" size="sm">
+                          <Badge key={index} variant="info">
                             {platform.charAt(0).toUpperCase() + platform.slice(1)}
                           </Badge>
                         ))}
@@ -674,7 +674,7 @@ export default function ProjectDetailPage({
                       </p>
                       <div className="flex flex-wrap gap-2">
                         {project.contentRequirements.contentTypes.map((type, index) => (
-                          <Badge key={index} variant="secondary" size="sm">
+                          <Badge key={index} variant="secondary">
                             {type.charAt(0).toUpperCase() + type.slice(1)}
                           </Badge>
                         ))}

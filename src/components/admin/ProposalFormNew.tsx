@@ -790,7 +790,7 @@ export function ProposalFormNew({ initialProposal, onSaveSuccess }: ProposalForm
             <MetricCard
               title="Total Investment"
               value={`₹${proposal.investment.total.toLocaleString('en-IN')}`}
-              subtitle={`${proposal.proposalType === 'monthly' ? 'per month' : 'project total'}`}
+              subtitle={`${proposal.proposalType === 'retainer' ? 'per month' : 'project total'}`}
               icon={<CreditCard className="w-6 h-6" />}
               variant="success"
               className="ring-2 ring-fm-magenta-200"

@@ -119,7 +119,6 @@ export default function WeHavePage() {
     { name: 'CommunicationHub', path: 'components/admin/CommunicationHub.tsx' },
     { name: 'DocumentManager', path: 'components/admin/DocumentManager.tsx' },
     { name: 'GrowthEngine', path: 'components/admin/GrowthEngine.tsx' },
-    { name: 'InvoiceForm', path: 'components/admin/InvoiceForm.tsx' },
     { name: 'InvoiceFormNew', path: 'components/admin/InvoiceFormNew.tsx' },
     { name: 'ProposalDashboard', path: 'components/admin/ProposalDashboard.tsx' },
     { name: 'ProposalFormNew', path: 'components/admin/ProposalFormNew.tsx' },

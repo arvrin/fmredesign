@@ -143,7 +143,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   };
 
   /* Flatten groups for iteration */
-  const allGroups = navigation.length > 0
+  const allGroups: NavigationGroup[] = navigation.length > 0
     ? navigation
     : [{ items: [{ label: 'Dashboard', href: variant === 'admin' ? '/admin' : '/client', icon: <div className="w-5 h-5 rounded bg-current opacity-20" /> }] }];
 

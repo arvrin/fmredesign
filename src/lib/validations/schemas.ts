@@ -65,7 +65,7 @@ export const createProjectSchema = z.object({
   estimatedHours: z.number().optional(),
   hourlyRate: z.union([z.number(), z.string()]).optional(),
   discoveryId: optionalString,
-  contentRequirements: z.record(z.unknown()).optional(),
+  contentRequirements: z.record(z.string(), z.unknown()).optional(),
   tags: z.array(z.string()).optional(),
   notes: optionalString,
 });
@@ -116,7 +116,7 @@ export const createTeamMemberSchema = z.object({
   capacity: z.number().optional(),
   skills: z.array(z.string()).optional(),
   startDate: optionalString,
-  compensation: z.record(z.unknown()).optional(),
+  compensation: z.record(z.string(), z.unknown()).optional(),
   notes: optionalString,
 });
 
@@ -188,12 +188,12 @@ export const createProposalSchema = z.object({
   client: z.object({
     isExisting: z.boolean().optional(),
     clientId: optionalString,
-    prospectInfo: z.record(z.unknown()).optional(),
+    prospectInfo: z.record(z.string(), z.unknown()).optional(),
   }).optional(),
   servicePackages: z.array(z.unknown()).optional(),
   customServices: z.array(z.unknown()).optional(),
-  timeline: z.record(z.unknown()).optional(),
-  investment: z.record(z.unknown()).optional(),
+  timeline: z.record(z.string(), z.unknown()).optional(),
+  investment: z.record(z.string(), z.unknown()).optional(),
   proposalType: z.enum(['project', 'retainer', 'hybrid']).optional(),
   validUntil: optionalString,
   status: z.enum(['draft', 'sent', 'viewed', 'approved', 'declined', 'expired', 'converted']).optional(),
@@ -224,7 +224,7 @@ export const createLeadSchema = z.object({
   additionalChallenges: z.array(z.string()).optional(),
   specificRequirements: optionalString,
   source: optionalString,
-  customFields: z.record(z.unknown()).optional(),
+  customFields: z.record(z.string(), z.unknown()).optional(),
 });
 
 // ---------------------------------------------------------------------------
@@ -247,7 +247,7 @@ export const createDiscoverySchema = z.object({
 export const updateDiscoverySchema = z.object({
   action: z.literal('update'),
   sessionId: nonEmptyString,
-  updates: z.record(z.unknown()),
+  updates: z.record(z.string(), z.unknown()),
 });
 
 // ---------------------------------------------------------------------------

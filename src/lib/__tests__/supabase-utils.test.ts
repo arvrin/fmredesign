@@ -1,0 +1,32 @@
+import { describe, it, expect } from 'vitest';
+import { normalizeMobileNumber } from '../supabase-utils';
+
+describe('normalizeMobileNumber', () => {
+  it('returns empty string for empty input', () => {
+    expect(normalizeMobileNumber('')).toBe('');
+  });
+
+  it('preserves already-normalized +91 numbers', () => {
+    expect(normalizeMobileNumber('+919876543210')).toBe('+919876543210');
+  });
+
+  it('adds + prefix to 91XXXXXXXXXX format', () => {
+    expect(normalizeMobileNumber('919876543210')).toBe('+919876543210');
+  });
+
+  it('adds +91 prefix to 10-digit numbers', () => {
+    expect(normalizeMobileNumber('9876543210')).toBe('+919876543210');
+  });
+
+  it('strips non-digit characters', () => {
+    expect(normalizeMobileNumber('+91 987-654-3210')).toBe('+919876543210');
+  });
+
+  it('strips spaces and dashes from 10-digit', () => {
+    expect(normalizeMobileNumber('987 654 3210')).toBe('+919876543210');
+  });
+
+  it('returns cleaned string for unrecognized formats', () => {
+    expect(normalizeMobileNumber('12345')).toBe('12345');
+  });
+});

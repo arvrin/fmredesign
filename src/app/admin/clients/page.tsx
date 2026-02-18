@@ -8,12 +8,10 @@
 import { useState } from 'react';
 import { ClientDashboard } from '@/components/admin/ClientDashboard';
 import { ClientProfile } from '@/components/admin/ClientProfile';
-import { ClientProfile as ClientProfileType } from '@/lib/admin/client-types';
-
 export default function ClientsPage() {
-  const [selectedClient, setSelectedClient] = useState<ClientProfileType | null>(null);
+  const [selectedClient, setSelectedClient] = useState<{ id: string } | null>(null);
 
-  const handleClientSelect = (client: ClientProfileType) => {
+  const handleClientSelect = (client: { id: string }) => {
     setSelectedClient(client);
   };
 

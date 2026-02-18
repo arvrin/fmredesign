@@ -66,7 +66,7 @@ export function AnalyticsDashboard({ clientId, campaigns }: AnalyticsDashboardPr
     setIsLoading(true);
     
     if (clientId) {
-      const clientData = ClientService.getClientById(clientId);
+      const clientData = await ClientService.getClientById(clientId);
       setClient(clientData);
       
       const analyticsData = ClientService.getClientAnalytics(clientId, period);

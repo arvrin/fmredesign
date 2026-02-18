@@ -173,6 +173,7 @@ export function HeroSection() {
               <img
                 src="/3dasset/medibrain.png"
                 alt="Freaking Minds - Thoughtful Strategy"
+                loading="lazy"
                 className="w-44 h-auto hover:scale-110 transition-transform duration-500 drop-shadow-lg rounded-2xl brain-animate-float"
               />
             </div>

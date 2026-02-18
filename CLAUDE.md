@@ -471,6 +471,22 @@ GOOGLE_SHEETS_CLIENT_EMAIL=...
 GOOGLE_SHEETS_SPREADSHEET_ID=...
 ```
 
+## Workflow Rules
+
+### Before Starting Implementation
+- **Confirm existing state first**: Before starting any implementation, scan the codebase and identify what's already built and working. Do NOT re-plan or re-implement completed work. Ask the user if unsure rather than assuming prior work is incomplete.
+- **Present UI approach before coding**: For visual/design changes (hero sections, page layouts, color schemes, component redesigns), describe the planned approach in 3-5 bullet points and get approval BEFORE writing code.
+
+### During Implementation
+- **Never ignore TypeScript errors**: Always fix them properly. Treat build errors as blockers that must be resolved before considering a task complete. Never suggest `@ts-ignore`, `any` casts, or suppressing errors.
+- **Verification sweep after multi-file changes**: When implementing changes across many files (design system migration, refactoring, pattern replacement), do a grep-based verification sweep AFTER the main implementation to catch missed instances. Search for remaining old patterns before declaring the task complete.
+
+### Before Declaring Done
+- **Build must pass**: Run `npm run build` (or at minimum `npx tsc --noEmit`) before declaring any task complete. A task with build errors is NOT complete.
+- **All files must be staged**: Before pushing to git, run `git status` and ensure ALL modified and newly created files are included. Check that imports reference files that exist in the repo.
+
+---
+
 ## Do's and Don'ts
 
 ### Do — Public Pages

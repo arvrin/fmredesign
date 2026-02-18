@@ -256,6 +256,7 @@ export default function GetStartedPage() {
             <img
               src="/3dasset/brain-rocket.png"
               alt="Launch Your Project"
+              loading="lazy"
               className="h-auto animate-v2-hero-float"
               style={{
                 width: 'min(180px, 30vw)',

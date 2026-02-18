@@ -60,9 +60,9 @@ export function CommunicationHub({ clientId, onScheduleMeeting }: CommunicationH
     loadData();
   }, [clientId]);
 
-  const loadData = () => {
+  const loadData = async () => {
     if (clientId) {
-      const clientData = ClientService.getClientById(clientId);
+      const clientData = await ClientService.getClientById(clientId);
       setClient(clientData);
       
       const messageData = ClientService.getClientMessages(clientId);

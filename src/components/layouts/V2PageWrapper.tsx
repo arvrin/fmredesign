@@ -259,7 +259,7 @@ export function V2PageWrapper({
       </div>
 
       {/* Layer 5: Content (children) — relative, normal scroll */}
-      <div className="relative" style={{ zIndex: 10 }}>
+      <div id="main" className="relative" style={{ zIndex: 10 }}>
         {children}
       </div>
 

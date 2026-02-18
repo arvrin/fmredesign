@@ -114,6 +114,7 @@ export function ContactSection() {
             <img
               src="/3dasset/happy brain.png"
               alt="Freaking Minds - Let's Talk"
+              loading="lazy"
               className="w-32 lg:w-44 h-auto hover:scale-110 transition-transform duration-500 brain-animate-bounce"
               style={{ '--brain-rotate': '-10deg', mixBlendMode: 'multiply' } as React.CSSProperties}
             />

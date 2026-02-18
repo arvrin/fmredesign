@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   ArrowLeft,
@@ -36,14 +36,14 @@ import {
 } from '@/lib/admin/types';
 
 interface EditTeamMemberProps {
-  params: {
+  params: Promise<{
     memberId: string;
-  };
+  }>;
 }
 
 export default function EditTeamMemberPage({ params }: EditTeamMemberProps) {
   const router = useRouter();
-  const { memberId } = params;
+  const { memberId } = use(params);
   const [originalMember, setOriginalMember] = useState<TeamMember | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);

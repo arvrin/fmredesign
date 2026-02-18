@@ -156,6 +156,7 @@ export default function ContactPage() {
           <img
             src="/3dasset/brain-creative.png"
             alt="Creative Solutions"
+            loading="lazy"
             className="h-auto animate-v2-hero-float"
             style={{
               width: 'min(180px, 30vw)',

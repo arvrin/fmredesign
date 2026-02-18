@@ -41,9 +41,7 @@ import {
 import type { ContentItem, ContentStatus, ContentType, Platform } from '@/lib/admin/project-types';
 import { ProjectUtils } from '@/lib/admin/project-types';
 
-interface ContentCalendarPageProps {}
-
-export default function ContentCalendarPage({}: ContentCalendarPageProps) {
+export default function ContentCalendarPage() {
   const router = useRouter();
   const [contentItems, setContentItems] = useState<ContentItem[]>([]);
   const [filteredContent, setFilteredContent] = useState<ContentItem[]>([]);

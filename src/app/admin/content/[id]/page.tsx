@@ -223,7 +223,7 @@ export default function ContentDetailPage({
               </h1>
 
               <div className="flex flex-wrap items-center gap-2">
-                <Badge variant={getStatusBadgeVariant(content.status)} size="sm">
+                <Badge variant={getStatusBadgeVariant(content.status)}>
                   {getStatusLabel(content.status)}
                 </Badge>
 
@@ -234,7 +234,7 @@ export default function ContentDetailPage({
                     content.platform.slice(1)}
                 </span>
 
-                <Badge variant="default" size="sm">
+                <Badge variant="default">
                   {getTypeLabel(content.type)}
                 </Badge>
               </div>
@@ -344,7 +344,7 @@ export default function ContentDetailPage({
                 <CardContent className="px-6 pb-6">
                   <div className="flex flex-wrap gap-2">
                     {content.tags.map((tag, index) => (
-                      <Badge key={index} variant="default" size="sm">
+                      <Badge key={index} variant="default">
                         {tag}
                       </Badge>
                     ))}

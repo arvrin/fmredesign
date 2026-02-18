@@ -8,6 +8,7 @@ import { getSupabaseAdmin } from '@/lib/supabase';
 import { normalizeMobileNumber, getRolePermissions } from '@/lib/supabase-utils';
 import { requireAdminAuth } from '@/lib/admin-auth-middleware';
 import { createUserSchema, updateUserSchema, validateBody } from '@/lib/validations/schemas';
+import { logAuditEvent, getAuditUser, getClientIP } from '@/lib/admin/audit-log';
 
 // GET - List all authorized users
 export async function GET(request: NextRequest) {
@@ -82,6 +83,16 @@ export async function POST(request: NextRequest) {
 
     if (error) throw error;
 
+    // Fire-and-forget audit log
+    logAuditEvent({
+      ...getAuditUser(request),
+      action: 'create',
+      resource_type: 'user',
+      resource_id: newUser.id,
+      details: { name: newUser.name, role: newUser.role },
+      ip_address: getClientIP(request),
+    });
+
     return NextResponse.json({
       success: true,
       user: {
@@ -135,6 +146,16 @@ export async function PUT(request: NextRequest) {
 
     if (error) throw error;
 
+    // Fire-and-forget audit log
+    logAuditEvent({
+      ...getAuditUser(request),
+      action: 'update',
+      resource_type: 'user',
+      resource_id: id,
+      details: { name, role, updatedFields: Object.keys(updates) },
+      ip_address: getClientIP(request),
+    });
+
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error updating user:', error);
@@ -168,6 +189,16 @@ export async function DELETE(request: NextRequest) {
       .eq('id', userId);
 
     if (error) throw error;
+
+    // Fire-and-forget audit log
+    logAuditEvent({
+      ...getAuditUser(request),
+      action: 'delete',
+      resource_type: 'user',
+      resource_id: userId,
+      details: {},
+      ip_address: getClientIP(request),
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {

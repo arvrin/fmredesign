@@ -96,10 +96,10 @@ export function GrowthEngine({ clientId }: GrowthEngineProps) {
     loadData();
   }, [clientId, selectedTimeframe]);
 
-  const loadData = () => {
+  const loadData = async () => {
     // Load client data
     if (clientId) {
-      const clientData = ClientService.getClientById(clientId);
+      const clientData = await ClientService.getClientById(clientId);
       setClient(clientData);
     }
 

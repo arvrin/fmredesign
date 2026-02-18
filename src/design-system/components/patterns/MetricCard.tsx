@@ -11,7 +11,7 @@ export interface MetricCardProps {
   subtitle?: string;
   change?: {
     value: number;
-    type: 'increase' | 'decrease' | 'neutral';
+    type: 'increase' | 'decrease' | 'neutral' | 'positive' | 'negative';
     period: string;
   };
   icon?: React.ReactNode;
@@ -88,8 +88,10 @@ export const MetricCard: React.FC<MetricCardProps> = ({
 
     const iconProps = { size: 16, className: 'inline' };
     switch (change.type) {
-      case 'increase': return <TrendingUp {...iconProps} />;
-      case 'decrease': return <TrendingDown {...iconProps} />;
+      case 'increase':
+      case 'positive': return <TrendingUp {...iconProps} />;
+      case 'decrease':
+      case 'negative': return <TrendingDown {...iconProps} />;
       case 'neutral': return <Minus {...iconProps} />;
     }
   };
@@ -97,8 +99,10 @@ export const MetricCard: React.FC<MetricCardProps> = ({
   const getChangeStyles = () => {
     if (!change) return '';
     switch (change.type) {
-      case 'increase': return variantStyles.changeIncrease;
-      case 'decrease': return variantStyles.changeDecrease;
+      case 'increase':
+      case 'positive': return variantStyles.changeIncrease;
+      case 'decrease':
+      case 'negative': return variantStyles.changeDecrease;
       case 'neutral': return variantStyles.changeNeutral;
     }
   };

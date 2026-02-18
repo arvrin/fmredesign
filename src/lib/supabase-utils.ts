@@ -134,7 +134,7 @@ export function determineLeadPriority(score: number): LeadPriority {
 /** Normalize an Indian mobile number to +91XXXXXXXXXX format */
 export function normalizeMobileNumber(mobile: string): string {
   if (!mobile) return '';
-  let normalized = mobile.replace(/[^\d+]/g, '');
+  const normalized = mobile.replace(/[^\d+]/g, '');
   if (normalized.startsWith('+91')) return normalized;
   if (normalized.startsWith('91') && normalized.length === 12) return `+${normalized}`;
   if (normalized.length === 10 && !normalized.startsWith('0')) return `+91${normalized}`;

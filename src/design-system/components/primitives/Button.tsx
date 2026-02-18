@@ -5,12 +5,14 @@ import { cn } from '@/lib/utils';
 import { designTokens } from '@/design-system/tokens';
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'admin' | 'client';
+  variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'admin' | 'client' | 'outline' | 'default' | 'destructive' | 'accent';
   size?: 'sm' | 'md' | 'lg' | 'xl';
   loading?: boolean;
   icon?: React.ReactNode;
   iconPosition?: 'left' | 'right';
   fullWidth?: boolean;
+  theme?: 'light' | 'dark';
+  animation?: string;
 }
 
 const buttonVariants = {
@@ -65,6 +67,31 @@ const buttonVariants = {
       'focus:ring-fm-magenta-500 border border-fm-magenta-600',
       'hover:from-fm-magenta-700 hover:to-fm-magenta-800',
       'rounded-full'
+    ].join(' '),
+
+    outline: [
+      'bg-white text-fm-magenta-700 border border-fm-magenta-200',
+      'hover:bg-fm-magenta-50 hover:border-fm-magenta-300',
+      'focus:ring-fm-magenta-500 shadow-md hover:shadow-lg'
+    ].join(' '),
+
+    default: [
+      'bg-white text-fm-neutral-700 border border-fm-neutral-200',
+      'hover:bg-fm-neutral-50 hover:border-fm-neutral-300',
+      'focus:ring-fm-neutral-500 shadow-sm hover:shadow-md'
+    ].join(' '),
+
+    destructive: [
+      'bg-gradient-to-r from-red-500 to-red-600',
+      'text-white shadow-lg hover:shadow-xl',
+      'focus:ring-red-500 border border-red-500',
+      'hover:from-red-600 hover:to-red-700'
+    ].join(' '),
+
+    accent: [
+      'bg-gradient-to-r from-fm-magenta-500 to-orange-500',
+      'text-white shadow-lg hover:shadow-xl',
+      'focus:ring-fm-magenta-500 border border-fm-magenta-500'
     ].join(' ')
   },
 
@@ -87,6 +114,8 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({
   fullWidth = false,
   children,
   disabled,
+  theme: _theme,
+  animation: _animation,
   ...props
 }, ref) => {
   const isDisabled = disabled || loading;

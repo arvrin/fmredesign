@@ -309,7 +309,6 @@ export function ContactForm({
           disabled={isSubmitting}
           icon={<ArrowRight className="w-5 h-5" />}
           iconPosition="right"
-          animation="scale"
         >
           {isSubmitting ? submittingText : submitText}
         </Button>

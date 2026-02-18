@@ -257,6 +257,7 @@ export function ContactSectionV2() {
                   alt="We're Here to Help"
                   width={420}
                   height={420}
+                  loading="lazy"
                   className="relative max-w-full"
                   style={{
                     width: 'min(420px, 60vw)',

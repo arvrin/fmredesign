@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   ArrowLeft,
@@ -35,17 +35,18 @@ import { ClientService } from '@/lib/admin/client-service';
 import { TeamMember, TeamAssignment, TEAM_ROLES } from '@/lib/admin/types';
 
 interface TeamAssignmentManagementProps {
-  params: {
+  params: Promise<{
     memberId: string;
-  };
+  }>;
 }
 
 export default function TeamAssignmentManagementPage({ params }: TeamAssignmentManagementProps) {
   const router = useRouter();
-  const { memberId } = params;
+  const { memberId } = use(params);
   const [member, setMember] = useState<TeamMember | null>(null);
   const [assignments, setAssignments] = useState<TeamAssignment[]>([]);
   const [availableClients, setAvailableClients] = useState<any[]>([]);
+  const [clientMap, setClientMap] = useState<Record<string, any>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
   const [newAssignment, setNewAssignment] = useState({
@@ -71,10 +72,15 @@ export default function TeamAssignmentManagementPage({ params }: TeamAssignmentM
       setAssignments(memberAssignments);
 
       // Load available clients (not currently assigned to this member)
-      const allClients = ClientService.getAllClients();
+      const allClients = await ClientService.getAllClients();
       const assignedClientIds = memberAssignments.map(a => a.clientId);
       const available = allClients.filter(client => !assignedClientIds.includes(client.id));
       setAvailableClients(available);
+
+      // Build a lookup map for all clients (for use in render)
+      const map: Record<string, any> = {};
+      allClients.forEach(client => { map[client.id] = client; });
+      setClientMap(map);
     } catch (error) {
       console.error('Error loading assignment data:', error);
     } finally {
@@ -348,7 +354,7 @@ export default function TeamAssignmentManagementPage({ params }: TeamAssignmentM
           {assignments.length > 0 ? (
             <div className="space-y-4">
               {assignments.map((assignment) => {
-                const client = ClientService.getClientById(assignment.clientId);
+                const client = clientMap[assignment.clientId];
                 if (!client) return null;
                 
                 return (

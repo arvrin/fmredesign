@@ -24,26 +24,74 @@ export interface TypographyPattern {
 }
 
 /**
- * Creates a glass card effect with backdrop blur and subtle border
+ * Creates a glass card effect with backdrop blur and subtle border.
+ * Overload 1: Called with a single options object, returns flat CSS properties.
+ * Overload 2: Called with (theme, withGlow), returns structured class names
+ *   for the GlassCard component (container, glow, card).
  */
-export function createGlassCard(options?: {
-  backgroundColor?: string;
-  borderColor?: string;
-  blur?: string;
-}) {
-  const {
-    backgroundColor = 'rgba(255, 255, 255, 0.1)',
-    borderColor = 'rgba(255, 255, 255, 0.2)',
-    blur = '12px'
-  } = options || {};
+export function createGlassCard(theme?: 'light' | 'dark' | { backgroundColor?: string; borderColor?: string; blur?: string }, withGlow?: boolean): {
+  container: string;
+  glow?: { outer: string; inner: string };
+  card: string;
+  backgroundColor: string;
+  backdropFilter: string;
+  border: string;
+  borderRadius: string;
+  boxShadow: string;
+} {
+  // If called with an options object (legacy usage)
+  if (theme && typeof theme === 'object') {
+    const {
+      backgroundColor = 'rgba(255, 255, 255, 0.1)',
+      borderColor = 'rgba(255, 255, 255, 0.2)',
+      blur = '12px'
+    } = theme;
 
-  return {
-    backgroundColor,
-    backdropFilter: `blur(${blur})`,
-    border: `1px solid ${borderColor}`,
+    return {
+      container: 'relative',
+      card: 'relative rounded-xl backdrop-blur-sm bg-white/10 border border-white/20',
+      backgroundColor,
+      backdropFilter: `blur(${blur})`,
+      border: `1px solid ${borderColor}`,
+      borderRadius: '12px',
+      boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
+    };
+  }
+
+  // Called with (theme, withGlow) for GlassCard component
+  const isDark = theme === 'dark';
+  const baseContainer = 'relative';
+  const baseCard = isDark
+    ? 'relative rounded-xl backdrop-blur-sm bg-white/5 border border-white/10'
+    : 'relative rounded-xl backdrop-blur-sm bg-white/80 border border-white/40';
+
+  const result: {
+    container: string;
+    glow?: { outer: string; inner: string };
+    card: string;
+    backgroundColor: string;
+    backdropFilter: string;
+    border: string;
+    borderRadius: string;
+    boxShadow: string;
+  } = {
+    container: baseContainer,
+    card: baseCard,
+    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.8)',
+    backdropFilter: 'blur(12px)',
+    border: isDark ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(255, 255, 255, 0.4)',
     borderRadius: '12px',
     boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
   };
+
+  if (withGlow) {
+    result.glow = {
+      outer: 'absolute -inset-1 rounded-xl bg-gradient-to-r from-fm-magenta-500/20 to-purple-500/20 blur-xl',
+      inner: 'absolute -inset-0.5 rounded-xl bg-gradient-to-r from-fm-magenta-500/10 to-purple-500/10 blur-sm',
+    };
+  }
+
+  return result;
 }
 
 /**

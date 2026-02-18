@@ -27,6 +27,7 @@ export interface ClientProfile {
   companySize: 'startup' | 'small' | 'medium' | 'enterprise';
   founded?: string;
   headquarters: Address;
+  gstNumber?: string;
   
   // Account Management
   accountManager: string; // User ID

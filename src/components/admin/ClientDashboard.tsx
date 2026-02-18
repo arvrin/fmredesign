@@ -353,7 +353,7 @@ export function ClientDashboard({ onClientSelect }: ClientDashboardProps) {
                 <div className="flex items-center justify-between">
                   {getStatusBadge(client.status)}
                   <span className="text-sm font-medium text-fm-neutral-900">
-                    {ClientUtils.formatCurrency(client.totalValue || 0)}
+                    {ClientUtils.formatCurrency(Number(client.totalValue) || 0)}
                   </span>
                 </div>
 
@@ -423,7 +423,7 @@ export function ClientDashboard({ onClientSelect }: ClientDashboardProps) {
                     
                     <div className="text-right">
                       <p className="font-semibold text-fm-neutral-900">
-                        {ClientUtils.formatCurrency(client.totalValue || 0)}
+                        {ClientUtils.formatCurrency(Number(client.totalValue) || 0)}
                       </p>
                       <p className="text-xs text-fm-neutral-500">
                         {client.status === 'active' ? 'Active' : 'Inactive'}

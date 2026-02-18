@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   ArrowLeft,
@@ -43,14 +43,14 @@ import { ClientService } from '@/lib/admin/client-service';
 import { TeamMember, TEAM_ROLES, TEAM_DEPARTMENTS } from '@/lib/admin/types';
 
 interface TeamMemberProfileProps {
-  params: {
+  params: Promise<{
     memberId: string;
-  };
+  }>;
 }
 
 export default function TeamMemberProfilePage({ params }: TeamMemberProfileProps) {
   const router = useRouter();
-  const { memberId } = params;
+  const { memberId } = use(params);
   const [member, setMember] = useState<TeamMember | null>(null);
   const [assignedClients, setAssignedClients] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);

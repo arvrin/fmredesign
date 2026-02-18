@@ -8,6 +8,7 @@ import { getSupabaseAdmin } from '@/lib/supabase';
 import { ProjectUtils } from '@/lib/admin/project-types';
 import { requireAdminAuth } from '@/lib/admin-auth-middleware';
 import { createContentSchema, updateContentSchema, validateBody } from '@/lib/validations/schemas';
+import { logAuditEvent, getAuditUser, getClientIP } from '@/lib/admin/audit-log';
 
 // GET /api/content
 export async function GET(request: NextRequest) {
@@ -150,6 +151,16 @@ export async function POST(request: NextRequest) {
       updatedAt: data.updated_at,
     };
 
+    // Fire-and-forget audit log
+    logAuditEvent({
+      ...getAuditUser(request),
+      action: 'create',
+      resource_type: 'content',
+      resource_id: data.id,
+      details: { title: data.title, platform: data.platform, type: data.type },
+      ip_address: getClientIP(request),
+    });
+
     return NextResponse.json(
       { success: true, data: newContent, message: 'Content created successfully' },
       { status: 201 }
@@ -239,6 +250,16 @@ export async function PUT(request: NextRequest) {
       updatedAt: data.updated_at,
     };
 
+    // Fire-and-forget audit log
+    logAuditEvent({
+      ...getAuditUser(request),
+      action: body.status === 'approved' ? 'approve' : 'update',
+      resource_type: 'content',
+      resource_id: data.id,
+      details: { title: data.title, updatedFields: Object.keys(updates) },
+      ip_address: getClientIP(request),
+    });
+
     return NextResponse.json({
       success: true,
       data: responseContent,
@@ -273,6 +294,16 @@ export async function DELETE(request: NextRequest) {
     const { error } = await supabase.from('content_calendar').delete().eq('id', contentId);
 
     if (error) throw error;
+
+    // Fire-and-forget audit log
+    logAuditEvent({
+      ...getAuditUser(request),
+      action: 'delete',
+      resource_type: 'content',
+      resource_id: contentId,
+      details: {},
+      ip_address: getClientIP(request),
+    });
 
     return NextResponse.json({
       success: true,

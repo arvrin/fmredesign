@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { requireAdminAuth } from '@/lib/admin-auth-middleware';
 import { createClientSchema, updateClientSchema, validateBody } from '@/lib/validations/schemas';
+import { logAuditEvent, getAuditUser, getClientIP } from '@/lib/admin/audit-log';
 import bcrypt from 'bcryptjs';
 
 /** Generate a URL-safe slug from a company name */
@@ -203,6 +204,16 @@ export async function POST(request: NextRequest) {
 
     if (error) throw error;
 
+    // Fire-and-forget audit log
+    logAuditEvent({
+      ...getAuditUser(request),
+      action: 'create',
+      resource_type: 'client',
+      resource_id: clientData.id,
+      details: { name: clientData.name, email: clientData.primaryContact.email },
+      ip_address: getClientIP(request),
+    });
+
     return NextResponse.json({
       success: true,
       data: clientData,
@@ -319,6 +330,16 @@ export async function PUT(request: NextRequest) {
       notes: formData.notes || [],
     };
 
+    // Fire-and-forget audit log
+    logAuditEvent({
+      ...getAuditUser(request),
+      action: 'update',
+      resource_type: 'client',
+      resource_id: id,
+      details: { name: formData.name, updatedFields: Object.keys(updates) },
+      ip_address: getClientIP(request),
+    });
+
     return NextResponse.json({
       success: true,
       data: clientData,
@@ -352,6 +373,16 @@ export async function DELETE(request: NextRequest) {
     const { error } = await supabase.from('clients').delete().eq('id', clientId);
 
     if (error) throw error;
+
+    // Fire-and-forget audit log
+    logAuditEvent({
+      ...getAuditUser(request),
+      action: 'delete',
+      resource_type: 'client',
+      resource_id: clientId,
+      details: {},
+      ip_address: getClientIP(request),
+    });
 
     return NextResponse.json({
       success: true,

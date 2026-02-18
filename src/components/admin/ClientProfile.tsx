@@ -292,24 +292,11 @@ export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
           }),
         });
         
-        if (response.ok) {
-          const result = await response.json();
-          if (result.success && result.data) {
-            // Update localStorage with the properly structured data from API
-            try {
-              const existingClients = JSON.parse(localStorage.getItem('fm_admin_clients') || '[]');
-              const updatedClientsList = existingClients.map((c: any) => 
-                c.id === client.id ? result.data : c
-              );
-              localStorage.setItem('fm_admin_clients', JSON.stringify(updatedClientsList));
-            } catch (storageError) {
-              console.warn('Failed to save updated client to localStorage:', storageError);
-            }
-          }
+        if (!response.ok) {
+          console.error('API update failed:', response.status);
         }
       } catch (apiError) {
-        // Fallback to local save with correct data structure
-        ClientService.saveClient(updatedClient);
+        console.error('Error saving client via API:', apiError);
       }
       
       // Update local state

@@ -11,6 +11,7 @@ export default function TermsOfServicePage() {
             <img
               src="/3dasset/brain-strategy.png"
               alt="Terms & Conditions"
+              loading="lazy"
               className="h-auto animate-v2-hero-float"
               style={{
                 width: 'min(160px, 25vw)',
