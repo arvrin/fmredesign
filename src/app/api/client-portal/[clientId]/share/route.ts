@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { resolveClientId } from '@/lib/client-portal/resolve-client';
+import { requireClientAuth } from '@/lib/client-session';
 
 export async function GET(
   request: NextRequest,
@@ -16,6 +17,9 @@ export async function GET(
     if (!clientId) {
       return NextResponse.json({ success: false, error: 'Client ID is required' }, { status: 400 });
     }
+
+    const authError = await requireClientAuth(request, clientId);
+    if (authError) return authError;
 
     const resolved = await resolveClientId(clientId);
     if (!resolved) {
@@ -61,6 +65,9 @@ export async function POST(
     if (!clientId) {
       return NextResponse.json({ success: false, error: 'Client ID is required' }, { status: 400 });
     }
+
+    const authError = await requireClientAuth(request, clientId);
+    if (authError) return authError;
 
     const resolved = await resolveClientId(clientId);
     if (!resolved) {
@@ -125,6 +132,9 @@ export async function DELETE(
     if (!clientId) {
       return NextResponse.json({ success: false, error: 'Client ID is required' }, { status: 400 });
     }
+
+    const authError = await requireClientAuth(request, clientId);
+    if (authError) return authError;
 
     const resolved = await resolveClientId(clientId);
     if (!resolved) {

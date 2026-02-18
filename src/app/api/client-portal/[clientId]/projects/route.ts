@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { requireClientAuth } from '@/lib/client-session';
 
 export async function GET(
   request: NextRequest,
@@ -22,6 +23,9 @@ export async function GET(
         { status: 400 }
       );
     }
+
+    const authError = await requireClientAuth(request, clientId);
+    if (authError) return authError;
 
     let query = supabaseAdmin
       .from('projects')

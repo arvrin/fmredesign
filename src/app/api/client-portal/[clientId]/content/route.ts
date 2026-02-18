@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { requireClientAuth } from '@/lib/client-session';
 
 export async function GET(
   request: NextRequest,
@@ -26,6 +27,9 @@ export async function GET(
         { status: 400 }
       );
     }
+
+    const authError = await requireClientAuth(request, clientId);
+    if (authError) return authError;
 
     let query = supabaseAdmin
       .from('content_calendar')
@@ -100,6 +104,9 @@ export async function PUT(
     if (!clientId) {
       return NextResponse.json({ success: false, error: 'Client ID is required' }, { status: 400 });
     }
+
+    const authError = await requireClientAuth(request, clientId);
+    if (authError) return authError;
 
     const body = await request.json();
     const { contentId, action, feedback } = body;

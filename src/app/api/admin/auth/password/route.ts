@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createHmac } from 'crypto';
+import { createHmac, timingSafeEqual } from 'crypto';
 import { rateLimit, getClientIp } from '@/lib/rate-limiter';
 
 export async function POST(request: NextRequest) {
@@ -32,8 +32,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Constant-time-ish comparison (avoid timing attacks)
-    if (password.length !== adminPassword.length || password !== adminPassword) {
+    // Constant-time comparison (prevent timing attacks)
+    const passwordBuffer = Buffer.from(password);
+    const adminBuffer = Buffer.from(adminPassword);
+    if (passwordBuffer.length !== adminBuffer.length || !timingSafeEqual(passwordBuffer, adminBuffer)) {
       return NextResponse.json(
         { success: false, error: 'Invalid password' },
         { status: 401 }

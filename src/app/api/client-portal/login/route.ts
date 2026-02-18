@@ -1,9 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { createSession, setSessionCookie, type SessionData } from '@/lib/client-session';
+import { rateLimit, getClientIp } from '@/lib/rate-limiter';
 import bcrypt from 'bcryptjs';
 
 export async function POST(request: NextRequest) {
+  // Rate limit: 5 attempts per minute per IP
+  const clientIp = getClientIp(request);
+  if (!rateLimit(clientIp, 5, 60_000)) {
+    return NextResponse.json(
+      { success: false, error: 'Too many login attempts. Please try again later.' },
+      { status: 429 }
+    );
+  }
+
   try {
     const { email, password } = await request.json();
 

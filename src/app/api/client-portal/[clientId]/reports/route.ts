@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { resolveClientId } from '@/lib/client-portal/resolve-client';
+import { requireClientAuth } from '@/lib/client-session';
 
 export async function GET(
   request: NextRequest,
@@ -14,6 +15,10 @@ export async function GET(
 ) {
   try {
     const { clientId } = await params;
+
+    const authError = await requireClientAuth(request, clientId);
+    if (authError) return authError;
+
     const client = await resolveClientId(clientId);
 
     if (!client) {

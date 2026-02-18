@@ -1,8 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createHmac } from 'crypto';
 import { supabaseAdmin } from './supabase';
+import { resolveClientId } from './client-portal/resolve-client';
 
 export const COOKIE_NAME = 'fm_client_session';
 const SESSION_DURATION_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+
+/** Secret for HMAC signing client session cookies */
+function getSigningSecret(): string {
+  // Use ADMIN_PASSWORD as the signing key (always available)
+  return process.env.ADMIN_PASSWORD || 'fallback-dev-secret';
+}
+
+/** Create HMAC signature for cookie payload */
+function signPayload(payload: string): string {
+  return createHmac('sha256', getSigningSecret()).update(payload).digest('hex');
+}
 
 export interface SessionData {
   sessionId: string;
@@ -88,8 +101,11 @@ export async function deleteSession(sessionId: string): Promise<void> {
  */
 export function setSessionCookie(response: NextResponse, sessionId: string, sessionData: SessionData): NextResponse {
   const cookiePayload = Buffer.from(JSON.stringify(sessionData)).toString('base64');
+  const signature = signPayload(cookiePayload);
+  // Format: payload.signature — signature prevents forgery
+  const signedCookie = `${cookiePayload}.${signature}`;
 
-  response.cookies.set(COOKIE_NAME, cookiePayload, {
+  response.cookies.set(COOKIE_NAME, signedCookie, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
@@ -109,12 +125,63 @@ export function getSessionFromCookie(request: NextRequest): SessionData | null {
   if (!cookie?.value) return null;
 
   try {
-    const data: SessionData = JSON.parse(Buffer.from(cookie.value, 'base64').toString('utf-8'));
+    const parts = cookie.value.split('.');
+    if (parts.length !== 2) return null;
+
+    const [payload, signature] = parts;
+    // Verify HMAC signature to prevent cookie forgery
+    const expectedSignature = signPayload(payload);
+    if (signature.length !== expectedSignature.length) return null;
+    // Constant-time comparison
+    let mismatch = 0;
+    for (let i = 0; i < signature.length; i++) {
+      mismatch |= signature.charCodeAt(i) ^ expectedSignature.charCodeAt(i);
+    }
+    if (mismatch !== 0) return null;
+
+    const data: SessionData = JSON.parse(Buffer.from(payload, 'base64').toString('utf-8'));
     if (Date.now() > data.expires) return null;
     return data;
   } catch {
     return null;
   }
+}
+
+/**
+ * Validate that the request has a valid client session for the given clientId.
+ * Returns null if valid, or a 401 NextResponse if invalid.
+ * Use in all client portal API routes.
+ */
+export async function requireClientAuth(
+  request: NextRequest,
+  routeClientId: string
+): Promise<NextResponse | null> {
+  const session = getSessionFromCookie(request);
+  if (!session) {
+    return NextResponse.json(
+      { success: false, error: 'Authentication required' },
+      { status: 401 }
+    );
+  }
+
+  // Resolve the route's clientId (could be slug or DB id)
+  const resolved = await resolveClientId(routeClientId);
+  if (!resolved) {
+    return NextResponse.json(
+      { success: false, error: 'Client not found' },
+      { status: 404 }
+    );
+  }
+
+  // Ensure the session belongs to this client
+  if (session.clientId !== resolved.id) {
+    return NextResponse.json(
+      { success: false, error: 'Access denied' },
+      { status: 403 }
+    );
+  }
+
+  return null; // Auth passed
 }
 
 /**
