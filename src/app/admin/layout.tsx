@@ -36,6 +36,7 @@ import {
   UserCog,
   Presentation,
   UsersRound,
+  ScrollText,
 } from 'lucide-react';
 import React from 'react';
 
@@ -69,6 +70,7 @@ const adminNavigation: NavigationGroup[] = [
     title: 'System',
     items: [
       { label: 'Users', href: '/admin/users', icon: <UserCog className="w-5 h-5" /> },
+      { label: 'Audit Log', href: '/admin/audit', icon: <ScrollText className="w-5 h-5" /> },
       { label: 'Admin System', href: '/admin/system', icon: <Shield className="w-5 h-5" /> },
       { label: 'Settings', href: '/admin/settings', icon: <Settings className="w-5 h-5" /> },
     ],
