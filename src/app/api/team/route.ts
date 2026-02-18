@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { requireAdminAuth } from '@/lib/admin-auth-middleware';
+import { createTeamMemberSchema, updateTeamMemberSchema, validateBody } from '@/lib/validations/schemas';
 
 // GET /api/team - Fetch all team members
 export async function GET(request: NextRequest) {
@@ -91,7 +92,12 @@ export async function POST(request: NextRequest) {
   if (authError) return authError;
 
   try {
-    const body = await request.json();
+    const rawBody = await request.json();
+    const validation = validateBody(createTeamMemberSchema, rawBody);
+    if (!validation.success) {
+      return NextResponse.json({ success: false, error: validation.error }, { status: 400 });
+    }
+    const body = rawBody;
     const supabase = getSupabaseAdmin();
 
     const id = body.id || `tm-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -149,14 +155,12 @@ export async function PUT(request: NextRequest) {
   if (authError) return authError;
 
   try {
-    const { id, ...body } = await request.json();
-
-    if (!id) {
-      return NextResponse.json(
-        { success: false, error: 'Team member ID is required' },
-        { status: 400 }
-      );
+    const rawBody = await request.json();
+    const validation = validateBody(updateTeamMemberSchema, rawBody);
+    if (!validation.success) {
+      return NextResponse.json({ success: false, error: validation.error }, { status: 400 });
     }
+    const { id, ...body } = rawBody;
 
     const supabase = getSupabaseAdmin();
     const updates: Record<string, any> = { updated_at: new Date().toISOString() };

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { createSession, setSessionCookie, type SessionData } from '@/lib/client-session';
+import bcrypt from 'bcryptjs';
 
 export async function POST(request: NextRequest) {
   try {
@@ -27,12 +28,33 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check password
-    if (!client.portal_password || client.portal_password !== password) {
+    // Check password (supports both bcrypt hashed and legacy plaintext)
+    if (!client.portal_password) {
       return NextResponse.json(
         { success: false, error: 'Invalid email or password' },
         { status: 401 }
       );
+    }
+
+    const isBcryptHash = client.portal_password.startsWith('$2a$') || client.portal_password.startsWith('$2b$');
+    const passwordMatch = isBcryptHash
+      ? await bcrypt.compare(password, client.portal_password)
+      : client.portal_password === password;
+
+    if (!passwordMatch) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid email or password' },
+        { status: 401 }
+      );
+    }
+
+    // If password was plaintext, upgrade to bcrypt hash
+    if (!isBcryptHash) {
+      const hashed = await bcrypt.hash(password, 12);
+      await supabaseAdmin
+        .from('clients')
+        .update({ portal_password: hashed })
+        .eq('id', client.id);
     }
 
     // Create session

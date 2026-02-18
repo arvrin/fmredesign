@@ -68,17 +68,18 @@ export interface BankAccountInfo {
 }
 
 // Default company info for Freaking Minds
+// Sensitive fields read from environment variables
 export const DEFAULT_COMPANY_INFO: CompanyInfo = {
   name: "Freaking Minds",
-  address: "House No. 5, Maheshwari Bhawan, Near Qutbi Masjid, MP Nagar, Professors Colony",
+  address: process.env.COMPANY_ADDRESS || "",
   city: "Bhopal",
   state: "Madhya Pradesh",
   zipCode: "462002",
   phone: "+91 98332 57659",
   email: "freakingmindsdigital@gmail.com",
   website: "https://freakingminds.in",
-  taxId: "23BQNPM3447F1ZT",
-  msmeUdyamNumber: "UDYAM-MP-10-0032670",
+  taxId: process.env.COMPANY_PAN || "",
+  msmeUdyamNumber: process.env.COMPANY_MSME || "",
 };
 
 // Default bank account info (placeholder - will be updated with actual details)

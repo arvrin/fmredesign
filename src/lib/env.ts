@@ -1,0 +1,57 @@
+/**
+ * Environment Variable Validation
+ * Validates required environment variables at import time.
+ * Fails fast with clear error messages instead of cryptic runtime crashes.
+ */
+
+import { z } from 'zod';
+
+const envSchema = z.object({
+  // Supabase (required for all data operations)
+  NEXT_PUBLIC_SUPABASE_URL: z.string().url('NEXT_PUBLIC_SUPABASE_URL must be a valid URL'),
+  SUPABASE_SERVICE_ROLE_KEY: z.string().min(1, 'SUPABASE_SERVICE_ROLE_KEY is required'),
+
+  // Admin authentication
+  ADMIN_PASSWORD: z.string().min(8, 'ADMIN_PASSWORD must be at least 8 characters'),
+
+  // Site URL
+  NEXT_PUBLIC_SITE_URL: z.string().optional(),
+
+  // Company info (moved from source code)
+  COMPANY_PAN: z.string().optional(),
+  COMPANY_MSME: z.string().optional(),
+  COMPANY_ADDRESS: z.string().optional(),
+
+  // Google Sheets (legacy — optional)
+  GOOGLE_SHEETS_PRIVATE_KEY: z.string().optional(),
+  GOOGLE_SHEETS_CLIENT_EMAIL: z.string().optional(),
+  GOOGLE_SHEETS_SPREADSHEET_ID: z.string().optional(),
+});
+
+export type Env = z.infer<typeof envSchema>;
+
+function validateEnv(): Env {
+  const result = envSchema.safeParse(process.env);
+
+  if (!result.success) {
+    const errors = result.error.issues.map(
+      (issue) => `  - ${issue.path.join('.')}: ${issue.message}`
+    );
+
+    console.error(
+      '\n❌ Environment variable validation failed:\n' +
+      errors.join('\n') +
+      '\n\nPlease check your .env.local file.\n'
+    );
+
+    // In development, throw to make the error obvious
+    // In production builds, some vars may be set at deploy time
+    if (process.env.NODE_ENV === 'development') {
+      throw new Error(`Missing or invalid environment variables:\n${errors.join('\n')}`);
+    }
+  }
+
+  return result.success ? result.data : (process.env as unknown as Env);
+}
+
+export const env = validateEnv();

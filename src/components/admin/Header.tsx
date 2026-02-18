@@ -5,7 +5,6 @@
 'use client';
 
 import { Bell, Search, User } from 'lucide-react';
-import { AdminAuth } from '@/lib/admin/auth';
 
 interface AdminHeaderProps {
   title?: string;
@@ -13,33 +12,15 @@ interface AdminHeaderProps {
 }
 
 export function AdminHeader({ title = "Dashboard", subtitle }: AdminHeaderProps) {
-  const session = AdminAuth.getSession();
-
-  const formatTimeRemaining = () => {
-    if (!session) return '';
-    
-    const timeRemaining = session.expiresAt - Date.now();
-    const hoursRemaining = Math.floor(timeRemaining / (1000 * 60 * 60));
-    
-    if (hoursRemaining > 1) {
-      return `${hoursRemaining}h remaining`;
-    } else if (hoursRemaining === 1) {
-      return '1h remaining';
-    } else {
-      const minutesRemaining = Math.floor(timeRemaining / (1000 * 60));
-      return `${minutesRemaining}m remaining`;
-    }
-  };
-
   return (
     <header className="bg-white border-b border-fm-neutral-200 px-4 py-4 sm:px-6 lg:px-8">
       <div className="flex h-16 justify-between items-center">
         {/* Logo and Title */}
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-4">
-            <img 
-              src="/logo.png" 
-              alt="Freaking Minds" 
+            <img
+              src="/logo.png"
+              alt="Freaking Minds"
               className="h-10 w-auto flex-shrink-0"
             />
             <div>
@@ -69,9 +50,6 @@ export function AdminHeader({ title = "Dashboard", subtitle }: AdminHeaderProps)
           <div className="flex items-center gap-x-3">
             <div className="hidden sm:block text-right">
               <p className="text-sm font-medium text-fm-neutral-900">Admin</p>
-              <p className="text-xs text-fm-neutral-500">
-                {formatTimeRemaining()}
-              </p>
             </div>
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-fm-magenta-100">
               <User className="h-4 w-4 text-fm-magenta-700" />

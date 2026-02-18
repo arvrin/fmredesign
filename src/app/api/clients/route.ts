@@ -6,6 +6,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { requireAdminAuth } from '@/lib/admin-auth-middleware';
+import { createClientSchema, updateClientSchema, validateBody } from '@/lib/validations/schemas';
+import bcrypt from 'bcryptjs';
 
 /** Generate a URL-safe slug from a company name */
 function slugify(name: string): string {
@@ -101,7 +103,12 @@ export async function POST(request: NextRequest) {
   if (authError) return authError;
 
   try {
-    const formData = await request.json();
+    const rawBody = await request.json();
+    const validation = validateBody(createClientSchema, rawBody);
+    if (!validation.success) {
+      return NextResponse.json({ success: false, error: validation.error }, { status: 400 });
+    }
+    const formData = rawBody;
 
     if (!formData.id) {
       formData.id = `client-${Date.now()}`;
@@ -185,7 +192,7 @@ export async function POST(request: NextRequest) {
         contract_end_date: formData.contractEndDate || null,
         billing_cycle: clientData.contractDetails.billingCycle,
         total_value: clientData.contractDetails.value,
-        portal_password: formData.portalPassword || null,
+        portal_password: formData.portalPassword ? await bcrypt.hash(formData.portalPassword, 12) : null,
         slug: await uniqueSlug(slugify(clientData.name)),
         services: Array.isArray(clientData.contractDetails.services)
           ? clientData.contractDetails.services
@@ -215,7 +222,12 @@ export async function PUT(request: NextRequest) {
   if (authError) return authError;
 
   try {
-    const { id, ...formData } = await request.json();
+    const rawBody = await request.json();
+    const validation = validateBody(updateClientSchema, rawBody);
+    if (!validation.success) {
+      return NextResponse.json({ success: false, error: validation.error }, { status: 400 });
+    }
+    const { id, ...formData } = rawBody;
 
     if (!id) {
       return NextResponse.json(
@@ -251,7 +263,11 @@ export async function PUT(request: NextRequest) {
     if (formData.totalValue !== undefined) updates.total_value = parseFloat(formData.totalValue) || 0;
     if (formData.services) updates.services = formData.services;
     if (formData.tags) updates.tags = formData.tags;
-    if (formData.portalPassword !== undefined) updates.portal_password = formData.portalPassword || null;
+    if (formData.portalPassword !== undefined) {
+      updates.portal_password = formData.portalPassword
+        ? await bcrypt.hash(formData.portalPassword, 12)
+        : null;
+    }
 
     const supabase = getSupabaseAdmin();
     const { error } = await supabase

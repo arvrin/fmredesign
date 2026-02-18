@@ -8,6 +8,7 @@ import { getSupabaseAdmin } from '@/lib/supabase';
 import type { ProjectInput, Project } from '@/lib/admin/project-types';
 import { ProjectUtils } from '@/lib/admin/project-types';
 import { requireAdminAuth } from '@/lib/admin-auth-middleware';
+import { createProjectSchema, updateProjectSchema, validateBody } from '@/lib/validations/schemas';
 
 // GET /api/projects
 export async function GET(request: NextRequest) {
@@ -91,17 +92,12 @@ export async function POST(request: NextRequest) {
   if (authError) return authError;
 
   try {
-    const body = await request.json();
-
-    const requiredFields = ['clientId', 'name', 'type', 'startDate', 'endDate', 'projectManager', 'budget'];
-    const missingFields = requiredFields.filter((field) => !body[field]);
-
-    if (missingFields.length > 0) {
-      return NextResponse.json(
-        { success: false, error: 'Missing required fields', missingFields },
-        { status: 400 }
-      );
+    const rawBody = await request.json();
+    const validation = validateBody(createProjectSchema, rawBody);
+    if (!validation.success) {
+      return NextResponse.json({ success: false, error: validation.error }, { status: 400 });
     }
+    const body = validation.data;
 
     const newProject = {
       id: ProjectUtils.generateProjectId(),
@@ -177,7 +173,12 @@ export async function PUT(request: NextRequest) {
   if (authError) return authError;
 
   try {
-    const body = await request.json();
+    const rawBody = await request.json();
+    const validation = validateBody(updateProjectSchema, rawBody);
+    if (!validation.success) {
+      return NextResponse.json({ success: false, error: validation.error }, { status: 400 });
+    }
+    const body = rawBody;
 
     if (!body.id) {
       return NextResponse.json(

@@ -22,7 +22,7 @@ import {
   Settings,
   Zap,
 } from 'lucide-react';
-import { AdminAuth } from '@/lib/admin/auth';
+import { useAdminAuth } from '@/lib/admin/auth';
 import { Input } from '@/components/ui/Input';
 
 /* -------------------------------------------------------------------------- */
@@ -53,25 +53,24 @@ const adminFeatures = [
 
 export default function AdminLoginPage() {
   const router = useRouter();
+  const { isAuthenticated, loading: authLoading, login, loginWithMobile } = useAdminAuth();
   const [authMethod, setAuthMethod] = useState<'password' | 'mobile'>('mobile');
   const [password, setPassword] = useState('');
   const [mobileNumber, setMobileNumber] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Check if already authenticated
+  // Redirect if already authenticated
   useEffect(() => {
-    if (AdminAuth.isAuthenticated()) {
+    if (!authLoading && isAuthenticated) {
       router.push('/admin');
     }
-  }, [router]);
+  }, [authLoading, isAuthenticated, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
-
-    await new Promise(resolve => setTimeout(resolve, 500));
 
     try {
       let success = false;
@@ -82,7 +81,7 @@ export default function AdminLoginPage() {
           setIsLoading(false);
           return;
         }
-        success = await AdminAuth.authenticate(password);
+        success = await login(password);
         if (!success) {
           setError('Invalid password. Please try again.');
           setPassword('');
@@ -93,7 +92,7 @@ export default function AdminLoginPage() {
           setIsLoading(false);
           return;
         }
-        const result = await AdminAuth.authenticateWithMobile(mobileNumber);
+        const result = await loginWithMobile(mobileNumber);
         success = result.success;
         if (!success) {
           setError(result.error || 'Mobile authentication failed. Please try again.');

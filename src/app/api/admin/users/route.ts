@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { normalizeMobileNumber, getRolePermissions } from '@/lib/supabase-utils';
 import { requireAdminAuth } from '@/lib/admin-auth-middleware';
+import { createUserSchema, updateUserSchema, validateBody } from '@/lib/validations/schemas';
 
 // GET - List all authorized users
 export async function GET(request: NextRequest) {
@@ -56,15 +57,13 @@ export async function POST(request: NextRequest) {
   if (authError) return authError;
 
   try {
-    const body = await request.json();
-    const { name, email, mobileNumber, role, notes } = body;
-
-    if (!name || !email || !mobileNumber || !role) {
-      return NextResponse.json(
-        { success: false, error: 'Name, email, mobile number, and role are required' },
-        { status: 400 }
-      );
+    const rawBody = await request.json();
+    const validation = validateBody(createUserSchema, rawBody);
+    if (!validation.success) {
+      return NextResponse.json({ success: false, error: validation.error }, { status: 400 });
     }
+    const body = rawBody;
+    const { name, email, mobileNumber, role, notes } = body;
 
     const newUser = {
       id: `user-${Date.now()}`,
@@ -109,15 +108,13 @@ export async function PUT(request: NextRequest) {
   if (authError) return authError;
 
   try {
-    const body = await request.json();
-    const { id, name, email, mobileNumber, role, status, notes } = body;
-
-    if (!id) {
-      return NextResponse.json(
-        { success: false, error: 'User ID is required' },
-        { status: 400 }
-      );
+    const rawBody = await request.json();
+    const validation = validateBody(updateUserSchema, rawBody);
+    if (!validation.success) {
+      return NextResponse.json({ success: false, error: validation.error }, { status: 400 });
     }
+    const body = rawBody;
+    const { id, name, email, mobileNumber, role, status, notes } = body;
 
     const updates: Record<string, any> = {};
     if (name) updates.name = name;

@@ -1,95 +1,66 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+/**
+ * Next.js Middleware
+ * Protects /admin/* routes server-side by checking the session cookie.
+ * Redirects unauthenticated users to the login page.
+ */
 
-const DEV_ONLY_PATHS = ['/diagnostic', '/wehave', '/showcase'];
-const COOKIE_NAME = 'fm_client_session';
+import { NextRequest, NextResponse } from 'next/server';
+import { createHmac, timingSafeEqual } from 'crypto';
+
+const ADMIN_SESSION_COOKIE = 'fm-admin-session';
+const MAX_SESSION_AGE_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+function isValidSession(token: string, adminPassword: string): boolean {
+  if (!token.includes('.')) return false;
+
+  const [timestampStr, signature] = token.split('.');
+  if (!timestampStr || !signature) return false;
+
+  try {
+    const expectedSignature = createHmac('sha256', adminPassword)
+      .update(timestampStr)
+      .digest('hex');
+
+    const sigBuffer = Buffer.from(signature, 'hex');
+    const expectedBuffer = Buffer.from(expectedSignature, 'hex');
+
+    if (sigBuffer.length !== expectedBuffer.length) return false;
+    if (!timingSafeEqual(sigBuffer, expectedBuffer)) return false;
+
+    const timestamp = parseInt(timestampStr, 10);
+    if (isNaN(timestamp) || Date.now() - timestamp > MAX_SESSION_AGE_MS) return false;
+
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Block dev-only pages in production
-  if (process.env.NODE_ENV === 'production') {
-    const isDevPage = DEV_ONLY_PATHS.some(
-      (path) => pathname === path || pathname.startsWith(path + '/')
-    );
-
-    if (isDevPage) {
-      return NextResponse.redirect(new URL('/', request.url));
-    }
-  }
-
-  // Admin route protection
-  if (pathname.startsWith('/admin')) {
-    // Allow auth pages through (login, etc.)
-    if (pathname.startsWith('/admin/auth')) {
-      return NextResponse.next();
-    }
-
-    // The admin uses localStorage-based auth (client-side check in admin layout).
-    // Middleware can't check localStorage, so we let requests through
-    // and rely on the admin layout's client-side auth guard.
+  // Only protect admin routes (excluding auth pages and API routes)
+  if (!pathname.startsWith('/admin')) {
     return NextResponse.next();
   }
 
-  // Client portal route protection
-  if (pathname.startsWith('/client')) {
-    // Allow login page through
-    if (pathname === '/client/login') {
-      return NextResponse.next();
-    }
+  // Allow auth pages (login)
+  if (pathname.startsWith('/admin/auth')) {
+    return NextResponse.next();
+  }
 
-    // Check for session cookie
-    const cookie = request.cookies.get(COOKIE_NAME);
-    if (!cookie?.value) {
-      return NextResponse.redirect(new URL('/client/login', request.url));
-    }
+  const sessionToken = request.cookies.get(ADMIN_SESSION_COOKIE)?.value;
+  const adminPassword = process.env.ADMIN_PASSWORD;
 
-    // Decode cookie and validate locally (no DB call in middleware)
-    try {
-      const sessionData = JSON.parse(
-        Buffer.from(cookie.value, 'base64').toString('utf-8')
-      );
-
-      // Check expiry
-      if (Date.now() > sessionData.expires) {
-        const response = NextResponse.redirect(
-          new URL('/client/login?error=session_expired', request.url)
-        );
-        response.cookies.set(COOKIE_NAME, '', { maxAge: 0, path: '/' });
-        return response;
-      }
-
-      // Extract slug from URL: /client/[slug]/...
-      const urlParts = pathname.split('/');
-      const urlSlug = urlParts[2]; // /client/[slug]
-
-      if (urlSlug && urlSlug !== sessionData.slug && urlSlug !== sessionData.clientId) {
-        // Client trying to access another client's portal — redirect to their own
-        return NextResponse.redirect(
-          new URL(`/client/${sessionData.slug}`, request.url)
-        );
-      }
-
-      return NextResponse.next();
-    } catch {
-      // Invalid cookie data — clear and redirect to login
-      const response = NextResponse.redirect(
-        new URL('/client/login', request.url)
-      );
-      response.cookies.set(COOKIE_NAME, '', { maxAge: 0, path: '/' });
-      return response;
-    }
+  if (!sessionToken || !adminPassword || !isValidSession(sessionToken, adminPassword)) {
+    const loginUrl = new URL('/admin/auth/login', request.url);
+    loginUrl.searchParams.set('from', pathname);
+    return NextResponse.redirect(loginUrl);
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: [
-    '/diagnostic/:path*',
-    '/wehave/:path*',
-    '/showcase/:path*',
-    '/client/:path*',
-    '/admin/:path*',
-  ],
+  matcher: ['/admin/:path*'],
 };

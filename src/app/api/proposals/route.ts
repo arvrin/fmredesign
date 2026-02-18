@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { requireAdminAuth } from '@/lib/admin-auth-middleware';
+import { createProposalSchema, updateProposalSchema, validateBody } from '@/lib/validations/schemas';
 
 // GET /api/proposals - Fetch all proposals
 export async function GET(request: NextRequest) {
@@ -106,7 +107,12 @@ export async function POST(request: NextRequest) {
   if (authError) return authError;
 
   try {
-    const body = await request.json();
+    const rawBody = await request.json();
+    const validation = validateBody(createProposalSchema, rawBody);
+    if (!validation.success) {
+      return NextResponse.json({ success: false, error: validation.error }, { status: 400 });
+    }
+    const body = rawBody;
     const supabase = getSupabaseAdmin();
 
     // Generate proposal number if not provided
@@ -184,14 +190,12 @@ export async function PUT(request: NextRequest) {
   if (authError) return authError;
 
   try {
-    const { id, status, ...rest } = await request.json();
-
-    if (!id) {
-      return NextResponse.json(
-        { success: false, error: 'Proposal ID is required' },
-        { status: 400 }
-      );
+    const rawBody = await request.json();
+    const validation = validateBody(updateProposalSchema, rawBody);
+    if (!validation.success) {
+      return NextResponse.json({ success: false, error: validation.error }, { status: 400 });
     }
+    const { id, status, ...rest } = rawBody;
 
     const supabase = getSupabaseAdmin();
     const updates: Record<string, any> = { updated_at: new Date().toISOString() };

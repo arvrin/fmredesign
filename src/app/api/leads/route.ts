@@ -9,6 +9,7 @@ import { calculateLeadScore, determineLeadPriority, toCamelCaseKeys } from '@/li
 import type { LeadInput, LeadUpdate } from '@/lib/admin/lead-types';
 import { rateLimit, getClientIp } from '@/lib/rate-limiter';
 import { requireAdminAuth } from '@/lib/admin-auth-middleware';
+import { createLeadSchema, validateBody } from '@/lib/validations/schemas';
 
 // GET /api/leads - Fetch leads with optional filtering and sorting
 export async function GET(request: NextRequest) {
@@ -150,30 +151,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
-
-    // Validate required fields
-    const requiredFields = [
-      'name', 'email', 'company', 'projectType', 'projectDescription',
-      'budgetRange', 'timeline', 'primaryChallenge', 'companySize',
-    ];
-    const missingFields = requiredFields.filter((field) => !body[field]);
-
-    if (missingFields.length > 0) {
-      return NextResponse.json(
-        { success: false, error: 'Missing required fields', missingFields },
-        { status: 400 }
-      );
+    const rawBody = await request.json();
+    const validation = validateBody(createLeadSchema, rawBody);
+    if (!validation.success) {
+      return NextResponse.json({ success: false, error: validation.error }, { status: 400 });
     }
-
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(body.email)) {
-      return NextResponse.json(
-        { success: false, error: 'Invalid email format' },
-        { status: 400 }
-      );
-    }
+    const body = rawBody;
 
     const stripHtml = (str: string) => str.replace(/<[^>]*>/g, '');
 

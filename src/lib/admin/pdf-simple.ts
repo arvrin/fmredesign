@@ -10,6 +10,7 @@
 
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { DEFAULT_COMPANY_INFO } from './types';
 
 // ---------------------------------------------------------------------------
 // Brand constants
@@ -544,8 +545,8 @@ export class SimplePDFGenerator {
       this.doc.setFontSize(7);
       this.doc.setTextColor(...GREY);
       this.doc.setFont('helvetica', 'normal');
-      this.doc.text('GST: 23BQNPM3447F1ZT', MARGIN_L, PAGE_H - 23);
-      this.doc.text('MSME: UDYAM-MP-10-0032670', MARGIN_L, PAGE_H - 19);
+      this.doc.text(`GST: ${DEFAULT_COMPANY_INFO.taxId || ''}`, MARGIN_L, PAGE_H - 23);
+      this.doc.text(`MSME: ${DEFAULT_COMPANY_INFO.msmeUdyamNumber || ''}`, MARGIN_L, PAGE_H - 19);
 
       // Center: Thank you
       this.doc.setFont('helvetica', 'italic');

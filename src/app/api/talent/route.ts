@@ -11,6 +11,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { requireAdminAuth } from '@/lib/admin-auth-middleware';
 import { rateLimit, getClientIp } from '@/lib/rate-limiter';
+import { submitTalentApplicationSchema, validateBody } from '@/lib/validations/schemas';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -88,45 +89,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
-    const { action, application } = body;
-
-    if (action !== 'submit_application') {
-      return NextResponse.json(
-        { success: false, error: 'Invalid action' },
-        { status: 400 }
-      );
+    const rawBody = await request.json();
+    const validation = validateBody(submitTalentApplicationSchema, rawBody);
+    if (!validation.success) {
+      return NextResponse.json({ success: false, error: validation.error }, { status: 400 });
     }
-
-    if (!application) {
-      return NextResponse.json(
-        { success: false, error: 'Application data is required' },
-        { status: 400 }
-      );
-    }
-
-    // ------------------------------------------------------------------
-    // Validate required personal info fields
-    // ------------------------------------------------------------------
-    const personalInfo = application.personalInfo;
-    if (!personalInfo?.fullName || !personalInfo?.email || !personalInfo?.phone) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Missing required fields: fullName, email, and phone are required in personalInfo',
-        },
-        { status: 400 }
-      );
-    }
-
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(personalInfo.email)) {
-      return NextResponse.json(
-        { success: false, error: 'Invalid email format' },
-        { status: 400 }
-      );
-    }
+    const body = rawBody;
+    const { application } = body;
 
     // ------------------------------------------------------------------
     // Insert into talent_applications

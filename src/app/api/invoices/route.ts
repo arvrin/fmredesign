@@ -11,6 +11,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { requireAdminAuth } from '@/lib/admin-auth-middleware';
+import { createInvoiceSchema, updateInvoiceSchema, validateBody } from '@/lib/validations/schemas';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -153,7 +154,12 @@ export async function POST(request: NextRequest) {
   if (authError) return authError;
 
   try {
-    const body = await request.json();
+    const rawBody = await request.json();
+    const validation = validateBody(createInvoiceSchema, rawBody);
+    if (!validation.success) {
+      return NextResponse.json({ success: false, error: validation.error }, { status: 400 });
+    }
+    const body = rawBody;
     const record = buildRecord(body);
 
     const supabase = getSupabaseAdmin();
@@ -188,15 +194,13 @@ export async function PUT(request: NextRequest) {
   if (authError) return authError;
 
   try {
-    const body = await request.json();
-    const { invoiceId, status, ...rest } = body as Record<string, unknown>;
-
-    if (!invoiceId) {
-      return NextResponse.json(
-        { success: false, error: 'Invoice ID is required' },
-        { status: 400 },
-      );
+    const rawBody = await request.json();
+    const validation = validateBody(updateInvoiceSchema, rawBody);
+    if (!validation.success) {
+      return NextResponse.json({ success: false, error: validation.error }, { status: 400 });
     }
+    const body = rawBody as Record<string, unknown>;
+    const { invoiceId, status, ...rest } = body;
 
     const updates: Record<string, unknown> = {
       updated_at: new Date().toISOString(),

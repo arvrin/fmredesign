@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { requireAdminAuth } from '@/lib/admin-auth-middleware';
+import { createDiscoverySchema, updateDiscoverySchema, validateBody } from '@/lib/validations/schemas';
 
 export async function GET(request: NextRequest) {
   const authError = await requireAdminAuth(request);
@@ -65,15 +66,13 @@ export async function POST(request: NextRequest) {
   if (authError) return authError;
 
   try {
-    const body = await request.json();
-    const { action, session } = body;
-
-    if (action !== 'create') {
-      return NextResponse.json(
-        { success: false, error: 'Invalid action' },
-        { status: 400 }
-      );
+    const rawBody = await request.json();
+    const validation = validateBody(createDiscoverySchema, rawBody);
+    if (!validation.success) {
+      return NextResponse.json({ success: false, error: validation.error }, { status: 400 });
     }
+    const body = rawBody;
+    const { session } = body;
 
     const record = {
       id: session.id,
@@ -119,15 +118,13 @@ export async function PUT(request: NextRequest) {
   if (authError) return authError;
 
   try {
-    const body = await request.json();
-    const { action, sessionId, updates } = body;
-
-    if (action !== 'update') {
-      return NextResponse.json(
-        { success: false, error: 'Invalid action' },
-        { status: 400 }
-      );
+    const rawBody = await request.json();
+    const validation = validateBody(updateDiscoverySchema, rawBody);
+    if (!validation.success) {
+      return NextResponse.json({ success: false, error: validation.error }, { status: 400 });
     }
+    const body = rawBody;
+    const { sessionId, updates } = body;
 
     const dbUpdates: Record<string, any> = {};
     if (updates.status !== undefined) dbUpdates.status = updates.status;

@@ -39,7 +39,9 @@ import { SimplePDFGenerator } from '@/lib/admin/pdf-simple';
 import { AdminStorage } from '@/lib/admin/storage';
 import { ClientService } from '@/lib/admin/client-service';
 import { InvoiceNumbering } from '@/lib/admin/invoice-numbering';
-import { AGENCY_SERVICES, SERVICE_CATEGORIES } from '@/lib/admin/types';
+import { AGENCY_SERVICES, SERVICE_CATEGORIES, DEFAULT_COMPANY_INFO } from '@/lib/admin/types';
+
+const companyInfo = DEFAULT_COMPANY_INFO;
 
 // ---------------------------------------------------------------------------
 // Types
@@ -1046,7 +1048,7 @@ function InvoicePreview({
       <div className="px-4 pt-2 pb-1">
         <div className="border-t border-fm-neutral-200 pt-1">
           <p className="text-[7px] text-fm-neutral-500">
-            GST: 23BQNPM3447F1ZT &middot; MSME: UDYAM-MP-10-0032670
+            GST: {companyInfo.taxId} &middot; MSME: {companyInfo.msmeUdyamNumber}
           </p>
           <p className="text-[8px] italic text-fm-neutral-600 mt-0.5">
             Thank you for your business!

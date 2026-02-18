@@ -1,9 +1,10 @@
 /**
  * Admin Authentication Utilities
- * Multi-level authentication for admin dashboard (Password + Mobile)
+ * Session is managed via HTTP-only cookies set by the server.
+ * Client-side code validates by calling the session API endpoint.
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 export interface MobileUser {
   id: string;
@@ -20,24 +21,19 @@ export interface MobileUser {
   notes?: string;
 }
 
-export interface AdminSession {
-  isAuthenticated: boolean;
-  timestamp: number;
-  expiresAt: number;
-  authMethod: 'password' | 'mobile';
-  user?: {
-    type: 'admin' | 'mobile_user';
-    data: MobileUser | null;
-  };
+export interface SessionUser {
+  type: 'admin' | 'mobile_user';
+  id?: string;
+  name?: string;
+  email?: string;
+  role: string;
+  permissions: string[];
 }
-
-const SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 hours
-const SESSION_KEY = "fm_admin_session";
 
 export class AdminAuth {
   /**
    * Authenticate admin with password (Super Admin)
-   * Calls server-side API to verify password
+   * Server sets HTTP-only cookie on success.
    */
   static async authenticate(password: string): Promise<boolean> {
     try {
@@ -48,27 +44,7 @@ export class AdminAuth {
       });
 
       const result = await response.json();
-
-      if (result.success) {
-        const session: AdminSession = {
-          isAuthenticated: true,
-          timestamp: Date.now(),
-          expiresAt: Date.now() + SESSION_DURATION,
-          authMethod: 'password',
-          user: {
-            type: 'admin',
-            data: null
-          }
-        };
-
-        if (typeof window !== 'undefined') {
-          localStorage.setItem(SESSION_KEY, JSON.stringify(session));
-        }
-
-        return true;
-      }
-
-      return false;
+      return result.success === true;
     } catch (error) {
       console.error('Password authentication error:', error);
       return false;
@@ -77,38 +53,32 @@ export class AdminAuth {
 
   /**
    * Authenticate admin with mobile number
+   * Server sets HTTP-only cookie on success.
    */
-  static async authenticateWithMobile(mobileNumber: string): Promise<{ success: boolean; error?: string }> {
+  static async authenticateWithMobile(mobileNumber: string): Promise<{ success: boolean; user?: SessionUser; error?: string }> {
     try {
       const response = await fetch('/api/admin/auth/mobile', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ mobileNumber }),
       });
 
       const result = await response.json();
-      
+
       if (result.success && result.user) {
-        const session: AdminSession = {
-          isAuthenticated: true,
-          timestamp: Date.now(),
-          expiresAt: Date.now() + SESSION_DURATION,
-          authMethod: 'mobile',
+        return {
+          success: true,
           user: {
             type: 'mobile_user',
-            data: result.user
-          }
+            id: result.user.id,
+            name: result.user.name,
+            email: result.user.email,
+            role: result.user.role,
+            permissions: result.user.permissions || [],
+          },
         };
-        
-        if (typeof window !== 'undefined') {
-          localStorage.setItem(SESSION_KEY, JSON.stringify(session));
-        }
-        
-        return { success: true };
       }
-      
+
       return { success: false, error: result.error || 'Authentication failed' };
     } catch (error) {
       console.error('Mobile authentication error:', error);
@@ -117,145 +87,55 @@ export class AdminAuth {
   }
 
   /**
-   * Check if current session is valid
+   * Validate session by calling the server-side session endpoint.
+   * The server checks the HTTP-only cookie.
    */
-  static isAuthenticated(): boolean {
-    if (typeof window === 'undefined') return false;
-    
+  static async validateSession(): Promise<{ authenticated: boolean; user?: SessionUser }> {
     try {
-      const sessionData = localStorage.getItem(SESSION_KEY);
-      if (!sessionData) return false;
-      
-      const session: AdminSession = JSON.parse(sessionData);
-      
-      // Check if session is expired
-      if (Date.now() > session.expiresAt) {
-        this.logout();
-        return false;
+      const response = await fetch('/api/admin/auth/session', {
+        credentials: 'same-origin',
+      });
+
+      if (!response.ok) {
+        return { authenticated: false };
       }
-      
-      return session.isAuthenticated;
-    } catch (error) {
-      console.error('Error checking authentication:', error);
-      return false;
+
+      const data = await response.json();
+      return {
+        authenticated: data.authenticated === true,
+        user: data.user,
+      };
+    } catch {
+      return { authenticated: false };
     }
   }
 
   /**
-   * Get current session data
+   * Logout admin — clears session cookie server-side.
    */
-  static getSession(): AdminSession | null {
-    if (typeof window === 'undefined') return null;
-    
+  static async logout(): Promise<void> {
     try {
-      const sessionData = localStorage.getItem(SESSION_KEY);
-      if (!sessionData) return null;
-      
-      const session: AdminSession = JSON.parse(sessionData);
-      
-      if (Date.now() > session.expiresAt) {
-        this.logout();
-        return null;
-      }
-      
-      return session;
+      await fetch('/api/admin/auth/logout', {
+        method: 'POST',
+        credentials: 'same-origin',
+      });
     } catch (error) {
-      console.error('Error getting session:', error);
-      return null;
+      console.error('Logout error:', error);
     }
-  }
-
-  /**
-   * Logout admin and clear session
-   */
-  static logout(): void {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem(SESSION_KEY);
-    }
-  }
-
-  /**
-   * Extend current session
-   */
-  static extendSession(): boolean {
-    const session = this.getSession();
-    if (!session) return false;
-    
-    const updatedSession: AdminSession = {
-      ...session,
-      expiresAt: Date.now() + SESSION_DURATION,
-    };
-    
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(SESSION_KEY, JSON.stringify(updatedSession));
-    }
-    
-    return true;
-  }
-
-  /**
-   * Get current user information
-   */
-  static getCurrentUser(): { 
-    authMethod: 'password' | 'mobile'; 
-    isAdmin: boolean; 
-    user: MobileUser | null;
-    permissions: string[];
-  } | null {
-    const session = this.getSession();
-    if (!session) return null;
-
-    if (session.authMethod === 'password') {
-      return {
-        authMethod: 'password',
-        isAdmin: true,
-        user: null,
-        permissions: ['full_access']
-      };
-    } else if (session.authMethod === 'mobile' && session.user?.data) {
-      return {
-        authMethod: 'mobile',
-        isAdmin: session.user.data.role === 'admin',
-        user: session.user.data,
-        permissions: session.user.data.permissions
-      };
-    }
-
-    return null;
   }
 
   /**
    * Check if user has specific permission
    */
-  static hasPermission(permission: string): boolean {
-    const currentUser = this.getCurrentUser();
-    if (!currentUser) return false;
+  static hasPermission(user: SessionUser | null, permission: string): boolean {
+    if (!user) return false;
 
-    // Super admin (password auth) has all permissions
-    if (currentUser.authMethod === 'password') {
-      return true;
-    }
+    if (user.type === 'admin' || user.role === 'super_admin') return true;
+    if (user.permissions.includes('full_access')) return true;
+    if (user.permissions.includes(permission)) return true;
 
-    // Mobile users check permissions
-    if (currentUser.user) {
-      const userPermissions = currentUser.user.permissions;
-      
-      // Super admin access via mobile
-      if (currentUser.user.role === 'admin' || userPermissions.includes('full_access')) {
-        return true;
-      }
-      
-      // Direct permission check
-      if (userPermissions.includes(permission)) {
-        return true;
-      }
-      
-      // Category-level permissions (e.g., content.* for all content permissions)
-      const permissionCategory = permission.split('.')[0];
-      if (userPermissions.includes(`${permissionCategory}.*`)) {
-        return true;
-      }
-    }
+    const category = permission.split('.')[0];
+    if (user.permissions.includes(`${category}.*`)) return true;
 
     return false;
   }
@@ -263,23 +143,8 @@ export class AdminAuth {
   /**
    * Check if user is super admin
    */
-  static isSuperAdmin(): boolean {
-    const currentUser = this.getCurrentUser();
-    return currentUser?.authMethod === 'password' || false;
-  }
-
-  /**
-   * Get user role
-   */
-  static getUserRole(): string {
-    const currentUser = this.getCurrentUser();
-    if (!currentUser) return 'none';
-
-    if (currentUser.authMethod === 'password') {
-      return 'super_admin';
-    }
-
-    return currentUser.user?.role || 'viewer';
+  static isSuperAdmin(user: SessionUser | null): boolean {
+    return user?.type === 'admin' || user?.role === 'super_admin' || false;
   }
 }
 
@@ -289,27 +154,25 @@ export class AdminAuth {
 export function useAdminAuth() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [currentUser, setCurrentUser] = useState<{
-    authMethod: 'password' | 'mobile';
-    isAdmin: boolean;
-    user: MobileUser | null;
-    permissions: string[];
-  } | null>(null);
+  const [currentUser, setCurrentUser] = useState<SessionUser | null>(null);
 
-  useEffect(() => {
-    const authenticated = AdminAuth.isAuthenticated();
-    const user = AdminAuth.getCurrentUser();
-    setIsAuthenticated(authenticated);
-    setCurrentUser(user);
+  const checkSession = useCallback(async () => {
+    const result = await AdminAuth.validateSession();
+    setIsAuthenticated(result.authenticated);
+    setCurrentUser(result.user || null);
     setLoading(false);
   }, []);
+
+  useEffect(() => {
+    checkSession();
+    const interval = setInterval(checkSession, 60000);
+    return () => clearInterval(interval);
+  }, [checkSession]);
 
   const login = async (password: string): Promise<boolean> => {
     const success = await AdminAuth.authenticate(password);
     if (success) {
-      const user = AdminAuth.getCurrentUser();
-      setIsAuthenticated(true);
-      setCurrentUser(user);
+      await checkSession();
     }
     return success;
   };
@@ -317,33 +180,28 @@ export function useAdminAuth() {
   const loginWithMobile = async (mobileNumber: string): Promise<{ success: boolean; error?: string }> => {
     const result = await AdminAuth.authenticateWithMobile(mobileNumber);
     if (result.success) {
-      const user = AdminAuth.getCurrentUser();
-      setIsAuthenticated(true);
-      setCurrentUser(user);
+      await checkSession();
     }
     return result;
   };
 
-  const logout = () => {
-    AdminAuth.logout();
+  const logout = async () => {
+    await AdminAuth.logout();
     setIsAuthenticated(false);
     setCurrentUser(null);
   };
 
-  const extendSession = () => {
-    return AdminAuth.extendSession();
-  };
-
   const hasPermission = (permission: string): boolean => {
-    return AdminAuth.hasPermission(permission);
+    return AdminAuth.hasPermission(currentUser, permission);
   };
 
   const isSuperAdmin = (): boolean => {
-    return AdminAuth.isSuperAdmin();
+    return AdminAuth.isSuperAdmin(currentUser);
   };
 
   const getUserRole = (): string => {
-    return AdminAuth.getUserRole();
+    if (!currentUser) return 'none';
+    return currentUser.role || 'viewer';
   };
 
   return {
@@ -353,10 +211,9 @@ export function useAdminAuth() {
     login,
     loginWithMobile,
     logout,
-    extendSession,
+    checkSession,
     hasPermission,
     isSuperAdmin,
     getUserRole,
   };
 }
-

@@ -2,18 +2,19 @@
  * Admin Dashboard Layout
  * Uses the design-system DashboardLayout with command palette, breadcrumbs,
  * toast provider, and error boundary.
+ * Authentication is validated server-side via session cookie.
  */
 
 'use client';
 
 import { useEffect, useState, useCallback, Suspense } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { AdminAuth } from '@/lib/admin/auth';
+import { useAdminAuth } from '@/lib/admin/auth';
 import { DashboardLayout, type NavigationGroup } from '@/design-system';
 import { CommandPalette } from '@/components/admin/CommandPalette';
 import { AdminErrorBoundary } from '@/components/admin/AdminErrorBoundary';
 import { ToastProvider } from '@/components/ui/toast-provider';
-import { useBreadcrumbs, type BreadcrumbItem } from '@/hooks/useBreadcrumbs';
+import { useBreadcrumbs } from '@/hooks/useBreadcrumbs';
 import {
   Breadcrumb,
   BreadcrumbItem as BCItem,
@@ -103,53 +104,40 @@ function AdminBreadcrumbs() {
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const { isAuthenticated, loading, currentUser, logout } = useAdminAuth();
   const [commandOpen, setCommandOpen] = useState(false);
 
   const isAuthRoute = pathname?.startsWith('/admin/auth');
 
   useEffect(() => {
-    const checkAuth = () => {
-      const authenticated = AdminAuth.isAuthenticated();
-      setIsAuthenticated(authenticated);
-      setIsLoading(false);
+    if (!loading && !isAuthenticated && !isAuthRoute) {
+      router.push('/admin/auth/login');
+    }
+    if (!loading && isAuthenticated && pathname === '/admin/auth/login') {
+      router.push('/admin');
+    }
+  }, [loading, isAuthenticated, isAuthRoute, pathname, router]);
 
-      if (!authenticated && !isAuthRoute) {
-        router.push('/admin/auth/login');
-      }
-      if (authenticated && pathname === '/admin/auth/login') {
-        router.push('/admin');
-      }
-    };
-
-    checkAuth();
-    const interval = setInterval(checkAuth, 60000);
-    return () => clearInterval(interval);
-  }, [router, pathname, isAuthRoute]);
-
-  const handleLogout = useCallback(() => {
-    AdminAuth.logout();
-    setIsAuthenticated(false);
+  const handleLogout = useCallback(async () => {
+    await logout();
     router.push('/admin/auth/login');
-  }, [router]);
+  }, [logout, router]);
 
   const handleCommandPalette = useCallback(() => {
     setCommandOpen(true);
   }, []);
 
   /* Get user info for sidebar */
-  const currentUser = AdminAuth.getCurrentUser();
   const user = currentUser
     ? {
-        name: currentUser.user?.name ?? 'Admin',
-        email: currentUser.user?.email ?? 'Super Admin',
-        role: currentUser.authMethod === 'password' ? 'Super Admin' : currentUser.user?.role ?? 'Viewer',
+        name: currentUser.name ?? 'Admin',
+        email: currentUser.email ?? 'Super Admin',
+        role: currentUser.type === 'admin' ? 'Super Admin' : currentUser.role ?? 'Viewer',
       }
     : undefined;
 
   // Loading state
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[var(--admin-bg)]">
         <div className="flex flex-col items-center space-y-4">

@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { ProjectUtils } from '@/lib/admin/project-types';
 import { requireAdminAuth } from '@/lib/admin-auth-middleware';
+import { createContentSchema, updateContentSchema, validateBody } from '@/lib/validations/schemas';
 
 // GET /api/content
 export async function GET(request: NextRequest) {
@@ -97,17 +98,12 @@ export async function POST(request: NextRequest) {
   if (authError) return authError;
 
   try {
-    const body = await request.json();
-
-    const requiredFields = ['projectId', 'title', 'type', 'platform', 'scheduledDate'];
-    const missingFields = requiredFields.filter((field) => !body[field]);
-
-    if (missingFields.length > 0) {
-      return NextResponse.json(
-        { success: false, error: 'Missing required fields', missingFields },
-        { status: 400 }
-      );
+    const rawBody = await request.json();
+    const validation = validateBody(createContentSchema, rawBody);
+    if (!validation.success) {
+      return NextResponse.json({ success: false, error: validation.error }, { status: 400 });
     }
+    const body = rawBody;
 
     const record = {
       id: ProjectUtils.generateContentId(),
@@ -173,14 +169,12 @@ export async function PUT(request: NextRequest) {
   if (authError) return authError;
 
   try {
-    const body = await request.json();
-
-    if (!body.id) {
-      return NextResponse.json(
-        { success: false, error: 'Content ID is required' },
-        { status: 400 }
-      );
+    const rawBody = await request.json();
+    const validation = validateBody(updateContentSchema, rawBody);
+    if (!validation.success) {
+      return NextResponse.json({ success: false, error: validation.error }, { status: 400 });
     }
+    const body = rawBody;
 
     const updates: Record<string, any> = {};
     if (body.title !== undefined) updates.title = body.title;

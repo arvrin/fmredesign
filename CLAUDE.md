@@ -14,7 +14,8 @@ FreakingMinds is a digital marketing agency website built with Next.js 15 and Ta
 - **Animations**: GSAP 3.14.2
 - **Smooth Scroll**: Lenis 1.3.17
 - **Icons**: Lucide React
-- **Backend**: Google Sheets API (for data storage)
+- **Database**: Supabase (PostgreSQL) — primary backend for admin, client portal, and all data
+- **Legacy**: Google Sheets API (leads/discovery forms only)
 
 ## Critical: Tailwind v4 Cascade Layer Fix (globals.css)
 
@@ -124,34 +125,210 @@ img { height: auto; display: block; }
 
 ```
 src/
-├── app/                    # Next.js App Router pages
-│   ├── about/             # About page
-│   ├── admin/             # Admin dashboard (protected)
-│   ├── api/               # API routes
-│   ├── blog/              # Blog page
-│   ├── client/            # Client portal
-│   ├── contact/           # Contact page
-│   ├── creativeminds/     # Talent network page
-│   ├── get-started/       # Lead generation page
-│   ├── services/          # Services page
-│   ├── showcase/          # Design showcase (dev only)
-│   ├── work/              # Portfolio/case studies
-│   ├── globals.css        # Main CSS with Tailwind v4 config
-│   ├── layout.tsx         # Root layout
-│   └── page.tsx           # Homepage
+├── app/
+│   ├── admin/              # Admin dashboard (auth-protected)
+│   │   ├── auth/           # Login pages
+│   │   └── ...             # Dashboard pages (clients, projects, content, team, etc.)
+│   ├── api/
+│   │   ├── admin/          # Admin APIs (auth, users, support)
+│   │   ├── client-portal/  # Client portal APIs (profile, projects, content, etc.)
+│   │   │   └── [clientId]/ # All client-scoped endpoints
+│   │   ├── shared/[token]/ # Public share link resolver
+│   │   └── ...             # Other APIs (clients, projects, invoices, leads, talent)
+│   ├── client/             # Client portal
+│   │   ├── login/          # Client login page
+│   │   └── [clientId]/     # Dashboard pages (overview, projects, content, reports, documents, support, settings)
+│   ├── shared/[token]/     # Public shared resource viewer
+│   ├── about/, blog/, contact/, services/, work/, get-started/  # Public pages
+│   ├── globals.css         # Main CSS with Tailwind v4 config
+│   └── middleware.ts       # Route protection (admin + client auth)
 ├── components/
-│   ├── admin/             # Admin-specific components
-│   ├── animations/        # GSAP animation components
-│   ├── layout/            # Header, Footer, etc.
-│   ├── layouts/           # Page wrappers (V2PageWrapper)
-│   ├── sections/          # Homepage section components
-│   └── ui/                # Reusable UI components
-├── design-system/         # Design tokens and utilities
-├── hooks/                 # Custom React hooks
-├── lib/                   # Utilities and API clients
-├── providers/             # Context providers
-└── styles/                # Additional CSS files
+│   ├── admin/              # Admin-specific components
+│   ├── animations/         # GSAP animation components
+│   ├── layout/             # Header, Footer
+│   ├── layouts/            # V2PageWrapper
+│   ├── sections/           # Homepage sections
+│   └── ui/                 # Shared UI (Badge, Input, Toggle, tabs)
+├── design-system/          # DashboardLayout, Card, Button, MetricCard, IconBox
+├── hooks/                  # useAdminAuth, useAdminData, useBreadcrumbs, etc.
+├── lib/
+│   ├── admin/              # Admin types, auth, services, permissions, rate-limiter
+│   ├── client-portal/      # resolve-client, context, status-colors, export
+│   ├── supabase.ts         # Supabase admin client
+│   └── utils.ts            # cn() classname utility
+├── providers/              # Context providers
+└── styles/                 # Additional CSS (performance-fixes.css)
 ```
+
+## Supabase Backend
+
+### Connection
+- `src/lib/supabase.ts` — lazy-initialized admin client using `SUPABASE_SERVICE_ROLE_KEY` (full access, no RLS)
+- Import: `import { supabaseAdmin } from '@/lib/supabase'`
+
+### Key Tables
+| Table | Purpose | Key Columns |
+|-------|---------|-------------|
+| `clients` | Client profiles | id, name, email, slug, portal_password, logo, industry, status, health, account_manager, contract_*, services |
+| `projects` | Client projects | id, client_id, name, status, progress, milestones (jsonb), deliverables (jsonb), budget, spent |
+| `content_calendar` | Content items | id, client_id, title, status, platform, type, scheduled_date, approved_at, client_feedback, revision_notes |
+| `support_tickets` | Support system | id, client_id, subject, status, priority, category, assigned_to |
+| `client_documents` | Shared files | id, client_id, name, file_url, file_type, category, file_size |
+| `share_links` | Public share tokens | id, client_id, token (unique), resource_type, resource_id, expires_at |
+| `client_sessions` | Portal sessions | id, client_id, email, client_name, expires_at |
+| `authorized_users` | Admin team members | id, mobile_number, name, email, role, permissions, status |
+
+### resolveClientId Pattern
+URL param `[clientId]` can be **slug OR database ID**. Always use the resolver:
+```ts
+import { resolveClientId } from '@/lib/client-portal/resolve-client';
+const resolved = await resolveClientId(clientId); // tries slug first, then id
+if (!resolved) return 404;
+// Use resolved.id for DB queries, resolved.slug for URLs
+```
+
+---
+
+## Authentication
+
+### Admin Auth (Dual Method)
+- **Password**: `ADMIN_PASSWORD` env var → HMAC-SHA256 signed session token
+- **Mobile**: Lookup in `authorized_users` table by normalized mobile (`+91XXXXXXXXXX`)
+- **Cookie**: `fm-admin-session` (httpOnly, secure, 24h expiry)
+- **Session format**: `timestamp.hmac_signature` — validated via constant-time comparison
+- **API**: `POST /api/admin/auth/password`, `POST /api/admin/auth/mobile`, `GET /api/admin/auth/session`, `POST /api/admin/auth/logout`
+- **Auth helper**: `requireAdminAuth(request)` in `src/lib/admin/auth.ts` — use in all admin API routes
+
+### Client Portal Auth
+- **Method**: Email + `portal_password` field in `clients` table
+- **Cookie**: `fm_client_session` (base64-encoded JSON with clientId, slug, email, expires)
+- **Session storage**: `client_sessions` table in Supabase (7-day duration)
+- **API**: `POST /api/client-portal/login`, `POST /api/client-portal/logout`
+
+### Middleware (`src/middleware.ts`)
+- **Protects**: `/admin/*` (validates HMAC cookie), `/client/*` (validates base64 cookie + expiry)
+- **Allows through**: `/admin/auth/*`, `/client/login`
+- **Client slug check**: Prevents clients from accessing other clients' portals
+- **Does NOT apply to**: Public pages, API routes (APIs do their own auth)
+
+---
+
+## Admin Dashboard
+
+### Architecture
+```
+/admin/layout.tsx
+  ├─ useAdminAuth() hook → validates session via /api/admin/auth/session (polls every 60s)
+  ├─ If unauthenticated → redirect to /admin/auth/login
+  └─ DashboardLayout variant="admin" with NavigationGroup[] navigation
+```
+
+### Admin API Routes
+| Route | Methods | Purpose |
+|-------|---------|---------|
+| `/api/admin/auth/password` | POST | Password login |
+| `/api/admin/auth/mobile` | POST | Mobile login |
+| `/api/admin/auth/session` | GET | Validate session |
+| `/api/admin/auth/logout` | POST | Clear session |
+| `/api/admin/users` | GET, POST, PUT, DELETE | Manage authorized users |
+| `/api/admin/support` | GET, PUT | Admin support ticket management |
+| `/api/clients` | GET, POST, PUT | Client CRUD |
+| `/api/projects` | GET, POST, PUT | Project CRUD |
+| `/api/content` | GET, POST, PUT | Content CRUD |
+| `/api/invoices` | GET, POST | Invoice management |
+| `/api/proposals` | GET, POST | Proposal management |
+| `/api/team` | GET, POST, PUT | Team member management |
+| `/api/leads` | GET, POST | Lead management |
+| `/api/leads/analytics` | GET | Lead analytics |
+| `/api/leads/convert` | POST | Convert lead to client |
+| `/api/talent` | GET, POST | CreativeMinds talent |
+
+### Rate Limiting
+- `src/lib/admin/rate-limiter.ts` — in-memory sliding window (5 requests/60s per IP)
+- Uses `x-forwarded-for` / `x-real-ip` headers
+- Returns 429 when exceeded
+- **Caveat**: In-memory map resets on serverless cold starts
+
+---
+
+## Client Portal
+
+### Architecture
+```
+/client/[clientId]/layout.tsx
+  ├─ Fetches profile from /api/client-portal/[clientId]/profile
+  ├─ ClientPortalProvider context (profile, clientId, slug, refreshProfile)
+  └─ DashboardLayout variant="client" with NavigationGroup[] navigation
+       Pages: Overview, Projects, Content, Reports, Documents, Support, Settings
+```
+
+### Client Portal API Routes
+| Route | Methods | Purpose |
+|-------|---------|---------|
+| `/api/client-portal/login` | POST | Client login |
+| `/api/client-portal/logout` | POST | Client logout |
+| `/api/client-portal/[clientId]/profile` | GET, PUT | Profile read/update |
+| `/api/client-portal/[clientId]/projects` | GET | List projects |
+| `/api/client-portal/[clientId]/content` | GET, PUT | Content + approval workflow |
+| `/api/client-portal/[clientId]/reports` | GET | Performance reports |
+| `/api/client-portal/[clientId]/documents` | GET | Document vault |
+| `/api/client-portal/[clientId]/activity` | GET | Activity feed |
+| `/api/client-portal/[clientId]/share` | GET, POST, DELETE | Share link CRUD |
+| `/api/client-portal/[clientId]/support/tickets` | GET, POST | Support tickets |
+| `/api/shared/[token]` | GET | Public share link resolver |
+
+### useClientPortal() Hook
+```tsx
+const { profile, clientId, slug, refreshProfile } = useClientPortal();
+// profile: ClientProfile (name, logo, industry, status, health, contractDetails, etc.)
+// clientId: actual database ID (NOT the URL slug)
+// slug: URL-friendly identifier
+// refreshProfile: () => void — call after saving profile changes
+```
+
+### Key Shared Utilities (`src/lib/client-portal/`)
+- `resolve-client.ts` — `resolveClientId(slugOrId)` → `{id, slug} | null`
+- `context.tsx` — `ClientPortalProvider` + `useClientPortal()` hook
+- `status-colors.ts` — `getStatusColor()`, `getPriorityColor()`, `getHealthColor()`
+- `export.ts` — `downloadCSV(filename, headers, rows)`
+
+---
+
+## Critical: DashboardLayout Navigation
+
+`DashboardLayout` expects **`NavigationGroup[]`**, NOT a flat array of items.
+
+```tsx
+// CORRECT — wrapped in a group
+const navigation = [
+  {
+    title: 'Main',  // optional section header
+    items: [
+      { label: 'Dashboard', href: '/admin', icon: <Icon /> },
+      { label: 'Projects', href: '/admin/projects', icon: <Icon /> },
+    ],
+  },
+];
+
+// WRONG — flat array (sidebar will be empty, pages appear as 404)
+const navigation = [
+  { label: 'Dashboard', href: '/admin', icon: <Icon /> },
+];
+```
+
+**Types:**
+```ts
+interface NavigationGroup { title?: string; items: NavigationItem[]; }
+interface NavigationItem { label: string; href: string; icon?: ReactNode; badge?: string | number; }
+```
+
+### Dashboard Component Variants
+- `DashboardCard variant="admin"` — magenta gradient bg, backdrop-blur
+- `DashboardCard variant="client"` — v2-paper white card with soft shadow
+- `DashboardButton variant="admin"` — magenta gradient with shadow
+- `DashboardButton variant="client"` — magenta gradient with glow + rounded
+
+---
 
 ## Key Components
 
@@ -278,33 +455,47 @@ npm run lint         # Run ESLint
 
 Required in `.env.local`:
 ```
+# Supabase (required for admin + client portal)
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=eyJ...
+
+# Admin auth
+ADMIN_PASSWORD=your_secure_password
+
+# Site
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
+
+# Google Sheets (legacy — leads/discovery only)
 GOOGLE_SHEETS_PRIVATE_KEY=...
 GOOGLE_SHEETS_CLIENT_EMAIL=...
 GOOGLE_SHEETS_SPREADSHEET_ID=...
-NEXT_PUBLIC_SITE_URL=...
 ```
 
 ## Do's and Don'ts
 
-### Do
+### Do — Public Pages
 - Use `V2PageWrapper` for all public pages
 - Use inline styles for `textAlign` on section headers
-- Follow the V2 design system patterns
-- Use `v2-paper` variants for cards
-- Add 3D brain decorations to major sections
-- Use `text-fm-neutral-900` for headings on white cards (near black)
-- Use `text-fm-neutral-600` for body text on white cards
-- Use `text-fm-magenta-600` for accent/highlight text on white cards
-- Use `v2-accent` class for gradient highlights in headings on dark backgrounds
+- Use `v2-paper` variants for cards, `v2-accent` for gradient highlights
+- Use `text-fm-neutral-900` for headings, `text-fm-neutral-600` for body text on white cards
+
+### Do — Backend / Dashboards
+- Use `resolveClientId()` in all client portal API routes (handles slug OR ID)
+- Use `requireAdminAuth(request)` in all admin API routes
+- Wrap navigation in `NavigationGroup[]` for `DashboardLayout` (not flat arrays)
+- Use `variant="client"` for client portal components, `variant="admin"` for admin
+- Use `useClientPortal()` hook in all client portal pages
+- Use `getStatusColor()` / `getPriorityColor()` from `src/lib/client-portal/status-colors.ts`
+- Add new element-level CSS inside `@layer base` in globals.css
 
 ### Don't
-- Use `text-center` class directly on paragraphs with `v2-text-secondary`
-- Mix V1 and V2 design patterns
+- Pass flat `NavigationItem[]` to `DashboardLayout` — wrap in `{ items: [...] }`
+- Use `text-center` class directly (use inline `style={{ textAlign: 'center' }}`)
 - Add `!important` rules to fix CSS issues (find root cause instead)
-- Modify globals.css cascade layers without understanding Tailwind v4
-- Add element-level CSS (`p {}`, `img {}`, etc.) outside of `@layer base` — it will override Tailwind utilities
-- Use lighter neutral colors (400, 500) for body text - they lack contrast
-- Use plain `text-fm-neutral-500` for important text - too light
+- Add element-level CSS outside of `@layer base` — it will override Tailwind utilities
+- Access Supabase tables without RLS awareness — admin client bypasses RLS
+- Store secrets in client-side code — use `NEXT_PUBLIC_` prefix only for public values
+- Mix V1 and V2 design patterns
 
 ## Related Documentation
 
