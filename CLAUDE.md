@@ -4,17 +4,25 @@ Project-specific instructions for Claude Code when working on this codebase.
 
 ## Project Overview
 
-FreakingMinds is a digital marketing agency website built with Next.js 15 and Tailwind CSS v4. The site features a V2 design system with a dark magenta/purple theme, 3D brain mascot decorations, and glass-morphism effects.
+FreakingMinds is a digital marketing agency platform built with Next.js 15 and Tailwind CSS v4. It includes:
+- **Public website** — Marketing site with V2 dark magenta/purple theme, 3D brain decorations, glass-morphism
+- **Admin dashboard** — Full agency management (clients, projects, content, invoices, proposals, leads, team, discovery, talent, audit)
+- **Client portal** — Client-facing dashboard (project tracking, content approval, documents, reports, support)
+- **CreativeMinds** — Talent marketplace for freelance creatives
+- **Blog** — Hardcoded blog with SEO (sitemap, JSON-LD, Open Graph)
 
 ## Tech Stack
 
 - **Framework**: Next.js 15.5.0 (App Router)
 - **React**: 19.1.0
 - **Styling**: Tailwind CSS v4 (CSS-first configuration)
-- **Animations**: GSAP 3.14.2
-- **Smooth Scroll**: Lenis 1.3.17
+- **Animations**: GSAP 3.14.2 (ScrollTrigger, custom hooks)
+- **Smooth Scroll**: Lenis 1.3.17 (installed but **disabled** — `SmoothScrollProvider` passes children through; GSAP ScrollTrigger works with native scroll)
 - **Icons**: Lucide React
+- **Forms**: react-hook-form + Zod (installed; Zod schemas in use for API validation, forms partially migrated)
 - **Database**: Supabase (PostgreSQL) — primary backend for admin, client portal, and all data
+- **PDF**: jsPDF + jspdf-autotable (invoice/proposal PDF generation)
+- **Auth**: bcryptjs (password hashing), HMAC-SHA256 (session signing)
 - **Legacy**: Google Sheets API (leads/discovery forms only)
 
 ## Critical: Tailwind v4 Cascade Layer Fix (globals.css)
@@ -127,41 +135,85 @@ img { height: auto; display: block; }
 src/
 ├── app/
 │   ├── admin/              # Admin dashboard (auth-protected)
-│   │   ├── auth/           # Login pages
-│   │   └── ...             # Dashboard pages (clients, projects, content, team, etc.)
+│   │   ├── auth/login/     # Admin login page
+│   │   ├── audit/          # Audit log viewer
+│   │   ├── clients/        # Client list + [clientId] detail
+│   │   ├── content/        # Content calendar + [id] detail/edit + new
+│   │   ├── creativeminds/  # Talent pool management
+│   │   ├── discovery/      # Discovery sessions + [id]/report + new
+│   │   ├── invoice/        # Single invoice form
+│   │   ├── invoices/       # Invoice list
+│   │   ├── leads/          # Lead management + analytics
+│   │   ├── projects/       # Project list + [id] detail/edit + new
+│   │   ├── proposals/      # Proposal list
+│   │   ├── settings/       # App settings
+│   │   ├── support/        # Support ticket management
+│   │   ├── system/         # System diagnostics
+│   │   ├── team/           # Team list + [memberId] detail/edit/assignments/documents/performance + new
+│   │   └── users/          # Authorized user management (roles/permissions)
 │   ├── api/
-│   │   ├── admin/          # Admin APIs (auth, users, support)
+│   │   ├── admin/          # Admin APIs (auth, users, support, audit)
 │   │   ├── client-portal/  # Client portal APIs (profile, projects, content, etc.)
 │   │   │   └── [clientId]/ # All client-scoped endpoints
 │   │   ├── shared/[token]/ # Public share link resolver
-│   │   └── ...             # Other APIs (clients, projects, invoices, leads, talent)
+│   │   ├── discovery/      # Discovery session API
+│   │   ├── talent/         # CreativeMinds talent API + [slug]
+│   │   └── ...             # Other APIs (clients, projects, invoices, leads, proposals, team, content)
 │   ├── client/             # Client portal
 │   │   ├── login/          # Client login page
 │   │   └── [clientId]/     # Dashboard pages (overview, projects, content, reports, documents, support, settings)
-│   ├── shared/[token]/     # Public shared resource viewer
-│   ├── about/, blog/, contact/, services/, work/, get-started/  # Public pages
+│   ├── shared/[token]/     # Public shared resource viewer (documents, reports, content)
+│   ├── creativeminds/      # Public talent application page
+│   ├── talent/[slug]/      # Public talent profile viewer
+│   ├── blog/               # Blog list + [slug] detail
+│   ├── get-started/        # Lead capture / onboarding form
+│   ├── about/, contact/, services/, work/  # Public pages
+│   ├── privacy/, terms/    # Legal pages
+│   ├── diagnostic/         # Design system diagnostic (dev only)
+│   ├── wehave/             # Page index / sitemap (dev only)
+│   ├── showcase/           # Design prototypes (dev only: navbars, footers, headings, etc.)
+│   ├── sitemap.ts          # Dynamic sitemap generation (static pages + blog posts)
+│   ├── robots.ts           # Robots.txt (disallows /admin, /client, /api, /diagnostic, /wehave, /showcase)
 │   ├── globals.css         # Main CSS with Tailwind v4 config
-│   └── middleware.ts       # Route protection (admin + client auth)
+│   └── layout.tsx          # Root layout (fonts, JSON-LD, analytics pixel)
 ├── components/
-│   ├── admin/              # Admin-specific components
+│   ├── admin/              # Admin components (modals, forms, dashboards)
+│   │   └── discovery/      # Discovery wizard section components
 │   ├── animations/         # GSAP animation components
-│   ├── layout/             # Header, Footer
+│   ├── layout/             # Header, Footer, ConditionalLayout
 │   ├── layouts/            # V2PageWrapper
-│   ├── sections/           # Homepage sections
+│   ├── public/             # TalentApplicationForm
+│   ├── sections/           # Homepage sections (Hero, Services, Features, Testimonials, CTA)
 │   └── ui/                 # Shared UI (Badge, Input, Toggle, tabs)
 ├── design-system/          # DashboardLayout, Card, Button, MetricCard, IconBox
-├── hooks/                  # useAdminAuth, useAdminData, useBreadcrumbs, etc.
+├── hooks/                  # useAdminAuth, useAdminData, useBreadcrumbs, useCountUp, useGSAP, useMagneticEffect, useAdminFilters
 ├── lib/
-│   ├── admin/              # Admin types, auth, services, permissions, audit-log
+│   ├── admin/              # Admin types, auth, services, permissions, audit-log, PDF generators
+│   │   ├── permissions.ts  # Role-based permission system (23 permissions, 5 roles)
+│   │   ├── audit-log.ts    # Admin action audit logging
+│   │   ├── invoice-numbering.ts  # Auto-incrementing invoice numbers
+│   │   ├── proposal-numbering.ts # Auto-incrementing proposal numbers
+│   │   ├── pdf.ts          # Invoice PDF generator (jsPDF)
+│   │   ├── proposal-pdf-generator.ts # Proposal PDF generator
+│   │   ├── discovery-service.ts # Discovery session CRUD
+│   │   ├── discovery-types.ts # Discovery session types (10-section wizard)
+│   │   ├── talent-types.ts # CreativeMinds talent pool types
+│   │   ├── lead-types.ts   # Lead scoring and management types
+│   │   ├── client-service.ts # Client service (API client pattern)
+│   │   ├── team-service.ts # Team member service
+│   │   └── types.ts        # Core admin types (company info via env vars)
 │   ├── client-portal/      # resolve-client, context, status-colors, export
 │   ├── validations/        # Zod schemas (schemas.ts) — shared by API routes + forms
 │   ├── admin-auth-middleware.ts  # requireAdminAuth() — admin API route guard
 │   ├── client-session.ts   # requireClientAuth(), session cookies — client API route guard
 │   ├── rate-limiter.ts     # In-memory rate limiter (5 req/60s per IP)
 │   ├── env.ts              # Zod-validated environment variables
+│   ├── blog-data.ts        # Hardcoded blog posts (add new posts here)
 │   ├── supabase.ts         # Supabase admin client
+│   ├── supabase-utils.ts   # Supabase helper utilities
 │   └── utils.ts            # cn() classname utility
-├── providers/              # Context providers
+├── providers/              # SmoothScrollProvider (disabled — passes through)
+├── middleware.ts           # Edge Runtime route protection (admin + client auth)
 └── styles/                 # Additional CSS (performance-fixes.css)
 ```
 
@@ -183,6 +235,11 @@ src/
 | `client_sessions` | Portal sessions | id, client_id, email, client_name, expires_at |
 | `authorized_users` | Admin team members | id, mobile_number, name, email, role, permissions, status |
 | `admin_audit_log` | Audit trail | id, user_id, user_name, action, resource_type, resource_id, details (jsonb), ip_address, created_at |
+| `leads` | Lead capture (get-started form) | id, name, email, phone, company, budget, services, source, status, score, notes, created_at |
+| `invoices` | Invoice management | id, client_id, invoice_number, items (jsonb), subtotal, tax, total, status, due_date, paid_date |
+| `proposals` | Proposal management | id, client_id, proposal_number, title, sections (jsonb), total, status, valid_until |
+| `talent_applications` | CreativeMinds applications | id, name, email, phone, category, skills, portfolio_url, experience, status |
+| `team_members` | Agency team profiles | id, name, email, role, department, skills, avatar_url, status |
 
 ### resolveClientId Pattern
 URL param `[clientId]` can be **slug OR database ID**. Always use the resolver:
@@ -235,6 +292,41 @@ if (!resolved) return 404;
   └─ DashboardLayout variant="admin" with NavigationGroup[] navigation
 ```
 
+### Admin Pages (33 total)
+| Route | Purpose |
+|-------|---------|
+| `/admin` | Main dashboard (overview metrics) |
+| `/admin/clients` | Client list |
+| `/admin/clients/[clientId]` | Client detail |
+| `/admin/projects` | Project list |
+| `/admin/projects/[id]` | Project detail |
+| `/admin/projects/[id]/edit` | Edit project |
+| `/admin/projects/new` | Create project |
+| `/admin/content` | Content calendar |
+| `/admin/content/[id]` | Content detail |
+| `/admin/content/[id]/edit` | Edit content |
+| `/admin/content/new` | Create content |
+| `/admin/team` | Team list |
+| `/admin/team/[memberId]` | Member detail |
+| `/admin/team/[memberId]/edit` | Edit member |
+| `/admin/team/[memberId]/assignments` | Member assignments |
+| `/admin/team/[memberId]/documents` | Member documents |
+| `/admin/team/[memberId]/performance` | Member performance |
+| `/admin/team/new` | Add team member |
+| `/admin/invoices` | Invoice list |
+| `/admin/invoice` | Create invoice |
+| `/admin/proposals` | Proposal list |
+| `/admin/leads` | Lead pipeline |
+| `/admin/discovery` | Discovery sessions |
+| `/admin/discovery/new` | New discovery |
+| `/admin/discovery/[id]/report` | Discovery report |
+| `/admin/creativeminds` | Talent pool management |
+| `/admin/support` | Support tickets |
+| `/admin/users` | Authorized users (RBAC) |
+| `/admin/audit` | Audit log |
+| `/admin/settings` | App settings |
+| `/admin/system` | System diagnostics |
+
 ### Admin API Routes
 | Route | Methods | Purpose |
 |-------|---------|---------|
@@ -254,7 +346,9 @@ if (!resolved) return 404;
 | `/api/leads` | GET, POST | Lead management |
 | `/api/leads/analytics` | GET | Lead analytics |
 | `/api/leads/convert` | POST | Convert lead to client |
-| `/api/talent` | GET, POST | CreativeMinds talent |
+| `/api/talent` | GET, POST | CreativeMinds talent applications |
+| `/api/talent/[slug]` | GET | Individual talent profile |
+| `/api/discovery` | GET, POST | Discovery session CRUD |
 
 ### Rate Limiting
 - `src/lib/rate-limiter.ts` — in-memory sliding window (5 requests/60s per IP)
@@ -281,6 +375,7 @@ if (!resolved) return 404;
 |-------|---------|---------|
 | `/api/client-portal/login` | POST | Client login |
 | `/api/client-portal/logout` | POST | Client logout |
+| `/api/client-portal/[clientId]/auth` | GET | Verify client auth for specific client |
 | `/api/client-portal/[clientId]/profile` | GET, PUT | Profile read/update |
 | `/api/client-portal/[clientId]/projects` | GET | List projects |
 | `/api/client-portal/[clientId]/content` | GET, PUT | Content + approval workflow |
@@ -305,6 +400,147 @@ const { profile, clientId, slug, refreshProfile } = useClientPortal();
 - `context.tsx` — `ClientPortalProvider` + `useClientPortal()` hook
 - `status-colors.ts` — `getStatusColor()`, `getPriorityColor()`, `getHealthColor()`
 - `export.ts` — `downloadCSV(filename, headers, rows)`
+
+---
+
+## CreativeMinds (Talent Marketplace)
+
+A talent pool platform connecting freelance creatives with the agency.
+
+### How It Works
+1. **Public application** (`/creativeminds`): Creatives apply via `TalentApplicationForm` with name, email, category, skills, portfolio, experience
+2. **API submission** (`POST /api/talent`): Saves application to Supabase `talent_applications` table
+3. **Admin review** (`/admin/creativeminds`): Team reviews, approves/rejects applications
+4. **Public profiles** (`/talent/[slug]`): Approved talent get public profile pages
+
+### Key Files
+- `src/app/creativeminds/page.tsx` — Public landing + application form
+- `src/components/public/TalentApplicationForm.tsx` — Application form component
+- `src/app/talent/[slug]/page.tsx` — Public talent profile viewer
+- `src/app/admin/creativeminds/page.tsx` — Admin talent management
+- `src/lib/admin/talent-types.ts` — TalentProfile, TalentApplication types
+- `src/app/api/talent/route.ts` — GET (list) / POST (apply)
+- `src/app/api/talent/[slug]/route.ts` — GET individual profile
+
+---
+
+## Invoice & Proposal System
+
+### Invoices
+- **Admin page** (`/admin/invoices`): List view with filters; `/admin/invoice`: Single invoice creation form
+- **Component**: `src/components/admin/InvoiceFormNew.tsx` — Line items, tax calc, PDF generation
+- **PDF**: `src/lib/admin/pdf.ts` — jsPDF-based invoice PDF generator
+- **Numbering**: `src/lib/admin/invoice-numbering.ts` — Auto-incrementing `FM-INV-XXXX`
+- **Company info**: Read from `COMPANY_PAN`, `COMPANY_MSME`, `COMPANY_ADDRESS` env vars (NOT hardcoded)
+- **API**: `GET/POST /api/invoices`
+
+### Proposals
+- **Admin page** (`/admin/proposals`): List + creation
+- **Component**: `src/components/admin/ProposalFormNew.tsx` — Multi-section proposal builder
+- **PDF**: `src/lib/admin/proposal-pdf-generator.ts` — Proposal PDF output
+- **Numbering**: `src/lib/admin/proposal-numbering.ts` — Auto-incrementing `FM-PROP-XXXX`
+- **Storage**: `src/lib/admin/proposal-storage.ts` — Proposal persistence
+- **API**: `GET/POST /api/proposals`
+
+---
+
+## Discovery / Lead System
+
+### Lead Capture
+- **Public form** (`/get-started`): Multi-step onboarding form → `POST /api/leads`
+- **Admin list** (`/admin/leads`): Lead pipeline with status tracking, scoring, analytics
+- **Lead conversion** (`POST /api/leads/convert`): Convert lead to client
+- **Analytics** (`GET /api/leads/analytics`): Lead source, status, conversion metrics
+
+### Discovery Sessions
+- **Admin pages**: `/admin/discovery` (list), `/admin/discovery/new` (create), `/admin/discovery/[id]/report` (report)
+- **10-section wizard**: Company Fundamentals → Project Overview → Target Audience → Current State → Goals/KPIs → Competition/Market → Budget/Resources → Technical Requirements → Content/Creative → Next Steps
+- **Types**: `src/lib/admin/discovery-types.ts`
+- **Service**: `src/lib/admin/discovery-service.ts`
+- **Components**: `src/components/admin/discovery/` (section form components)
+- **API**: `GET/POST /api/discovery`
+
+---
+
+## Blog System
+
+Blog content is **hardcoded** in `src/lib/blog-data.ts` (no CMS/database).
+
+### Adding a Blog Post
+1. Edit `src/lib/blog-data.ts` — add a new `BlogPost` object to the `blogPosts` array
+2. Fields: `slug`, `title`, `excerpt`, `content` (markdown string), `category`, `tags`, `readTime`, `date`, `author`, `featured?`
+3. The post automatically appears at `/blog` (list) and `/blog/[slug]` (detail)
+4. Sitemap (`src/app/sitemap.ts`) auto-generates entries for all blog posts
+
+---
+
+## Share Links System
+
+Allows clients to share specific resources (documents, reports, content) via public tokens.
+
+- **Creation**: `POST /api/client-portal/[clientId]/share` — generates a unique token with optional expiry
+- **Viewer**: `/shared/[token]` — public page that resolves token and displays the shared resource
+- **API resolver**: `GET /api/shared/[token]` — looks up `share_links` table, returns resource data
+- **Supabase table**: `share_links` (token, resource_type, resource_id, expires_at)
+
+---
+
+## Permission System (RBAC)
+
+Defined in `src/lib/admin/permissions.ts`. Used for admin user management.
+
+### Roles (hierarchy order)
+| Role | Hierarchy | Description |
+|------|-----------|-------------|
+| `super_admin` | 100 | Full system access (`system.full_access`) |
+| `admin` | 90 | All permissions except super_admin-only |
+| `manager` | 70 | Clients, projects, content, finance (read/write) |
+| `editor` | 50 | Content + clients + projects (read/write), finance (read) |
+| `viewer` | 10 | Read-only across content, clients, projects, finance |
+
+### Permission Categories
+`system` (2), `content` (4), `users` (4), `clients` (4), `projects` (4), `finance` (4), `settings` (3) — **23 total permissions**
+
+### Usage
+```ts
+import { PermissionService } from '@/lib/admin/permissions';
+PermissionService.hasPermission(userPermissions, 'finance.write'); // true/false
+PermissionService.canManageRole('admin', 'editor'); // true (higher hierarchy)
+```
+
+---
+
+## SEO
+
+- **Sitemap**: `src/app/sitemap.ts` — auto-generates XML sitemap with all static pages + blog posts
+- **Robots.txt**: `src/app/robots.ts` — allows public pages, disallows `/admin`, `/client`, `/api`, `/diagnostic`, `/wehave`, `/showcase`
+- **JSON-LD**: Structured data in `src/app/layout.tsx` — Organization, LocalBusiness, WebSite schemas
+- **Open Graph / Twitter**: Configured in `layout.tsx` metadata with `/og-image.png`
+- **Analytics**: GoodmanTech Observatory pixel in `<head>`
+
+---
+
+## GSAP Animation Hooks
+
+Custom hooks in `src/hooks/`:
+
+| Hook | Purpose |
+|------|---------|
+| `useGSAP` | Core GSAP + ScrollTrigger setup for component animations |
+| `useMagneticEffect` | Mouse-following magnetic effect on elements |
+| `useCountUp` | Animated number counter (for stats/metrics) |
+
+GSAP animations work with native browser scroll (Lenis is disabled). ScrollTrigger-based animations fire on scroll position.
+
+---
+
+## Dev-Only Pages
+
+These pages are blocked from search engines via `robots.ts`:
+
+- `/diagnostic` — Design system component diagnostic/testing page
+- `/wehave` — Site page index (lists all public, admin, client, and API routes)
+- `/showcase/*` — Design prototypes: `navbars`, `footers`, `heading-styles`, `accent-text`, `accent-colors`, `design-directions`, `home-v2`, `home-v3`
 
 ---
 
@@ -359,6 +595,13 @@ export default function Page() {
   );
 }
 ```
+
+### ConditionalLayout
+`src/components/layout/ConditionalLayout.tsx` — Automatically selects header/footer based on route:
+- `/admin/*` and `/client/*`: No header/footer (dashboard has own layout)
+- `/showcase/*`: No header/footer (self-contained prototypes)
+- `/showcase/home-v3`: HeaderV3 + FooterV2
+- Everything else: HeaderV2 + FooterV2 (main site)
 
 ### Section Components (Homepage)
 - `HeroSectionV2`: Main hero with 3D brain mascot
@@ -535,6 +778,42 @@ GOOGLE_SHEETS_SPREADSHEET_ID=...
 - Access Supabase tables without RLS awareness — admin client bypasses RLS
 - Store secrets in client-side code — use `NEXT_PUBLIC_` prefix only for public values
 - Mix V1 and V2 design patterns
+
+## Zod Validation Schemas
+
+`src/lib/validations/schemas.ts` — shared between API routes (server validation) and forms (client validation).
+
+Key schemas: `createClientSchema`, `updateClientSchema`, `createProjectSchema`, `createContentSchema`, `createTeamMemberSchema`, `createInvoiceSchema`, `createProposalSchema`, `createUserSchema`, `contactFormSchema`, `getStartedFormSchema`, `talentApplicationSchema`
+
+Usage in API routes:
+```ts
+import { createClientSchema } from '@/lib/validations/schemas';
+const body = createClientSchema.safeParse(await req.json());
+if (!body.success) return NextResponse.json({ error: body.error.flatten() }, { status: 400 });
+```
+
+---
+
+## Key Admin Components
+
+| Component | File | Purpose |
+|-----------|------|---------|
+| `AddClientModal` | `admin/AddClientModal.tsx` | Modal for creating new clients |
+| `AddLeadModal` | `admin/AddLeadModal.tsx` | Modal for adding leads manually |
+| `InvoiceFormNew` | `admin/InvoiceFormNew.tsx` | Invoice creation with line items + PDF |
+| `ProposalFormNew` | `admin/ProposalFormNew.tsx` | Proposal builder with sections + PDF |
+| `ProposalDashboard` | `admin/ProposalDashboard.tsx` | Proposal list with filters |
+| `CommandPalette` | `admin/CommandPalette.tsx` | Cmd+K quick navigation |
+| `CommunicationHub` | `admin/CommunicationHub.tsx` | Client communication dashboard |
+| `AnalyticsDashboard` | `admin/AnalyticsDashboard.tsx` | Analytics overview |
+| `ClientDashboard` | `admin/ClientDashboard.tsx` | Individual client dashboard |
+| `ClientProfile` | `admin/ClientProfile.tsx` | Client profile editor |
+| `DocumentManager` | `admin/DocumentManager.tsx` | Document upload/management |
+| `GrowthEngine` | `admin/GrowthEngine.tsx` | Growth metrics dashboard |
+| `AdminSystem` | `admin/AdminSystem.tsx` | System health diagnostics |
+| `AdminErrorBoundary` | `admin/AdminErrorBoundary.tsx` | Error boundary for admin pages |
+
+---
 
 ## Related Documentation
 
