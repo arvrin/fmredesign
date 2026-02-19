@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { resolveClientId } from '@/lib/client-portal/resolve-client';
 import { requireClientAuth } from '@/lib/client-session';
+import { notifyTeam, newSupportTicketEmail } from '@/lib/email/send';
 
 export async function GET(
   request: NextRequest,
@@ -119,6 +120,21 @@ export async function POST(
         { status: 500 }
       );
     }
+
+    // Fire-and-forget email notification
+    Promise.resolve(
+      supabaseAdmin.from('clients').select('name').eq('id', client.id).single()
+    ).then(({ data: clientRow }) => {
+      const emailData = newSupportTicketEmail({
+        ticketId: ticket.id,
+        clientName: clientRow?.name || 'Unknown Client',
+        title,
+        description,
+        priority: priority || 'medium',
+        category: category || 'general',
+      });
+      notifyTeam(emailData.subject, emailData.html);
+    }).catch((err: unknown) => console.error('Email notification failed:', err));
 
     return NextResponse.json({
       success: true,

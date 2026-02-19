@@ -22,6 +22,10 @@ const envSchema = z.object({
   COMPANY_MSME: z.string().optional(),
   COMPANY_ADDRESS: z.string().optional(),
 
+  // Resend (Email notifications — optional so builds don't break)
+  RESEND_API_KEY: z.string().min(1).optional(),
+  NOTIFICATION_EMAIL: z.string().email().optional(),
+
   // Google Sheets (legacy — optional)
   GOOGLE_SHEETS_PRIVATE_KEY: z.string().optional(),
   GOOGLE_SHEETS_CLIENT_EMAIL: z.string().optional(),

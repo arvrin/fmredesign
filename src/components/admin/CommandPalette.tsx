@@ -31,7 +31,7 @@ const pages = [
   { label: 'Clients', href: '/admin/clients', icon: Users, group: 'Navigation' },
   { label: 'Projects', href: '/admin/projects', icon: Briefcase, group: 'Navigation' },
   { label: 'Content Calendar', href: '/admin/content', icon: Calendar, group: 'Navigation' },
-  { label: 'Invoices', href: '/admin/invoice', icon: FileText, group: 'Navigation' },
+  { label: 'Invoices', href: '/admin/invoices', icon: FileText, group: 'Navigation' },
   { label: 'Proposals', href: '/admin/proposals', icon: Presentation, group: 'Navigation' },
   { label: 'Team', href: '/admin/team', icon: Users, group: 'Navigation' },
   { label: 'Discovery', href: '/admin/discovery', icon: Search, group: 'Navigation' },

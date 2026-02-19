@@ -10,6 +10,7 @@ import type { LeadInput, LeadUpdate } from '@/lib/admin/lead-types';
 import { rateLimit, getClientIp } from '@/lib/rate-limiter';
 import { requireAdminAuth } from '@/lib/admin-auth-middleware';
 import { createLeadSchema, validateBody } from '@/lib/validations/schemas';
+import { notifyTeam, newLeadEmail } from '@/lib/email/send';
 
 // GET /api/leads - Fetch leads with optional filtering and sorting
 export async function GET(request: NextRequest) {
@@ -228,6 +229,20 @@ export async function POST(request: NextRequest) {
     const { data, error } = await supabase.from('leads').insert(record).select().single();
 
     if (error) throw error;
+
+    // Fire-and-forget email notification
+    const emailData = newLeadEmail({
+      name: record.name,
+      email: record.email,
+      company: record.company,
+      projectType: record.project_type,
+      budgetRange: record.budget_range,
+      timeline: record.timeline,
+      primaryChallenge: record.primary_challenge,
+      leadScore,
+      priority,
+    });
+    notifyTeam(emailData.subject, emailData.html);
 
     // Build camelCase response
     const lead = {

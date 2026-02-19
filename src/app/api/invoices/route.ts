@@ -12,6 +12,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { requireAdminAuth } from '@/lib/admin-auth-middleware';
 import { createInvoiceSchema, updateInvoiceSchema, validateBody } from '@/lib/validations/schemas';
+import { notifyTeam, invoiceCreatedEmail } from '@/lib/email/send';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -170,6 +171,16 @@ export async function POST(request: NextRequest) {
       .upsert(record, { onConflict: 'id' });
 
     if (error) throw error;
+
+    // Fire-and-forget email notification
+    const emailData = invoiceCreatedEmail({
+      invoiceNumber: record.invoice_number,
+      clientName: record.client_name,
+      total: record.total,
+      dueDate: record.due_date,
+      status: record.status,
+    });
+    notifyTeam(emailData.subject, emailData.html);
 
     return NextResponse.json({
       success: true,

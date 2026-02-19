@@ -37,6 +37,8 @@ import {
   Presentation,
   UsersRound,
   ScrollText,
+  Target,
+  MessageSquare,
 } from 'lucide-react';
 import React from 'react';
 
@@ -54,13 +56,15 @@ const adminNavigation: NavigationGroup[] = [
     title: 'Content',
     items: [
       { label: 'Content Calendar', href: '/admin/content', icon: <Calendar className="w-5 h-5" /> },
-      { label: 'Invoices', href: '/admin/invoice', icon: <FileText className="w-5 h-5" /> },
+      { label: 'Invoices', href: '/admin/invoices', icon: <FileText className="w-5 h-5" /> },
       { label: 'Proposals', href: '/admin/proposals', icon: <Presentation className="w-5 h-5" /> },
     ],
   },
   {
     title: 'Management',
     items: [
+      { label: 'Leads', href: '/admin/leads', icon: <Target className="w-5 h-5" /> },
+      { label: 'Support', href: '/admin/support', icon: <MessageSquare className="w-5 h-5" /> },
       { label: 'Team', href: '/admin/team', icon: <UsersRound className="w-5 h-5" /> },
       { label: 'Discovery', href: '/admin/discovery', icon: <Search className="w-5 h-5" /> },
       { label: 'CreativeMinds', href: '/admin/creativeminds', icon: <Sparkles className="w-5 h-5" /> },

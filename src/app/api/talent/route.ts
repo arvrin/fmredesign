@@ -12,6 +12,10 @@ import { getSupabaseAdmin } from '@/lib/supabase';
 import { requireAdminAuth } from '@/lib/admin-auth-middleware';
 import { rateLimit, getClientIp } from '@/lib/rate-limiter';
 import { submitTalentApplicationSchema, validateBody } from '@/lib/validations/schemas';
+import {
+  notifyTeam, notifyRecipient,
+  talentApplicationReceivedEmail, talentApplicationTeamEmail, talentApprovedEmail,
+} from '@/lib/email/send';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -118,6 +122,27 @@ export async function POST(request: NextRequest) {
     const { error } = await supabase.from('talent_applications').insert(record);
 
     if (error) throw error;
+
+    // Fire-and-forget email notifications
+    const personalInfo = application.personalInfo || {};
+    const fullName = personalInfo.fullName || 'Applicant';
+    const applicantEmail = personalInfo.email;
+    const talentData = {
+      fullName,
+      email: applicantEmail || '',
+      category: (application.professionalDetails?.primaryCategory as string) || undefined,
+      experience: (application.professionalDetails?.experienceLevel as string) || undefined,
+    };
+
+    // Notify team
+    const teamEmail = talentApplicationTeamEmail(talentData);
+    notifyTeam(teamEmail.subject, teamEmail.html);
+
+    // Confirmation to applicant
+    if (applicantEmail) {
+      const confirmEmail = talentApplicationReceivedEmail(talentData);
+      notifyRecipient(applicantEmail, confirmEmail.subject, confirmEmail.html);
+    }
 
     return NextResponse.json(
       { success: true, id: applicationId },
@@ -304,6 +329,13 @@ export async function PUT(request: NextRequest) {
         .insert(profileRecord);
 
       if (profileError) throw profileError;
+
+      // Fire-and-forget: notify approved applicant
+      const approvedEmail = personalInfo.email as string | undefined;
+      if (approvedEmail && profileSlug) {
+        const emailData = talentApprovedEmail({ fullName, profileSlug });
+        notifyRecipient(approvedEmail, emailData.subject, emailData.html);
+      }
     }
 
     return NextResponse.json({

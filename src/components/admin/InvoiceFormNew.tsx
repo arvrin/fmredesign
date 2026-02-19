@@ -36,7 +36,6 @@ import {
 import { Badge } from '@/components/ui/Badge';
 import { adminToast } from '@/lib/admin/toast';
 import { SimplePDFGenerator } from '@/lib/admin/pdf-simple';
-import { AdminStorage } from '@/lib/admin/storage';
 import { ClientService } from '@/lib/admin/client-service';
 import { InvoiceNumbering } from '@/lib/admin/invoice-numbering';
 import { AGENCY_SERVICES, SERVICE_CATEGORIES, DEFAULT_COMPANY_INFO } from '@/lib/admin/types';
@@ -184,7 +183,7 @@ export function InvoiceFormNew() {
       const invoiceClients = await ClientService.getInvoiceClients();
       setClients(invoiceClients || []);
     } catch {
-      setClients(AdminStorage.getClients() as InvoiceClient[]);
+      setClients([]);
     }
   };
 
@@ -285,7 +284,6 @@ export function InvoiceFormNew() {
       if (!invoice.id) invoice.id = `invoice-${Date.now()}`;
       if (!invoice.invoiceNumber || invoice.invoiceNumber.startsWith('INV-'))
         invoice.invoiceNumber = InvoiceNumbering.getNextInvoiceNumber();
-      AdminStorage.saveInvoice(invoice);
       saveToAPI(invoice);
       adminToast.success('Invoice saved successfully!');
     } catch {

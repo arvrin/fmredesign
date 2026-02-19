@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { requireAdminAuth } from '@/lib/admin-auth-middleware';
 import { createProposalSchema, updateProposalSchema, validateBody } from '@/lib/validations/schemas';
+import { notifyTeam, proposalCreatedEmail } from '@/lib/email/send';
 
 // GET /api/proposals - Fetch all proposals
 export async function GET(request: NextRequest) {
@@ -169,6 +170,16 @@ export async function POST(request: NextRequest) {
 
     const { error } = await supabase.from('proposals').upsert(record);
     if (error) throw error;
+
+    // Fire-and-forget email notification
+    const prospectInfo = body.client?.prospectInfo as Record<string, string> | undefined;
+    const emailData = proposalCreatedEmail({
+      proposalNumber,
+      title: record.title,
+      clientName: prospectInfo?.name || prospectInfo?.company || undefined,
+      status: record.status,
+    });
+    notifyTeam(emailData.subject, emailData.html);
 
     return NextResponse.json({
       success: true,

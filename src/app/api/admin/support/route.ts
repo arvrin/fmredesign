@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { requireAdminAuth } from '@/lib/admin-auth-middleware';
+import { notifyRecipient, ticketStatusUpdateEmail } from '@/lib/email/send';
 
 export async function GET(request: NextRequest) {
   const authError = await requireAdminAuth(request);
@@ -114,6 +115,25 @@ export async function PUT(request: NextRequest) {
         { success: false, error: 'Failed to update ticket' },
         { status: 500 }
       );
+    }
+
+    // Fire-and-forget: notify client about status change
+    if (status && ticket.client_id) {
+      const { data: client } = await supabaseAdmin
+        .from('clients')
+        .select('name, email')
+        .eq('id', ticket.client_id)
+        .single();
+
+      if (client?.email) {
+        const emailData = ticketStatusUpdateEmail({
+          clientName: client.name || 'there',
+          title: ticket.title,
+          newStatus: status,
+          assignedTo: ticket.assigned_to,
+        });
+        notifyRecipient(client.email, emailData.subject, emailData.html);
+      }
     }
 
     return NextResponse.json({

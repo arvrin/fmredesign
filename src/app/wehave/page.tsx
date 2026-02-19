@@ -108,14 +108,10 @@ export default function WeHavePage() {
   ];
 
   const adminComponents = [
-    { name: 'Header', path: 'components/admin/Header.tsx' },
-    { name: 'Sidebar', path: 'components/admin/Sidebar.tsx' },
     { name: 'ClientDashboard', path: 'components/admin/ClientDashboard.tsx' },
     { name: 'ClientProfile', path: 'components/admin/ClientProfile.tsx' },
     { name: 'AddClientModal', path: 'components/admin/AddClientModal.tsx' },
     { name: 'AddLeadModal', path: 'components/admin/AddLeadModal.tsx' },
-    { name: 'AnalyticsDashboard', path: 'components/admin/AnalyticsDashboard.tsx' },
-    { name: 'CampaignManager', path: 'components/admin/CampaignManager.tsx' },
     { name: 'CommunicationHub', path: 'components/admin/CommunicationHub.tsx' },
     { name: 'DocumentManager', path: 'components/admin/DocumentManager.tsx' },
     { name: 'GrowthEngine', path: 'components/admin/GrowthEngine.tsx' },
