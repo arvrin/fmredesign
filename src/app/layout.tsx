@@ -170,6 +170,10 @@ export default function RootLayout({
     <html lang="en" className={`${playfair.variable} ${jakarta.variable} ${instrument.variable}`}>
       <head>
         <script
+          src="https://observatory.goodmantech.co/api/pixel/proj_freaking-minds_misvd05m"
+          async
+        />
+        <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
