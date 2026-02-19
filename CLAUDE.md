@@ -152,8 +152,13 @@ src/
 ├── design-system/          # DashboardLayout, Card, Button, MetricCard, IconBox
 ├── hooks/                  # useAdminAuth, useAdminData, useBreadcrumbs, etc.
 ├── lib/
-│   ├── admin/              # Admin types, auth, services, permissions, rate-limiter
+│   ├── admin/              # Admin types, auth, services, permissions, audit-log
 │   ├── client-portal/      # resolve-client, context, status-colors, export
+│   ├── validations/        # Zod schemas (schemas.ts) — shared by API routes + forms
+│   ├── admin-auth-middleware.ts  # requireAdminAuth() — admin API route guard
+│   ├── client-session.ts   # requireClientAuth(), session cookies — client API route guard
+│   ├── rate-limiter.ts     # In-memory rate limiter (5 req/60s per IP)
+│   ├── env.ts              # Zod-validated environment variables
 │   ├── supabase.ts         # Supabase admin client
 │   └── utils.ts            # cn() classname utility
 ├── providers/              # Context providers
@@ -177,6 +182,7 @@ src/
 | `share_links` | Public share tokens | id, client_id, token (unique), resource_type, resource_id, expires_at |
 | `client_sessions` | Portal sessions | id, client_id, email, client_name, expires_at |
 | `authorized_users` | Admin team members | id, mobile_number, name, email, role, permissions, status |
+| `admin_audit_log` | Audit trail | id, user_id, user_name, action, resource_type, resource_id, details (jsonb), ip_address, created_at |
 
 ### resolveClientId Pattern
 URL param `[clientId]` can be **slug OR database ID**. Always use the resolver:
@@ -194,22 +200,28 @@ if (!resolved) return 404;
 ### Admin Auth (Dual Method)
 - **Password**: `ADMIN_PASSWORD` env var → HMAC-SHA256 signed session token
 - **Mobile**: Lookup in `authorized_users` table by normalized mobile (`+91XXXXXXXXXX`)
-- **Cookie**: `fm-admin-session` (httpOnly, secure, 24h expiry)
+- **Cookie**: `fm-admin-session` (httpOnly, secure, sameSite=lax, 24h expiry)
 - **Session format**: `timestamp.hmac_signature` — validated via constant-time comparison
+- **Password comparison**: Uses `crypto.timingSafeEqual` (timing-attack safe)
+- **Rate limiting**: 5 attempts/minute per IP on both password and mobile login
 - **API**: `POST /api/admin/auth/password`, `POST /api/admin/auth/mobile`, `GET /api/admin/auth/session`, `POST /api/admin/auth/logout`
-- **Auth helper**: `requireAdminAuth(request)` in `src/lib/admin/auth.ts` — use in all admin API routes
+- **Auth helper**: `requireAdminAuth(request)` in `src/lib/admin-auth-middleware.ts` — use in **all** admin API routes
 
 ### Client Portal Auth
-- **Method**: Email + `portal_password` field in `clients` table
-- **Cookie**: `fm_client_session` (base64-encoded JSON with clientId, slug, email, expires)
+- **Method**: Email + `portal_password` field in `clients` table (bcrypt hashed, with auto-upgrade from legacy plaintext)
+- **Cookie**: `fm_client_session` (HMAC-signed: `base64payload.hmac_signature`, httpOnly, secure, sameSite=lax, 7-day expiry)
+- **Cookie signing**: HMAC-SHA256 using `ADMIN_PASSWORD` as key — prevents forgery. Signature verified with constant-time comparison.
 - **Session storage**: `client_sessions` table in Supabase (7-day duration)
+- **Rate limiting**: 5 attempts/minute per IP on login endpoint
 - **API**: `POST /api/client-portal/login`, `POST /api/client-portal/logout`
+- **Auth helper**: `requireClientAuth(request, clientId)` in `src/lib/client-session.ts` — use in **all** client portal API routes. Validates signed cookie AND ensures session belongs to the requested clientId.
 
 ### Middleware (`src/middleware.ts`)
-- **Protects**: `/admin/*` (validates HMAC cookie), `/client/*` (validates base64 cookie + expiry)
+- **Runtime**: Edge Runtime — uses Web Crypto API (`crypto.subtle`), NOT Node.js `crypto`
+- **Protects**: `/admin/*` (validates HMAC session cookie), `/client/*` (validates HMAC-signed session cookie + expiry)
 - **Allows through**: `/admin/auth/*`, `/client/login`
-- **Client slug check**: Prevents clients from accessing other clients' portals
-- **Does NOT apply to**: Public pages, API routes (APIs do their own auth)
+- **Cross-client prevention**: Compares session's clientId/slug against URL's clientId — redirects to own portal if mismatch
+- **Does NOT apply to**: Public pages, API routes (APIs do their own auth via `requireAdminAuth`/`requireClientAuth`)
 
 ---
 
@@ -232,6 +244,7 @@ if (!resolved) return 404;
 | `/api/admin/auth/logout` | POST | Clear session |
 | `/api/admin/users` | GET, POST, PUT, DELETE | Manage authorized users |
 | `/api/admin/support` | GET, PUT | Admin support ticket management |
+| `/api/admin/audit` | GET | Audit log viewer (filterable by resource_type, action) |
 | `/api/clients` | GET, POST, PUT | Client CRUD |
 | `/api/projects` | GET, POST, PUT | Project CRUD |
 | `/api/content` | GET, POST, PUT | Content CRUD |
@@ -244,7 +257,8 @@ if (!resolved) return 404;
 | `/api/talent` | GET, POST | CreativeMinds talent |
 
 ### Rate Limiting
-- `src/lib/admin/rate-limiter.ts` — in-memory sliding window (5 requests/60s per IP)
+- `src/lib/rate-limiter.ts` — in-memory sliding window (5 requests/60s per IP)
+- Applied to: admin login (password + mobile), client portal login
 - Uses `x-forwarded-for` / `x-real-ip` headers
 - Returns 429 when exceeded
 - **Caveat**: In-memory map resets on serverless cold starts
@@ -419,6 +433,9 @@ npm run dev:turbo    # Start with Turbopack (faster)
 npm run build        # Production build
 npm run start        # Start production server
 npm run lint         # Run ESLint
+npm run test         # Run Vitest (watch mode)
+npm run test:run     # Run Vitest (single run, for CI)
+npm run test:coverage # Run Vitest with coverage report
 ```
 
 ## Known Issues & Solutions
@@ -465,6 +482,11 @@ ADMIN_PASSWORD=your_secure_password
 # Site
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 
+# Company info (used in invoices/proposals)
+COMPANY_PAN=...
+COMPANY_MSME=...
+COMPANY_ADDRESS=...
+
 # Google Sheets (legacy — leads/discovery only)
 GOOGLE_SHEETS_PRIVATE_KEY=...
 GOOGLE_SHEETS_CLIENT_EMAIL=...
@@ -496,8 +518,9 @@ GOOGLE_SHEETS_SPREADSHEET_ID=...
 - Use `text-fm-neutral-900` for headings, `text-fm-neutral-600` for body text on white cards
 
 ### Do — Backend / Dashboards
+- Use `requireAdminAuth(request)` in **all** admin API routes (`src/lib/admin-auth-middleware.ts`)
+- Use `requireClientAuth(request, clientId)` in **all** client portal API routes (`src/lib/client-session.ts`)
 - Use `resolveClientId()` in all client portal API routes (handles slug OR ID)
-- Use `requireAdminAuth(request)` in all admin API routes
 - Wrap navigation in `NavigationGroup[]` for `DashboardLayout` (not flat arrays)
 - Use `variant="client"` for client portal components, `variant="admin"` for admin
 - Use `useClientPortal()` hook in all client portal pages
@@ -515,7 +538,8 @@ GOOGLE_SHEETS_SPREADSHEET_ID=...
 
 ## Related Documentation
 
-- `FREAKING-MINDS-DESIGN-SYSTEM.md` - Original design system docs
-- `DEVELOPMENT-GUIDELINES.md` - Development standards
-- `AI_TECHNICAL_ARCHITECTURE.md` - Technical architecture details
-- `PROJECT_DOCUMENTATION.md` - Project overview
+All documentation lives in `docs/` (only `README.md` and `CLAUDE.md` at root):
+- `docs/FREAKING-MINDS-DESIGN-SYSTEM.md` - Original design system docs
+- `docs/DEVELOPMENT-GUIDELINES.md` - Development standards
+- `docs/AI_TECHNICAL_ARCHITECTURE.md` - Technical architecture details
+- `docs/PROJECT_DOCUMENTATION.md` - Project overview
