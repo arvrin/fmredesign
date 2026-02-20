@@ -13,7 +13,7 @@ export function PageHeader({ title, description, icon, actions, breadcrumb, clas
   return (
     <div className={cn('mb-8', className)}>
       {breadcrumb && <div className="mb-3">{breadcrumb}</div>}
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
         <div className="min-w-0 flex items-center gap-3">
           {icon && (
             <div className="shrink-0 text-fm-magenta-600">{icon}</div>
@@ -25,7 +25,7 @@ export function PageHeader({ title, description, icon, actions, breadcrumb, clas
             )}
           </div>
         </div>
-        {actions && <div className="flex items-center gap-3 shrink-0">{actions}</div>}
+        {actions && <div className="flex items-center gap-3 flex-wrap sm:shrink-0">{actions}</div>}
       </div>
     </div>
   );
