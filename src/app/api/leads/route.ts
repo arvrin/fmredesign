@@ -8,7 +8,7 @@ import { getSupabaseAdmin } from '@/lib/supabase';
 import { calculateLeadScore, determineLeadPriority, toCamelCaseKeys } from '@/lib/supabase-utils';
 import type { LeadInput, LeadUpdate } from '@/lib/admin/lead-types';
 import { rateLimit, getClientIp } from '@/lib/rate-limiter';
-import { requireAdminAuth } from '@/lib/admin-auth-middleware';
+import { requireAdminAuth, requirePermission } from '@/lib/admin-auth-middleware';
 import { createLeadSchema, validateBody } from '@/lib/validations/schemas';
 import { notifyTeam, newLeadEmail } from '@/lib/email/send';
 
@@ -315,8 +315,8 @@ export async function DELETE(request: NextRequest) {
 
 // PUT /api/leads - Update lead
 export async function PUT(request: NextRequest) {
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+  const auth = await requirePermission(request, 'clients.write');
+  if ('error' in auth) return auth.error;
 
   try {
     const body = await request.json();

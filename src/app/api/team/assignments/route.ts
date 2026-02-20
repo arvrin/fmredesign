@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
-import { requireAdminAuth } from '@/lib/admin-auth-middleware';
+import { requireAdminAuth, requirePermission } from '@/lib/admin-auth-middleware';
 
 /** Transform a Supabase row (snake_case) to camelCase */
 function transformAssignment(row: any) {
@@ -60,8 +60,8 @@ export async function GET(request: NextRequest) {
 
 // POST /api/team/assignments - Create assignment
 export async function POST(request: NextRequest) {
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+  const auth = await requirePermission(request, 'projects.write');
+  if ('error' in auth) return auth.error;
 
   try {
     const body = await request.json();
@@ -107,8 +107,8 @@ export async function POST(request: NextRequest) {
 
 // DELETE /api/team/assignments - Delete assignment
 export async function DELETE(request: NextRequest) {
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+  const auth = await requirePermission(request, 'projects.delete');
+  if ('error' in auth) return auth.error;
 
   try {
     const { searchParams } = new URL(request.url);

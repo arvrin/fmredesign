@@ -3,6 +3,7 @@ import { Playfair_Display, Plus_Jakarta_Sans, Instrument_Serif } from "next/font
 import "./globals.css";
 import { ConditionalLayout } from "@/components/layout/ConditionalLayout";
 import { SmoothScrollProvider } from "@/providers/SmoothScrollProvider";
+import { QueryProvider } from "@/providers/QueryProvider";
 
 // Display font - elegant serif for headlines (authority & sophistication)
 const playfair = Playfair_Display({
@@ -185,9 +186,11 @@ export default function RootLayout({
         >
           Skip to content
         </a>
-        <SmoothScrollProvider>
-          <ConditionalLayout>{children}</ConditionalLayout>
-        </SmoothScrollProvider>
+        <QueryProvider>
+          <SmoothScrollProvider>
+            <ConditionalLayout>{children}</ConditionalLayout>
+          </SmoothScrollProvider>
+        </QueryProvider>
       </body>
     </html>
   );
