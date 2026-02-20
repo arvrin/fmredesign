@@ -449,6 +449,13 @@ export function HeaderV2() {
                     </Link>
                   ))}
                 </div>
+                <Link
+                  href="/services"
+                  className="flex items-center gap-1 mt-3 px-3 py-2 text-sm text-fm-magenta-600 font-medium"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  View all services <ArrowRight className="w-4 h-4" />
+                </Link>
               </div>
 
               {/* Work */}
