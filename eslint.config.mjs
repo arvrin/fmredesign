@@ -19,6 +19,7 @@ const eslintConfig = [
       "build/**",
       "scripts/**",
       "next-env.d.ts",
+      "populate-clients.js",
     ],
   },
   {
