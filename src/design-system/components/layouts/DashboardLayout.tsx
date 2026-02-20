@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -97,6 +97,8 @@ const layoutVariants = {
 };
 
 const SIDEBAR_STORAGE_KEY = 'fm-sidebar-collapsed';
+const SWIPE_THRESHOLD = 80;
+const EDGE_ZONE = 24;
 
 /* ── Tiny icon button ── */
 const IconBtn: React.FC<
@@ -136,7 +138,10 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
-  const notifRef = React.useRef<HTMLDivElement>(null);
+  const notifRef = useRef<HTMLDivElement>(null);
+  const sidebarRef = useRef<HTMLElement>(null);
+  const menuTriggerRef = useRef<HTMLButtonElement>(null);
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
   const pathname = usePathname();
   const styles = layoutVariants[variant];
 
@@ -155,9 +160,14 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     } catch {}
   }, [collapsed]);
 
-  /* Keyboard shortcuts: Cmd+B (toggle sidebar), Cmd+K (command palette) */
+  /* Keyboard shortcuts: Cmd+B (toggle sidebar), Cmd+K (command palette), Escape (close panels) */
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (notifOpen) setNotifOpen(false);
+        if (mobileOpen) setMobileOpen(false);
+        return;
+      }
       if (e.metaKey || e.ctrlKey) {
         if (e.key === 'b') {
           e.preventDefault();
@@ -169,13 +179,69 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         }
       }
     },
-    [onCommandPalette]
+    [onCommandPalette, notifOpen, mobileOpen]
   );
 
   useEffect(() => {
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [handleKeyDown]);
+
+  /* Body scroll lock when mobile sidebar is open */
+  useEffect(() => {
+    if (mobileOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [mobileOpen]);
+
+  /* Focus management: move focus into sidebar on open, return on close */
+  useEffect(() => {
+    if (mobileOpen && sidebarRef.current) {
+      const closeBtn = sidebarRef.current.querySelector<HTMLElement>('[aria-label="Close menu"]');
+      closeBtn?.focus();
+    }
+  }, [mobileOpen]);
+
+  /* Swipe gestures for mobile sidebar */
+  useEffect(() => {
+    const handleTouchStart = (e: TouchEvent) => {
+      const touch = e.touches[0];
+      touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+    };
+
+    const handleTouchEnd = (e: TouchEvent) => {
+      if (!touchStartRef.current) return;
+      const touch = e.changedTouches[0];
+      const deltaX = touch.clientX - touchStartRef.current.x;
+      const deltaY = Math.abs(touch.clientY - touchStartRef.current.y);
+      const startX = touchStartRef.current.x;
+      touchStartRef.current = null;
+
+      // Ignore vertical swipes
+      if (deltaY > Math.abs(deltaX)) return;
+
+      if (!mobileOpen && startX < EDGE_ZONE && deltaX > SWIPE_THRESHOLD) {
+        setMobileOpen(true);
+      } else if (mobileOpen && deltaX < -SWIPE_THRESHOLD) {
+        setMobileOpen(false);
+      }
+    };
+
+    // Only attach on mobile-sized screens
+    const mql = window.matchMedia('(max-width: 767px)');
+    if (!mql.matches) return;
+
+    document.addEventListener('touchstart', handleTouchStart, { passive: true });
+    document.addEventListener('touchend', handleTouchEnd, { passive: true });
+
+    return () => {
+      document.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [mobileOpen]);
 
   /* Close notification panel on outside click */
   useEffect(() => {
@@ -216,6 +282,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     <div className={cn('min-h-screen flex', styles.bg, className)}>
       {/* ─────────────── Sidebar ─────────────── */}
       <aside
+        ref={sidebarRef}
         className={cn(
           'fixed inset-y-0 left-0 flex flex-col',
           'transition-[width,transform] duration-300 ease-in-out',
@@ -225,6 +292,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         )}
         style={{ zIndex: 50 }}
+        aria-label="Sidebar navigation"
       >
         {/* ── Sidebar header ── */}
         <div
@@ -255,6 +323,16 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
           <div className={cn('flex-1', collapsed && 'md:hidden')} />
 
+          {/* Desktop: always-visible collapse toggle */}
+          <IconBtn
+            onClick={() => setCollapsed((prev) => !prev)}
+            label={collapsed ? 'Expand sidebar (Cmd+B)' : 'Collapse sidebar (Cmd+B)'}
+            className={cn('hidden md:flex', collapsed && 'md:hidden')}
+          >
+            <PanelLeftClose className="w-4 h-4" />
+          </IconBtn>
+
+          {/* Mobile: close button */}
           <IconBtn
             onClick={() => setMobileOpen(false)}
             label="Close menu"
@@ -361,6 +439,18 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           ))}
         </nav>
 
+        {/* ── Expand button at bottom when collapsed (desktop) ── */}
+        {collapsed && (
+          <div className="hidden md:flex shrink-0 justify-center py-3 border-t border-fm-neutral-100">
+            <IconBtn
+              onClick={() => setCollapsed(false)}
+              label="Expand sidebar (Cmd+B)"
+            >
+              <PanelLeftOpen className="w-4 h-4" />
+            </IconBtn>
+          </div>
+        )}
+
         {/* ── User section ── */}
         {user && (
           <div
@@ -409,40 +499,6 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         )}
       </aside>
 
-      {/* ── Floating sidebar toggle (desktop only) ──
-           Hover zone extends from sidebar edge inward/outward so the
-           button appears when you approach the sidebar boundary.       */}
-      <div
-        className="hidden md:block fixed top-0 h-14 group/toggle"
-        style={{
-          zIndex: 51,
-          left: collapsed ? 'calc(72px - 20px)' : 'calc(256px - 20px)',
-          width: 40,
-          transition: 'left 300ms ease-in-out',
-        }}
-      >
-        <button
-          onClick={() => setCollapsed((prev) => !prev)}
-          className={cn(
-            'absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2',
-            'flex items-center justify-center',
-            'w-6 h-6 rounded-full',
-            'bg-white border border-fm-neutral-200 shadow-sm',
-            'text-fm-neutral-400 hover:text-fm-neutral-700 hover:border-fm-neutral-300 hover:shadow-md',
-            'transition-all duration-200',
-            'scale-0 group-hover/toggle:scale-100',
-            'focus:scale-100'
-          )}
-          aria-label={collapsed ? 'Expand sidebar (Cmd+B)' : 'Collapse sidebar (Cmd+B)'}
-        >
-          {collapsed ? (
-            <PanelLeftOpen className="w-3.5 h-3.5" />
-          ) : (
-            <PanelLeftClose className="w-3.5 h-3.5" />
-          )}
-        </button>
-      </div>
-
       {/* ─────────────── Main content ─────────────── */}
       <div
         className={cn(
@@ -450,6 +506,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           'transition-[margin-left] duration-300 ease-in-out',
           collapsed ? 'md:ml-[72px]' : 'md:ml-64'
         )}
+        inert={mobileOpen || undefined}
       >
         {/* Top bar */}
         <header
@@ -462,6 +519,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           {/* Left — mobile menu toggle + breadcrumb */}
           <div className="flex items-center gap-3 min-w-0 flex-1">
             <button
+              ref={menuTriggerRef}
               onClick={() => setMobileOpen(true)}
               className="md:hidden flex items-center justify-center w-9 h-9 rounded-lg text-fm-neutral-600 hover:text-fm-neutral-900 hover:bg-fm-neutral-100 transition-colors shrink-0"
               aria-label="Open menu"
@@ -592,15 +650,17 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         </main>
       </div>
 
-      {/* ─────────────── Mobile overlay ─────────────── */}
-      {mobileOpen && (
-        <div
-          className="fixed inset-0 bg-black/20 md:hidden"
-          style={{ zIndex: 40 }}
-          onClick={() => setMobileOpen(false)}
-          aria-hidden="true"
-        />
-      )}
+      {/* ─────────────── Mobile overlay (always rendered for smooth transitions) ─────────────── */}
+      <div
+        className={cn(
+          'fixed inset-0 bg-black/40 md:hidden',
+          'transition-opacity duration-300 ease-in-out',
+          mobileOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        )}
+        style={{ zIndex: 40 }}
+        onClick={() => setMobileOpen(false)}
+        aria-hidden="true"
+      />
     </div>
   );
 };
