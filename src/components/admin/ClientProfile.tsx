@@ -60,6 +60,7 @@ import { adminToast } from '@/lib/admin/toast';
 import { CommunicationHub } from './CommunicationHub';
 import { DocumentManager } from './DocumentManager';
 import { GrowthEngine } from './GrowthEngine';
+import ContractsTab from './ContractsTab';
 
 interface ClientProfileProps {
   clientId: string;
@@ -68,7 +69,7 @@ interface ClientProfileProps {
 
 export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
   const [client, setClient] = useState<ClientProfileType | null>(null);
-  const [activeTab, setActiveTab] = useState<'overview' | 'campaigns' | 'analytics' | 'communication' | 'files' | 'opportunities'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'campaigns' | 'analytics' | 'communication' | 'files' | 'contracts' | 'opportunities'>('overview');
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [analytics, setAnalytics] = useState<ClientAnalytics | null>(null);
   const [deliverables, setDeliverables] = useState<Deliverable[]>([]);
@@ -358,6 +359,7 @@ export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
     { id: 'campaigns', name: 'Campaigns', icon: Target },
     { id: 'analytics', name: 'Analytics', icon: BarChart3 },
     { id: 'communication', name: 'Communication', icon: MessageSquare },
+    { id: 'contracts', name: 'Contracts', icon: Briefcase },
     { id: 'files', name: 'Files & Assets', icon: FileText },
     { id: 'opportunities', name: 'Growth', icon: TrendingUp }
   ];
@@ -1120,6 +1122,11 @@ export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
               </p>
             </div>
           </div>
+        )}
+
+        {/* Contracts Tab */}
+        {activeTab === 'contracts' && (
+          <ContractsTab clientId={clientId} />
         )}
 
         {/* Opportunities Tab */}
