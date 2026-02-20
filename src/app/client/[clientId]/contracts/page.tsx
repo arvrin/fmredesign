@@ -117,9 +117,14 @@ function NumberedTerms({ text }: { text: string }) {
     <div className="space-y-2">
       {lines.map((line, idx) => {
         const trimmed = line.trim();
-        // Detect section headers (lines ending with :) vs bullet points
+        // Detect section headers (short title-like lines ending with :) vs bullet points
+        // Exclude sentence-like lines that happen to end with : (e.g. "The Client agrees to provide:")
         const isBullet = trimmed.startsWith('•') || trimmed.startsWith('-');
-        const isHeader = trimmed.endsWith(':') && !isBullet;
+        const isHeader =
+          trimmed.endsWith(':') &&
+          !isBullet &&
+          trimmed.length <= 45 &&
+          !/^(The|Both|All|Any|Each|This|These|It|Either|Neither|Agency|Upon) /i.test(trimmed);
 
         if (isHeader) {
           clauseNum++;
