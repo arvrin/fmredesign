@@ -115,7 +115,7 @@ export default function ClientDashboard() {
   const [contentItems, setContentItems] = useState<ContentItem[]>([]);
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [pageLoading, setPageLoading] = useState(true);
-  const [partnershipExpanded, setPartnershipExpanded] = useState(true);
+  const [partnershipExpanded, setPartnershipExpanded] = useState(false);
 
   useEffect(() => {
     if (!clientId) return;
@@ -189,11 +189,11 @@ export default function ClientDashboard() {
   return (
     <>
       {/* Welcome Header */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center space-x-4">
+      <div className="mb-6 sm:mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+          <div className="flex items-center space-x-3 sm:space-x-4">
             {profile.logo && (
-              <div className="w-16 h-16 rounded-xl overflow-hidden ring-2 ring-fm-magenta-100 shadow-lg">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl overflow-hidden ring-2 ring-fm-magenta-100 shadow-lg flex-shrink-0">
                 <img
                   src={profile.logo}
                   alt={profile.name}
@@ -202,15 +202,15 @@ export default function ClientDashboard() {
               </div>
             )}
             <div>
-              <h1 className="text-3xl font-display font-bold text-fm-neutral-900">
+              <h1 className="text-xl sm:text-3xl font-display font-bold text-fm-neutral-900">
                 Welcome back, <span className="v2-accent">{profile.name}</span>
               </h1>
-              <p className="text-fm-neutral-600 mt-1 font-medium capitalize">
+              <p className="text-fm-neutral-600 mt-0.5 sm:mt-1 text-sm sm:text-base font-medium capitalize">
                 {profile.industry} • Managed by {profile.accountManager}
               </p>
             </div>
           </div>
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-3 pl-15 sm:pl-0">
             <Badge className={getStatusColor(profile.status)} variant="secondary">
               {profile.status}
             </Badge>
@@ -222,8 +222,8 @@ export default function ClientDashboard() {
         </div>
       </div>
 
-      {/* Metrics Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      {/* Metrics Overview — 2×2 on mobile, 4-col on desktop */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
         <MetricCard
           title="Active Projects"
           value={activeProjects}
@@ -473,7 +473,7 @@ export default function ClientDashboard() {
       </Card>
 
       {/* Projects & Content Overview */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8 mb-6 sm:mb-8">
         {/* Recent Projects */}
         <Card variant="client" hover glow>
           <CardHeader>
@@ -616,7 +616,7 @@ export default function ClientDashboard() {
       </div>
 
       {/* Quick Actions & Support */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8">
         {/* Recent Activity */}
         <Card variant="glass" hover>
           <CardHeader>

@@ -75,7 +75,7 @@ function DashboardSkeleton() {
       </div>
 
       {/* Metric skeletons */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
         {[...Array(4)].map((_, i) => (
           <MetricCardSkeleton key={i} />
         ))}
@@ -222,15 +222,15 @@ export default function AdminDashboard() {
   if (isLoading) return <DashboardSkeleton />;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-5 sm:space-y-8">
       {/* Header */}
       <PageHeader
         title={`${getGreeting()}`}
         description="Your business operations at a glance — real-time insights and control."
       />
 
-      {/* Key Metrics — 4 cards max */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      {/* Key Metrics — 2×2 on mobile, 4-col on desktop */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
         <MetricCard
           title="Clients"
           value={stats.totalClients}
@@ -283,14 +283,14 @@ export default function AdminDashboard() {
       </div>
 
       {/* Quick Actions — clean grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
         {quickActions.map((action) => {
           const Icon = action.icon;
           return (
             <Link
               key={action.title}
               href={action.href}
-              className="group flex flex-col items-center gap-3 rounded-xl border border-fm-neutral-200 bg-white p-5 transition-all duration-200 hover:border-fm-magenta-200 hover:shadow-fm-sm"
+              className="group flex flex-col items-center gap-2 sm:gap-3 rounded-xl border border-fm-neutral-200 bg-white p-3 sm:p-5 transition-all duration-200 hover:border-fm-magenta-200 hover:shadow-fm-sm"
             >
               <div className={cn('p-3 rounded-xl transition-transform duration-200 group-hover:scale-110', action.color)}>
                 <Icon className="w-5 h-5" />
@@ -304,7 +304,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Activity — two columns */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Recent Invoices */}
         <section className="rounded-xl border border-fm-neutral-200 bg-white">
           <div className="flex items-center justify-between px-5 py-4 border-b border-fm-neutral-100">
@@ -321,7 +321,7 @@ export default function AdminDashboard() {
               description="Create your first invoice to start tracking revenue."
               action={
                 <DashboardButton variant="admin" size="sm" onClick={() => router.push('/admin/invoice')}>
-                  <Plus className="w-4 h-4 mr-2" /> Create Invoice
+                  <Plus className="w-4 h-4" /> Create Invoice
                 </DashboardButton>
               }
               className="py-10"
@@ -364,7 +364,7 @@ export default function AdminDashboard() {
               description="Create your first project to get started."
               action={
                 <DashboardButton variant="admin" size="sm" onClick={() => router.push('/admin/projects/new')}>
-                  <Plus className="w-4 h-4 mr-2" /> Create Project
+                  <Plus className="w-4 h-4" /> Create Project
                 </DashboardButton>
               }
               className="py-10"

@@ -125,7 +125,8 @@ export const MetricCard: React.FC<MetricCardProps> = ({
   return (
     <Card
       variant={variantStyles.card as any}
-      className={cn('relative overflow-hidden group', className)}
+      padding="none"
+      className={cn('relative overflow-hidden group p-3 sm:p-6', className)}
       hover
       glow={variant !== 'default'}
     >
@@ -134,34 +135,34 @@ export const MetricCard: React.FC<MetricCardProps> = ({
 
       <div className="relative">
         {/* Header */}
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-medium text-fm-neutral-600 uppercase tracking-wide truncate">
+        <div className="flex items-center justify-between mb-2 sm:mb-4">
+          <h3 className="text-xs sm:text-sm font-medium text-fm-neutral-600 uppercase tracking-wide truncate">
             {title}
           </h3>
           {icon && (
-            <div className={cn('transition-transform duration-300 group-hover:scale-110', variantStyles.accent)}>
+            <div className={cn('transition-transform duration-300 group-hover:scale-110 [&>svg]:w-4 [&>svg]:h-4 sm:[&>svg]:w-6 sm:[&>svg]:h-6', variantStyles.accent)}>
               {icon}
             </div>
           )}
         </div>
 
         {/* Main Value */}
-        <div className="mb-3">
+        <div className="mb-1 sm:mb-3">
           <div className={cn(
-            'text-3xl font-bold font-display leading-none',
+            'text-xl sm:text-3xl font-bold font-display leading-none',
             variantStyles.accent
           )}>
             {formatValue(value)}
           </div>
           {subtitle && (
-            <p className="text-sm text-fm-neutral-500 mt-1">{subtitle}</p>
+            <p className="text-xs sm:text-sm text-fm-neutral-500 mt-0.5 sm:mt-1 line-clamp-1">{subtitle}</p>
           )}
         </div>
 
-        {/* Change Indicator */}
+        {/* Change Indicator — hidden on mobile to save space */}
         {change && (
           <div className={cn(
-            'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium',
+            'hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium',
             'transition-all duration-200 hover:scale-[1.02]',
             getChangeStyles()
           )}>
