@@ -8,27 +8,20 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useForm, Controller, useWatch } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
   ArrowLeft,
-  Calendar,
-  FileText,
-  Image,
-  Video,
-  Repeat,
   Hash,
   AtSign,
-  Upload,
   Save,
-  Eye,
   AlertCircle
 } from 'lucide-react';
 import { Button } from '@/design-system/components/primitives/Button';
 import { adminToast } from '@/lib/admin/toast';
 import { createContentSchema } from '@/lib/validations/schemas';
-import type { ContentType, Platform, Project } from '@/lib/admin/project-types';
+import type { Project } from '@/lib/admin/project-types';
 
 // Extend the base schema to include the content body field and array fields
 const contentFormSchema = createContentSchema.extend({
@@ -175,20 +168,6 @@ export default function NewContentPage() {
       adminToast.error('Error creating content');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const getTypeIcon = (type: ContentType) => {
-    switch (type) {
-      case 'video':
-      case 'reel':
-        return <Video className="h-4 w-4" />;
-      case 'carousel':
-        return <Repeat className="h-4 w-4" />;
-      case 'article':
-        return <FileText className="h-4 w-4" />;
-      default:
-        return <Image className="h-4 w-4" />;
     }
   };
 

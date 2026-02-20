@@ -113,13 +113,14 @@ export async function GET(request: NextRequest) {
     const supabase = getSupabaseAdmin();
 
     /** Apply shared filters to a query builder */
-    function applyFilters<T extends { eq: Function; or: Function }>(q: T): T {
-      if (clientId) q = q.eq('client_id', clientId) as T;
-      if (status) q = q.eq('status', status) as T;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    function applyFilters(q: any) {
+      if (clientId) q = q.eq('client_id', clientId);
+      if (status) q = q.eq('status', status);
       if (search) {
         q = q.or(
           `invoice_number.ilike.%${search}%,client_name.ilike.%${search}%`,
-        ) as T;
+        );
       }
       return q;
     }

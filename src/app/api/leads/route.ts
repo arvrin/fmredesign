@@ -56,20 +56,21 @@ export async function GET(request: NextRequest) {
     const dbSortField = sortBy ? (sortFieldMap[sortBy] || sortBy) : 'created_at';
 
     /** Apply shared filters to a query builder */
-    function applyFilters<T extends { in: Function; gte: Function; lte: Function; or: Function }>(q: T): T {
-      if (statusFilter) q = q.in('status', statusFilter.split(',')) as T;
-      if (priorityFilter) q = q.in('priority', priorityFilter.split(',')) as T;
-      if (sourceFilter) q = q.in('source', sourceFilter.split(',')) as T;
-      if (projectTypeFilter) q = q.in('project_type', projectTypeFilter.split(',')) as T;
-      if (budgetRangeFilter) q = q.in('budget_range', budgetRangeFilter.split(',')) as T;
-      if (companySizeFilter) q = q.in('company_size', companySizeFilter.split(',')) as T;
-      if (assignedToFilter) q = q.in('assigned_to', assignedToFilter.split(',')) as T;
-      if (startDate) q = q.gte('created_at', startDate) as T;
-      if (endDate) q = q.lte('created_at', endDate) as T;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    function applyFilters(q: any) {
+      if (statusFilter) q = q.in('status', statusFilter.split(','));
+      if (priorityFilter) q = q.in('priority', priorityFilter.split(','));
+      if (sourceFilter) q = q.in('source', sourceFilter.split(','));
+      if (projectTypeFilter) q = q.in('project_type', projectTypeFilter.split(','));
+      if (budgetRangeFilter) q = q.in('budget_range', budgetRangeFilter.split(','));
+      if (companySizeFilter) q = q.in('company_size', companySizeFilter.split(','));
+      if (assignedToFilter) q = q.in('assigned_to', assignedToFilter.split(','));
+      if (startDate) q = q.gte('created_at', startDate);
+      if (endDate) q = q.lte('created_at', endDate);
       if (searchQuery) {
         q = q.or(
           `name.ilike.%${searchQuery}%,email.ilike.%${searchQuery}%,company.ilike.%${searchQuery}%,project_description.ilike.%${searchQuery}%`
-        ) as T;
+        );
       }
       return q;
     }

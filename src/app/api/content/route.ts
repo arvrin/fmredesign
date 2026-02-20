@@ -44,14 +44,15 @@ export async function GET(request: NextRequest) {
     const dbSortField = sortFieldMap[sortBy] || sortBy;
 
     /** Apply shared filters to a query builder */
-    function applyFilters<T extends { eq: Function; in: Function; gte: Function; lte: Function }>(q: T): T {
-      if (projectId) q = q.eq('project_id', projectId) as T;
-      if (clientId) q = q.eq('client_id', clientId) as T;
-      if (status) q = q.in('status', status.split(',')) as T;
-      if (type) q = q.in('type', type.split(',')) as T;
-      if (platform) q = q.in('platform', platform.split(',')) as T;
-      if (startDate) q = q.gte('scheduled_date', startDate) as T;
-      if (endDate) q = q.lte('scheduled_date', endDate) as T;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    function applyFilters(q: any) {
+      if (projectId) q = q.eq('project_id', projectId);
+      if (clientId) q = q.eq('client_id', clientId);
+      if (status) q = q.in('status', status.split(','));
+      if (type) q = q.in('type', type.split(','));
+      if (platform) q = q.in('platform', platform.split(','));
+      if (startDate) q = q.gte('scheduled_date', startDate);
+      if (endDate) q = q.lte('scheduled_date', endDate);
       return q;
     }
 

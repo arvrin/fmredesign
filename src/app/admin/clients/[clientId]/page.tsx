@@ -98,7 +98,7 @@ export default function AdminClientDetail() {
   const additionalEmails = clientProfile.additionalContacts.map((c) => c.email);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <PageHeader
         title={clientProfile.name}
         description={`${clientProfile.industry} • Managed by ${clientProfile.accountManager}`}
@@ -118,15 +118,20 @@ export default function AdminClientDetail() {
       />
 
       <div>
-        <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="portal">Client Portal</TabsTrigger>
-            <TabsTrigger value="projects">Projects</TabsTrigger>
-            <TabsTrigger value="contracts">Contracts</TabsTrigger>
-            <TabsTrigger value="team">Team</TabsTrigger>
-            <TabsTrigger value="communication">Communication</TabsTrigger>
-          </TabsList>
+        <Tabs defaultValue="overview" className="space-y-4 sm:space-y-6">
+          {/* Scrollable tab bar with fade hints on mobile */}
+          <div className="relative">
+            <TabsList className="w-full sm:w-fit">
+              <TabsTrigger value="overview" className="text-xs sm:text-sm">Overview</TabsTrigger>
+              <TabsTrigger value="portal" className="text-xs sm:text-sm">Portal</TabsTrigger>
+              <TabsTrigger value="projects" className="text-xs sm:text-sm">Projects</TabsTrigger>
+              <TabsTrigger value="contracts" className="text-xs sm:text-sm">Contracts</TabsTrigger>
+              <TabsTrigger value="team" className="text-xs sm:text-sm">Team</TabsTrigger>
+              <TabsTrigger value="communication" className="text-xs sm:text-sm">Comms</TabsTrigger>
+            </TabsList>
+            {/* Right fade hint for scrollable tabs on mobile */}
+            <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white to-transparent pointer-events-none sm:hidden" />
+          </div>
 
           <TabsContent value="overview" className="space-y-6">
             <SectionErrorBoundary section="Overview">

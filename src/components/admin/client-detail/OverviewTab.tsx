@@ -18,8 +18,8 @@ interface OverviewTabProps {
 
 export function OverviewTab({ clientProfile }: OverviewTabProps) {
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Client Information */}
         <Card>
           <CardHeader>
@@ -111,7 +111,7 @@ export function OverviewTab({ clientProfile }: OverviewTabProps) {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
             <div>
               <p className="text-sm text-fm-neutral-600">Contract Value</p>
               <p className="text-2xl font-bold text-fm-neutral-900">

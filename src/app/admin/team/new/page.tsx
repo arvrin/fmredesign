@@ -6,7 +6,6 @@
 
 'use client';
 
-import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -31,8 +30,6 @@ import { PageHeader } from '@/components/ui/page-header';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/select-native';
 import {
-  TeamRole,
-  TeamDepartment,
   TEAM_ROLES,
   TEAM_DEPARTMENTS,
   COMMON_SKILLS

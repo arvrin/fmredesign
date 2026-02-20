@@ -11,7 +11,7 @@ interface PageHeaderProps {
 
 export function PageHeader({ title, description, icon, actions, breadcrumb, className }: PageHeaderProps) {
   return (
-    <div className={cn('mb-8', className)}>
+    <div className={cn('mb-5 sm:mb-8', className)}>
       {breadcrumb && <div className="mb-3">{breadcrumb}</div>}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
         <div className="min-w-0 flex items-center gap-3">
