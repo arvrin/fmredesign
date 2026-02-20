@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { useClientPortal } from '@/lib/client-portal/context';
 import { formatContractCurrency, type Contract } from '@/lib/admin/contract-types';
+import { getBankInfoForCurrency, type BankAccountInfo } from '@/lib/admin/types';
 
 /* ───────── Status helpers ───────── */
 const statusColor = (status: string) => {
@@ -162,9 +163,9 @@ async function downloadContractPDF(contract: Contract) {
   y = 16;
   doc.setFillColor(199, 50, 118);
   doc.rect(M, 10, 22, 22, 'F');
-  doc.setFontSize(12);
+  doc.setFontSize(10);
   doc.setTextColor(255, 255, 255);
-  doc.text('FM', M + 7, 23);
+  doc.text('FM', M + 6.5, 23);
 
   doc.setFontSize(24);
   doc.setTextColor(26, 26, 26);
@@ -304,6 +305,44 @@ async function downloadContractPDF(contract: Contract) {
       y += 4;
     });
   }
+
+  // ── Bank Details
+  const bankInfo = getBankInfoForCurrency(contract.currency || 'INR');
+  y += 10;
+  if (y > 240) {
+    doc.addPage();
+    y = 20;
+  }
+  doc.setFontSize(12);
+  doc.setTextColor(26, 26, 26);
+  doc.text('Bank Details for Payment', M, y);
+  y += 6;
+
+  const bankBoxH = bankInfo.swiftCode ? 28 : 22;
+  doc.setFillColor(249, 250, 251);
+  doc.rect(M, y, W - 2 * M, bankBoxH, 'F');
+  doc.setDrawColor(229, 229, 229);
+  doc.setLineWidth(0.5);
+  doc.rect(M, y, W - 2 * M, bankBoxH);
+
+  doc.setFontSize(9);
+  doc.setTextColor(26, 26, 26);
+  doc.text(`Account Name: ${bankInfo.accountName}`, M + 4, y + 6);
+  doc.text(`Account Number: ${bankInfo.accountNumber}`, M + 4, y + 11);
+  doc.text(`Bank: ${bankInfo.bankName}`, M + 90, y + 6);
+  doc.text(`IFSC: ${bankInfo.ifscCode}`, M + 90, y + 11);
+  if (bankInfo.swiftCode) {
+    doc.text(`SWIFT Code: ${bankInfo.swiftCode}`, M + 4, y + 16);
+    doc.text(`Branch: ${bankInfo.branch || ''}`, M + 90, y + 16);
+    doc.setFontSize(8);
+    doc.setTextColor(120, 120, 120);
+    doc.text('For international transfers, we recommend using Wise for lower fees.', M + 4, y + 23);
+  } else {
+    if (bankInfo.branch) {
+      doc.text(`Branch: ${bankInfo.branch}`, M + 4, y + 16);
+    }
+  }
+  y += bankBoxH;
 
   // ── Acceptance record
   if (contract.status === 'accepted' && contract.acceptedAt) {
@@ -630,6 +669,55 @@ export default function ClientContractsPage() {
                       </div>
                     )}
                   </div>
+
+                  {/* ── Bank Details ── */}
+                  {(() => {
+                    const bank = getBankInfoForCurrency(contract.currency || 'INR');
+                    return (
+                      <div className="pt-4 border-t border-fm-neutral-100">
+                        <h4 className="text-sm font-semibold text-fm-neutral-800 mb-3 uppercase tracking-wide">
+                          Bank Details for Payment
+                        </h4>
+                        <div className="bg-fm-neutral-50 rounded-lg p-4">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                            <div>
+                              <span className="text-fm-neutral-500 text-xs block">Account Name</span>
+                              <span className="text-fm-neutral-900 font-medium">{bank.accountName}</span>
+                            </div>
+                            <div>
+                              <span className="text-fm-neutral-500 text-xs block">Bank</span>
+                              <span className="text-fm-neutral-900 font-medium">{bank.bankName}</span>
+                            </div>
+                            <div>
+                              <span className="text-fm-neutral-500 text-xs block">Account Number</span>
+                              <span className="text-fm-neutral-900 font-medium">{bank.accountNumber}</span>
+                            </div>
+                            <div>
+                              <span className="text-fm-neutral-500 text-xs block">IFSC Code</span>
+                              <span className="text-fm-neutral-900 font-medium">{bank.ifscCode}</span>
+                            </div>
+                            {bank.swiftCode && (
+                              <div>
+                                <span className="text-fm-neutral-500 text-xs block">SWIFT Code</span>
+                                <span className="text-fm-neutral-900 font-medium">{bank.swiftCode}</span>
+                              </div>
+                            )}
+                            {bank.branch && (
+                              <div>
+                                <span className="text-fm-neutral-500 text-xs block">Branch</span>
+                                <span className="text-fm-neutral-900 font-medium">{bank.branch}</span>
+                              </div>
+                            )}
+                          </div>
+                          {bank.swiftCode && (
+                            <p className="text-xs text-fm-neutral-500 mt-3 pt-2 border-t border-fm-neutral-200">
+                              For international transfers, we recommend using Wise for lower fees.
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })()}
 
                   {/* ── Terms & Conditions (numbered) ── */}
                   {contract.termsAndConditions && (

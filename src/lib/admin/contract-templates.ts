@@ -5,6 +5,7 @@
  */
 
 import type { ContractServiceItem } from './contract-types';
+import { INDIAN_BANK_INFO, INTERNATIONAL_BANK_INFO, type BankAccountInfo } from './types';
 
 export interface ContractTemplate {
   id: 'indian' | 'international';
@@ -19,6 +20,8 @@ export interface ContractTemplate {
   defaultServices: ContractServiceItem[];
   /** Full T&C text with numbered sections */
   termsAndConditions: string;
+  /** Bank account details for payment */
+  bankDetails: BankAccountInfo;
 }
 
 /* ═══════════════════════════════════════════
@@ -51,6 +54,7 @@ const INDIAN_TEMPLATE: ContractTemplate = {
       total: 180000,
     },
   ],
+  bankDetails: INDIAN_BANK_INFO,
   termsAndConditions: `Parties & Agreement:
 This Agreement is entered into between Freaking Minds, Bhopal, Madhya Pradesh, India ("Agency") and the Client as named in this contract.
 
@@ -133,6 +137,7 @@ const INTERNATIONAL_TEMPLATE: ContractTemplate = {
       total: 3600,
     },
   ],
+  bankDetails: INTERNATIONAL_BANK_INFO,
   termsAndConditions: `Parties & Agreement:
 This Agreement is entered into between Freaking Minds, Bhopal, India ("Agency") and the Client as named in this contract. Both parties agree to collaborate remotely in good faith.
 

@@ -10,7 +10,7 @@
 
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { DEFAULT_COMPANY_INFO } from './types';
+import { DEFAULT_COMPANY_INFO, getBankInfoForClient, type BankAccountInfo } from './types';
 
 // ---------------------------------------------------------------------------
 // Brand constants
@@ -444,8 +444,9 @@ export class SimplePDFGenerator {
       currentY = this.addLabelledSection('P A Y M E N T   T E R M S', invoice.terms, currentY);
     }
 
-    // Bank details — two-column layout
-    this.addBankDetails(currentY);
+    // Bank details — two-column layout, account chosen by client country
+    const bankInfo = getBankInfoForClient(invoice.client.country);
+    this.addBankDetails(currentY, bankInfo);
   }
 
   private addLabelledSection(label: string, text: string, startY: number): number {
@@ -469,11 +470,14 @@ export class SimplePDFGenerator {
     return startY + 6 + lines.length * 4 + 6;
   }
 
-  private addBankDetails(startY: number): void {
+  private addBankDetails(startY: number, bankInfo: BankAccountInfo): void {
     if (startY > PAGE_H - 50) {
       this.doc.addPage();
       startY = 20;
     }
+
+    const hasSwift = !!bankInfo.swiftCode;
+    const boxH = hasSwift ? 24 : 18;
 
     // Section label
     this.doc.setFont('helvetica', 'bold');
@@ -488,7 +492,7 @@ export class SimplePDFGenerator {
     // Light background box for bank details
     const boxY = startY + 4;
     this.doc.setFillColor(248, 248, 250);
-    this.doc.roundedRect(MARGIN_L, boxY, CONTENT_W, 18, 1.5, 1.5, 'F');
+    this.doc.roundedRect(MARGIN_L, boxY, CONTENT_W, boxH, 1.5, 1.5, 'F');
 
     // Two-column bank details inside box
     const col1X = MARGIN_L + 4;
@@ -503,29 +507,49 @@ export class SimplePDFGenerator {
     this.doc.text('Bank:', col1X, rowY);
     this.doc.setFont('helvetica', 'normal');
     this.doc.setTextColor(...GREY);
-    this.doc.text('HDFC Bank', col1X + 14, rowY);
+    this.doc.text(bankInfo.bankName, col1X + 14, rowY);
 
     this.doc.setFont('helvetica', 'bold');
     this.doc.setTextColor(...DARK);
-    this.doc.text('A/C:', col1X, rowY + 5);
+    this.doc.text('A/C Name:', col1X, rowY + 5);
     this.doc.setFont('helvetica', 'normal');
     this.doc.setTextColor(...GREY);
-    this.doc.text('50200046586390', col1X + 14, rowY + 5);
+    this.doc.text(bankInfo.accountName, col1X + 20, rowY + 5);
+
+    this.doc.setFont('helvetica', 'bold');
+    this.doc.setTextColor(...DARK);
+    this.doc.text('A/C No:', col1X, rowY + 10);
+    this.doc.setFont('helvetica', 'normal');
+    this.doc.setTextColor(...MAGENTA);
+    this.doc.text(bankInfo.accountNumber, col1X + 16, rowY + 10);
 
     // Right column
     this.doc.setFont('helvetica', 'bold');
     this.doc.setTextColor(...DARK);
     this.doc.text('IFSC:', col2X, rowY);
     this.doc.setFont('helvetica', 'normal');
-    this.doc.setTextColor(...GREY);
-    this.doc.text('HDFC0000062', col2X + 14, rowY);
+    this.doc.setTextColor(...MAGENTA);
+    this.doc.text(bankInfo.ifscCode, col2X + 14, rowY);
+
+    if (hasSwift) {
+      this.doc.setFont('helvetica', 'bold');
+      this.doc.setTextColor(...DARK);
+      this.doc.text('SWIFT:', col2X, rowY + 5);
+      this.doc.setFont('helvetica', 'normal');
+      this.doc.setTextColor(...MAGENTA);
+      this.doc.text(bankInfo.swiftCode!, col2X + 14, rowY + 5);
+    }
 
     this.doc.setFont('helvetica', 'bold');
     this.doc.setTextColor(...DARK);
-    this.doc.text('Branch:', col2X, rowY + 5);
+    this.doc.text('Branch:', col2X, rowY + (hasSwift ? 10 : 5));
     this.doc.setFont('helvetica', 'normal');
     this.doc.setTextColor(...GREY);
-    this.doc.text('Arera Colony', col2X + 14, rowY + 5);
+    const branchText = bankInfo.branch || '';
+    // Truncate long branch text to fit
+    const maxBranchW = CONTENT_W / 2 - 24;
+    const branchLines = this.doc.splitTextToSize(branchText, maxBranchW);
+    this.doc.text(branchLines[0] || '', col2X + 16, rowY + (hasSwift ? 10 : 5));
   }
 
   // ---- Footer (all pages) -------------------------------------------------

@@ -63,8 +63,42 @@ export interface BankAccountInfo {
   accountName: string;
   accountNumber: string;
   ifscCode: string;
+  swiftCode?: string;
   branch?: string;
   accountType?: string;
+}
+
+/** Indian clients — HDFC Bank (Freaking Minds) */
+export const INDIAN_BANK_INFO: BankAccountInfo = {
+  bankName: 'HDFC Bank',
+  accountName: 'Freaking Minds',
+  accountNumber: '50200046586390',
+  ifscCode: 'HDFC0000062',
+  branch: 'Arera Colony, Bhopal',
+  accountType: 'Current Account',
+};
+
+/** International clients — Kotak Mahindra Bank (Freaking Minds LLP) */
+export const INTERNATIONAL_BANK_INFO: BankAccountInfo = {
+  bankName: 'Kotak Mahindra Bank Ltd',
+  accountName: 'Freaking Minds LLP',
+  accountNumber: '9451163111',
+  ifscCode: 'KKBK0005886',
+  swiftCode: 'KKBKINBBCPC',
+  branch: 'Plot No E-2-111, Arera Colony, Bhopal 462016',
+  accountType: 'Current Account',
+};
+
+/** Pick the right bank account based on client country */
+export function getBankInfoForClient(country?: string): BankAccountInfo {
+  if (!country || country.toLowerCase() === 'india') return INDIAN_BANK_INFO;
+  return INTERNATIONAL_BANK_INFO;
+}
+
+/** Pick the right bank account based on currency */
+export function getBankInfoForCurrency(currency: string): BankAccountInfo {
+  if (currency === 'INR') return INDIAN_BANK_INFO;
+  return INTERNATIONAL_BANK_INFO;
 }
 
 // Default company info for Freaking Minds
@@ -82,15 +116,8 @@ export const DEFAULT_COMPANY_INFO: CompanyInfo = {
   msmeUdyamNumber: process.env.COMPANY_MSME || "",
 };
 
-// Default bank account info (placeholder - will be updated with actual details)
-export const DEFAULT_BANK_INFO: BankAccountInfo = {
-  bankName: "[Bank Name]",
-  accountName: "Freaking Minds",
-  accountNumber: "[Account Number]",
-  ifscCode: "[IFSC Code]",
-  branch: "[Branch Name]",
-  accountType: "Current Account"
-};
+/** @deprecated Use INDIAN_BANK_INFO or INTERNATIONAL_BANK_INFO instead */
+export const DEFAULT_BANK_INFO: BankAccountInfo = INDIAN_BANK_INFO;
 
 // Agency Services and Products
 export interface AgencyService {
