@@ -52,7 +52,7 @@ describe('ApiError', () => {
       throw new ApiError('test', 500);
     } catch (e) {
       expect(e).toBeInstanceOf(Error);
-      expect((e as ApiError).status).toBe(500);
+      expect((e as InstanceType<typeof ApiError>).status).toBe(500);
     }
   });
 
@@ -141,7 +141,7 @@ describe('ApiResponse type contract', () => {
   it('ApiResponse interface has success, data, and optional message/error', async () => {
     // This is a compile-time check primarily, but we verify the shape at runtime
     const { ApiError } = await import('../api');
-    type ApiResponse = import('../api').ApiResponse;
+    type ApiResponse<T = unknown> = import('../api').ApiResponse<T>;
 
     // Verify the shape is usable
     const response: ApiResponse<string[]> = {
