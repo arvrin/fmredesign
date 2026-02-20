@@ -46,6 +46,7 @@ export default function ContractsTab({ clientId, clientName }: Props) {
   const [showTemplatePicker, setShowTemplatePicker] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingStatus, setEditingStatus] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   // Form state
@@ -91,6 +92,7 @@ export default function ContractsTab({ clientId, clientName }: Props) {
     setTermsAndConditions('');
     setRevisionNotes('');
     setEditingId(null);
+    setEditingStatus(null);
     setShowForm(false);
     setShowTemplatePicker(false);
   };
@@ -125,6 +127,7 @@ export default function ContractsTab({ clientId, clientName }: Props) {
     setTermsAndConditions(c.termsAndConditions || '');
     setRevisionNotes(c.revisionNotes || '');
     setEditingId(c.id);
+    setEditingStatus(c.status);
     setShowForm(true);
   };
 
@@ -143,6 +146,8 @@ export default function ContractsTab({ clientId, clientName }: Props) {
     setSaving(true);
     try {
       const method = editingId ? 'PUT' : 'POST';
+      // When re-sending an edit_requested contract, set status back to 'sent'
+      const resendStatus = editingId && editingStatus === 'edit_requested' ? 'sent' : undefined;
       const body = editingId
         ? {
             id: editingId,
@@ -156,6 +161,7 @@ export default function ContractsTab({ clientId, clientName }: Props) {
             billingCycle: billingCycle || undefined,
             termsAndConditions: termsAndConditions || undefined,
             revisionNotes: revisionNotes || undefined,
+            ...(resendStatus && { status: resendStatus }),
           }
         : {
             clientId,
@@ -180,7 +186,7 @@ export default function ContractsTab({ clientId, clientName }: Props) {
 
       if (!json.success) throw new Error(json.error);
 
-      adminToast.success(editingId ? 'Contract updated' : 'Contract created');
+      adminToast.success(resendStatus ? 'Contract updated & re-sent to client' : editingId ? 'Contract updated' : 'Contract created');
       resetForm();
       fetchContracts();
     } catch (err) {
@@ -554,7 +560,7 @@ export default function ContractsTab({ clientId, clientName }: Props) {
               </DashboardButton>
               <DashboardButton onClick={handleSave} disabled={saving || !title.trim()}>
                 <Save className="h-4 w-4 mr-2" />
-                {saving ? 'Saving...' : editingId ? 'Update Contract' : 'Create Contract'}
+                {saving ? 'Saving...' : editingStatus === 'edit_requested' ? 'Save & Re-send' : editingId ? 'Update Contract' : 'Create Contract'}
               </DashboardButton>
             </div>
           </CardContent>
