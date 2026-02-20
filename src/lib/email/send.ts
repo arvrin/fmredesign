@@ -306,6 +306,39 @@ export function proposalCreatedEmail(data: ProposalEmailData): { subject: string
 }
 
 // ---------------------------------------------------------------------------
+// Content action email templates (client → team)
+// ---------------------------------------------------------------------------
+
+interface ContentActionEmailData {
+  contentTitle: string;
+  platform: string;
+  action: 'approved' | 'revision_requested';
+  clientFeedback?: string;
+}
+
+export function contentActionEmail(data: ContentActionEmailData): { subject: string; html: string } {
+  const isApproved = data.action === 'approved';
+  const label = isApproved ? 'Approved' : 'Revision Requested';
+  const color = isApproved ? '#22c55e' : '#f59e0b';
+
+  const body = `
+    <p style="margin:0 0 16px;color:${HEADING_COLOR};font-size:16px;font-weight:700">A client has ${isApproved ? 'approved' : 'requested revisions on'} content.</p>
+    ${dataTable(
+      row('Content', data.contentTitle) +
+      row('Platform', data.platform) +
+      row('Action', badge(label, color))
+    )}
+    ${data.clientFeedback ? `<div style="margin:16px 0;padding:12px;background:#fff7ed;border-left:3px solid #f59e0b;border-radius:4px"><p style="margin:0 0 4px;color:${HEADING_COLOR};font-size:13px;font-weight:600">Client Feedback</p><p style="margin:0;color:${TEXT_COLOR};font-size:13px">${data.clientFeedback}</p></div>` : ''}
+    <p style="margin:16px 0 0;color:${TEXT_COLOR};font-size:13px">View in the <a href="https://freakingminds.in/admin/content" style="color:${BRAND_MAGENTA}">admin dashboard</a>.</p>
+  `;
+
+  return {
+    subject: `Content ${label}: ${data.contentTitle}`,
+    html: emailWrapper(`Content ${label}`, body),
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Contract email templates
 // ---------------------------------------------------------------------------
 

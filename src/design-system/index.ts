@@ -104,7 +104,7 @@ export { DashboardLayout } from './components/layouts/DashboardLayout';
 export type { ButtonProps as DashboardButtonProps } from './components/primitives/Button';
 export type { CardProps as DashboardCardProps } from './components/primitives/Card';
 export type { MetricCardProps } from './components/patterns/MetricCard';
-export type { DashboardLayoutProps, NavigationItem, NavigationGroup } from './components/layouts/DashboardLayout';
+export type { DashboardLayoutProps, NavigationItem, NavigationGroup, NotificationItem } from './components/layouts/DashboardLayout';
 
 // Re-export utils for convenience
 export { cn } from '@/lib/utils';

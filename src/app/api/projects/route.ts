@@ -10,6 +10,7 @@ import { ProjectUtils } from '@/lib/admin/project-types';
 import { requireAdminAuth, requirePermission } from '@/lib/admin-auth-middleware';
 import { createProjectSchema, updateProjectSchema, validateBody } from '@/lib/validations/schemas';
 import { logAuditEvent, getClientIP } from '@/lib/admin/audit-log';
+import { notifyClient } from '@/lib/notifications';
 
 // GET /api/projects
 export async function GET(request: NextRequest) {
@@ -205,6 +206,16 @@ export async function POST(request: NextRequest) {
       ip_address: getClientIP(request),
     });
 
+    // Notify client about new project
+    if (data.client_id) {
+      notifyClient(data.client_id, {
+        type: 'project_created',
+        title: 'New project created',
+        message: data.name,
+        actionUrl: `/client/${data.client_id}/projects`,
+      });
+    }
+
     return NextResponse.json(
       { success: true, data: responseProject, message: 'Project created successfully' },
       { status: 201 }
@@ -307,6 +318,25 @@ export async function PUT(request: NextRequest) {
       details: { name: data.name, updatedFields: Object.keys(updates) },
       ip_address: getClientIP(request),
     });
+
+    // Notify client on status changes
+    if (body.status && data.client_id) {
+      const statusLabels: Record<string, string> = {
+        active: 'is now active',
+        completed: 'has been completed',
+        on_hold: 'is on hold',
+        cancelled: 'has been cancelled',
+      };
+      const label = statusLabels[body.status];
+      if (label) {
+        notifyClient(data.client_id, {
+          type: 'project_status_changed',
+          title: `Project ${label}`,
+          message: data.name,
+          actionUrl: `/client/${data.client_id}/projects`,
+        });
+      }
+    }
 
     return NextResponse.json({
       success: true,

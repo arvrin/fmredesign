@@ -113,6 +113,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const { isAuthenticated, loading, currentUser, logout } = useAdminAuth();
   const [commandOpen, setCommandOpen] = useState(false);
 
+  // Notification state
+  const [notifications, setNotifications] = useState<
+    { id: string; type: string; title: string; message: string; isRead: boolean; priority: 'low' | 'normal' | 'high'; actionUrl: string | null; createdAt: string }[]
+  >([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+
   const isAuthRoute = pathname?.startsWith('/admin/auth');
 
   useEffect(() => {
@@ -123,6 +129,51 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       router.push('/admin');
     }
   }, [loading, isAuthenticated, isAuthRoute, pathname, router]);
+
+  // Notification handlers
+  const fetchNotifications = useCallback(async () => {
+    try {
+      const res = await fetch('/api/admin/notifications?limit=20');
+      if (res.ok) {
+        const json = await res.json();
+        setNotifications(json.data || []);
+        setUnreadCount(json.unreadCount || 0);
+      }
+    } catch { /* silent */ }
+  }, []);
+
+  const handleMarkAllRead = useCallback(async () => {
+    try {
+      await fetch('/api/admin/notifications', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ markAllRead: true }),
+      });
+      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+      setUnreadCount(0);
+    } catch { /* silent */ }
+  }, []);
+
+  const handleNotificationClick = useCallback(async (id: string, actionUrl?: string) => {
+    try {
+      await fetch('/api/admin/notifications', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: [id] }),
+      });
+      setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)));
+      setUnreadCount((prev) => Math.max(0, prev - 1));
+    } catch { /* silent */ }
+    if (actionUrl) router.push(actionUrl);
+  }, [router]);
+
+  // Poll notifications every 60s when authenticated
+  useEffect(() => {
+    if (!isAuthenticated || loading) return;
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 60000);
+    return () => clearInterval(interval);
+  }, [isAuthenticated, loading, fetchNotifications]);
 
   const handleLogout = useCallback(async () => {
     await logout();
@@ -187,6 +238,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <AdminBreadcrumbs />
           </Suspense>
         }
+        notifications={notifications}
+        unreadCount={unreadCount}
+        onMarkAllRead={handleMarkAllRead}
+        onNotificationClick={handleNotificationClick}
+        onRefreshNotifications={fetchNotifications}
       >
         <AdminErrorBoundary>{children}</AdminErrorBoundary>
       </DashboardLayout>

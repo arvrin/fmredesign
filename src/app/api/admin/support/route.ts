@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { requireAdminAuth, requirePermission } from '@/lib/admin-auth-middleware';
 import { notifyRecipient, ticketStatusUpdateEmail } from '@/lib/email/send';
+import { notifyClient } from '@/lib/notifications';
 
 export async function GET(request: NextRequest) {
   const authError = await requireAdminAuth(request);
@@ -134,6 +135,21 @@ export async function PUT(request: NextRequest) {
         });
         notifyRecipient(client.email, emailData.subject, emailData.html);
       }
+
+      // In-app notification for the client
+      const statusLabels: Record<string, string> = {
+        open: 'reopened',
+        in_progress: 'being worked on',
+        resolved: 'resolved',
+        closed: 'closed',
+      };
+      notifyClient(ticket.client_id, {
+        type: 'ticket_status_updated',
+        title: `Support ticket ${statusLabels[status] || 'updated'}`,
+        message: ticket.title,
+        priority: status === 'resolved' ? 'high' : 'normal',
+        actionUrl: `/client/${ticket.client_id}/support`,
+      });
     }
 
     return NextResponse.json({

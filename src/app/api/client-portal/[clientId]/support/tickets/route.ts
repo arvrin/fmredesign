@@ -9,6 +9,7 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { resolveClientId } from '@/lib/client-portal/resolve-client';
 import { requireClientAuth } from '@/lib/client-session';
 import { notifyTeam, newSupportTicketEmail } from '@/lib/email/send';
+import { notifyAdmins } from '@/lib/notifications';
 
 export async function GET(
   request: NextRequest,
@@ -135,6 +136,16 @@ export async function POST(
       });
       notifyTeam(emailData.subject, emailData.html);
     }).catch((err: unknown) => console.error('Email notification failed:', err));
+
+    // In-app notification for admin team
+    notifyAdmins({
+      type: 'ticket_created',
+      title: 'New support ticket',
+      message: `${title} — ${priority || 'medium'} priority`,
+      priority: priority === 'urgent' || priority === 'high' ? 'high' : 'normal',
+      clientId: client.id,
+      actionUrl: '/admin/support',
+    });
 
     return NextResponse.json({
       success: true,

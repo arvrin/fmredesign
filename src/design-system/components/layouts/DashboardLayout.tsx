@@ -13,6 +13,8 @@ import {
   User,
   LogOut,
   Search,
+  Check,
+  ExternalLink,
 } from 'lucide-react';
 
 export interface DashboardLayoutProps {
@@ -29,6 +31,23 @@ export interface DashboardLayoutProps {
   onCommandPalette?: () => void;
   breadcrumb?: React.ReactNode;
   className?: string;
+  /** Notification system */
+  notifications?: NotificationItem[];
+  unreadCount?: number;
+  onMarkAllRead?: () => void;
+  onNotificationClick?: (id: string, actionUrl?: string) => void;
+  onRefreshNotifications?: () => void;
+}
+
+export interface NotificationItem {
+  id: string;
+  type: string;
+  title: string;
+  message: string;
+  isRead: boolean;
+  priority: 'low' | 'normal' | 'high';
+  actionUrl: string | null;
+  createdAt: string;
 }
 
 export interface NavigationGroup {
@@ -41,6 +60,21 @@ export interface NavigationItem {
   href: string;
   icon?: React.ReactNode;
   badge?: string | number;
+}
+
+/* Time formatting for notifications */
+function formatRelativeTime(iso: string): string {
+  const now = Date.now();
+  const then = new Date(iso).getTime();
+  const diff = now - then;
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'Just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  if (days < 7) return `${days}d ago`;
+  return new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
 }
 
 const layoutVariants = {
@@ -93,9 +127,16 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   onCommandPalette,
   breadcrumb,
   className,
+  notifications = [],
+  unreadCount = 0,
+  onMarkAllRead,
+  onNotificationClick,
+  onRefreshNotifications,
 }) => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const notifRef = React.useRef<HTMLDivElement>(null);
   const pathname = usePathname();
   const styles = layoutVariants[variant];
 
@@ -135,6 +176,23 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [handleKeyDown]);
+
+  /* Close notification panel on outside click */
+  useEffect(() => {
+    if (!notifOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
+        setNotifOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [notifOpen]);
+
+  /* Fetch notifications when panel opens */
+  useEffect(() => {
+    if (notifOpen) onRefreshNotifications?.();
+  }, [notifOpen, onRefreshNotifications]);
 
   /* Auto-detect active nav item from pathname */
   const isActive = (href: string) => {
@@ -416,10 +474,100 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                 </kbd>
               </button>
             )}
-            <IconBtn label="Notifications" className="relative w-9 h-9">
-              <Bell className="w-[18px] h-[18px]" />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-fm-magenta-500 rounded-full" />
-            </IconBtn>
+            {/* Notification bell + dropdown */}
+            <div className="relative" ref={notifRef}>
+              <IconBtn
+                label="Notifications"
+                className="relative w-9 h-9"
+                onClick={() => setNotifOpen((p) => !p)}
+              >
+                <Bell className="w-[18px] h-[18px]" />
+                {unreadCount > 0 && (
+                  <span className="absolute top-1 right-1 min-w-[16px] h-4 px-1 flex items-center justify-center bg-fm-magenta-500 text-white text-[10px] font-bold rounded-full leading-none">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                )}
+              </IconBtn>
+
+              {/* Notification Panel */}
+              {notifOpen && (
+                <div
+                  className="absolute right-0 top-full mt-2 w-80 sm:w-96 bg-white rounded-xl shadow-xl border border-fm-neutral-200 overflow-hidden"
+                  style={{ zIndex: 100 }}
+                >
+                  {/* Header */}
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-fm-neutral-100 bg-fm-neutral-50">
+                    <h3 className="font-semibold text-fm-neutral-900 text-sm">
+                      Notifications
+                      {unreadCount > 0 && (
+                        <span className="ml-2 text-xs font-medium text-fm-magenta-600">
+                          {unreadCount} new
+                        </span>
+                      )}
+                    </h3>
+                    {unreadCount > 0 && onMarkAllRead && (
+                      <button
+                        onClick={() => { onMarkAllRead(); }}
+                        className="text-xs text-fm-magenta-600 hover:text-fm-magenta-700 font-medium flex items-center gap-1"
+                      >
+                        <Check className="w-3 h-3" />
+                        Mark all read
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Notification list */}
+                  <div className="max-h-80 overflow-y-auto divide-y divide-fm-neutral-100">
+                    {notifications.length === 0 ? (
+                      <div className="py-10 px-4" style={{ textAlign: 'center' as const }}>
+                        <Bell className="w-8 h-8 text-fm-neutral-300 mx-auto mb-2" />
+                        <p className="text-sm text-fm-neutral-500">No notifications yet</p>
+                      </div>
+                    ) : (
+                      notifications.map((n) => (
+                        <button
+                          key={n.id}
+                          className={cn(
+                            'w-full px-4 py-3 flex items-start gap-3 hover:bg-fm-neutral-50 transition-colors',
+                            !n.isRead && 'bg-fm-magenta-50/40'
+                          )}
+                          onClick={() => {
+                            onNotificationClick?.(n.id, n.actionUrl || undefined);
+                            setNotifOpen(false);
+                          }}
+                        >
+                          {/* Unread dot */}
+                          <div className="pt-1.5 shrink-0">
+                            {!n.isRead ? (
+                              <span className="block w-2 h-2 rounded-full bg-fm-magenta-500" />
+                            ) : (
+                              <span className="block w-2 h-2 rounded-full bg-transparent" />
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0" style={{ textAlign: 'left' as const }}>
+                            <p className={cn(
+                              'text-sm leading-tight',
+                              !n.isRead ? 'font-semibold text-fm-neutral-900' : 'text-fm-neutral-700'
+                            )}>
+                              {n.title}
+                            </p>
+                            {n.message && (
+                              <p className="text-xs text-fm-neutral-500 mt-0.5 truncate">{n.message}</p>
+                            )}
+                            <p className="text-[11px] text-fm-neutral-400 mt-1">
+                              {formatRelativeTime(n.createdAt)}
+                            </p>
+                          </div>
+                          {n.actionUrl && (
+                            <ExternalLink className="w-3.5 h-3.5 text-fm-neutral-400 shrink-0 mt-1" />
+                          )}
+                        </button>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </header>
 

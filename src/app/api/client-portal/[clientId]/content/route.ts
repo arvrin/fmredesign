@@ -6,6 +6,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { requireClientAuth } from '@/lib/client-session';
+import { notifyAdmins } from '@/lib/notifications';
+import { notifyTeam, contentActionEmail } from '@/lib/email/send';
 
 export async function GET(
   request: NextRequest,
@@ -155,6 +157,25 @@ export async function PUT(
       console.error('Supabase content update error:', updateError);
       return NextResponse.json({ success: false, error: 'Failed to update content' }, { status: 500 });
     }
+
+    // Notify admin team about client's content decision
+    notifyAdmins({
+      type: action === 'approve' ? 'content_approved' : 'content_revision_requested',
+      title: action === 'approve' ? 'Client approved content' : 'Client requested content revision',
+      message: `Content #${contentId}${feedback ? ` — "${feedback}"` : ''}`,
+      priority: action === 'request_revision' ? 'high' : 'normal',
+      clientId,
+      actionUrl: '/admin/content',
+    });
+
+    // Fire-and-forget email to team
+    const emailData = contentActionEmail({
+      contentTitle: content.id,
+      platform: '',
+      action: action === 'approve' ? 'approved' : 'revision_requested',
+      clientFeedback: feedback || undefined,
+    });
+    notifyTeam(emailData.subject, emailData.html);
 
     return NextResponse.json({ success: true, data: { status: updates.status } });
   } catch (error) {

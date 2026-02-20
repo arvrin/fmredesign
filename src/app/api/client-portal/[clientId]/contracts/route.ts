@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { requireClientAuth } from '@/lib/client-session';
 import { resolveClientId } from '@/lib/client-portal/resolve-client';
+import { notifyAdmins } from '@/lib/notifications';
 import { contractActionSchema, validateBody } from '@/lib/validations/schemas';
 import { transformContract } from '@/lib/admin/contract-types';
 import { notifyTeam, contractStatusEmail } from '@/lib/email/send';
@@ -124,6 +125,21 @@ export async function PUT(
       clientFeedback: feedback || undefined,
     });
     notifyTeam(emailData.subject, emailData.html);
+
+    // In-app notification for admin team
+    const notifTitles = {
+      accept: 'Client accepted contract',
+      reject: 'Client rejected contract',
+      request_edit: 'Client requested contract edits',
+    } as const;
+    notifyAdmins({
+      type: action === 'accept' ? 'contract_accepted' : action === 'reject' ? 'contract_rejected' : 'contract_edit_requested',
+      title: notifTitles[action],
+      message: `${contract.title}${feedback ? ` — "${feedback}"` : ''}`,
+      priority: 'high',
+      clientId: resolved.id,
+      actionUrl: '/admin/clients',
+    });
 
     return NextResponse.json({ success: true, data: { status: updates.status } });
   } catch (error) {

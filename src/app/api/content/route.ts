@@ -9,6 +9,7 @@ import { ProjectUtils } from '@/lib/admin/project-types';
 import { requireAdminAuth, requirePermission } from '@/lib/admin-auth-middleware';
 import { createContentSchema, updateContentSchema, validateBody } from '@/lib/validations/schemas';
 import { logAuditEvent, getClientIP } from '@/lib/admin/audit-log';
+import { notifyClient } from '@/lib/notifications';
 
 // GET /api/content
 export async function GET(request: NextRequest) {
@@ -161,6 +162,17 @@ export async function POST(request: NextRequest) {
       details: { title: data.title, platform: data.platform, type: data.type },
       ip_address: getClientIP(request),
     });
+
+    // Notify client about new content (especially if in review status)
+    if (data.client_id) {
+      notifyClient(data.client_id, {
+        type: 'content_created',
+        title: data.status === 'review' ? 'Content ready for your review' : 'New content scheduled',
+        message: `${data.title} — ${data.platform}`,
+        priority: data.status === 'review' ? 'high' : 'normal',
+        actionUrl: `/client/${data.client_id}/content`,
+      });
+    }
 
     return NextResponse.json(
       { success: true, data: newContent, message: 'Content created successfully' },

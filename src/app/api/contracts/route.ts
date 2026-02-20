@@ -14,6 +14,7 @@ import { createContractSchema, updateContractSchema, validateBody } from '@/lib/
 import { logAuditEvent, getClientIP } from '@/lib/admin/audit-log';
 import { transformContract } from '@/lib/admin/contract-types';
 import { notifyTeam, contractCreatedEmail, contractStatusEmail } from '@/lib/email/send';
+import { notifyClient, notifyAdmins } from '@/lib/notifications';
 
 export async function GET(request: NextRequest) {
   const authError = await requireAdminAuth(request);
@@ -173,10 +174,19 @@ export async function PUT(request: NextRequest) {
     if (error) throw error;
     if (!data) return NextResponse.json({ success: false, error: 'Contract not found' }, { status: 404 });
 
-    // Fire-and-forget email when status changes
+    // Fire-and-forget notifications when status changes
     if (body.status === 'sent') {
       const emailData = contractStatusEmail({ title: data.title, action: 'sent' });
       notifyTeam(emailData.subject, emailData.html);
+
+      // In-app notification for client
+      notifyClient(data.client_id, {
+        type: 'contract_sent',
+        title: 'New contract ready for review',
+        message: data.title,
+        priority: 'high',
+        actionUrl: `/client/${data.client_id}/contracts`,
+      });
     }
 
     logAuditEvent({

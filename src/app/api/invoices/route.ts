@@ -13,6 +13,7 @@ import { getSupabaseAdmin } from '@/lib/supabase';
 import { requireAdminAuth, requirePermission } from '@/lib/admin-auth-middleware';
 import { createInvoiceSchema, updateInvoiceSchema, validateBody } from '@/lib/validations/schemas';
 import { notifyTeam, invoiceCreatedEmail } from '@/lib/email/send';
+import { notifyClient } from '@/lib/notifications';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -182,6 +183,17 @@ export async function POST(request: NextRequest) {
       status: record.status,
     });
     notifyTeam(emailData.subject, emailData.html);
+
+    // Notify client about new invoice
+    if (record.client_id) {
+      notifyClient(record.client_id, {
+        type: 'invoice_created',
+        title: 'New invoice available',
+        message: `Invoice ${record.invoice_number} — ${record.client_name}`,
+        priority: 'high',
+        actionUrl: `/client/${record.client_id}/documents`,
+      });
+    }
 
     return NextResponse.json({
       success: true,
