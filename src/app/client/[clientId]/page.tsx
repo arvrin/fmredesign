@@ -30,6 +30,7 @@ import {
   ChevronDown,
 } from 'lucide-react';
 import { AGENCY_SERVICES } from '@/lib/admin/types';
+import { formatContractCurrency } from '@/lib/admin/contract-types';
 import { useClientPortal } from '@/lib/client-portal/context';
 import { getStatusColor, getHealthColor } from '@/lib/client-portal/status-colors';
 
@@ -242,12 +243,7 @@ export default function ClientDashboard() {
           value={profile.contractDetails.value}
           subtitle={`Total project investment`}
           icon={<TrendingUp className="w-6 h-6" />}
-          formatter={(val) => new Intl.NumberFormat('en-IN', {
-            style: 'currency',
-            currency: profile.contractDetails.currency,
-            minimumFractionDigits: 0,
-            notation: 'compact'
-          }).format(Number(val))}
+          formatter={(val) => formatContractCurrency(Number(val), profile.contractDetails.currency)}
           variant="client"
         />
 
@@ -350,10 +346,10 @@ export default function ClientDashboard() {
                     <div>
                       <p className="text-sm text-fm-neutral-500">Contract Value</p>
                       <p className="font-medium text-fm-neutral-900">
-                        {new Intl.NumberFormat('en-IN', { style: 'currency', currency: profile.contractDetails.currency, minimumFractionDigits: 0 }).format(profile.contractDetails.value)}
+                        {formatContractCurrency(profile.contractDetails.value, profile.contractDetails.currency)}
                         {profile.contractDetails.retainerAmount > 0 && (
                           <span className="text-fm-neutral-500 font-normal">
-                            {' '}(Retainer: {new Intl.NumberFormat('en-IN', { style: 'currency', currency: profile.contractDetails.currency, minimumFractionDigits: 0 }).format(profile.contractDetails.retainerAmount)}/mo)
+                            {' '}(Retainer: {formatContractCurrency(profile.contractDetails.retainerAmount, profile.contractDetails.currency)}/mo)
                           </span>
                         )}
                       </p>
@@ -494,12 +490,7 @@ export default function ClientDashboard() {
                       </div>
                       <div className="flex justify-between items-center pt-2">
                         <span className="text-sm text-fm-neutral-600">
-                          Budget: {new Intl.NumberFormat('en-IN', {
-                            style: 'currency',
-                            currency: 'INR',
-                            minimumFractionDigits: 0,
-                            notation: 'compact'
-                          }).format(project.budget)}
+                          Budget: {formatContractCurrency(project.budget, profile.contractDetails.currency)}
                         </span>
                         <Link
                           href={`/client/${slug}/projects`}
