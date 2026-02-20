@@ -74,33 +74,6 @@ const services = [
   }
 ];
 
-const packages = [
-  {
-    name: "Startup Spark",
-    price: "₹25,000",
-    period: "/month",
-    description: "Perfect for startups and small businesses looking to establish their digital presence.",
-    features: ["Basic SEO Setup", "Social Media Management (2 platforms)", "Monthly Content Creation", "Basic Analytics Reporting", "Email Support"],
-    popular: false
-  },
-  {
-    name: "Growth Accelerator",
-    price: "₹50,000",
-    period: "/month",
-    description: "Ideal for growing businesses ready to scale their digital marketing efforts.",
-    features: ["Advanced SEO & Content Marketing", "Multi-platform Social Media", "PPC Campaign Management", "Monthly Strategy Calls", "Dedicated Account Manager"],
-    popular: true
-  },
-  {
-    name: "Enterprise Excellence",
-    price: "₹1,00,000",
-    period: "/month",
-    description: "Comprehensive solution for established businesses seeking market leadership.",
-    features: ["Full-service Digital Marketing", "Custom Strategy Development", "Advanced Analytics & BI", "Weekly Performance Reviews", "Priority Support & Consultation"],
-    popular: false
-  }
-];
-
 const process = [
   { step: "01", title: "Discovery & Audit", description: "We analyze your current digital presence, understand your goals, and identify opportunities for growth." },
   { step: "02", title: "Strategy Development", description: "Our team creates a comprehensive digital marketing strategy tailored to your business objectives and target audience." },
@@ -285,68 +258,45 @@ export default function ServicesPage() {
         <Image src="/textures/wave-divider.svg" alt="" width={1920} height={60} className="w-full" style={{ height: '60px', display: 'block' }} />
       </div>
 
-      {/* Pricing Section */}
+      {/* Custom Quote CTA Section */}
       <section className="relative z-10 v2-section v2-texture-dots">
-        <div className="v2-container">
-          <div className="max-w-3xl mx-auto" style={{ textAlign: 'center', marginBottom: '64px' }}>
-            <div className="v2-badge v2-badge-glass mb-6">
-              <Zap className="w-4 h-4 v2-text-primary" />
-              <span className="v2-text-primary">Transparent Pricing</span>
+        <div className="v2-container v2-container-narrow">
+          <div className="v2-paper rounded-3xl p-8 md:p-12 lg:p-16" style={{ textAlign: 'center' }}>
+            <div className="v2-badge v2-badge-light mb-6">
+              <Zap className="w-4 h-4" />
+              <span>Tailored For You</span>
             </div>
-            <h2 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold v2-text-primary mb-8 leading-tight">
-              Choose Your{' '}
-              <span className="v2-accent">Growth Package</span>
+            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold text-fm-neutral-900 mb-6 leading-tight">
+              Every Business Is <span className="text-fm-magenta-600">Different</span>
             </h2>
-            <p className="text-lg md:text-xl v2-text-secondary leading-relaxed">
-              Flexible packages designed to fit businesses of all sizes. All packages include dedicated support and monthly reporting.
+            <p className="text-fm-neutral-600 text-lg md:text-xl leading-relaxed max-w-2xl mx-auto" style={{ marginBottom: '32px' }}>
+              We don&apos;t believe in one-size-fits-all packages. Tell us about your goals and we&apos;ll craft a strategy and plan that fits your business, your market, and your budget.
             </p>
-          </div>
 
-          <div className="grid lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {packages.map((pkg) => (
-              <div
-                key={pkg.name}
-                className={`relative v2-paper rounded-2xl p-8 ${
-                  pkg.popular ? 'ring-2 ring-fm-magenta-500 xl:scale-105' : ''
-                }`}
-              >
-                {pkg.popular && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 bg-fm-magenta-600 text-white text-sm font-semibold rounded-full">
-                    Most Popular
-                  </div>
-                )}
-                <h3 className="font-display text-2xl font-bold text-fm-neutral-900 mb-2">{pkg.name}</h3>
-                <div className="flex items-baseline gap-1 mb-4">
-                  <span className="text-4xl font-bold text-fm-magenta-600">{pkg.price}</span>
-                  <span className="text-fm-neutral-500">{pkg.period}</span>
-                </div>
-                <p className="text-fm-neutral-600 text-sm mb-6 leading-relaxed">{pkg.description}</p>
-                <ul className="space-y-3 mb-8">
-                  {pkg.features.map((feature) => (
-                    <li key={feature} className="flex items-center gap-2 text-sm text-fm-neutral-700">
-                      <CheckCircle2 className="w-4 h-4 text-fm-magenta-500 flex-shrink-0" />
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-                <Link
-                  href="/contact"
-                  className={`v2-btn v2-btn-full ${pkg.popular ? 'v2-btn-magenta' : 'v2-btn-neutral'}`}
-                >
-                  Get Started
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
+            <div className="grid sm:grid-cols-3 gap-6 max-w-2xl mx-auto" style={{ marginBottom: '40px' }}>
+              <div className="p-4">
+                <div className="text-3xl font-bold text-fm-magenta-600 mb-1">100%</div>
+                <p className="text-sm text-fm-neutral-600">Custom Strategy</p>
               </div>
-            ))}
-          </div>
+              <div className="p-4">
+                <div className="text-3xl font-bold text-fm-magenta-600 mb-1">No</div>
+                <p className="text-sm text-fm-neutral-600">Lock-in Contracts</p>
+              </div>
+              <div className="p-4">
+                <div className="text-3xl font-bold text-fm-magenta-600 mb-1">Free</div>
+                <p className="text-sm text-fm-neutral-600">Initial Consultation</p>
+              </div>
+            </div>
 
-          <div style={{ textAlign: 'center', marginTop: '48px' }}>
-            <p className="v2-text-secondary" style={{ marginBottom: '16px' }}>
-              Need a custom solution? We create tailored packages for enterprise clients.
-            </p>
-            <Link href="/contact" className="v2-btn v2-btn-secondary">
-              Request Custom Quote
-            </Link>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Link href="/get-started" className="v2-btn v2-btn-magenta">
+                Get Your Custom Proposal
+                <ArrowRight className="w-5 h-5" />
+              </Link>
+              <Link href="/contact" className="v2-btn v2-btn-outline">
+                Talk to Us First
+              </Link>
+            </div>
           </div>
         </div>
       </section>
