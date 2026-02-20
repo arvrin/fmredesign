@@ -340,7 +340,7 @@ export function GrowthEngine({ clientId }: GrowthEngineProps) {
             </select>
             
             <Button
-              variant="outline"
+              variant="secondary"
               size="sm"
               onClick={generateNewInsights}
               disabled={isGeneratingInsights}
@@ -489,7 +489,7 @@ export function GrowthEngine({ clientId }: GrowthEngineProps) {
                             In Progress
                           </span>
                         )}
-                        <Button size="sm" variant="outline">
+                        <Button size="sm" variant="secondary">
                           View Details
                         </Button>
                       </div>
@@ -560,7 +560,7 @@ export function GrowthEngine({ clientId }: GrowthEngineProps) {
                       </div>
                       
                       {insight.actionable && (
-                        <Button size="sm" variant="outline">
+                        <Button size="sm" variant="secondary">
                           Action
                         </Button>
                       )}
@@ -572,7 +572,7 @@ export function GrowthEngine({ clientId }: GrowthEngineProps) {
           </div>
           
           <Button
-            variant="outline"
+            variant="secondary"
             className="w-full mt-4"
             onClick={generateNewInsights}
             disabled={isGeneratingInsights}

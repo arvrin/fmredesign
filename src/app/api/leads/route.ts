@@ -11,6 +11,7 @@ import { rateLimit, getClientIp } from '@/lib/rate-limiter';
 import { requireAdminAuth, requirePermission } from '@/lib/admin-auth-middleware';
 import { createLeadSchema, validateBody } from '@/lib/validations/schemas';
 import { notifyTeam, newLeadEmail } from '@/lib/email/send';
+import { logAuditEvent, getAuditUser, getClientIP } from '@/lib/admin/audit-log';
 
 // GET /api/leads - Fetch leads with optional filtering and sorting
 export async function GET(request: NextRequest) {
@@ -303,6 +304,17 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Failed to delete lead' }, { status: 500 });
     }
 
+    // Fire-and-forget audit log (uses header-based user identity — requireAdminAuth has no user object)
+    const auditUser = getAuditUser(request);
+    logAuditEvent({
+      ...auditUser,
+      action: 'delete',
+      resource_type: 'lead',
+      resource_id: id,
+      details: {},
+      ip_address: getClientIP(request),
+    });
+
     return NextResponse.json({ success: true, message: 'Lead deleted' });
   } catch (error) {
     console.error('Error deleting lead:', error);
@@ -391,6 +403,17 @@ export async function PUT(request: NextRequest) {
       createdAt: data.created_at,
       updatedAt: data.updated_at,
     };
+
+    // Fire-and-forget audit log
+    logAuditEvent({
+      user_id: auth.user.id,
+      user_name: auth.user.name,
+      action: 'update',
+      resource_type: 'lead',
+      resource_id: id,
+      details: { updatedFields: Object.keys(updates), newStatus: updateData.status },
+      ip_address: getClientIP(request),
+    });
 
     return NextResponse.json({
       success: true,

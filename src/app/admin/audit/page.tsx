@@ -142,7 +142,7 @@ export default function AuditLogPage() {
         icon={<ScrollText className="w-6 h-6" />}
         description="Track all admin actions -- who changed what and when."
         actions={
-          <DashboardButton variant="outline" size="sm" onClick={fetchEntries} disabled={loading}>
+          <DashboardButton variant="secondary" size="sm" onClick={fetchEntries} disabled={loading}>
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             Refresh
           </DashboardButton>

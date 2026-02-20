@@ -1,17 +1,35 @@
 /**
  * New Project Creation Page
  * Create new projects with comprehensive form and auto-discovery integration
+ * Migrated to react-hook-form + Zod validation
  */
 
 'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useForm, Controller, useWatch } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { ArrowLeft, Calendar, DollarSign, Users, Target, Save, CheckCircle } from 'lucide-react';
 import { Button } from '@/design-system/components/primitives/Button';
 import { adminToast } from '@/lib/admin/toast';
-import type { ProjectInput, ProjectType } from '@/lib/admin/project-types';
+import type { ProjectType } from '@/lib/admin/project-types';
 import { PROJECT_TEMPLATES } from '@/lib/admin/project-types';
+import { createProjectSchema } from '@/lib/validations/schemas';
+
+// Extend the base schema with the extra fields the form uses
+// that are not in the API schema (assignedTalent, contentRequirements nested)
+const projectFormSchema = createProjectSchema.extend({
+  assignedTalent: z.array(z.string()).optional(),
+  contentRequirements: z.object({
+    postsPerWeek: z.number(),
+    platforms: z.array(z.string()),
+    contentTypes: z.array(z.string()),
+  }).optional(),
+});
+
+type ProjectFormData = z.infer<typeof projectFormSchema>;
 
 interface Client {
   id: string;
@@ -56,6 +74,10 @@ interface Discovery {
   };
 }
 
+const inputClass = 'w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-fm-magenta-700';
+const selectClass = inputClass;
+const errorClass = 'text-sm text-red-500 mt-1';
+
 export default function NewProjectPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -65,30 +87,42 @@ export default function NewProjectPage() {
   const [talent, setTalent] = useState<TalentMember[]>([]);
   const [discovery, setDiscovery] = useState<Discovery | null>(null);
   const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
 
-  const [formData, setFormData] = useState<ProjectInput>({
-    clientId: '',
-    discoveryId: discoveryId || undefined,
-    name: '',
-    description: '',
-    type: 'social_media',
-    priority: 'medium',
-    startDate: new Date().toISOString().split('T')[0],
-    endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    estimatedHours: 40,
-    projectManager: '',
-    assignedTalent: [],
-    budget: 50000,
-    hourlyRate: 1000,
-    contentRequirements: {
-      postsPerWeek: 5,
-      platforms: ['instagram', 'facebook'],
-      contentTypes: ['post', 'story', 'reel']
-    },
-    tags: [],
-    notes: ''
+  const {
+    register,
+    handleSubmit,
+    control,
+    setValue,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<ProjectFormData>({
+    resolver: zodResolver(projectFormSchema),
+    defaultValues: {
+      clientId: '',
+      discoveryId: discoveryId || undefined,
+      name: '',
+      description: '',
+      type: 'social_media',
+      priority: 'medium',
+      startDate: new Date().toISOString().split('T')[0],
+      endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      estimatedHours: 40,
+      projectManager: '',
+      assignedTalent: [],
+      budget: 50000,
+      hourlyRate: 1000,
+      contentRequirements: {
+        postsPerWeek: 5,
+        platforms: ['instagram', 'facebook'],
+        contentTypes: ['post', 'story', 'reel']
+      },
+      tags: [],
+      notes: ''
+    }
   });
+
+  // Watch the type field to update template defaults
+  const watchedType = useWatch({ control, name: 'type' });
 
   // Load data
   useEffect(() => {
@@ -121,25 +155,33 @@ export default function NewProjectPage() {
             if (discoveryResult.success && discoveryResult.data) {
               const discoveryData = discoveryResult.data;
               setDiscovery(discoveryData);
-              
+
               // Pre-populate form with discovery data
-              setFormData(prev => ({
-                ...prev,
+              const postsPerWeek = discoveryData.contentCreative?.contentStrategy?.postingFrequency === 'daily' ? 7 :
+                discoveryData.contentCreative?.contentStrategy?.postingFrequency === '3-4 times/week' ? 4 : 5;
+
+              reset({
                 clientId: discoveryData.clientId || '',
+                discoveryId: discoveryId,
                 name: discoveryData.projectOverview?.projectName || '',
                 description: discoveryData.projectOverview?.projectDescription || '',
                 type: discoveryData.projectOverview?.projectType || 'social_media',
-                startDate: discoveryData.projectOverview?.timeline?.startDate || prev.startDate,
-                endDate: discoveryData.projectOverview?.timeline?.desiredLaunch || prev.endDate,
-                budget: discoveryData.budgetResources?.totalBudget?.amount || prev.budget,
+                priority: 'medium',
+                startDate: discoveryData.projectOverview?.timeline?.startDate || new Date().toISOString().split('T')[0],
+                endDate: discoveryData.projectOverview?.timeline?.desiredLaunch || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                estimatedHours: 40,
+                projectManager: '',
+                assignedTalent: [],
+                budget: discoveryData.budgetResources?.totalBudget?.amount || 50000,
+                hourlyRate: 1000,
                 contentRequirements: {
-                  postsPerWeek: discoveryData.contentCreative?.contentStrategy?.postingFrequency === 'daily' ? 7 : 
-                               discoveryData.contentCreative?.contentStrategy?.postingFrequency === '3-4 times/week' ? 4 : 5,
+                  postsPerWeek,
                   platforms: ['instagram', 'facebook'],
                   contentTypes: discoveryData.contentCreative?.contentStrategy?.contentTypes || ['post', 'story']
                 },
-                tags: discoveryData.projectOverview?.projectScope || []
-              }));
+                tags: discoveryData.projectOverview?.projectScope || [],
+                notes: ''
+              });
             }
           } catch (error) {
             console.error('Error loading discovery:', error);
@@ -153,31 +195,29 @@ export default function NewProjectPage() {
     };
 
     loadInitialData();
-  }, [discoveryId]);
+  }, [discoveryId, reset]);
 
   // Update form when project type changes
   useEffect(() => {
-    const template = PROJECT_TEMPLATES[formData.type as keyof typeof PROJECT_TEMPLATES];
+    const template = PROJECT_TEMPLATES[watchedType as keyof typeof PROJECT_TEMPLATES];
     if (template) {
-      setFormData(prev => ({
-        ...prev,
-        estimatedHours: template.estimatedHours || prev.estimatedHours,
-        contentRequirements: template.contentRequirements || prev.contentRequirements
-      }));
+      if (template.estimatedHours) {
+        setValue('estimatedHours', template.estimatedHours);
+      }
+      if (template.contentRequirements) {
+        setValue('contentRequirements', template.contentRequirements);
+      }
     }
-  }, [formData.type]);
+  }, [watchedType, setValue]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaving(true);
-
+  const onSubmit = async (data: ProjectFormData) => {
     try {
       const response = await fetch('/api/projects', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(data)
       });
 
       const result = await response.json();
@@ -190,8 +230,6 @@ export default function NewProjectPage() {
     } catch (error) {
       console.error('Error creating project:', error);
       adminToast.error('Failed to create project. Please try again.');
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -212,7 +250,7 @@ export default function NewProjectPage() {
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
           <Button
-            variant="outline"
+            variant="secondary"
             onClick={() => router.push('/admin/projects')}
             className="flex items-center gap-2"
           >
@@ -242,11 +280,11 @@ export default function NewProjectPage() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-8">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
           {/* Basic Information */}
           <div className="bg-white rounded-xl border border-fm-neutral-200 p-6">
             <h2 className="text-lg font-semibold text-fm-neutral-900 mb-6">Basic Information</h2>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Client Selection */}
               <div className="md:col-span-2">
@@ -254,10 +292,8 @@ export default function NewProjectPage() {
                   Client *
                 </label>
                 <select
-                  value={formData.clientId}
-                  onChange={(e) => setFormData(prev => ({ ...prev, clientId: e.target.value }))}
-                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-fm-magenta-700"
-                  required
+                  {...register('clientId')}
+                  className={selectClass}
                 >
                   <option value="">Select a client</option>
                   {clients.map(client => (
@@ -266,6 +302,7 @@ export default function NewProjectPage() {
                     </option>
                   ))}
                 </select>
+                {errors.clientId && <p className={errorClass}>{errors.clientId.message}</p>}
               </div>
 
               {/* Project Name */}
@@ -275,12 +312,11 @@ export default function NewProjectPage() {
                 </label>
                 <input
                   type="text"
-                  value={formData.name}
-                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-fm-magenta-700"
+                  {...register('name')}
+                  className={inputClass}
                   placeholder="Enter project name"
-                  required
                 />
+                {errors.name && <p className={errorClass}>{errors.name.message}</p>}
               </div>
 
               {/* Project Type */}
@@ -289,10 +325,8 @@ export default function NewProjectPage() {
                   Project Type *
                 </label>
                 <select
-                  value={formData.type}
-                  onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value as ProjectType }))}
-                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-fm-magenta-700"
-                  required
+                  {...register('type')}
+                  className={selectClass}
                 >
                   <option value="social_media">Social Media</option>
                   <option value="web_development">Web Development</option>
@@ -302,6 +336,7 @@ export default function NewProjectPage() {
                   <option value="content_marketing">Content Marketing</option>
                   <option value="full_service">Full Service</option>
                 </select>
+                {errors.type && <p className={errorClass}>{errors.type.message}</p>}
               </div>
 
               {/* Priority */}
@@ -310,9 +345,8 @@ export default function NewProjectPage() {
                   Priority
                 </label>
                 <select
-                  value={formData.priority}
-                  onChange={(e) => setFormData(prev => ({ ...prev, priority: e.target.value as any }))}
-                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-fm-magenta-700"
+                  {...register('priority')}
+                  className={selectClass}
                 >
                   <option value="low">Low</option>
                   <option value="medium">Medium</option>
@@ -328,9 +362,8 @@ export default function NewProjectPage() {
                 </label>
                 <textarea
                   rows={4}
-                  value={formData.description}
-                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-fm-magenta-700"
+                  {...register('description')}
+                  className={inputClass}
                   placeholder="Describe the project objectives and scope"
                 />
               </div>
@@ -343,7 +376,7 @@ export default function NewProjectPage() {
               <Calendar className="h-5 w-5" />
               Timeline & Budget
             </h2>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Start Date */}
               <div>
@@ -352,11 +385,10 @@ export default function NewProjectPage() {
                 </label>
                 <input
                   type="date"
-                  value={formData.startDate}
-                  onChange={(e) => setFormData(prev => ({ ...prev, startDate: e.target.value }))}
-                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-fm-magenta-700"
-                  required
+                  {...register('startDate')}
+                  className={inputClass}
                 />
+                {errors.startDate && <p className={errorClass}>{errors.startDate.message}</p>}
               </div>
 
               {/* End Date */}
@@ -366,11 +398,10 @@ export default function NewProjectPage() {
                 </label>
                 <input
                   type="date"
-                  value={formData.endDate}
-                  onChange={(e) => setFormData(prev => ({ ...prev, endDate: e.target.value }))}
-                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-fm-magenta-700"
-                  required
+                  {...register('endDate')}
+                  className={inputClass}
                 />
+                {errors.endDate && <p className={errorClass}>{errors.endDate.message}</p>}
               </div>
 
               {/* Estimated Hours */}
@@ -378,13 +409,19 @@ export default function NewProjectPage() {
                 <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
                   Estimated Hours
                 </label>
-                <input
-                  type="number"
-                  value={formData.estimatedHours}
-                  onChange={(e) => setFormData(prev => ({ ...prev, estimatedHours: parseInt(e.target.value) || 0 }))}
-                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-fm-magenta-700"
-                  min="0"
-                  step="1"
+                <Controller
+                  name="estimatedHours"
+                  control={control}
+                  render={({ field }) => (
+                    <input
+                      type="number"
+                      value={field.value ?? ''}
+                      onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                      className={inputClass}
+                      min="0"
+                      step="1"
+                    />
+                  )}
                 />
               </div>
 
@@ -393,15 +430,21 @@ export default function NewProjectPage() {
                 <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
                   Budget (₹) *
                 </label>
-                <input
-                  type="number"
-                  value={formData.budget}
-                  onChange={(e) => setFormData(prev => ({ ...prev, budget: parseFloat(e.target.value) || 0 }))}
-                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-fm-magenta-700"
-                  min="0"
-                  step="1000"
-                  required
+                <Controller
+                  name="budget"
+                  control={control}
+                  render={({ field }) => (
+                    <input
+                      type="number"
+                      value={field.value ?? ''}
+                      onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                      className={inputClass}
+                      min="0"
+                      step="1000"
+                    />
+                  )}
                 />
+                {errors.budget && <p className={errorClass}>{errors.budget.message}</p>}
               </div>
 
               {/* Hourly Rate */}
@@ -409,13 +452,19 @@ export default function NewProjectPage() {
                 <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
                   Hourly Rate (₹)
                 </label>
-                <input
-                  type="number"
-                  value={formData.hourlyRate}
-                  onChange={(e) => setFormData(prev => ({ ...prev, hourlyRate: parseFloat(e.target.value) || 0 }))}
-                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-fm-magenta-700"
-                  min="0"
-                  step="100"
+                <Controller
+                  name="hourlyRate"
+                  control={control}
+                  render={({ field }) => (
+                    <input
+                      type="number"
+                      value={field.value ?? ''}
+                      onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                      className={inputClass}
+                      min="0"
+                      step="100"
+                    />
+                  )}
                 />
               </div>
             </div>
@@ -427,7 +476,7 @@ export default function NewProjectPage() {
               <Users className="h-5 w-5" />
               Team Assignment
             </h2>
-            
+
             <div className="space-y-6">
               {/* Project Manager */}
               <div>
@@ -436,12 +485,11 @@ export default function NewProjectPage() {
                 </label>
                 <input
                   type="text"
-                  value={formData.projectManager}
-                  onChange={(e) => setFormData(prev => ({ ...prev, projectManager: e.target.value }))}
-                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-fm-magenta-700"
+                  {...register('projectManager')}
+                  className={inputClass}
                   placeholder="Enter project manager name"
-                  required
                 />
+                {errors.projectManager && <p className={errorClass}>{errors.projectManager.message}</p>}
               </div>
 
               {/* Assigned Talent */}
@@ -450,29 +498,36 @@ export default function NewProjectPage() {
                   Assigned Team Members
                 </label>
                 {talent.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {talent.slice(0, 6).map(member => (
-                      <div key={member.id} className="flex items-center p-3 border border-fm-neutral-200 rounded-lg">
-                        <input
-                          type="checkbox"
-                          id={`talent-${member.id}`}
-                          checked={formData.assignedTalent.includes(member.id)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setFormData(prev => ({ ...prev, assignedTalent: [...prev.assignedTalent, member.id] }));
-                            } else {
-                              setFormData(prev => ({ ...prev, assignedTalent: prev.assignedTalent.filter(id => id !== member.id) }));
-                            }
-                          }}
-                          className="mr-3"
-                        />
-                        <label htmlFor={`talent-${member.id}`} className="flex-1 cursor-pointer">
-                          <div className="font-medium text-fm-neutral-900">{member.name}</div>
-                          <div className="text-sm text-fm-neutral-600">{member.category} • ₹{member.hourlyRate}/hr</div>
-                        </label>
+                  <Controller
+                    name="assignedTalent"
+                    control={control}
+                    render={({ field }) => (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {talent.slice(0, 6).map(member => (
+                          <div key={member.id} className="flex items-center p-3 border border-fm-neutral-200 rounded-lg">
+                            <input
+                              type="checkbox"
+                              id={`talent-${member.id}`}
+                              checked={(field.value || []).includes(member.id)}
+                              onChange={(e) => {
+                                const current = field.value || [];
+                                if (e.target.checked) {
+                                  field.onChange([...current, member.id]);
+                                } else {
+                                  field.onChange(current.filter((id: string) => id !== member.id));
+                                }
+                              }}
+                              className="mr-3"
+                            />
+                            <label htmlFor={`talent-${member.id}`} className="flex-1 cursor-pointer">
+                              <div className="font-medium text-fm-neutral-900">{member.name}</div>
+                              <div className="text-sm text-fm-neutral-600">{member.category} &bull; ₹{member.hourlyRate}/hr</div>
+                            </label>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
+                    )}
+                  />
                 ) : (
                   <p className="text-fm-neutral-500">No talent members available. You can assign team members after creating the project.</p>
                 )}
@@ -486,25 +541,25 @@ export default function NewProjectPage() {
               <Target className="h-5 w-5" />
               Content Requirements
             </h2>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* Posts Per Week */}
               <div>
                 <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
                   Posts Per Week
                 </label>
-                <input
-                  type="number"
-                  value={formData.contentRequirements.postsPerWeek}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    contentRequirements: {
-                      ...prev.contentRequirements,
-                      postsPerWeek: parseInt(e.target.value) || 0
-                    }
-                  }))}
-                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-fm-magenta-700"
-                  min="0"
+                <Controller
+                  name="contentRequirements.postsPerWeek"
+                  control={control}
+                  render={({ field }) => (
+                    <input
+                      type="number"
+                      value={field.value ?? ''}
+                      onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                      className={inputClass}
+                      min="0"
+                    />
+                  )}
                 />
               </div>
 
@@ -513,37 +568,32 @@ export default function NewProjectPage() {
                 <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
                   Platforms
                 </label>
-                <div className="flex flex-wrap gap-2">
-                  {['instagram', 'facebook', 'linkedin', 'twitter', 'youtube', 'website'].map(platform => (
-                    <label key={platform} className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={formData.contentRequirements.platforms.includes(platform)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setFormData(prev => ({
-                              ...prev,
-                              contentRequirements: {
-                                ...prev.contentRequirements,
-                                platforms: [...prev.contentRequirements.platforms, platform]
+                <Controller
+                  name="contentRequirements.platforms"
+                  control={control}
+                  render={({ field }) => (
+                    <div className="flex flex-wrap gap-2">
+                      {['instagram', 'facebook', 'linkedin', 'twitter', 'youtube', 'website'].map(platform => (
+                        <label key={platform} className="flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={(field.value || []).includes(platform)}
+                            onChange={(e) => {
+                              const current = field.value || [];
+                              if (e.target.checked) {
+                                field.onChange([...current, platform]);
+                              } else {
+                                field.onChange(current.filter((p: string) => p !== platform));
                               }
-                            }));
-                          } else {
-                            setFormData(prev => ({
-                              ...prev,
-                              contentRequirements: {
-                                ...prev.contentRequirements,
-                                platforms: prev.contentRequirements.platforms.filter(p => p !== platform)
-                              }
-                            }));
-                          }
-                        }}
-                        className="mr-2"
-                      />
-                      <span className="capitalize text-sm">{platform}</span>
-                    </label>
-                  ))}
-                </div>
+                            }}
+                            className="mr-2"
+                          />
+                          <span className="capitalize text-sm">{platform}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                />
               </div>
             </div>
           </div>
@@ -551,18 +601,25 @@ export default function NewProjectPage() {
           {/* Additional Notes */}
           <div className="bg-white rounded-xl border border-fm-neutral-200 p-6">
             <h2 className="text-lg font-semibold text-fm-neutral-900 mb-6">Additional Information</h2>
-            
+
             <div className="space-y-6">
               {/* Tags */}
               <div>
                 <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
                   Tags
                 </label>
-                <input
-                  type="text"
-                  placeholder="Enter tags separated by commas (e.g., urgent, social-media, campaign)"
-                  onChange={(e) => setFormData(prev => ({ ...prev, tags: e.target.value.split(',').map(t => t.trim()).filter(t => t) }))}
-                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-fm-magenta-700"
+                <Controller
+                  name="tags"
+                  control={control}
+                  render={({ field }) => (
+                    <input
+                      type="text"
+                      placeholder="Enter tags separated by commas (e.g., urgent, social-media, campaign)"
+                      onChange={(e) => field.onChange(e.target.value.split(',').map(t => t.trim()).filter(t => t))}
+                      defaultValue={(field.value || []).join(', ')}
+                      className={inputClass}
+                    />
+                  )}
                 />
               </div>
 
@@ -573,9 +630,8 @@ export default function NewProjectPage() {
                 </label>
                 <textarea
                   rows={4}
-                  value={formData.notes}
-                  onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-fm-magenta-700"
+                  {...register('notes')}
+                  className={inputClass}
                   placeholder="Additional notes or special requirements for this project"
                 />
               </div>
@@ -586,18 +642,18 @@ export default function NewProjectPage() {
           <div className="flex justify-end gap-4">
             <Button
               type="button"
-              variant="outline"
+              variant="secondary"
               onClick={() => router.push('/admin/projects')}
             >
               Cancel
             </Button>
             <Button
               type="submit"
-              disabled={saving}
+              disabled={isSubmitting}
               className="flex items-center gap-2"
             >
               <Save className="h-4 w-4" />
-              {saving ? 'Creating Project...' : 'Create Project'}
+              {isSubmitting ? 'Creating Project...' : 'Create Project'}
             </Button>
           </div>
         </form>

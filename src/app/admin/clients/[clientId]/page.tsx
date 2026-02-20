@@ -85,7 +85,7 @@ export default function AdminClientDetail() {
           icon={<AlertCircle className="h-6 w-6" />}
           title={error || 'Client not found'}
           action={
-            <DashboardButton onClick={() => router.back()} variant="outline">
+            <DashboardButton onClick={() => router.back()} variant="secondary">
               <ArrowLeft className="h-4 w-4" />
               Go Back
             </DashboardButton>

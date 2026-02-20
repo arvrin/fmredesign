@@ -411,11 +411,11 @@ export function ProposalFormNew({ initialProposal, onSaveSuccess }: ProposalForm
                     <Eye className="w-4 h-4" />
                     Preview
                   </Button>
-                  <Button variant="outline" size="sm" onClick={handleDownload}>
+                  <Button variant="secondary" size="sm" onClick={handleDownload}>
                     <Download className="w-4 h-4" />
                     Export PDF
                   </Button>
-                  <Button variant="admin" size="sm" onClick={handleSave}>
+                  <Button variant="primary" size="sm" onClick={handleSave}>
                     <Save className="w-4 h-4" />
                     Save
                   </Button>

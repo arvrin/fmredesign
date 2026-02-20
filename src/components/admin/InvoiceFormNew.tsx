@@ -484,7 +484,7 @@ export function InvoiceFormNew() {
                     <Download className="w-4 h-4" />
                     Download
                   </Button>
-                  <Button variant="admin" size="sm" onClick={handleSave}>
+                  <Button variant="primary" size="sm" onClick={handleSave}>
                     <Save className="w-4 h-4" />
                     Save
                   </Button>
@@ -859,7 +859,7 @@ export function InvoiceFormNew() {
           <Button variant="secondary" size="sm" onClick={handleDownload}>
             <Download className="w-4 h-4" />
           </Button>
-          <Button variant="admin" size="sm" onClick={handleSave}>
+          <Button variant="primary" size="sm" onClick={handleSave}>
             <Save className="w-4 h-4" />
             Save
           </Button>

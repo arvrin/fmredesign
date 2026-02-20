@@ -262,7 +262,7 @@ export default function ProjectDetailPage({
               </p>
             </div>
             <DashboardButton
-              variant="admin"
+              variant="primary"
               size="md"
               onClick={() => router.push(`/admin/projects/${id}/edit`)}
             >

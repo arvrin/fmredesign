@@ -211,7 +211,7 @@ export default function UsersManagementPage() {
         actions={
           canManageUsers ? (
             <DashboardButton
-              variant="admin"
+              variant="primary"
               size="sm"
               onClick={() => setShowAddModal(true)}
               className="flex items-center gap-2"
@@ -575,10 +575,10 @@ function UserFormModal({
           </div>
 
           <div className="flex gap-3 pt-4">
-            <DashboardButton type="submit" variant="admin" disabled={isSubmitting} className="flex-1">
+            <DashboardButton type="submit" variant="primary" disabled={isSubmitting} className="flex-1">
               {isSubmitting ? (isEdit ? 'Updating...' : 'Adding...') : (isEdit ? 'Update User' : 'Add User')}
             </DashboardButton>
-            <DashboardButton type="button" variant="outline" onClick={onClose} className="flex-1">
+            <DashboardButton type="button" variant="secondary" onClick={onClose} className="flex-1">
               Cancel
             </DashboardButton>
           </div>

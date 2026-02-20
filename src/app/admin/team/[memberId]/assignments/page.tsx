@@ -203,7 +203,7 @@ export default function TeamAssignmentManagementPage({ params }: TeamAssignmentM
         actions={
           <div className="flex items-center gap-3">
             <DashboardButton
-              variant="outline"
+              variant="secondary"
               size="sm"
               onClick={() => router.push(`/admin/team/${memberId}`)}
             >
@@ -211,7 +211,7 @@ export default function TeamAssignmentManagementPage({ params }: TeamAssignmentM
               Back to Profile
             </DashboardButton>
             <DashboardButton
-              variant="admin"
+              variant="primary"
               onClick={() => setShowAddForm(true)}
             >
               <Plus className="w-4 h-4 mr-2" />
@@ -334,7 +334,7 @@ export default function TeamAssignmentManagementPage({ params }: TeamAssignmentM
                 Cancel
               </DashboardButton>
               <DashboardButton
-                variant="admin"
+                variant="primary"
                 onClick={handleAddAssignment}
                 disabled={!newAssignment.clientId}
                 className="flex items-center gap-2"
@@ -419,7 +419,7 @@ export default function TeamAssignmentManagementPage({ params }: TeamAssignmentM
               description="This team member hasn't been assigned to any clients yet."
               action={
                 <DashboardButton
-                  variant="admin"
+                  variant="primary"
                   onClick={() => setShowAddForm(true)}
                 >
                   <Plus className="w-4 h-4 mr-2" />

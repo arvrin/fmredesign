@@ -146,7 +146,7 @@ export function PricingCard({
       
       {/* CTA Button */}
       <Button 
-        variant={popular ? "primary" : "outline"}
+        variant={popular ? "primary" : "secondary"}
         size="lg"
         className="w-full"
         icon={<ArrowRight className="w-5 h-5" />}

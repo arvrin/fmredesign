@@ -206,21 +206,21 @@ FreakingMinds Team`);
                     <div className="flex gap-2">
                       <Button
                         size="sm"
-                        variant="outline"
+                        variant="secondary"
                         onClick={() => copyToClipboard(link.portalUrl)}
                       >
                         <Copy className="h-4 w-4" />
                       </Button>
                       <Button
                         size="sm"
-                        variant="outline"
+                        variant="secondary"
                         onClick={() => shareViaEmail(link)}
                       >
                         <Mail className="h-4 w-4" />
                       </Button>
                       <Button
                         size="sm"
-                        variant="outline"
+                        variant="secondary"
                         onClick={() => window.open(link.portalUrl, '_blank')}
                       >
                         <ExternalLink className="h-4 w-4" />

@@ -122,7 +122,7 @@ export default function DiscoveryDashboardPage() {
         description="Comprehensive client analysis and requirement gathering"
         actions={
           <DashboardButton
-            variant="admin"
+            variant="primary"
             size="lg"
             onClick={() => router.push('/admin/discovery/new')}
           >
@@ -291,7 +291,7 @@ export default function DiscoveryDashboardPage() {
 
                   <div className="flex items-center gap-2 ml-4">
                     <DashboardButton
-                      variant="outline"
+                      variant="secondary"
                       size="sm"
                       onClick={() => router.push(`/admin/discovery/new?sessionId=${session.id}`)}
                     >
@@ -301,7 +301,7 @@ export default function DiscoveryDashboardPage() {
 
                     {session.status === 'completed' && (
                       <DashboardButton
-                        variant="admin"
+                        variant="primary"
                         size="sm"
                         onClick={() => router.push(`/admin/discovery/${session.id}/report`)}
                       >

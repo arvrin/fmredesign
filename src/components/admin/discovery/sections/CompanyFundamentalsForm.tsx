@@ -236,7 +236,7 @@ export function CompanyFundamentalsForm({ session, onUpdate }: CompanyFundamenta
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-lg font-semibold text-fm-neutral-900">Key Stakeholders</h3>
             <Button
-              variant="outline"
+              variant="secondary"
               onClick={handleStakeholderAdd}
               icon={<Plus className="h-4 w-4" />}
             >
@@ -310,7 +310,7 @@ export function CompanyFundamentalsForm({ session, onUpdate }: CompanyFundamenta
                         />
                       </div>
                       <Button
-                        variant="outline"
+                        variant="secondary"
                         onClick={() => handleStakeholderRemove(index)}
                         icon={<Trash2 className="h-4 w-4" />}
                         className="text-red-600 border-red-300 hover:bg-red-50"

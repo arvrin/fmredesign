@@ -148,7 +148,7 @@ export function ServiceCard({
           
           {/* CTA Button */}
           <Button 
-            variant="outline" 
+            variant="secondary" 
             size={size === 'lg' ? 'md' : 'sm'}
             icon={<ArrowRight className="w-4 h-4" />}
             iconPosition="right"

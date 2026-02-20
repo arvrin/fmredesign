@@ -150,7 +150,7 @@ export function CaseStudyCard({
         
         {/* CTA Button */}
         <Button 
-          variant="outline" 
+          variant="secondary" 
           icon={<ExternalLink className="w-4 h-4" />}
           iconPosition="right"
           theme={theme}

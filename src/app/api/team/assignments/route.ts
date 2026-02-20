@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { requireAdminAuth, requirePermission } from '@/lib/admin-auth-middleware';
+import { logAuditEvent, getClientIP } from '@/lib/admin/audit-log';
 
 /** Transform a Supabase row (snake_case) to camelCase */
 function transformAssignment(row: any) {
@@ -91,6 +92,17 @@ export async function POST(request: NextRequest) {
 
     if (error) throw error;
 
+    // Fire-and-forget audit log
+    logAuditEvent({
+      user_id: auth.user.id,
+      user_name: auth.user.name,
+      action: 'create',
+      resource_type: 'team_assignment',
+      resource_id: id,
+      details: { teamMemberId: body.teamMemberId, clientId: body.clientId },
+      ip_address: getClientIP(request),
+    });
+
     return NextResponse.json({
       success: true,
       data: { id },
@@ -124,6 +136,17 @@ export async function DELETE(request: NextRequest) {
     const supabase = getSupabaseAdmin();
     const { error } = await supabase.from('team_assignments').delete().eq('id', id);
     if (error) throw error;
+
+    // Fire-and-forget audit log
+    logAuditEvent({
+      user_id: auth.user.id,
+      user_name: auth.user.name,
+      action: 'delete',
+      resource_type: 'team_assignment',
+      resource_id: id,
+      details: {},
+      ip_address: getClientIP(request),
+    });
 
     return NextResponse.json({
       success: true,

@@ -244,7 +244,7 @@ export function DocumentManager({ clientId, campaignId }: DocumentManagerProps) 
           </div>
           
           <div className="flex items-center space-x-3">
-            <Button variant="outline" size="sm">
+            <Button variant="secondary" size="sm">
               <FolderPlus className="h-4 w-4 mr-2" />
               New Folder
             </Button>
@@ -378,19 +378,19 @@ export function DocumentManager({ clientId, campaignId }: DocumentManagerProps) 
                   {selectedFiles.length} file(s) selected
                 </span>
                 <div className="flex items-center space-x-2">
-                  <Button size="sm" variant="outline">
+                  <Button size="sm" variant="secondary">
                     <Download className="h-4 w-4 mr-2" />
                     Download
                   </Button>
-                  <Button size="sm" variant="outline">
+                  <Button size="sm" variant="secondary">
                     <Share2 className="h-4 w-4 mr-2" />
                     Share
                   </Button>
-                  <Button size="sm" variant="outline">
+                  <Button size="sm" variant="secondary">
                     <Move className="h-4 w-4 mr-2" />
                     Move
                   </Button>
-                  <Button size="sm" variant="outline">
+                  <Button size="sm" variant="secondary">
                     <Trash2 className="h-4 w-4 mr-2" />
                     Delete
                   </Button>
@@ -510,13 +510,13 @@ export function DocumentManager({ clientId, campaignId }: DocumentManagerProps) 
                     </div>
                     
                     <div className="flex items-center space-x-2 ml-4">
-                      <Button size="sm" variant="outline">
+                      <Button size="sm" variant="secondary">
                         <Eye className="h-4 w-4" />
                       </Button>
-                      <Button size="sm" variant="outline">
+                      <Button size="sm" variant="secondary">
                         <Download className="h-4 w-4" />
                       </Button>
-                      <Button size="sm" variant="outline">
+                      <Button size="sm" variant="secondary">
                         <Share2 className="h-4 w-4" />
                       </Button>
                       <button className="p-2 hover:bg-fm-neutral-100 rounded">

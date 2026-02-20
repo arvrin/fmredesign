@@ -273,7 +273,7 @@ export default function ContentCalendarPage() {
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1 bg-white border border-fm-neutral-200 rounded-lg p-1">
               <DashboardButton
-                variant={viewMode === 'list' ? 'admin' : 'ghost'}
+                variant={viewMode === 'list' ? 'primary' : 'ghost'}
                 size="sm"
                 onClick={() => setViewMode('list')}
                 className="text-xs"
@@ -281,7 +281,7 @@ export default function ContentCalendarPage() {
                 List
               </DashboardButton>
               <DashboardButton
-                variant={viewMode === 'calendar' ? 'admin' : 'ghost'}
+                variant={viewMode === 'calendar' ? 'primary' : 'ghost'}
                 size="sm"
                 onClick={() => setViewMode('calendar')}
                 className="text-xs"
@@ -290,7 +290,7 @@ export default function ContentCalendarPage() {
               </DashboardButton>
             </div>
             <DashboardButton
-              variant="admin"
+              variant="primary"
               size="sm"
               onClick={() => router.push('/admin/content/new')}
             >
@@ -430,7 +430,7 @@ export default function ContentCalendarPage() {
             }
             action={
               contentItems.length === 0 ? (
-                <DashboardButton variant="admin" size="sm" onClick={() => router.push('/admin/content/new')}>
+                <DashboardButton variant="primary" size="sm" onClick={() => router.push('/admin/content/new')}>
                   Create First Content
                 </DashboardButton>
               ) : undefined

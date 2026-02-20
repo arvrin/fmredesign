@@ -140,7 +140,7 @@ export default function DiscoveryReportPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Button
-                variant="outline"
+                variant="secondary"
                 icon={<ArrowLeft className="h-4 w-4" />}
                 onClick={() => router.push(`/admin/discovery/new?clientId=${session.clientId}`)}
               >
@@ -158,7 +158,7 @@ export default function DiscoveryReportPage() {
             
             <div className="flex items-center gap-3">
               <Button
-                variant="outline"
+                variant="secondary"
                 onClick={() => router.push(`/admin/creativeminds/match?sessionId=${sessionId}`)}
                 icon={<Users className="h-4 w-4" />}
               >
@@ -249,7 +249,7 @@ export default function DiscoveryReportPage() {
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-semibold text-fm-neutral-900">Detailed Report</h2>
             <Button
-              variant="outline"
+              variant="secondary"
               icon={<Eye className="h-4 w-4" />}
               onClick={() => {
                 const newWindow = window.open('', '_blank');

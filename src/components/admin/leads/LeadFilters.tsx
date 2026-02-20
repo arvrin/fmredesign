@@ -41,7 +41,7 @@ export function LeadFilters({
               leftIcon={<Search className="w-4 h-4" />}
             />
           </div>
-          <DashboardButton variant="outline" size="sm">
+          <DashboardButton variant="secondary" size="sm">
             <Filter className="w-4 h-4" />
             Filters
           </DashboardButton>
@@ -65,7 +65,7 @@ export function LeadFilters({
 
           <div className="flex items-center gap-1 bg-white border border-fm-neutral-200 rounded-lg p-1">
             <DashboardButton
-              variant={viewMode === 'table' ? 'admin' : 'ghost'}
+              variant={viewMode === 'table' ? 'primary' : 'ghost'}
               size="sm"
               onClick={() => onViewModeChange('table')}
               className="text-xs"
@@ -73,7 +73,7 @@ export function LeadFilters({
               Table
             </DashboardButton>
             <DashboardButton
-              variant={viewMode === 'cards' ? 'admin' : 'ghost'}
+              variant={viewMode === 'cards' ? 'primary' : 'ghost'}
               size="sm"
               onClick={() => onViewModeChange('cards')}
               className="text-xs"

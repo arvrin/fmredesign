@@ -320,7 +320,7 @@ export default function AdminDashboard() {
               title="No invoices yet"
               description="Create your first invoice to start tracking revenue."
               action={
-                <DashboardButton variant="admin" size="sm" onClick={() => router.push('/admin/invoice')}>
+                <DashboardButton variant="primary" size="sm" onClick={() => router.push('/admin/invoice')}>
                   <Plus className="w-4 h-4" /> Create Invoice
                 </DashboardButton>
               }
@@ -363,7 +363,7 @@ export default function AdminDashboard() {
               title="No projects yet"
               description="Create your first project to get started."
               action={
-                <DashboardButton variant="admin" size="sm" onClick={() => router.push('/admin/projects/new')}>
+                <DashboardButton variant="primary" size="sm" onClick={() => router.push('/admin/projects/new')}>
                   <Plus className="w-4 h-4" /> Create Project
                 </DashboardButton>
               }

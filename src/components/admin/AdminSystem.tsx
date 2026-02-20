@@ -479,14 +479,14 @@ export function AdminSystem() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div className="flex items-center space-x-2">
-                      <Button size="sm" variant="outline">
+                      <Button size="sm" variant="secondary">
                         <Eye className="h-4 w-4" />
                       </Button>
-                      <Button size="sm" variant="outline">
+                      <Button size="sm" variant="secondary">
                         <Edit className="h-4 w-4" />
                       </Button>
                       {user.role !== 'super_admin' && (
-                        <Button size="sm" variant="outline">
+                        <Button size="sm" variant="secondary">
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       )}
@@ -546,19 +546,19 @@ export function AdminSystem() {
       <div className="bg-white rounded-lg border border-fm-neutral-200 p-6">
         <h4 className="font-semibold text-fm-neutral-900 mb-4">System Actions</h4>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Button variant="outline" className="justify-start">
+          <Button variant="secondary" className="justify-start">
             <RefreshCw className="h-4 w-4 mr-2" />
             Restart Services
           </Button>
-          <Button variant="outline" className="justify-start">
+          <Button variant="secondary" className="justify-start">
             <Database className="h-4 w-4 mr-2" />
             Backup Database
           </Button>
-          <Button variant="outline" className="justify-start">
+          <Button variant="secondary" className="justify-start">
             <Download className="h-4 w-4 mr-2" />
             Export Logs
           </Button>
-          <Button variant="outline" className="justify-start">
+          <Button variant="secondary" className="justify-start">
             <Settings className="h-4 w-4 mr-2" />
             System Settings
           </Button>
@@ -644,7 +644,7 @@ export function AdminSystem() {
             <p className="text-fm-neutral-600 mt-1">Comprehensive system administration and access control</p>
           </div>
           <div className="flex items-center space-x-3">
-            <Button size="sm" variant="outline" icon={<Download className="h-4 w-4" />}>
+            <Button size="sm" variant="secondary" icon={<Download className="h-4 w-4" />}>
               Export Report
             </Button>
             <Button size="sm" icon={<Settings className="h-4 w-4" />}>

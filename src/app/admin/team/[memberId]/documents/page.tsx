@@ -95,14 +95,14 @@ export default function TeamMemberDocumentsPage({ params }: TeamMemberDocumentsP
         actions={
           <div className="flex items-center gap-3">
             <DashboardButton
-              variant="outline"
+              variant="secondary"
               size="sm"
               onClick={() => router.push(`/admin/team/${memberId}`)}
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Profile
             </DashboardButton>
-            <DashboardButton variant="admin">
+            <DashboardButton variant="primary">
               <Plus className="w-4 h-4 mr-2" />
               Upload Document
             </DashboardButton>
@@ -117,7 +117,7 @@ export default function TeamMemberDocumentsPage({ params }: TeamMemberDocumentsP
             <FileText className="w-12 h-12 text-fm-magenta-600 mx-auto mb-4" />
             <h3 className="font-medium text-fm-neutral-900 mb-2">Contracts & Agreements</h3>
             <p className="text-sm text-fm-neutral-600 mb-4">Employment contracts, NDAs, agreements</p>
-            <DashboardButton variant="outline" size="sm">
+            <DashboardButton variant="secondary" size="sm">
               View (0)
             </DashboardButton>
           </CardContent>
@@ -128,7 +128,7 @@ export default function TeamMemberDocumentsPage({ params }: TeamMemberDocumentsP
             <FolderOpen className="w-12 h-12 text-fm-magenta-600 mx-auto mb-4" />
             <h3 className="font-medium text-fm-neutral-900 mb-2">HR Documents</h3>
             <p className="text-sm text-fm-neutral-600 mb-4">Payroll, benefits, performance reviews</p>
-            <DashboardButton variant="outline" size="sm">
+            <DashboardButton variant="secondary" size="sm">
               View (0)
             </DashboardButton>
           </CardContent>
@@ -139,7 +139,7 @@ export default function TeamMemberDocumentsPage({ params }: TeamMemberDocumentsP
             <Upload className="w-12 h-12 text-fm-magenta-600 mx-auto mb-4" />
             <h3 className="font-medium text-fm-neutral-900 mb-2">Project Files</h3>
             <p className="text-sm text-fm-neutral-600 mb-4">Work samples, project deliverables</p>
-            <DashboardButton variant="outline" size="sm">
+            <DashboardButton variant="secondary" size="sm">
               View (0)
             </DashboardButton>
           </CardContent>
@@ -165,12 +165,12 @@ export default function TeamMemberDocumentsPage({ params }: TeamMemberDocumentsP
             action={
               <div className="flex items-center gap-4">
                 <DashboardButton
-                  variant="outline"
+                  variant="secondary"
                   onClick={() => router.push(`/admin/team/${memberId}`)}
                 >
                   Back to Profile
                 </DashboardButton>
-                <DashboardButton variant="admin">
+                <DashboardButton variant="primary">
                   <Upload className="w-4 h-4 mr-2" />
                   Upload First Document
                 </DashboardButton>

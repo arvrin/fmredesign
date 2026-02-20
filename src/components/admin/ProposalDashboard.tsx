@@ -190,7 +190,7 @@ export function ProposalDashboard({ onCreateNew, onEditProposal }: ProposalDashb
         title="Proposal Dashboard"
         description="Manage and track your client proposals"
         actions={
-          <Button variant="admin" onClick={onCreateNew}>
+          <Button variant="primary" onClick={onCreateNew}>
             <Plus className="w-4 h-4" />
             New Proposal
           </Button>
@@ -294,7 +294,7 @@ export function ProposalDashboard({ onCreateNew, onEditProposal }: ProposalDashb
                 : 'Try adjusting your search or filter criteria'
             }
             action={proposals.length === 0 ? (
-              <Button variant="admin" onClick={onCreateNew}>
+              <Button variant="primary" onClick={onCreateNew}>
                 <Plus className="w-4 h-4" />
                 Create First Proposal
               </Button>

@@ -123,7 +123,7 @@ export default function TeamDashboardPage() {
         description="Manage your in-house employees and freelancers"
         actions={
           <DashboardButton
-            variant="admin"
+            variant="primary"
             className="flex items-center gap-2"
             onClick={() => router.push('/admin/team/new')}
           >
@@ -326,7 +326,7 @@ export default function TeamDashboardPage() {
                       View Profile
                     </DashboardButton>
                     <DashboardButton
-                      variant="outline"
+                      variant="secondary"
                       size="sm"
                       onClick={() => router.push(`/admin/team/${member.id}/edit`)}
                     >

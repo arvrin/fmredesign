@@ -96,7 +96,7 @@ export default function TeamMemberPerformancePage({ params }: TeamMemberPerforma
         description="Performance Analytics"
         actions={
           <DashboardButton
-            variant="outline"
+            variant="secondary"
             size="sm"
             onClick={() => router.push(`/admin/team/${memberId}`)}
           >
@@ -166,7 +166,7 @@ export default function TeamMemberPerformancePage({ params }: TeamMemberPerforma
             description="Advanced performance tracking, detailed analytics, time tracking integration, and productivity metrics will be available here."
             action={
               <DashboardButton
-                variant="outline"
+                variant="secondary"
                 onClick={() => router.push(`/admin/team/${memberId}`)}
               >
                 Back to Profile

@@ -177,7 +177,7 @@ export function ArticleCard({
           
           {/* CTA Button */}
           <Button 
-            variant="outline" 
+            variant="secondary" 
             size="sm" 
             className="w-full"
             icon={<ArrowRight className="w-4 h-4" />}

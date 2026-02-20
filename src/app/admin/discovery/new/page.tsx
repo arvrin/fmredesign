@@ -77,7 +77,7 @@ export default function NewDiscoveryPage() {
           {/* Header */}
           <div className="flex items-center gap-4 mb-8">
             <Button
-              variant="outline"
+              variant="secondary"
               icon={<ArrowLeft className="h-4 w-4" />}
               onClick={() => router.push('/admin/clients')}
             >

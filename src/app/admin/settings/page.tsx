@@ -230,7 +230,7 @@ export default function SettingsPage() {
         description="Manage your admin panel preferences and account settings"
         actions={
           <DashboardButton
-            variant="outline"
+            variant="secondary"
             size="sm"
             onClick={() => window.location.reload()}
           >
@@ -326,11 +326,11 @@ export default function SettingsPage() {
                     <div className="space-y-2">
                       <h3 className="font-medium text-fm-neutral-900">Profile Photo</h3>
                       <div className="flex gap-2">
-                        <DashboardButton size="sm" variant="outline">
+                        <DashboardButton size="sm" variant="secondary">
                           <Upload className="h-4 w-4" />
                           Upload
                         </DashboardButton>
-                        <DashboardButton size="sm" variant="outline">
+                        <DashboardButton size="sm" variant="secondary">
                           <Camera className="h-4 w-4" />
                           Take Photo
                         </DashboardButton>
@@ -383,7 +383,7 @@ export default function SettingsPage() {
                   </div>
 
                   <DashboardButton
-                    variant="admin"
+                    variant="primary"
                     onClick={() => saveSettings('profile', settings.profile)}
                     disabled={saving}
                   >
@@ -517,7 +517,7 @@ export default function SettingsPage() {
                           <p className="text-sm text-fm-neutral-600">Last changed 30 days ago</p>
                         </div>
                       </div>
-                      <DashboardButton variant="outline" size="sm">
+                      <DashboardButton variant="secondary" size="sm">
                         Change Password
                       </DashboardButton>
                     </div>
@@ -673,7 +673,7 @@ export default function SettingsPage() {
                         </div>
                       </div>
                       <DashboardButton
-                        variant={connected ? "outline" : "admin"}
+                        variant={connected ? "secondary" : "primary"}
                         size="sm"
                         onClick={() => saveSettings('integrations', { [key]: !connected })}
                       >
@@ -746,11 +746,11 @@ export default function SettingsPage() {
                     </div>
 
                     <div className="space-y-4 mt-6">
-                      <DashboardButton variant="outline" className="w-full">
+                      <DashboardButton variant="secondary" className="w-full">
                         <FileText className="h-4 w-4" />
                         Download Invoice
                       </DashboardButton>
-                      <DashboardButton variant="outline" className="w-full">
+                      <DashboardButton variant="secondary" className="w-full">
                         <CreditCard className="h-4 w-4" />
                         Update Payment Method
                       </DashboardButton>

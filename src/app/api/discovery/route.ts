@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { requireAdminAuth } from '@/lib/admin-auth-middleware';
 import { createDiscoverySchema, updateDiscoverySchema, validateBody } from '@/lib/validations/schemas';
+import { logAuditEvent, getAuditUser, getClientIP } from '@/lib/admin/audit-log';
 
 export async function GET(request: NextRequest) {
   const authError = await requireAdminAuth(request);
@@ -100,6 +101,17 @@ export async function POST(request: NextRequest) {
 
     if (error) throw error;
 
+    // Fire-and-forget audit log
+    const auditUser = getAuditUser(request);
+    logAuditEvent({
+      ...auditUser,
+      action: 'create',
+      resource_type: 'discovery_session',
+      resource_id: session.id,
+      details: { clientId: session.clientId },
+      ip_address: getClientIP(request),
+    });
+
     return NextResponse.json({
       success: true,
       data: session,
@@ -159,6 +171,17 @@ export async function PUT(request: NextRequest) {
         { status: 404 }
       );
     }
+
+    // Fire-and-forget audit log
+    const auditUser = getAuditUser(request);
+    logAuditEvent({
+      ...auditUser,
+      action: 'update',
+      resource_type: 'discovery_session',
+      resource_id: sessionId,
+      details: { updatedFields: Object.keys(dbUpdates) },
+      ip_address: getClientIP(request),
+    });
 
     return NextResponse.json({
       success: true,

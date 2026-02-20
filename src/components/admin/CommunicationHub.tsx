@@ -131,11 +131,11 @@ export function CommunicationHub({ clientId, onScheduleMeeting }: CommunicationH
           </div>
           
           <div className="flex items-center space-x-3">
-            <Button variant="outline" size="sm">
+            <Button variant="secondary" size="sm">
               <Phone className="h-4 w-4 mr-2" />
               Call
             </Button>
-            <Button variant="outline" size="sm">
+            <Button variant="secondary" size="sm">
               <Video className="h-4 w-4 mr-2" />
               Video Call
             </Button>
@@ -185,7 +185,7 @@ export function CommunicationHub({ clientId, onScheduleMeeting }: CommunicationH
             <div className="p-4 border-b border-fm-neutral-200">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="font-semibold text-fm-neutral-900">Conversations</h3>
-                <Button size="sm" variant="outline">
+                <Button size="sm" variant="secondary">
                   <Plus className="h-4 w-4" />
                 </Button>
               </div>
@@ -422,12 +422,12 @@ export function CommunicationHub({ clientId, onScheduleMeeting }: CommunicationH
                     
                     <div className="flex items-center space-x-2 ml-4">
                       {meeting.meetingLink && (
-                        <Button size="sm" variant="outline">
+                        <Button size="sm" variant="secondary">
                           <Video className="h-4 w-4 mr-1" />
                           Join
                         </Button>
                       )}
-                      <Button size="sm" variant="outline">
+                      <Button size="sm" variant="secondary">
                         <FileText className="h-4 w-4 mr-1" />
                         Notes
                       </Button>

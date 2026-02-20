@@ -293,14 +293,14 @@ export function ClientDashboard({ onClientSelect }: ClientDashboardProps) {
           {/* View Mode Toggle */}
           <div className="flex items-center space-x-2">
             <DashboardButton
-              variant={viewMode === 'grid' ? 'primary' : 'outline'}
+              variant={viewMode === 'grid' ? 'primary' : 'secondary'}
               size="sm"
               onClick={() => setViewMode('grid')}
             >
               Grid
             </DashboardButton>
             <DashboardButton
-              variant={viewMode === 'list' ? 'primary' : 'outline'}
+              variant={viewMode === 'list' ? 'primary' : 'secondary'}
               size="sm"
               onClick={() => setViewMode('list')}
             >
@@ -381,14 +381,14 @@ export function ClientDashboard({ onClientSelect }: ClientDashboardProps) {
 
                 {/* Action DashboardButtons */}
                 <div className="flex space-x-2 pt-2">
-                  <DashboardButton size="sm" variant="outline" className="flex-1">
+                  <DashboardButton size="sm" variant="secondary" className="flex-1">
                     <Eye className="h-4 w-4" />
                     View
                   </DashboardButton>
-                  <DashboardButton size="sm" variant="outline">
+                  <DashboardButton size="sm" variant="secondary">
                     <MessageSquare className="h-4 w-4" />
                   </DashboardButton>
-                  <DashboardButton size="sm" variant="outline">
+                  <DashboardButton size="sm" variant="secondary">
                     <BarChart3 className="h-4 w-4" />
                   </DashboardButton>
                 </div>
@@ -433,13 +433,13 @@ export function ClientDashboard({ onClientSelect }: ClientDashboardProps) {
                 </div>
                 
                 <div className="flex items-center space-x-2 ml-4">
-                  <DashboardButton size="sm" variant="outline">
+                  <DashboardButton size="sm" variant="secondary">
                     <Eye className="h-4 w-4" />
                   </DashboardButton>
-                  <DashboardButton size="sm" variant="outline">
+                  <DashboardButton size="sm" variant="secondary">
                     <Edit className="h-4 w-4" />
                   </DashboardButton>
-                  <DashboardButton size="sm" variant="outline">
+                  <DashboardButton size="sm" variant="secondary">
                     <MoreVertical className="h-4 w-4" />
                   </DashboardButton>
                 </div>

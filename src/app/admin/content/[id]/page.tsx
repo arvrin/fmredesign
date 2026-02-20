@@ -247,7 +247,7 @@ export default function ContentDetailPage({
             </div>
 
             <DashboardButton
-              variant="admin"
+              variant="primary"
               size="sm"
               onClick={() => router.push(`/admin/content/${id}/edit`)}
               className="shrink-0"

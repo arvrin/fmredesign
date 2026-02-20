@@ -142,7 +142,7 @@ export function ProjectOverviewForm({ session, onUpdate }: ProjectOverviewFormPr
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-lg font-semibold text-fm-neutral-900">Key Objectives</h3>
             <Button
-              variant="outline"
+              variant="secondary"
               onClick={() => handleArrayAdd('keyObjectives')}
               icon={<Plus className="h-4 w-4" />}
             >
@@ -168,7 +168,7 @@ export function ProjectOverviewForm({ session, onUpdate }: ProjectOverviewFormPr
                     placeholder={`Objective ${index + 1}`}
                   />
                   <Button
-                    variant="outline"
+                    variant="secondary"
                     onClick={() => handleArrayRemove('keyObjectives', index)}
                     icon={<Trash2 className="h-4 w-4" />}
                     className="text-red-600 border-red-300 hover:bg-red-50"
@@ -235,7 +235,7 @@ export function ProjectOverviewForm({ session, onUpdate }: ProjectOverviewFormPr
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-lg font-semibold text-fm-neutral-900">Project Scope</h3>
             <Button
-              variant="outline"
+              variant="secondary"
               onClick={() => handleArrayAdd('projectScope')}
               icon={<Plus className="h-4 w-4" />}
             >
@@ -254,7 +254,7 @@ export function ProjectOverviewForm({ session, onUpdate }: ProjectOverviewFormPr
                   placeholder="Describe what's included in scope"
                 />
                 <Button
-                  variant="outline"
+                  variant="secondary"
                   onClick={() => handleArrayRemove('projectScope', index)}
                   icon={<Trash2 className="h-4 w-4" />}
                   className="text-red-600 border-red-300 hover:bg-red-50"
@@ -275,7 +275,7 @@ export function ProjectOverviewForm({ session, onUpdate }: ProjectOverviewFormPr
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-lg font-semibold text-fm-neutral-900">Success Metrics</h3>
             <Button
-              variant="outline"
+              variant="secondary"
               onClick={() => handleArrayAdd('successMetrics')}
               icon={<Plus className="h-4 w-4" />}
             >
@@ -294,7 +294,7 @@ export function ProjectOverviewForm({ session, onUpdate }: ProjectOverviewFormPr
                   placeholder="How will you measure success?"
                 />
                 <Button
-                  variant="outline"
+                  variant="secondary"
                   onClick={() => handleArrayRemove('successMetrics', index)}
                   icon={<Trash2 className="h-4 w-4" />}
                   className="text-red-600 border-red-300 hover:bg-red-50"
@@ -315,7 +315,7 @@ export function ProjectOverviewForm({ session, onUpdate }: ProjectOverviewFormPr
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-lg font-semibold text-fm-neutral-900">Constraints & Limitations</h3>
             <Button
-              variant="outline"
+              variant="secondary"
               onClick={() => handleArrayAdd('constraints')}
               icon={<Plus className="h-4 w-4" />}
             >
@@ -334,7 +334,7 @@ export function ProjectOverviewForm({ session, onUpdate }: ProjectOverviewFormPr
                   placeholder="Any limitations or constraints we should know about?"
                 />
                 <Button
-                  variant="outline"
+                  variant="secondary"
                   onClick={() => handleArrayRemove('constraints', index)}
                   icon={<Trash2 className="h-4 w-4" />}
                   className="text-red-600 border-red-300 hover:bg-red-50"

@@ -1,13 +1,17 @@
 /**
  * New Content Creation Page
  * Professional content creation interface with project integration
+ * Migrated to react-hook-form + Zod validation
  */
 
 'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { 
+import { useForm, Controller, useWatch } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import {
   ArrowLeft,
   Calendar,
   FileText,
@@ -23,7 +27,22 @@ import {
 } from 'lucide-react';
 import { Button } from '@/design-system/components/primitives/Button';
 import { adminToast } from '@/lib/admin/toast';
-import type { ContentInput, ContentType, Platform, Project } from '@/lib/admin/project-types';
+import { createContentSchema } from '@/lib/validations/schemas';
+import type { ContentType, Platform, Project } from '@/lib/admin/project-types';
+
+// Extend the base schema to include the content body field and array fields
+const contentFormSchema = createContentSchema.extend({
+  content: z.string().optional(),
+  hashtags: z.array(z.string()).optional(),
+  mentions: z.array(z.string()).optional(),
+  tags: z.array(z.string()).optional(),
+});
+
+type ContentFormData = z.infer<typeof contentFormSchema>;
+
+const inputClass = 'w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-fm-magenta-700';
+const errorInputClass = 'w-full px-3 py-2 border border-red-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-fm-magenta-700';
+const errorClass = 'text-red-500 text-sm mt-1';
 
 export default function NewContentPage() {
   const router = useRouter();
@@ -34,27 +53,40 @@ export default function NewContentPage() {
   const [clients, setClients] = useState<any[]>([]);
   const [talent, setTalent] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
-
-  // Form state
-  const [formData, setFormData] = useState<ContentInput>({
-    projectId: projectId || '',
-    title: '',
-    description: '',
-    content: '',
-    type: 'post' as ContentType,
-    platform: 'instagram' as Platform,
-    scheduledDate: '',
-    assignedDesigner: '',
-    assignedWriter: '',
-    hashtags: [],
-    mentions: [],
-    tags: []
-  });
 
   const [hashtagInput, setHashtagInput] = useState('');
   const [mentionInput, setMentionInput] = useState('');
   const [tagInput, setTagInput] = useState('');
+
+  const {
+    register,
+    handleSubmit,
+    control,
+    setValue,
+    formState: { errors, isSubmitting },
+  } = useForm<ContentFormData>({
+    resolver: zodResolver(contentFormSchema),
+    defaultValues: {
+      projectId: projectId || '',
+      title: '',
+      description: '',
+      content: '',
+      type: 'post',
+      platform: 'instagram',
+      scheduledDate: '',
+      assignedDesigner: '',
+      assignedWriter: '',
+      hashtags: [],
+      mentions: [],
+      tags: []
+    }
+  });
+
+  // Watch projectId for sidebar info
+  const watchedProjectId = useWatch({ control, name: 'projectId' });
+  const watchedContent = useWatch({ control, name: 'content' });
+  const watchedHashtags = useWatch({ control, name: 'hashtags' });
+  const watchedMentions = useWatch({ control, name: 'mentions' });
 
   // Load data
   useEffect(() => {
@@ -65,23 +97,20 @@ export default function NewContentPage() {
           fetch('/api/clients'),
           fetch('/api/talent')
         ]);
-        
+
         const projectsResult = await projectsResponse.json();
         const clientsResult = await clientsResponse.json();
         const talentResult = await talentResponse.json();
-        
+
         if (projectsResult.success) setProjects(projectsResult.data);
         if (clientsResult.success) setClients(clientsResult.data);
         if (talentResult.success) setTalent(talentResult.data);
 
-        // If projectId is provided, pre-select it and load project details
+        // If projectId is provided, pre-select it
         if (projectId && projectsResult.success) {
           const project = projectsResult.data.find((p: Project) => p.id === projectId);
           if (project) {
-            setFormData(prev => ({
-              ...prev,
-              projectId: project.id
-            }));
+            setValue('projectId', project.id);
           }
         }
       } catch (error) {
@@ -90,103 +119,39 @@ export default function NewContentPage() {
     };
 
     loadData();
-  }, [projectId]);
-
-  const handleInputChange = (field: keyof ContentInput, value: any) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-    
-    // Clear error when user starts typing
-    if (errors[field]) {
-      setErrors(prev => ({
-        ...prev,
-        [field]: ''
-      }));
-    }
-  };
+  }, [projectId, setValue]);
 
   const addHashtag = () => {
-    if (hashtagInput.trim() && !formData.hashtags.includes(hashtagInput.trim())) {
-      setFormData(prev => ({
-        ...prev,
-        hashtags: [...prev.hashtags, hashtagInput.trim()]
-      }));
+    if (hashtagInput.trim()) {
+      const current = watchedHashtags || [];
+      if (!current.includes(hashtagInput.trim())) {
+        setValue('hashtags', [...current, hashtagInput.trim()]);
+      }
       setHashtagInput('');
     }
   };
 
   const removeHashtag = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      hashtags: prev.hashtags.filter((_, i) => i !== index)
-    }));
+    const current = watchedHashtags || [];
+    setValue('hashtags', current.filter((_: string, i: number) => i !== index));
   };
 
   const addMention = () => {
-    if (mentionInput.trim() && !formData.mentions.includes(mentionInput.trim())) {
-      setFormData(prev => ({
-        ...prev,
-        mentions: [...prev.mentions, mentionInput.trim()]
-      }));
+    if (mentionInput.trim()) {
+      const current = watchedMentions || [];
+      if (!current.includes(mentionInput.trim())) {
+        setValue('mentions', [...current, mentionInput.trim()]);
+      }
       setMentionInput('');
     }
   };
 
   const removeMention = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      mentions: prev.mentions.filter((_, i) => i !== index)
-    }));
+    const current = watchedMentions || [];
+    setValue('mentions', current.filter((_: string, i: number) => i !== index));
   };
 
-  const addTag = () => {
-    if (tagInput.trim() && !formData.tags.includes(tagInput.trim())) {
-      setFormData(prev => ({
-        ...prev,
-        tags: [...prev.tags, tagInput.trim()]
-      }));
-      setTagInput('');
-    }
-  };
-
-  const removeTag = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      tags: prev.tags.filter((_, i) => i !== index)
-    }));
-  };
-
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-
-    if (!formData.projectId) newErrors.projectId = 'Project is required';
-    if (!formData.title.trim()) newErrors.title = 'Title is required';
-    if (!formData.type) newErrors.type = 'Content type is required';
-    if (!formData.platform) newErrors.platform = 'Platform is required';
-    if (!formData.scheduledDate) newErrors.scheduledDate = 'Scheduled date is required';
-
-    // Check if scheduled date is in the future
-    if (formData.scheduledDate) {
-      const selectedDate = new Date(formData.scheduledDate);
-      const now = new Date();
-      now.setHours(0, 0, 0, 0);
-      
-      if (selectedDate < now) {
-        newErrors.scheduledDate = 'Scheduled date must be in the future';
-      }
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!validateForm()) return;
-
+  const onSubmit = async (data: ContentFormData) => {
     setLoading(true);
 
     try {
@@ -195,7 +160,7 @@ export default function NewContentPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(data),
       });
 
       const result = await response.json();
@@ -227,7 +192,7 @@ export default function NewContentPage() {
     }
   };
 
-  const selectedProject = projects.find(p => p.id === formData.projectId);
+  const selectedProject = projects.find(p => p.id === watchedProjectId);
 
   return (
     <div className="min-h-screen bg-fm-neutral-50">
@@ -247,24 +212,22 @@ export default function NewContentPage() {
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-8">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
             {/* Main Content Form */}
             <div className="lg:col-span-2 space-y-6">
               {/* Basic Information */}
               <div className="bg-white rounded-xl border border-fm-neutral-200 p-6">
                 <h2 className="text-xl font-semibold text-fm-neutral-900 mb-4">Basic Information</h2>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                   <div>
                     <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
                       Project *
                     </label>
                     <select
-                      value={formData.projectId}
-                      onChange={(e) => handleInputChange('projectId', e.target.value)}
-                      className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 ${errors.projectId ? 'border-red-500' : 'border-fm-neutral-300'}`}
-                      required
+                      {...register('projectId')}
+                      className={errors.projectId ? errorInputClass : inputClass}
                     >
                       <option value="">Select a project</option>
                       {projects.map(project => (
@@ -273,7 +236,7 @@ export default function NewContentPage() {
                         </option>
                       ))}
                     </select>
-                    {errors.projectId && <p className="text-red-500 text-sm mt-1">{errors.projectId}</p>}
+                    {errors.projectId && <p className={errorClass}>{errors.projectId.message}</p>}
                   </div>
 
                   <div>
@@ -282,12 +245,10 @@ export default function NewContentPage() {
                     </label>
                     <input
                       type="datetime-local"
-                      value={formData.scheduledDate}
-                      onChange={(e) => handleInputChange('scheduledDate', e.target.value)}
-                      className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 ${errors.scheduledDate ? 'border-red-500' : 'border-fm-neutral-300'}`}
-                      required
+                      {...register('scheduledDate')}
+                      className={errors.scheduledDate ? errorInputClass : inputClass}
                     />
-                    {errors.scheduledDate && <p className="text-red-500 text-sm mt-1">{errors.scheduledDate}</p>}
+                    {errors.scheduledDate && <p className={errorClass}>{errors.scheduledDate.message}</p>}
                   </div>
                 </div>
 
@@ -297,13 +258,11 @@ export default function NewContentPage() {
                   </label>
                   <input
                     type="text"
-                    value={formData.title}
-                    onChange={(e) => handleInputChange('title', e.target.value)}
+                    {...register('title')}
                     placeholder="Enter content title"
-                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 ${errors.title ? 'border-red-500' : 'border-fm-neutral-300'}`}
-                    required
+                    className={errors.title ? errorInputClass : inputClass}
                   />
-                  {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title}</p>}
+                  {errors.title && <p className={errorClass}>{errors.title.message}</p>}
                 </div>
 
                 <div className="mb-4">
@@ -311,11 +270,10 @@ export default function NewContentPage() {
                     Description
                   </label>
                   <textarea
-                    value={formData.description}
-                    onChange={(e) => handleInputChange('description', e.target.value)}
+                    {...register('description')}
                     placeholder="Brief description of the content"
                     rows={3}
-                    className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-fm-magenta-700"
+                    className={inputClass}
                   />
                 </div>
 
@@ -325,10 +283,8 @@ export default function NewContentPage() {
                       Content Type *
                     </label>
                     <select
-                      value={formData.type}
-                      onChange={(e) => handleInputChange('type', e.target.value as ContentType)}
-                      className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 ${errors.type ? 'border-red-500' : 'border-fm-neutral-300'}`}
-                      required
+                      {...register('type')}
+                      className={errors.type ? errorInputClass : inputClass}
                     >
                       <option value="post">Post</option>
                       <option value="story">Story</option>
@@ -339,7 +295,7 @@ export default function NewContentPage() {
                       <option value="ad">Ad</option>
                       <option value="email">Email</option>
                     </select>
-                    {errors.type && <p className="text-red-500 text-sm mt-1">{errors.type}</p>}
+                    {errors.type && <p className={errorClass}>{errors.type.message}</p>}
                   </div>
 
                   <div>
@@ -347,10 +303,8 @@ export default function NewContentPage() {
                       Platform *
                     </label>
                     <select
-                      value={formData.platform}
-                      onChange={(e) => handleInputChange('platform', e.target.value as Platform)}
-                      className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 ${errors.platform ? 'border-red-500' : 'border-fm-neutral-300'}`}
-                      required
+                      {...register('platform')}
+                      className={errors.platform ? errorInputClass : inputClass}
                     >
                       <option value="instagram">Instagram</option>
                       <option value="facebook">Facebook</option>
@@ -361,7 +315,7 @@ export default function NewContentPage() {
                       <option value="website">Website</option>
                       <option value="email">Email</option>
                     </select>
-                    {errors.platform && <p className="text-red-500 text-sm mt-1">{errors.platform}</p>}
+                    {errors.platform && <p className={errorClass}>{errors.platform.message}</p>}
                   </div>
                 </div>
               </div>
@@ -369,20 +323,19 @@ export default function NewContentPage() {
               {/* Content Details */}
               <div className="bg-white rounded-xl border border-fm-neutral-200 p-6">
                 <h2 className="text-xl font-semibold text-fm-neutral-900 mb-4">Content Details</h2>
-                
+
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
                     Content Body
                   </label>
                   <textarea
-                    value={formData.content}
-                    onChange={(e) => handleInputChange('content', e.target.value)}
+                    {...register('content')}
                     placeholder="Write your content here..."
                     rows={6}
-                    className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-fm-magenta-700"
+                    className={inputClass}
                   />
                   <p className="text-sm text-fm-neutral-500 mt-1">
-                    Character count: {formData.content.length}
+                    Character count: {(watchedContent || '').length}
                   </p>
                 </div>
 
@@ -403,20 +356,20 @@ export default function NewContentPage() {
                         onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addHashtag())}
                       />
                     </div>
-                    <Button type="button" onClick={addHashtag} variant="outline">
+                    <Button type="button" onClick={addHashtag} variant="secondary">
                       Add
                     </Button>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {formData.hashtags.map((tag, index) => (
+                    {(watchedHashtags || []).map((tag: string, index: number) => (
                       <span key={index} className="inline-flex items-center gap-1 px-2 py-1 text-sm bg-blue-50 text-blue-600 rounded-full">
                         #{tag}
-                        <button 
-                          type="button" 
+                        <button
+                          type="button"
                           onClick={() => removeHashtag(index)}
                           className="text-blue-400 hover:text-blue-600 ml-1"
                         >
-                          ×
+                          &times;
                         </button>
                       </span>
                     ))}
@@ -440,20 +393,20 @@ export default function NewContentPage() {
                         onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addMention())}
                       />
                     </div>
-                    <Button type="button" onClick={addMention} variant="outline">
+                    <Button type="button" onClick={addMention} variant="secondary">
                       Add
                     </Button>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {formData.mentions.map((mention, index) => (
+                    {(watchedMentions || []).map((mention: string, index: number) => (
                       <span key={index} className="inline-flex items-center gap-1 px-2 py-1 text-sm bg-green-50 text-green-600 rounded-full">
                         @{mention}
-                        <button 
-                          type="button" 
+                        <button
+                          type="button"
                           onClick={() => removeMention(index)}
                           className="text-green-400 hover:text-green-600 ml-1"
                         >
-                          ×
+                          &times;
                         </button>
                       </span>
                     ))}
@@ -464,16 +417,15 @@ export default function NewContentPage() {
               {/* Team Assignment */}
               <div className="bg-white rounded-xl border border-fm-neutral-200 p-6">
                 <h2 className="text-xl font-semibold text-fm-neutral-900 mb-4">Team Assignment</h2>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
                       Assigned Designer
                     </label>
                     <select
-                      value={formData.assignedDesigner}
-                      onChange={(e) => handleInputChange('assignedDesigner', e.target.value)}
-                      className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-fm-magenta-700"
+                      {...register('assignedDesigner')}
+                      className={inputClass}
                     >
                       <option value="">Select designer</option>
                       {talent.filter(t => t.role === 'designer').map(person => (
@@ -489,9 +441,8 @@ export default function NewContentPage() {
                       Assigned Writer
                     </label>
                     <select
-                      value={formData.assignedWriter}
-                      onChange={(e) => handleInputChange('assignedWriter', e.target.value)}
-                      className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-fm-magenta-700"
+                      {...register('assignedWriter')}
+                      className={inputClass}
                     >
                       <option value="">Select writer</option>
                       {talent.filter(t => t.role === 'writer' || t.role === 'content_writer').map(person => (
@@ -513,10 +464,10 @@ export default function NewContentPage() {
                 <div className="space-y-3">
                   <Button
                     type="submit"
-                    disabled={loading}
+                    disabled={loading || isSubmitting}
                     className="w-full flex items-center justify-center gap-2"
                   >
-                    {loading ? (
+                    {(loading || isSubmitting) ? (
                       <>
                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                         Creating...
@@ -528,10 +479,10 @@ export default function NewContentPage() {
                       </>
                     )}
                   </Button>
-                  
+
                   <Button
                     type="button"
-                    variant="outline"
+                    variant="secondary"
                     onClick={() => router.push('/admin/content')}
                     className="w-full"
                   >

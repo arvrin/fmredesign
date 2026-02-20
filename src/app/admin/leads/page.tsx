@@ -74,11 +74,11 @@ export default function LeadDashboard() {
         description="Track, qualify, and convert your leads"
         actions={
           <div className="flex items-center gap-3">
-            <DashboardButton variant="outline" size="sm" onClick={exportLeads}>
+            <DashboardButton variant="secondary" size="sm" onClick={exportLeads}>
               <Download className="w-4 h-4" />
               Export
             </DashboardButton>
-            <DashboardButton variant="admin" size="sm" onClick={() => setShowAddLead(true)}>
+            <DashboardButton variant="primary" size="sm" onClick={() => setShowAddLead(true)}>
               <Plus className="w-4 h-4" />
               Add Lead
             </DashboardButton>

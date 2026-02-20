@@ -11,6 +11,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { requireAdminAuth } from '@/lib/admin-auth-middleware';
 import { rateLimit, getClientIp } from '@/lib/rate-limiter';
+import { logAuditEvent, getAuditUser, getClientIP } from '@/lib/admin/audit-log';
 import { submitTalentApplicationSchema, validateBody } from '@/lib/validations/schemas';
 import {
   notifyTeam, notifyRecipient,
@@ -337,6 +338,17 @@ export async function PUT(request: NextRequest) {
         notifyRecipient(approvedEmail, emailData.subject, emailData.html);
       }
     }
+
+    // Fire-and-forget audit log
+    const auditUser = getAuditUser(request);
+    logAuditEvent({
+      ...auditUser,
+      action: status === 'approved' ? 'approve' : status === 'rejected' ? 'reject' : 'update',
+      resource_type: 'talent_application',
+      resource_id: id,
+      details: { newStatus: status, profileSlug },
+      ip_address: getClientIP(request),
+    });
 
     return NextResponse.json({
       success: true,

@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { requireAdminAuth, requirePermission } from '@/lib/admin-auth-middleware';
 import { createTeamMemberSchema, updateTeamMemberSchema, validateBody } from '@/lib/validations/schemas';
+import { logAuditEvent, getClientIP } from '@/lib/admin/audit-log';
 
 /** Transform a Supabase row (snake_case) to camelCase for the frontend */
 function transformMember(row: any) {
@@ -165,6 +166,17 @@ export async function POST(request: NextRequest) {
     const { error } = await supabase.from('team_members').upsert(record);
     if (error) throw error;
 
+    // Fire-and-forget audit log
+    logAuditEvent({
+      user_id: auth.user.id,
+      user_name: auth.user.name,
+      action: 'create',
+      resource_type: 'team_member',
+      resource_id: id,
+      details: { name: body.name, role: body.role, department: body.department },
+      ip_address: getClientIP(request),
+    });
+
     return NextResponse.json({
       success: true,
       data: { ...body, id },
@@ -222,6 +234,17 @@ export async function PUT(request: NextRequest) {
 
     if (error) throw error;
 
+    // Fire-and-forget audit log
+    logAuditEvent({
+      user_id: auth.user.id,
+      user_name: auth.user.name,
+      action: 'update',
+      resource_type: 'team_member',
+      resource_id: id,
+      details: { updatedFields: Object.keys(updates) },
+      ip_address: getClientIP(request),
+    });
+
     return NextResponse.json({
       success: true,
       message: 'Team member updated successfully',
@@ -255,6 +278,17 @@ export async function DELETE(request: NextRequest) {
     const { error } = await supabase.from('team_members').delete().eq('id', id);
 
     if (error) throw error;
+
+    // Fire-and-forget audit log
+    logAuditEvent({
+      user_id: auth.user.id,
+      user_name: auth.user.name,
+      action: 'delete',
+      resource_type: 'team_member',
+      resource_id: id,
+      details: {},
+      ip_address: getClientIP(request),
+    });
 
     return NextResponse.json({
       success: true,

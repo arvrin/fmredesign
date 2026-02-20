@@ -14,6 +14,7 @@ import { requireAdminAuth, requirePermission } from '@/lib/admin-auth-middleware
 import { createInvoiceSchema, updateInvoiceSchema, validateBody } from '@/lib/validations/schemas';
 import { notifyTeam, invoiceCreatedEmail } from '@/lib/email/send';
 import { notifyClient } from '@/lib/notifications';
+import { logAuditEvent, getClientIP } from '@/lib/admin/audit-log';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -195,6 +196,17 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    // Fire-and-forget audit log
+    logAuditEvent({
+      user_id: auth.user.id,
+      user_name: auth.user.name,
+      action: 'create',
+      resource_type: 'invoice',
+      resource_id: record.id,
+      details: { invoiceNumber: record.invoice_number, clientName: record.client_name, total: record.total },
+      ip_address: getClientIP(request),
+    });
+
     return NextResponse.json({
       success: true,
       data: { id: record.id },
@@ -244,6 +256,17 @@ export async function PUT(request: NextRequest) {
 
     if (error) throw error;
 
+    // Fire-and-forget audit log
+    logAuditEvent({
+      user_id: auth.user.id,
+      user_name: auth.user.name,
+      action: 'update',
+      resource_type: 'invoice',
+      resource_id: invoiceId as string,
+      details: { updatedFields: Object.keys(updates), newStatus: status },
+      ip_address: getClientIP(request),
+    });
+
     return NextResponse.json({
       success: true,
       message: 'Invoice updated successfully',
@@ -280,6 +303,17 @@ export async function DELETE(request: NextRequest) {
     const { error } = await supabase.from('invoices').delete().eq('id', id);
 
     if (error) throw error;
+
+    // Fire-and-forget audit log
+    logAuditEvent({
+      user_id: auth.user.id,
+      user_name: auth.user.name,
+      action: 'delete',
+      resource_type: 'invoice',
+      resource_id: id,
+      details: {},
+      ip_address: getClientIP(request),
+    });
 
     return NextResponse.json({
       success: true,

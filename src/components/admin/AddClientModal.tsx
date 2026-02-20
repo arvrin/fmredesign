@@ -213,7 +213,7 @@ export function AddClientModal({ isOpen, onClose, onClientAdded }: AddClientModa
           </div>
 
           <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 mt-6 pt-6 border-t border-fm-neutral-200">
-            <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting} fullWidth className="sm:w-auto">
+            <Button type="button" variant="secondary" onClick={onClose} disabled={isSubmitting} fullWidth className="sm:w-auto">
               Cancel
             </Button>
             <Button

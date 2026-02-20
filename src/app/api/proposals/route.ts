@@ -8,6 +8,7 @@ import { getSupabaseAdmin } from '@/lib/supabase';
 import { requireAdminAuth, requirePermission } from '@/lib/admin-auth-middleware';
 import { createProposalSchema, updateProposalSchema, validateBody } from '@/lib/validations/schemas';
 import { notifyTeam, proposalCreatedEmail } from '@/lib/email/send';
+import { logAuditEvent, getClientIP } from '@/lib/admin/audit-log';
 
 // GET /api/proposals - Fetch all proposals
 export async function GET(request: NextRequest) {
@@ -181,6 +182,17 @@ export async function POST(request: NextRequest) {
     });
     notifyTeam(emailData.subject, emailData.html);
 
+    // Fire-and-forget audit log
+    logAuditEvent({
+      user_id: auth.user.id,
+      user_name: auth.user.name,
+      action: 'create',
+      resource_type: 'proposal',
+      resource_id: id,
+      details: { proposalNumber, title: record.title },
+      ip_address: getClientIP(request),
+    });
+
     return NextResponse.json({
       success: true,
       data: { ...body, id, proposalNumber },
@@ -229,6 +241,17 @@ export async function PUT(request: NextRequest) {
 
     if (error) throw error;
 
+    // Fire-and-forget audit log
+    logAuditEvent({
+      user_id: auth.user.id,
+      user_name: auth.user.name,
+      action: 'update',
+      resource_type: 'proposal',
+      resource_id: id,
+      details: { updatedFields: Object.keys(updates), newStatus: status },
+      ip_address: getClientIP(request),
+    });
+
     return NextResponse.json({
       success: true,
       message: 'Proposal updated successfully',
@@ -262,6 +285,17 @@ export async function DELETE(request: NextRequest) {
     const { error } = await supabase.from('proposals').delete().eq('id', id);
 
     if (error) throw error;
+
+    // Fire-and-forget audit log
+    logAuditEvent({
+      user_id: auth.user.id,
+      user_name: auth.user.name,
+      action: 'delete',
+      resource_type: 'proposal',
+      resource_id: id,
+      details: {},
+      ip_address: getClientIP(request),
+    });
 
     return NextResponse.json({
       success: true,

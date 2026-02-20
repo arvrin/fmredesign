@@ -89,7 +89,7 @@ export function ProjectsTab({ projects, loading, onFetchProjects }: ProjectsTabP
                 </div>
               </div>
               <Link href={`/admin/projects/${project.id}`} className="self-start">
-                <DashboardButton variant="outline" size="sm">
+                <DashboardButton variant="secondary" size="sm">
                   View Project
                 </DashboardButton>
               </Link>

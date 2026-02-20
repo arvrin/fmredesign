@@ -109,7 +109,7 @@ export function TeamTab({
             </div>
 
             <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2 sm:gap-4 pt-4 border-t border-fm-neutral-200">
-              <DashboardButton onClick={() => setShowAddTeamForm(false)} variant="outline">
+              <DashboardButton onClick={() => setShowAddTeamForm(false)} variant="secondary">
                 Cancel
               </DashboardButton>
               <DashboardButton

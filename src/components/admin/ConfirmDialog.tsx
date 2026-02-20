@@ -39,7 +39,7 @@ export function ConfirmDialog({
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="mt-4 flex-col-reverse gap-2 sm:flex-row">
-          <Button variant="outline" size="sm" onClick={onCancel} fullWidth className="sm:w-auto">
+          <Button variant="secondary" size="sm" onClick={onCancel} fullWidth className="sm:w-auto">
             Cancel
           </Button>
           <Button

@@ -115,7 +115,7 @@ export function LeadTable({
             : 'Get started by capturing your first lead'
         }
         action={
-          <DashboardButton variant="admin" size="sm" onClick={onAddLead}>
+          <DashboardButton variant="primary" size="sm" onClick={onAddLead}>
             <Plus className="w-4 h-4" />
             Add First Lead
           </DashboardButton>
@@ -517,7 +517,7 @@ export function LeadTable({
                 </div>
                 {CONVERTIBLE_STATUSES.includes(selectedLead.status) && (
                   <DashboardButton
-                    variant="admin"
+                    variant="primary"
                     size="sm"
                     onClick={() => {
                       onConvertToClient(selectedLead.id);

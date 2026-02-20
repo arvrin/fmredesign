@@ -432,7 +432,7 @@ export function AddLeadModal({ isOpen, onClose, onLeadAdded }: AddLeadModalProps
           <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 mt-6 pt-6 border-t border-fm-neutral-200">
             <Button
               type="button"
-              variant="outline"
+              variant="secondary"
               onClick={onClose}
               disabled={isSubmitting}
               fullWidth

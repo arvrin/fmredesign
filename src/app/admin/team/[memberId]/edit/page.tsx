@@ -199,7 +199,7 @@ export default function EditTeamMemberPage({ params }: EditTeamMemberProps) {
         actions={
           <div className="flex items-center gap-3">
             <DashboardButton
-              variant="outline"
+              variant="secondary"
               size="sm"
               onClick={() => router.push(`/admin/team/${memberId}`)}
             >
@@ -207,7 +207,7 @@ export default function EditTeamMemberPage({ params }: EditTeamMemberProps) {
               Back to Profile
             </DashboardButton>
             <DashboardButton
-              variant="destructive"
+              variant="danger"
               size="sm"
               onClick={() => setShowDeleteConfirm(true)}
             >
@@ -238,7 +238,7 @@ export default function EditTeamMemberPage({ params }: EditTeamMemberProps) {
                 Cancel
               </DashboardButton>
               <DashboardButton
-                variant="destructive"
+                variant="danger"
                 onClick={handleDelete}
                 disabled={isDeleting}
                 className="flex items-center gap-2"
@@ -535,7 +535,7 @@ export default function EditTeamMemberPage({ params }: EditTeamMemberProps) {
           </DashboardButton>
           <DashboardButton
             type="submit"
-            variant="admin"
+            variant="primary"
             disabled={isSubmitting}
             className="flex items-center gap-2"
           >

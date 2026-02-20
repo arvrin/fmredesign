@@ -157,7 +157,7 @@ export default function TeamMemberProfilePage({ params }: TeamMemberProfileProps
               {member.type}
             </Badge>
             <DashboardButton
-              variant="admin"
+              variant="primary"
               size="sm"
               onClick={() => router.push(`/admin/team/${memberId}/edit`)}
             >
@@ -416,7 +416,7 @@ export default function TeamMemberProfilePage({ params }: TeamMemberProfileProps
             </CardHeader>
             <CardContent className="space-y-3">
               <DashboardButton
-                variant="outline"
+                variant="secondary"
                 className="w-full justify-start"
                 onClick={() => router.push(`/admin/team/${memberId}/assignments`)}
               >
@@ -424,7 +424,7 @@ export default function TeamMemberProfilePage({ params }: TeamMemberProfileProps
                 Manage Assignments
               </DashboardButton>
               <DashboardButton
-                variant="outline"
+                variant="secondary"
                 className="w-full justify-start"
                 onClick={() => router.push(`/admin/team/${memberId}/performance`)}
               >
@@ -432,7 +432,7 @@ export default function TeamMemberProfilePage({ params }: TeamMemberProfileProps
                 View Performance
               </DashboardButton>
               <DashboardButton
-                variant="outline"
+                variant="secondary"
                 className="w-full justify-start"
                 onClick={() => router.push(`/admin/team/${memberId}/documents`)}
               >

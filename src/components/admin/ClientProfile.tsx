@@ -400,16 +400,16 @@ export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
           </div>
           
           <div className="flex items-center space-x-3">
-            <Button variant="outline" size="sm">
+            <Button variant="secondary" size="sm">
               <MessageSquare className="h-4 w-4 mr-2" />
               Message
             </Button>
-            <Button variant="outline" size="sm">
+            <Button variant="secondary" size="sm">
               <Calendar className="h-4 w-4 mr-2" />
               Schedule
             </Button>
             {!isEditing ? (
-              <Button variant="outline" size="sm" onClick={handleEditStart}>
+              <Button variant="secondary" size="sm" onClick={handleEditStart}>
                 <Edit className="h-4 w-4 mr-2" />
                 Edit
               </Button>
@@ -418,12 +418,12 @@ export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
                 <Button variant="default" size="sm" onClick={handleEditSave}>
                   Save
                 </Button>
-                <Button variant="outline" size="sm" onClick={handleEditCancel}>
+                <Button variant="secondary" size="sm" onClick={handleEditCancel}>
                   Cancel
                 </Button>
               </div>
             )}
-            <Button variant="outline" size="sm">
+            <Button variant="secondary" size="sm">
               <MoreVertical className="h-4 w-4" />
             </Button>
           </div>
@@ -956,10 +956,10 @@ export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
                       </div>
                       
                       <div className="flex items-center space-x-2 ml-4">
-                        <Button size="sm" variant="outline">
+                        <Button size="sm" variant="secondary">
                           <Eye className="h-4 w-4" />
                         </Button>
-                        <Button size="sm" variant="outline">
+                        <Button size="sm" variant="secondary">
                           <Edit className="h-4 w-4" />
                         </Button>
                       </div>

@@ -9,6 +9,7 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { requireAdminAuth, requirePermission } from '@/lib/admin-auth-middleware';
 import { notifyRecipient, ticketStatusUpdateEmail } from '@/lib/email/send';
 import { notifyClient } from '@/lib/notifications';
+import { logAuditEvent, getClientIP } from '@/lib/admin/audit-log';
 
 export async function GET(request: NextRequest) {
   const authError = await requireAdminAuth(request);
@@ -151,6 +152,17 @@ export async function PUT(request: NextRequest) {
         actionUrl: `/client/${ticket.client_id}/support`,
       });
     }
+
+    // Fire-and-forget audit log
+    logAuditEvent({
+      user_id: auth.user.id,
+      user_name: auth.user.name,
+      action: 'update',
+      resource_type: 'support_ticket',
+      resource_id: ticketId,
+      details: { newStatus: status, assignedTo, title: ticket.title },
+      ip_address: getClientIP(request),
+    });
 
     return NextResponse.json({
       success: true,

@@ -180,7 +180,7 @@ export function DiscoveryWizard({ session, onUpdate, onComplete }: DiscoveryWiza
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Button
-                variant="outline"
+                variant="secondary"
                 icon={<ArrowLeft className="h-4 w-4" />}
                 onClick={() => router.push('/admin/clients')}
               >
@@ -211,7 +211,7 @@ export function DiscoveryWizard({ session, onUpdate, onComplete }: DiscoveryWiza
               )}
               
               <Button
-                variant="outline"
+                variant="secondary"
                 icon={<FileText className="h-4 w-4" />}
                 onClick={() => router.push(`/admin/discovery/${session.id}/report`)}
               >
@@ -294,7 +294,7 @@ export function DiscoveryWizard({ session, onUpdate, onComplete }: DiscoveryWiza
             {/* Navigation Buttons */}
             <div className="flex justify-between items-center mt-8 pt-8 border-t border-fm-neutral-200">
               <Button
-                variant="outline"
+                variant="secondary"
                 onClick={handlePrevStep}
                 disabled={currentStep === 1}
                 icon={<ArrowLeft className="h-4 w-4" />}
@@ -304,7 +304,7 @@ export function DiscoveryWizard({ session, onUpdate, onComplete }: DiscoveryWiza
               
               <div className="flex items-center gap-3">
                 <Button
-                  variant="outline"
+                  variant="secondary"
                   onClick={handleAutoSave}
                   disabled={autoSaving}
                   icon={<Save className="h-4 w-4" />}

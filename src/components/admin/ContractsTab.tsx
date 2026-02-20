@@ -456,7 +456,7 @@ export default function ContractsTab({ clientId, clientName }: Props) {
               ))}
               <div className="flex items-center gap-2 mt-2">
                 <DashboardButton
-                  variant="outline"
+                  variant="secondary"
                   size="sm"
                   onClick={() => setServices((prev) => [...prev, { ...EMPTY_SERVICE }])}
                 >
@@ -555,7 +555,7 @@ export default function ContractsTab({ clientId, clientName }: Props) {
 
             {/* Actions */}
             <div className="flex items-center justify-end space-x-4 pt-4 border-t border-fm-neutral-200">
-              <DashboardButton variant="outline" onClick={resetForm}>
+              <DashboardButton variant="secondary" onClick={resetForm}>
                 Cancel
               </DashboardButton>
               <DashboardButton onClick={handleSave} disabled={saving || !title.trim()}>
@@ -654,7 +654,7 @@ export default function ContractsTab({ clientId, clientName }: Props) {
                     {contract.status === 'draft' && (
                       <>
                         <DashboardButton
-                          variant="outline"
+                          variant="secondary"
                           size="sm"
                           onClick={() => handleStatusChange(contract.id, 'sent')}
                         >
@@ -679,7 +679,7 @@ export default function ContractsTab({ clientId, clientName }: Props) {
                     )}
                     {contract.status === 'edit_requested' && (
                       <DashboardButton
-                        variant="outline"
+                        variant="secondary"
                         size="sm"
                         onClick={() => populateForm(contract)}
                       >

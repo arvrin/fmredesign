@@ -204,7 +204,7 @@ export default function ProjectsPage() {
         description="Manage client projects and deliverables"
         actions={
           <DashboardButton
-            variant="admin"
+            variant="primary"
             size="sm"
             onClick={() => router.push('/admin/projects/new')}
           >
@@ -297,7 +297,7 @@ export default function ProjectsPage() {
             </Select>
 
             <DashboardButton
-              variant="outline"
+              variant="secondary"
               onClick={() => setShowFilters(!showFilters)}
               className="flex items-center gap-2"
             >
@@ -321,7 +321,7 @@ export default function ProjectsPage() {
             }
             action={
               projects.length === 0 ? (
-                <DashboardButton variant="admin" size="sm" onClick={() => router.push('/admin/projects/new')}>
+                <DashboardButton variant="primary" size="sm" onClick={() => router.push('/admin/projects/new')}>
                   Create First Project
                 </DashboardButton>
               ) : undefined

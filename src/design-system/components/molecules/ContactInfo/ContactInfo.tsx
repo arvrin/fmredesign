@@ -111,7 +111,7 @@ export function ContactInfo({
           
           {quickActions.phone && (
             <Button 
-              variant="outline" 
+              variant="secondary" 
               size="lg" 
               className="w-full justify-start"
               theme={theme}
@@ -123,7 +123,7 @@ export function ContactInfo({
           
           {quickActions.email && (
             <Button 
-              variant="outline" 
+              variant="secondary" 
               size="lg" 
               className="w-full justify-start"
               theme={theme}
@@ -135,7 +135,7 @@ export function ContactInfo({
           
           {quickActions.whatsapp && (
             <Button 
-              variant="outline" 
+              variant="secondary" 
               size="lg" 
               className="w-full justify-start"
               theme={theme}

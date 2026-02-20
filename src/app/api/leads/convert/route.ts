@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { requireAdminAuth } from '@/lib/admin-auth-middleware';
+import { logAuditEvent, getAuditUser, getClientIP } from '@/lib/admin/audit-log';
 
 function slugify(name: string): string {
   return name
@@ -108,6 +109,17 @@ export async function POST(request: NextRequest) {
       .eq('id', leadId);
 
     if (updateError) throw updateError;
+
+    // Fire-and-forget audit log
+    const auditUser = getAuditUser(request);
+    logAuditEvent({
+      ...auditUser,
+      action: 'create',
+      resource_type: 'client',
+      resource_id: clientId,
+      details: { convertedFromLead: leadId, clientName },
+      ip_address: getClientIP(request),
+    });
 
     return NextResponse.json({
       success: true,
