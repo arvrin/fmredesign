@@ -460,7 +460,7 @@ export default function ContractsTab({ clientId, clientName }: Props) {
                   size="sm"
                   onClick={() => setServices((prev) => [...prev, { ...EMPTY_SERVICE }])}
                 >
-                  <Plus className="h-4 w-4 mr-1" />
+                  <Plus className="h-4 w-4" />
                   Add Service
                 </DashboardButton>
               </div>
@@ -559,7 +559,7 @@ export default function ContractsTab({ clientId, clientName }: Props) {
                 Cancel
               </DashboardButton>
               <DashboardButton onClick={handleSave} disabled={saving || !title.trim()}>
-                <Save className="h-4 w-4 mr-2" />
+                <Save className="h-4 w-4" />
                 {saving ? 'Saving...' : editingStatus === 'edit_requested' ? 'Save & Re-send' : editingId ? 'Update Contract' : 'Create Contract'}
               </DashboardButton>
             </div>
@@ -575,7 +575,7 @@ export default function ContractsTab({ clientId, clientName }: Props) {
             Contracts ({contracts.length})
           </h3>
           <DashboardButton onClick={() => setShowTemplatePicker(true)}>
-            <Plus className="h-4 w-4 mr-2" />
+            <Plus className="h-4 w-4" />
             New Contract
           </DashboardButton>
         </div>
@@ -589,7 +589,7 @@ export default function ContractsTab({ clientId, clientName }: Props) {
           description="Create a contract for this client to get started."
           action={
             <DashboardButton onClick={() => setShowTemplatePicker(true)}>
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="h-4 w-4" />
               Create First Contract
             </DashboardButton>
           }
@@ -658,7 +658,7 @@ export default function ContractsTab({ clientId, clientName }: Props) {
                           size="sm"
                           onClick={() => handleStatusChange(contract.id, 'sent')}
                         >
-                          <Send className="h-4 w-4 mr-1" />
+                          <Send className="h-4 w-4" />
                           Send
                         </DashboardButton>
                         <DashboardButton
@@ -669,9 +669,8 @@ export default function ContractsTab({ clientId, clientName }: Props) {
                           <Edit2 className="h-4 w-4" />
                         </DashboardButton>
                         <DashboardButton
-                          variant="ghost"
+                          variant="danger-ghost"
                           size="sm"
-                          className="text-red-600 hover:bg-red-50"
                           onClick={() => handleDelete(contract.id)}
                         >
                           <Trash2 className="h-4 w-4" />
@@ -684,15 +683,14 @@ export default function ContractsTab({ clientId, clientName }: Props) {
                         size="sm"
                         onClick={() => populateForm(contract)}
                       >
-                        <Edit2 className="h-4 w-4 mr-1" />
+                        <Edit2 className="h-4 w-4" />
                         Edit & Re-send
                       </DashboardButton>
                     )}
                     {contract.status === 'rejected' && (
                       <DashboardButton
-                        variant="ghost"
+                        variant="danger-ghost"
                         size="sm"
-                        className="text-red-600 hover:bg-red-50"
                         onClick={() => handleDelete(contract.id)}
                       >
                         <Trash2 className="h-4 w-4" />

@@ -191,7 +191,7 @@ export function ProposalDashboard({ onCreateNew, onEditProposal }: ProposalDashb
         description="Manage and track your client proposals"
         actions={
           <Button variant="admin" onClick={onCreateNew}>
-            <Plus className="w-4 h-4 mr-2" />
+            <Plus className="w-4 h-4" />
             New Proposal
           </Button>
         }
@@ -295,7 +295,7 @@ export function ProposalDashboard({ onCreateNew, onEditProposal }: ProposalDashb
             }
             action={proposals.length === 0 ? (
               <Button variant="admin" onClick={onCreateNew}>
-                <Plus className="w-4 h-4 mr-2" />
+                <Plus className="w-4 h-4" />
                 Create First Proposal
               </Button>
             ) : undefined}
@@ -394,7 +394,6 @@ export function ProposalDashboard({ onCreateNew, onEditProposal }: ProposalDashb
                         size="sm"
                         onClick={() => handleStatusUpdate(proposal.id, 'sent')}
                         title="Mark as Sent"
-                        className="text-blue-600 hover:text-blue-700"
                       >
                         <Send className="w-4 h-4" />
                       </Button>
@@ -407,16 +406,14 @@ export function ProposalDashboard({ onCreateNew, onEditProposal }: ProposalDashb
                           size="sm"
                           onClick={() => handleStatusUpdate(proposal.id, 'approved')}
                           title="Mark as Approved"
-                          className="text-green-600 hover:text-green-700"
                         >
                           <CheckCircle className="w-4 h-4" />
                         </Button>
                         <Button
-                          variant="ghost"
+                          variant="danger-ghost"
                           size="sm"
                           onClick={() => handleStatusUpdate(proposal.id, 'declined')}
                           title="Mark as Declined"
-                          className="text-red-600 hover:text-red-700"
                         >
                           <XCircle className="w-4 h-4" />
                         </Button>
@@ -424,11 +421,10 @@ export function ProposalDashboard({ onCreateNew, onEditProposal }: ProposalDashb
                     )}
 
                     <Button
-                      variant="ghost"
+                      variant="danger-ghost"
                       size="sm"
                       onClick={() => setDeleteConfirm(proposal.id)}
                       title="Delete Proposal"
-                      className="text-red-600 hover:text-red-700"
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>

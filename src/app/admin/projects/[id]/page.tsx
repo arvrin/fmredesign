@@ -207,7 +207,7 @@ export default function ProjectDetailPage({
             variant="ghost"
             onClick={() => router.push('/admin/projects')}
           >
-            <ArrowLeft className="h-4 w-4 mr-2" />
+            <ArrowLeft className="h-4 w-4" />
             Back to Projects
           </DashboardButton>
         </div>
@@ -266,7 +266,7 @@ export default function ProjectDetailPage({
               size="md"
               onClick={() => router.push(`/admin/projects/${id}/edit`)}
             >
-              <Edit className="h-4 w-4 mr-2" />
+              <Edit className="h-4 w-4" />
               Edit Project
             </DashboardButton>
           </div>

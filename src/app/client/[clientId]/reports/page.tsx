@@ -196,7 +196,7 @@ export default function ClientReportsPage() {
           </div>
           <div className="flex items-center space-x-3">
             <Button variant="client" size="sm" onClick={handleDownloadReport}>
-              <Download className="w-4 h-4 mr-2" />
+              <Download className="w-4 h-4" />
               Download Report
             </Button>
             <Button
@@ -206,7 +206,7 @@ export default function ClientReportsPage() {
               onClick={handleShareReport}
               disabled={shareLoading}
             >
-              <Share2 className="w-4 h-4 mr-2" />
+              <Share2 className="w-4 h-4" />
               {shareLoading ? 'Sharing...' : 'Share Report'}
             </Button>
           </div>
@@ -221,7 +221,7 @@ export default function ClientReportsPage() {
               className="flex-1 text-sm bg-white border border-fm-neutral-300 rounded-md px-3 py-2 text-fm-neutral-700"
             />
             <Button variant="client" size="sm" onClick={handleCopy}>
-              {copied ? <Check className="w-4 h-4 mr-1" /> : <Copy className="w-4 h-4 mr-1" />}
+              {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
               {copied ? 'Copied!' : 'Copy'}
             </Button>
             <Button variant="ghost" size="sm" onClick={() => setShareUrl(null)}>
@@ -421,7 +421,7 @@ export default function ClientReportsPage() {
                         Generated {new Date(report.generatedDate).toLocaleDateString()}
                       </span>
                       <Button variant="ghost" size="sm" className="text-fm-magenta-600" onClick={handleDownloadReport}>
-                        <Download className="w-4 h-4 mr-2" />
+                        <Download className="w-4 h-4" />
                         Download
                       </Button>
                     </div>
@@ -464,15 +464,15 @@ export default function ClientReportsPage() {
             </CardHeader>
             <CardContent className="space-y-2">
               <Button variant="ghost" size="sm" className="w-full justify-start text-fm-magenta-600">
-                <Calendar className="w-4 h-4 mr-2" />
+                <Calendar className="w-4 h-4" />
                 Schedule Performance Review
               </Button>
               <Button variant="ghost" size="sm" className="w-full justify-start text-fm-magenta-600">
-                <FileText className="w-4 h-4 mr-2" />
+                <FileText className="w-4 h-4" />
                 Request Custom Report
               </Button>
               <Button variant="ghost" size="sm" className="w-full justify-start text-fm-magenta-600">
-                <Activity className="w-4 h-4 mr-2" />
+                <Activity className="w-4 h-4" />
                 View Real-time Analytics
               </Button>
             </CardContent>

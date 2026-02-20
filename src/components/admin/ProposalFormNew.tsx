@@ -408,15 +408,15 @@ export function ProposalFormNew({ initialProposal, onSaveSuccess }: ProposalForm
                 </div>
                 <div className="flex items-center space-x-2">
                   <Button variant="ghost" size="sm" onClick={handlePreview}>
-                    <Eye className="w-4 h-4 mr-2" />
+                    <Eye className="w-4 h-4" />
                     Preview
                   </Button>
                   <Button variant="outline" size="sm" onClick={handleDownload}>
-                    <Download className="w-4 h-4 mr-2" />
+                    <Download className="w-4 h-4" />
                     Export PDF
                   </Button>
                   <Button variant="admin" size="sm" onClick={handleSave}>
-                    <Save className="w-4 h-4 mr-2" />
+                    <Save className="w-4 h-4" />
                     Save
                   </Button>
                 </div>
@@ -598,10 +598,9 @@ export function ProposalFormNew({ initialProposal, onSaveSuccess }: ProposalForm
                       </Badge>
                     </div>
                     <Button
-                      variant="ghost"
+                      variant="danger-ghost"
                       size="sm"
                       onClick={() => removeServicePackage(index)}
-                      className="text-red-600 hover:text-red-700"
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>

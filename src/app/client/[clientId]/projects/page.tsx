@@ -151,7 +151,7 @@ export default function ClientProjectsPage() {
                 downloadCSV('projects-report.csv', headers, rows);
               }}
             >
-              <Download className="w-4 h-4 mr-2" />
+              <Download className="w-4 h-4" />
               Export Report
             </Button>
           </div>

@@ -213,7 +213,7 @@ export default function ClientSupportPage() {
               size="sm"
               onClick={() => setShowNewTicketForm(true)}
             >
-              <Plus className="w-4 h-4 mr-2" />
+              <Plus className="w-4 h-4" />
               New Ticket
             </Button>
           </div>
@@ -285,7 +285,7 @@ export default function ClientSupportPage() {
                   </div>
                   <div className="flex items-center space-x-3 pt-4">
                     <Button type="submit" variant="client" size="sm" disabled={submitting}>
-                      <Send className="w-4 h-4 mr-2" />
+                      <Send className="w-4 h-4" />
                       {submitting ? 'Submitting...' : 'Submit Ticket'}
                     </Button>
                     <Button
@@ -337,7 +337,7 @@ export default function ClientSupportPage() {
                     </div>
                     <Button variant="ghost" size="sm" className="text-fm-magenta-600">
                       View Details
-                      <ChevronRight className="w-4 h-4 ml-1" />
+                      <ChevronRight className="w-4 h-4" />
                     </Button>
                   </div>
                 </CardContent>
@@ -409,17 +409,17 @@ export default function ClientSupportPage() {
             </CardHeader>
             <CardContent className="space-y-3">
               <Button variant="ghost" size="sm" className="w-full justify-start text-fm-magenta-600">
-                <BookOpen className="w-4 h-4 mr-2" />
+                <BookOpen className="w-4 h-4" />
                 User Guide & Documentation
                 <ExternalLink className="w-4 h-4 ml-auto" />
               </Button>
               <Button variant="ghost" size="sm" className="w-full justify-start text-fm-magenta-600">
-                <Video className="w-4 h-4 mr-2" />
+                <Video className="w-4 h-4" />
                 Tutorial Videos
                 <ExternalLink className="w-4 h-4 ml-auto" />
               </Button>
               <Button variant="ghost" size="sm" className="w-full justify-start text-fm-magenta-600">
-                <Download className="w-4 h-4 mr-2" />
+                <Download className="w-4 h-4" />
                 Download Resources
               </Button>
             </CardContent>

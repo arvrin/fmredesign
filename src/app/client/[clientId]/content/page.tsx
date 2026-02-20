@@ -218,7 +218,7 @@ export default function ClientContentPage() {
                 downloadCSV('content-calendar.csv', headers, rows);
               }}
             >
-              <Download className="w-4 h-4 mr-2" />
+              <Download className="w-4 h-4" />
               Export Calendar
             </Button>
           </div>
@@ -431,13 +431,12 @@ export default function ClientContentPage() {
                           disabled={actioningId === item.id}
                           onClick={() => handleContentAction(item.id, 'approve')}
                         >
-                          <CheckCircle2 className="w-4 h-4 mr-1" />
+                          <CheckCircle2 className="w-4 h-4" />
                           Approve
                         </Button>
                         <Button
-                          variant="ghost"
+                          variant="warning-ghost"
                           size="sm"
-                          className="text-orange-600 hover:bg-orange-50"
                           disabled={actioningId === item.id}
                           onClick={() => handleContentAction(item.id, 'request_revision')}
                         >
@@ -459,7 +458,7 @@ export default function ClientContentPage() {
                         size="sm"
                         onClick={() => setExpandedReviewId(item.id)}
                       >
-                        <CheckCircle2 className="w-4 h-4 mr-1" />
+                        <CheckCircle2 className="w-4 h-4" />
                         Approve
                       </Button>
                       <Button

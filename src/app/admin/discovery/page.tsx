@@ -126,7 +126,7 @@ export default function DiscoveryDashboardPage() {
             size="lg"
             onClick={() => router.push('/admin/discovery/new')}
           >
-            <Plus className="h-4 w-4 mr-2" />
+            <Plus className="h-4 w-4" />
             New Discovery
           </DashboardButton>
         }
@@ -216,7 +216,7 @@ export default function DiscoveryDashboardPage() {
             <DashboardButton
               onClick={() => router.push('/admin/discovery/new')}
             >
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="h-4 w-4" />
               Start First Discovery
             </DashboardButton>
           ) : undefined}
@@ -295,7 +295,7 @@ export default function DiscoveryDashboardPage() {
                       size="sm"
                       onClick={() => router.push(`/admin/discovery/new?sessionId=${session.id}`)}
                     >
-                      <Eye className="h-4 w-4 mr-1" />
+                      <Eye className="h-4 w-4" />
                       {session.status === 'completed' ? 'View' : 'Continue'}
                     </DashboardButton>
 
@@ -305,7 +305,7 @@ export default function DiscoveryDashboardPage() {
                         size="sm"
                         onClick={() => router.push(`/admin/discovery/${session.id}/report`)}
                       >
-                        <FileText className="h-4 w-4 mr-1" />
+                        <FileText className="h-4 w-4" />
                         Report
                       </DashboardButton>
                     )}

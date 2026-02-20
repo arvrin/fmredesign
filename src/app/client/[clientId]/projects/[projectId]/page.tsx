@@ -118,7 +118,7 @@ export default function ProjectDetailPage() {
         <p className="text-fm-neutral-600 mb-6">The project you&apos;re looking for doesn&apos;t exist.</p>
         <Link href={`/client/${slug}/projects`}>
           <Button variant="client" size="sm">
-            <ArrowLeft className="w-4 h-4 mr-2" />
+            <ArrowLeft className="w-4 h-4" />
             Back to Projects
           </Button>
         </Link>
@@ -205,7 +205,7 @@ export default function ProjectDetailPage() {
               {project.status}
             </Badge>
             <Button variant="ghost" size="sm" className="text-fm-magenta-600" onClick={handleExport}>
-              <Download className="w-4 h-4 mr-2" />
+              <Download className="w-4 h-4" />
               Export
             </Button>
             <Button
@@ -215,7 +215,7 @@ export default function ProjectDetailPage() {
               onClick={handleShare}
               disabled={shareLoading}
             >
-              <Share2 className="w-4 h-4 mr-2" />
+              <Share2 className="w-4 h-4" />
               {shareLoading ? 'Sharing...' : 'Share'}
             </Button>
           </div>
@@ -230,7 +230,7 @@ export default function ProjectDetailPage() {
               className="flex-1 text-sm bg-white border border-fm-neutral-300 rounded-md px-3 py-2 text-fm-neutral-700"
             />
             <Button variant="client" size="sm" onClick={handleCopy}>
-              {copied ? <Check className="w-4 h-4 mr-1" /> : <Copy className="w-4 h-4 mr-1" />}
+              {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
               {copied ? 'Copied!' : 'Copy'}
             </Button>
             <Button variant="ghost" size="sm" onClick={() => setShareUrl(null)}>

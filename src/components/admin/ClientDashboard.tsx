@@ -382,7 +382,7 @@ export function ClientDashboard({ onClientSelect }: ClientDashboardProps) {
                 {/* Action DashboardButtons */}
                 <div className="flex space-x-2 pt-2">
                   <DashboardButton size="sm" variant="outline" className="flex-1">
-                    <Eye className="h-4 w-4 mr-1" />
+                    <Eye className="h-4 w-4" />
                     View
                   </DashboardButton>
                   <DashboardButton size="sm" variant="outline">

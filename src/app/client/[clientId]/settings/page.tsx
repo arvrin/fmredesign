@@ -260,7 +260,7 @@ export default function ClientSettingsPage() {
         {/* Save Button */}
         <div className="flex justify-end">
           <Button variant="client" onClick={handleSave} disabled={saving}>
-            <Save className="w-4 h-4 mr-2" />
+            <Save className="w-4 h-4" />
             {saving ? 'Saving...' : 'Save Changes'}
           </Button>
         </div>

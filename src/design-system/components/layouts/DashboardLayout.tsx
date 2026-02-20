@@ -255,16 +255,6 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
           <div className={cn('flex-1', collapsed && 'md:hidden')} />
 
-          {!collapsed && (
-            <IconBtn
-              onClick={() => setCollapsed(true)}
-              label="Collapse sidebar (Cmd+B)"
-              className="hidden md:flex"
-            >
-              <PanelLeftClose className="w-4 h-4" />
-            </IconBtn>
-          )}
-
           <IconBtn
             onClick={() => setMobileOpen(false)}
             label="Close menu"
@@ -371,15 +361,6 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           ))}
         </nav>
 
-        {/* ── Expand toggle — collapsed desktop only ── */}
-        {collapsed && (
-          <div className="hidden md:flex shrink-0 justify-center py-2 border-t border-fm-neutral-100">
-            <IconBtn onClick={() => setCollapsed(false)} label="Expand sidebar (Cmd+B)">
-              <PanelLeftOpen className="w-4 h-4" />
-            </IconBtn>
-          </div>
-        )}
-
         {/* ── User section ── */}
         {user && (
           <div
@@ -427,6 +408,40 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           </div>
         )}
       </aside>
+
+      {/* ── Floating sidebar toggle (desktop only) ──
+           Hover zone extends from sidebar edge inward/outward so the
+           button appears when you approach the sidebar boundary.       */}
+      <div
+        className="hidden md:block fixed top-0 h-14 group/toggle"
+        style={{
+          zIndex: 51,
+          left: collapsed ? 'calc(72px - 20px)' : 'calc(256px - 20px)',
+          width: 40,
+          transition: 'left 300ms ease-in-out',
+        }}
+      >
+        <button
+          onClick={() => setCollapsed((prev) => !prev)}
+          className={cn(
+            'absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2',
+            'flex items-center justify-center',
+            'w-6 h-6 rounded-full',
+            'bg-white border border-fm-neutral-200 shadow-sm',
+            'text-fm-neutral-400 hover:text-fm-neutral-700 hover:border-fm-neutral-300 hover:shadow-md',
+            'transition-all duration-200',
+            'scale-0 group-hover/toggle:scale-100',
+            'focus:scale-100'
+          )}
+          aria-label={collapsed ? 'Expand sidebar (Cmd+B)' : 'Collapse sidebar (Cmd+B)'}
+        >
+          {collapsed ? (
+            <PanelLeftOpen className="w-3.5 h-3.5" />
+          ) : (
+            <PanelLeftClose className="w-3.5 h-3.5" />
+          )}
+        </button>
+      </div>
 
       {/* ─────────────── Main content ─────────────── */}
       <div

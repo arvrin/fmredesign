@@ -2,10 +2,12 @@
 
 import React from 'react';
 import { cn } from '@/lib/utils';
-import { designTokens } from '@/design-system/tokens';
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'admin' | 'client' | 'outline' | 'default' | 'destructive' | 'accent';
+  variant?:
+    | 'primary' | 'secondary' | 'ghost' | 'danger' | 'admin' | 'client'
+    | 'outline' | 'default' | 'destructive' | 'accent'
+    | 'danger-ghost' | 'warning-ghost';
   size?: 'sm' | 'md' | 'lg' | 'xl';
   loading?: boolean;
   icon?: React.ReactNode;
@@ -16,7 +18,6 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 }
 
 const buttonVariants = {
-  // Base styles — includes 'group' so child shine div can use group-hover
   base: [
     'inline-flex items-center justify-center font-medium transition-all duration-200',
     'focus:outline-none focus:ring-2 focus:ring-offset-2',
@@ -25,7 +26,6 @@ const buttonVariants = {
     'relative overflow-hidden group'
   ].join(' '),
 
-  // Variants
   variant: {
     primary: [
       'bg-gradient-to-r from-fm-magenta-600 to-fm-magenta-700',
@@ -52,6 +52,20 @@ const buttonVariants = {
       'text-white shadow-lg hover:shadow-xl',
       'focus:ring-red-500 border border-red-500',
       'hover:from-red-600 hover:to-red-700'
+    ].join(' '),
+
+    // Ghost button with red coloring — for delete/destructive icon buttons
+    'danger-ghost': [
+      'bg-transparent text-red-600 hover:bg-red-50',
+      'focus:ring-red-500 border border-transparent',
+      'hover:border-red-200'
+    ].join(' '),
+
+    // Ghost button with orange/amber coloring — for warning/edit-request actions
+    'warning-ghost': [
+      'bg-transparent text-orange-600 hover:bg-orange-50',
+      'focus:ring-orange-500 border border-transparent',
+      'hover:border-orange-200'
     ].join(' '),
 
     admin: [
@@ -95,7 +109,6 @@ const buttonVariants = {
     ].join(' ')
   },
 
-  // Sizes
   size: {
     sm: 'h-9 px-3 text-sm rounded-lg gap-1.5',
     md: 'h-10 px-4 text-sm rounded-xl gap-2',
@@ -140,18 +153,18 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({
         </div>
       )}
 
-      {/* Content */}
-      <span className={cn('flex items-center gap-2', loading && 'opacity-0')}>
+      {/* Content — icons and text are direct flex children so gap works */}
+      <span className={cn('inline-flex items-center gap-inherit', loading && 'opacity-0')}>
         {icon && iconPosition === 'left' && (
           <span className="flex-shrink-0">{icon}</span>
         )}
-        {children && <span>{children}</span>}
+        {children}
         {icon && iconPosition === 'right' && (
           <span className="flex-shrink-0">{icon}</span>
         )}
       </span>
 
-      {/* Shine effect — uses group-hover so it triggers when button is hovered */}
+      {/* Shine effect */}
       {!isDisabled && (
         <div
           className="absolute top-0 left-0 h-full bg-gradient-to-r from-transparent via-white to-transparent opacity-0 group-hover:opacity-10 -skew-x-12 -translate-x-full group-hover:translate-x-full transition-all duration-700 pointer-events-none"

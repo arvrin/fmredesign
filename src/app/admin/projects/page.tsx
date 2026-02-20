@@ -208,7 +208,7 @@ export default function ProjectsPage() {
             size="sm"
             onClick={() => router.push('/admin/projects/new')}
           >
-            <Plus className="h-4 w-4 mr-2" />
+            <Plus className="h-4 w-4" />
             New Project
           </DashboardButton>
         }
@@ -412,10 +412,9 @@ export default function ProjectsPage() {
                     <Edit className="h-4 w-4" />
                   </DashboardButton>
                   <DashboardButton
-                    variant="ghost"
+                    variant="danger-ghost"
                     size="sm"
                     onClick={() => setDeleteConfirm(project.id)}
-                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
                   >
                     <Trash2 className="h-4 w-4" />
                   </DashboardButton>

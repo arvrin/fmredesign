@@ -477,15 +477,15 @@ export function InvoiceFormNew() {
 
                 <div className="flex items-center gap-2">
                   <Button variant="ghost" size="sm" onClick={handlePreview}>
-                    <Eye className="w-4 h-4 mr-1" />
+                    <Eye className="w-4 h-4" />
                     Preview
                   </Button>
                   <Button variant="secondary" size="sm" onClick={handleDownload}>
-                    <Download className="w-4 h-4 mr-1" />
+                    <Download className="w-4 h-4" />
                     Download
                   </Button>
                   <Button variant="admin" size="sm" onClick={handleSave}>
-                    <Save className="w-4 h-4 mr-1" />
+                    <Save className="w-4 h-4" />
                     Save
                   </Button>
                 </div>
@@ -615,11 +615,11 @@ export function InvoiceFormNew() {
                     onClick={duplicateLastItem}
                     title="Duplicate last item"
                   >
-                    <Copy className="w-4 h-4 mr-1" />
+                    <Copy className="w-4 h-4" />
                     Duplicate
                   </Button>
                   <Button variant="ghost" size="sm" onClick={addLineItem}>
-                    <Plus className="w-4 h-4 mr-1" />
+                    <Plus className="w-4 h-4" />
                     Add Item
                   </Button>
                 </div>
@@ -726,10 +726,9 @@ export function InvoiceFormNew() {
                       <div className="flex justify-end">
                         {invoice.lineItems.length > 1 && (
                           <Button
-                            variant="ghost"
+                            variant="danger-ghost"
                             size="sm"
                             onClick={() => removeLineItem(item.id)}
-                            className="text-red-500 hover:text-red-700 hover:bg-red-50"
                           >
                             <Trash2 className="w-4 h-4" />
                           </Button>
@@ -861,7 +860,7 @@ export function InvoiceFormNew() {
             <Download className="w-4 h-4" />
           </Button>
           <Button variant="admin" size="sm" onClick={handleSave}>
-            <Save className="w-4 h-4 mr-1" />
+            <Save className="w-4 h-4" />
             Save
           </Button>
         </div>

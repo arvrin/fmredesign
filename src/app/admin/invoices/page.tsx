@@ -215,7 +215,7 @@ export default function InvoicesPage() {
         actions={
           <Link href="/admin/invoice">
             <DashboardButton variant="admin" size="sm">
-              <Plus className="w-4 h-4 mr-1" />
+              <Plus className="w-4 h-4" />
               New Invoice
             </DashboardButton>
           </Link>
@@ -324,7 +324,7 @@ export default function InvoicesPage() {
               action={
                 <Link href="/admin/invoice">
                   <DashboardButton variant="admin" size="sm">
-                    <Plus className="w-4 h-4 mr-1" />
+                    <Plus className="w-4 h-4" />
                     Create Invoice
                   </DashboardButton>
                 </Link>

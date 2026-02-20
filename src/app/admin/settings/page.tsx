@@ -234,7 +234,7 @@ export default function SettingsPage() {
             size="sm"
             onClick={() => window.location.reload()}
           >
-            <RefreshCw className="h-4 w-4 mr-2" />
+            <RefreshCw className="h-4 w-4" />
             Refresh
           </DashboardButton>
         }
@@ -327,11 +327,11 @@ export default function SettingsPage() {
                       <h3 className="font-medium text-fm-neutral-900">Profile Photo</h3>
                       <div className="flex gap-2">
                         <DashboardButton size="sm" variant="outline">
-                          <Upload className="h-4 w-4 mr-2" />
+                          <Upload className="h-4 w-4" />
                           Upload
                         </DashboardButton>
                         <DashboardButton size="sm" variant="outline">
-                          <Camera className="h-4 w-4 mr-2" />
+                          <Camera className="h-4 w-4" />
                           Take Photo
                         </DashboardButton>
                       </div>
@@ -387,7 +387,7 @@ export default function SettingsPage() {
                     onClick={() => saveSettings('profile', settings.profile)}
                     disabled={saving}
                   >
-                    <Save className="h-4 w-4 mr-2" />
+                    <Save className="h-4 w-4" />
                     {saving ? 'Saving...' : 'Save Profile'}
                   </DashboardButton>
                 </CardContent>
@@ -747,11 +747,11 @@ export default function SettingsPage() {
 
                     <div className="space-y-4 mt-6">
                       <DashboardButton variant="outline" className="w-full">
-                        <FileText className="h-4 w-4 mr-2" />
+                        <FileText className="h-4 w-4" />
                         Download Invoice
                       </DashboardButton>
                       <DashboardButton variant="outline" className="w-full">
-                        <CreditCard className="h-4 w-4 mr-2" />
+                        <CreditCard className="h-4 w-4" />
                         Update Payment Method
                       </DashboardButton>
                     </div>

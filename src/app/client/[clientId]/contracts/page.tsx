@@ -827,24 +827,25 @@ function ContractReader({
               />
               <div className="flex items-center gap-2">
                 <Button
-                  variant={expandedAction === 'accept' ? 'client' : 'ghost'}
-                  size="sm"
-                  className={
-                    expandedAction === 'reject'
-                      ? 'text-red-600 hover:bg-red-50 border border-red-200'
+                  variant={
+                    expandedAction === 'accept'
+                      ? 'client'
+                      : expandedAction === 'reject'
+                      ? 'danger-ghost'
                       : expandedAction === 'request_edit'
-                      ? 'text-orange-600 hover:bg-orange-50 border border-orange-200'
-                      : ''
+                      ? 'warning-ghost'
+                      : 'ghost'
                   }
+                  size="sm"
                   disabled={
                     actioningId === contract.id ||
                     (expandedAction === 'request_edit' && !feedback.trim())
                   }
                   onClick={handleSubmitAction}
                 >
-                  {expandedAction === 'accept' && <CheckCircle2 className="w-4 h-4 mr-1.5" />}
-                  {expandedAction === 'reject' && <XCircle className="w-4 h-4 mr-1.5" />}
-                  {expandedAction === 'request_edit' && <Send className="w-4 h-4 mr-1.5" />}
+                  {expandedAction === 'accept' && <CheckCircle2 className="w-4 h-4" />}
+                  {expandedAction === 'reject' && <XCircle className="w-4 h-4" />}
+                  {expandedAction === 'request_edit' && <Send className="w-4 h-4" />}
                   {actioningId === contract.id
                     ? 'Sending...'
                     : expandedAction === 'accept'
@@ -869,25 +870,23 @@ function ContractReader({
                 size="sm"
                 onClick={() => setExpandedAction('accept')}
               >
-                <CheckCircle2 className="w-4 h-4 mr-1.5" />
+                <CheckCircle2 className="w-4 h-4" />
                 Accept Contract
               </Button>
               <Button
-                variant="ghost"
+                variant="warning-ghost"
                 size="sm"
-                className="text-orange-600 hover:bg-orange-50 border border-orange-200"
                 onClick={() => setExpandedAction('request_edit')}
               >
-                <Edit3 className="w-4 h-4 mr-1.5" />
+                <Edit3 className="w-4 h-4" />
                 Request Edits
               </Button>
               <Button
-                variant="ghost"
+                variant="danger-ghost"
                 size="sm"
-                className="text-red-600 hover:bg-red-50"
                 onClick={() => setExpandedAction('reject')}
               >
-                <XCircle className="w-4 h-4 mr-1.5" />
+                <XCircle className="w-4 h-4" />
                 Reject
               </Button>
             </div>

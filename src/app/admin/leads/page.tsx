@@ -221,11 +221,11 @@ export default function LeadDashboard() {
         actions={
           <div className="flex items-center gap-3">
             <DashboardButton variant="outline" size="sm" onClick={exportLeads}>
-              <Download className="w-4 h-4 mr-2" />
+              <Download className="w-4 h-4" />
               Export
             </DashboardButton>
             <DashboardButton variant="admin" size="sm" onClick={() => setShowAddLead(true)}>
-              <Plus className="w-4 h-4 mr-2" />
+              <Plus className="w-4 h-4" />
               Add Lead
             </DashboardButton>
           </div>
@@ -292,7 +292,7 @@ export default function LeadDashboard() {
               />
             </div>
             <DashboardButton variant="outline" size="sm">
-              <Filter className="w-4 h-4 mr-2" />
+              <Filter className="w-4 h-4" />
               Filters
             </DashboardButton>
           </div>
@@ -619,7 +619,7 @@ export default function LeadDashboard() {
           }
           action={
             <DashboardButton variant="admin" size="sm" onClick={() => setShowAddLead(true)}>
-              <Plus className="w-4 h-4 mr-2" />
+              <Plus className="w-4 h-4" />
               Add First Lead
             </DashboardButton>
           }
@@ -714,7 +714,7 @@ export default function LeadDashboard() {
                 </div>
                 {(selectedLead.status === 'qualified' || selectedLead.status === 'discovery_completed' || selectedLead.status === 'proposal_sent') && (
                   <DashboardButton variant="admin" size="sm" onClick={() => { convertToClient(selectedLead.id); setSelectedLead(null); }} className="w-full justify-center">
-                    <UserCheck className="w-4 h-4 mr-2" />
+                    <UserCheck className="w-4 h-4" />
                     Convert to Client
                   </DashboardButton>
                 )}

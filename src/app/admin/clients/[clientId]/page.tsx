@@ -344,7 +344,7 @@ export default function AdminClientDetail() {
               onClick={() => router.back()}
               variant="outline"
             >
-              <ArrowLeft className="h-4 w-4 mr-2" />
+              <ArrowLeft className="h-4 w-4" />
               Go Back
             </DashboardButton>
           }
@@ -368,7 +368,7 @@ export default function AdminClientDetail() {
               variant="ghost"
               size="sm"
             >
-              <ArrowLeft className="h-4 w-4 mr-2" />
+              <ArrowLeft className="h-4 w-4" />
               Back
             </DashboardButton>
             <StatusBadge status={clientProfile.status} />
@@ -540,7 +540,7 @@ export default function AdminClientDetail() {
                 description="This client does not have any projects."
                 action={
                   <DashboardButton onClick={() => router.push('/admin/projects/new')}>
-                    <Plus className="h-4 w-4 mr-2" />
+                    <Plus className="h-4 w-4" />
                     Create Project
                   </DashboardButton>
                 }
@@ -671,7 +671,7 @@ export default function AdminClientDetail() {
                       disabled={!newTeamAssignment.teamMemberId}
                       className="flex items-center"
                     >
-                      <Save className="h-4 w-4 mr-2" />
+                      <Save className="h-4 w-4" />
                       Assign Team Member
                     </DashboardButton>
                   </div>
@@ -692,7 +692,7 @@ export default function AdminClientDetail() {
                     className="flex items-center"
                     size="sm"
                   >
-                    <Plus className="h-4 w-4 mr-2" />
+                    <Plus className="h-4 w-4" />
                     Assign Member
                   </DashboardButton>
                 </div>
@@ -735,9 +735,8 @@ export default function AdminClientDetail() {
                           <StatusBadge status={member.status} />
                           <DashboardButton
                             onClick={() => handleRemoveTeamMember(member)}
-                            variant="ghost"
+                            variant="danger-ghost"
                             size="sm"
-                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
                           >
                             <UserMinus className="h-4 w-4" />
                           </DashboardButton>
@@ -754,7 +753,7 @@ export default function AdminClientDetail() {
                       <DashboardButton
                         onClick={() => setShowAddTeamForm(true)}
                       >
-                        <Plus className="h-4 w-4 mr-2" />
+                        <Plus className="h-4 w-4" />
                         Assign First Member
                       </DashboardButton>
                     }

@@ -102,7 +102,7 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
           </div>
         </div>
         <DashboardButton variant="admin" onClick={handleSave} disabled={saving}>
-          {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
           {saving ? 'Saving...' : 'Save Changes'}
         </DashboardButton>
       </div>
