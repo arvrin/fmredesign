@@ -13,7 +13,7 @@ import { requireAdminAuth, requirePermission } from '@/lib/admin-auth-middleware
 import { createContractSchema, updateContractSchema, validateBody } from '@/lib/validations/schemas';
 import { logAuditEvent, getClientIP } from '@/lib/admin/audit-log';
 import { transformContract } from '@/lib/admin/contract-types';
-import { notifyTeam } from '@/lib/email/send';
+import { notifyTeam, contractCreatedEmail, contractStatusEmail } from '@/lib/email/send';
 
 export async function GET(request: NextRequest) {
   const authError = await requireAdminAuth(request);
@@ -87,6 +87,15 @@ export async function POST(request: NextRequest) {
     const supabase = getSupabaseAdmin();
     const { data, error } = await supabase.from('contracts').insert(record).select().single();
     if (error) throw error;
+
+    // Fire-and-forget email notification
+    const emailData = contractCreatedEmail({
+      title: record.title,
+      contractNumber: record.contract_number || undefined,
+      totalValue: record.total_value,
+      currency: record.currency,
+    });
+    notifyTeam(emailData.subject, emailData.html);
 
     logAuditEvent({
       user_id: auth.user.id,
@@ -164,12 +173,10 @@ export async function PUT(request: NextRequest) {
     if (error) throw error;
     if (!data) return NextResponse.json({ success: false, error: 'Contract not found' }, { status: 404 });
 
-    // Fire-and-forget email when sending to client
+    // Fire-and-forget email when status changes
     if (body.status === 'sent') {
-      notifyTeam(
-        `Contract Sent: ${data.title}`,
-        `<p>Contract <strong>${data.title}</strong> has been marked as sent to the client.</p>`
-      );
+      const emailData = contractStatusEmail({ title: data.title, action: 'sent' });
+      notifyTeam(emailData.subject, emailData.html);
     }
 
     logAuditEvent({

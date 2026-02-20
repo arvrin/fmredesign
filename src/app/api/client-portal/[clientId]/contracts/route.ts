@@ -10,7 +10,7 @@ import { requireClientAuth } from '@/lib/client-session';
 import { resolveClientId } from '@/lib/client-portal/resolve-client';
 import { contractActionSchema, validateBody } from '@/lib/validations/schemas';
 import { transformContract } from '@/lib/admin/contract-types';
-import { notifyTeam } from '@/lib/email/send';
+import { notifyTeam, contractStatusEmail } from '@/lib/email/send';
 
 export async function GET(
   request: NextRequest,
@@ -116,14 +116,14 @@ export async function PUT(
       return NextResponse.json({ success: false, error: 'Failed to update contract' }, { status: 500 });
     }
 
-    // Fire-and-forget: notify admin team (escape HTML in user-supplied data)
-    const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    const actionLabel = action === 'accept' ? 'accepted' : action === 'reject' ? 'rejected' : 'requested edits on';
-    const safeTitle = esc(contract.title as string);
-    notifyTeam(
-      `Contract ${action === 'accept' ? 'Accepted' : action === 'reject' ? 'Rejected' : 'Edit Requested'}: ${contract.title}`,
-      `<p>Client has ${actionLabel} the contract <strong>${safeTitle}</strong>.</p>${feedback ? `<p>Feedback: ${esc(feedback)}</p>` : ''}`
-    );
+    // Fire-and-forget: notify admin team with branded template
+    const actionMap = { accept: 'accepted', reject: 'rejected', request_edit: 'edit_requested' } as const;
+    const emailData = contractStatusEmail({
+      title: contract.title as string,
+      action: actionMap[action],
+      clientFeedback: feedback || undefined,
+    });
+    notifyTeam(emailData.subject, emailData.html);
 
     return NextResponse.json({ success: true, data: { status: updates.status } });
   } catch (error) {

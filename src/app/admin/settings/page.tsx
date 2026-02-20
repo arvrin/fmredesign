@@ -458,24 +458,42 @@ export default function SettingsPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {Object.entries(settings.notifications).map(([key, value]) => (
+                  {/* Active email notification toggles */}
+                  {(['email_notifications', 'security_alerts', 'lead_updates', 'client_updates', 'system_updates', 'marketing_emails'] as const).map((key) => (
                     <Toggle
                       key={key}
-                      checked={value}
+                      checked={settings.notifications[key]}
                       onChange={(checked) => saveSettings('notifications', { [key]: checked })}
-                      label={key.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                      label={key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
                       description={
-                        key === 'email_notifications' ? 'Receive notifications via email' :
-                        key === 'browser_notifications' ? 'Show browser push notifications' :
-                        key === 'mobile_notifications' ? 'Send notifications to mobile app' :
+                        key === 'email_notifications' ? 'Receive notifications via email (leads, invoices, contracts, support tickets)' :
                         key === 'security_alerts' ? 'Important security notifications' :
                         key === 'lead_updates' ? 'Updates about new leads and inquiries' :
-                        key === 'client_updates' ? 'Client-related notifications' :
+                        key === 'client_updates' ? 'Client-related notifications (contracts, support)' :
                         key === 'system_updates' ? 'System maintenance and updates' :
                         key === 'marketing_emails' ? 'Marketing emails and newsletters' : ''
                       }
                     />
                   ))}
+
+                  {/* Coming soon — not yet implemented */}
+                  <div className="pt-4 border-t border-fm-neutral-200">
+                    <p className="text-xs font-medium uppercase tracking-wider text-fm-neutral-400 mb-3">Coming Soon</p>
+                    <div className="space-y-4 opacity-50">
+                      <Toggle
+                        checked={false}
+                        onChange={() => {}}
+                        label="Browser Notifications"
+                        description="Real-time push notifications in your browser"
+                      />
+                      <Toggle
+                        checked={false}
+                        onChange={() => {}}
+                        label="Mobile Notifications"
+                        description="Push notifications on mobile devices"
+                      />
+                    </div>
+                  </div>
                 </CardContent>
               </DashboardCard>
             </TabsContent>

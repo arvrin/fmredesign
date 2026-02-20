@@ -252,12 +252,15 @@ interface InvoiceEmailData {
   invoiceNumber: string;
   clientName: string;
   total: number;
+  currency?: string;
   dueDate?: string;
   status?: string;
 }
 
 export function invoiceCreatedEmail(data: InvoiceEmailData): { subject: string; html: string } {
-  const formatted = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(data.total);
+  const cur = data.currency || 'INR';
+  const locale = cur === 'INR' ? 'en-IN' : 'en-GB';
+  const formatted = new Intl.NumberFormat(locale, { style: 'currency', currency: cur }).format(data.total);
 
   const body = `
     <p style="margin:0 0 16px;color:${HEADING_COLOR};font-size:16px;font-weight:700">A new invoice has been created.</p>
@@ -299,5 +302,87 @@ export function proposalCreatedEmail(data: ProposalEmailData): { subject: string
   return {
     subject: `Proposal Created: ${data.proposalNumber} — ${data.title}`,
     html: emailWrapper('Proposal Created', body),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Contract email templates
+// ---------------------------------------------------------------------------
+
+/** Escape HTML to prevent XSS in email templates */
+function escHtml(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+interface ContractEmailData {
+  title: string;
+  clientName?: string;
+  contractNumber?: string;
+  totalValue?: number;
+  currency?: string;
+}
+
+export function contractCreatedEmail(data: ContractEmailData): { subject: string; html: string } {
+  const cur = data.currency || 'INR';
+  const locale = cur === 'INR' ? 'en-IN' : 'en-GB';
+  const formatted = data.totalValue
+    ? new Intl.NumberFormat(locale, { style: 'currency', currency: cur }).format(data.totalValue)
+    : undefined;
+
+  const body = `
+    <p style="margin:0 0 16px;color:${HEADING_COLOR};font-size:16px;font-weight:700">A new contract has been created.</p>
+    ${dataTable(
+      row('Title', escHtml(data.title)) +
+      (data.clientName ? row('Client', escHtml(data.clientName)) : '') +
+      (data.contractNumber ? row('Contract #', escHtml(data.contractNumber)) : '') +
+      (formatted ? row('Total Value', `<strong>${formatted}</strong>`) : '') +
+      row('Status', badge('DRAFT'))
+    )}
+    <p style="margin:16px 0 0;color:${TEXT_COLOR};font-size:13px">View in the <a href="https://freakingminds.in/admin/clients" style="color:${BRAND_MAGENTA}">admin dashboard</a>.</p>
+  `;
+
+  return {
+    subject: `Contract Created: ${data.title}`,
+    html: emailWrapper('Contract Created', body),
+  };
+}
+
+interface ContractStatusEmailData {
+  title: string;
+  action: 'sent' | 'accepted' | 'rejected' | 'edit_requested';
+  clientFeedback?: string;
+}
+
+export function contractStatusEmail(data: ContractStatusEmailData): { subject: string; html: string } {
+  const labels: Record<string, string> = {
+    sent: 'Sent to Client',
+    accepted: 'Accepted',
+    rejected: 'Rejected',
+    edit_requested: 'Edit Requested',
+  };
+  const colors: Record<string, string> = {
+    sent: '#3b82f6',
+    accepted: '#22c55e',
+    rejected: '#ef4444',
+    edit_requested: '#f59e0b',
+  };
+
+  const label = labels[data.action] || data.action;
+  const color = colors[data.action] || BRAND_MAGENTA;
+  const safeTitle = escHtml(data.title);
+
+  const body = `
+    <p style="margin:0 0 16px;color:${HEADING_COLOR};font-size:16px;font-weight:700">Contract status updated.</p>
+    ${dataTable(
+      row('Contract', safeTitle) +
+      row('Status', badge(label, color))
+    )}
+    ${data.clientFeedback ? `<div style="margin:16px 0;padding:12px;background:#fff7ed;border-left:3px solid #f59e0b;border-radius:4px"><p style="margin:0 0 4px;color:${HEADING_COLOR};font-size:13px;font-weight:600">Client Feedback</p><p style="margin:0;color:${TEXT_COLOR};font-size:13px">${escHtml(data.clientFeedback)}</p></div>` : ''}
+    <p style="margin:16px 0 0;color:${TEXT_COLOR};font-size:13px">View in the <a href="https://freakingminds.in/admin/clients" style="color:${BRAND_MAGENTA}">admin dashboard</a>.</p>
+  `;
+
+  return {
+    subject: `Contract ${label}: ${data.title}`,
+    html: emailWrapper(`Contract ${label}`, body),
   };
 }

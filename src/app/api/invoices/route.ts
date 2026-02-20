@@ -177,6 +177,7 @@ export async function POST(request: NextRequest) {
       invoiceNumber: record.invoice_number,
       clientName: record.client_name,
       total: record.total,
+      currency: record.client_country?.toLowerCase() === 'india' ? 'INR' : (body.currency as string) || 'INR',
       dueDate: record.due_date,
       status: record.status,
     });
