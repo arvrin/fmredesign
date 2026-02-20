@@ -501,9 +501,11 @@ export default function ClientContractsPage() {
                   <div className="flex items-start justify-between">
                     <div>
                       <div className="flex items-center gap-2 mb-1">
-                        <div className="w-7 h-7 rounded bg-fm-magenta-600 flex items-center justify-center">
-                          <span className="text-white text-xs font-bold">FM</span>
-                        </div>
+                        <img
+                          src="/logo-white.png"
+                          alt="Freaking Minds"
+                          className="h-5 w-auto object-contain"
+                        />
                         <span className="text-fm-neutral-400 text-xs tracking-wide uppercase">
                           Freaking Minds
                         </span>

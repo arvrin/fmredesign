@@ -934,7 +934,7 @@ function InvoicePreview({
         <div className="flex items-center gap-2">
           <img
             src="/logo.png"
-            alt="FM"
+            alt="Freaking Minds"
             className="h-8 w-auto object-contain rounded"
           />
           <div>

@@ -182,9 +182,11 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
               collapsed && 'md:gap-0'
             )}
           >
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-fm-magenta-600 to-fm-magenta-700 flex items-center justify-center text-white font-bold text-sm shrink-0">
-              FM
-            </div>
+            <img
+              src="/favicon.png"
+              alt="FreakingMinds"
+              className="w-8 h-8 shrink-0 object-contain"
+            />
             <div className={cn('min-w-0', collapsed && 'md:hidden')}>
               <h1 className="font-display font-bold text-[15px] leading-tight text-fm-neutral-900 truncate">
                 {styles.logo}
