@@ -164,7 +164,7 @@ function transformClientData(data: any): ClientProfile {
 
     contractDetails: {
       type: data.contract_type || 'retainer',
-      startDate: data.contract_start_date || new Date().toISOString(),
+      startDate: data.contract_start_date || null,
       endDate: data.contract_end_date || undefined,
       value: parseFloat(data.contract_value || data.total_value || '0'),
       currency: data.currency || 'INR',
@@ -175,7 +175,7 @@ function transformClientData(data: any): ClientProfile {
       isActive: data.status === 'active'
     },
 
-    onboardedAt: data.created_at || new Date().toISOString(),
+    onboardedAt: data.onboarded_at || data.created_at || new Date().toISOString(),
     lastActivity: data.updated_at || new Date().toISOString(),
     createdAt: data.created_at || new Date().toISOString(),
     updatedAt: data.updated_at || new Date().toISOString(),

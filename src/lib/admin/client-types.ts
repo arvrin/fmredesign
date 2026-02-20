@@ -67,7 +67,7 @@ export interface Address {
 
 export interface ContractDetails {
   type: ContractType;
-  startDate: string;
+  startDate: string | null;
   endDate?: string;
   value: number;
   currency: string;

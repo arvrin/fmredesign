@@ -75,7 +75,7 @@ export async function PUT(
     const supabase = getSupabaseAdmin();
     const { data: contract, error: fetchError } = await supabase
       .from('contracts')
-      .select('id, status, client_id, title')
+      .select('id, status, client_id, title, services, total_value, start_date, end_date, currency, billing_cycle')
       .eq('id', contractId)
       .eq('client_id', resolved.id)
       .single();
@@ -115,6 +115,57 @@ export async function PUT(
     if (updateError) {
       console.error('Supabase contract update error:', updateError);
       return NextResponse.json({ success: false, error: 'Failed to update contract' }, { status: 500 });
+    }
+
+    // Fire-and-forget: sync contract data to client record + activate projects
+    if (action === 'accept') {
+      const now = new Date().toISOString();
+
+      // Extract service names from contract's services JSONB
+      let serviceNames: string[] = [];
+      if (contract.services) {
+        const services = typeof contract.services === 'string'
+          ? JSON.parse(contract.services)
+          : contract.services;
+        if (Array.isArray(services)) {
+          serviceNames = services.map((s: { name?: string; id?: string } | string) =>
+            typeof s === 'string' ? s : (s.name || s.id || '')
+          ).filter(Boolean);
+        }
+      }
+
+      // Derive contract_type from billing_cycle
+      const contractType = contract.billing_cycle === 'one-time' ? 'project' : 'retainer';
+
+      // Sync to clients table
+      supabase
+        .from('clients')
+        .update({
+          contract_value: contract.total_value,
+          contract_start_date: contract.start_date,
+          contract_end_date: contract.end_date,
+          services: serviceNames,
+          onboarded_at: now,
+          contract_type: contractType,
+          billing_cycle: contract.billing_cycle,
+          updated_at: now,
+        })
+        .eq('id', resolved.id)
+        .then(({ error: syncErr }) => {
+          if (syncErr) console.error('Failed to sync contract data to client:', syncErr);
+          else console.log(`Synced contract data to client ${resolved.id}`);
+        });
+
+      // Activate all planning projects for this client
+      supabase
+        .from('projects')
+        .update({ status: 'active', updated_at: now })
+        .eq('client_id', resolved.id)
+        .eq('status', 'planning')
+        .then(({ error: projErr, count }) => {
+          if (projErr) console.error('Failed to activate projects:', projErr);
+          else console.log(`Activated ${count ?? 0} planning projects for client ${resolved.id}`);
+        });
     }
 
     // Fire-and-forget: notify admin team with branded template

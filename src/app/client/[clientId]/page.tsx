@@ -175,9 +175,16 @@ export default function ClientDashboard() {
   const avgProgress = projects.length > 0 ?
     Math.round(projects.reduce((sum, p) => sum + p.progress, 0) / projects.length) : 0;
 
-  const partnerDuration = formatPartnerDuration(profile.onboardedAt);
-  const nextBilling = getNextBillingDate(profile.contractDetails.startDate, profile.contractDetails.billingCycle);
-  const contractProgress = getContractProgress(profile.contractDetails.startDate, profile.contractDetails.endDate);
+  const hasContract = !!profile.contractDetails.startDate;
+  const partnerDuration = hasContract
+    ? formatPartnerDuration(profile.contractDetails.startDate!)
+    : null;
+  const nextBilling = hasContract
+    ? getNextBillingDate(profile.contractDetails.startDate!, profile.contractDetails.billingCycle)
+    : null;
+  const contractProgress = hasContract
+    ? getContractProgress(profile.contractDetails.startDate!, profile.contractDetails.endDate)
+    : null;
 
   return (
     <>
@@ -240,10 +247,10 @@ export default function ClientDashboard() {
 
         <MetricCard
           title="Contract Value"
-          value={profile.contractDetails.value}
-          subtitle={`Total project investment`}
+          value={hasContract ? profile.contractDetails.value : 'Pending'}
+          subtitle={hasContract ? 'Total project investment' : 'Awaiting contract signature'}
           icon={<TrendingUp className="w-6 h-6" />}
-          formatter={(val) => formatContractCurrency(Number(val), profile.contractDetails.currency)}
+          formatter={hasContract ? (val) => formatContractCurrency(Number(val), profile.contractDetails.currency) : undefined}
           variant="client"
         />
 
@@ -270,9 +277,15 @@ export default function ClientDashboard() {
               </div>
             </div>
             <div className="flex items-center space-x-3">
-              {profile.contractDetails.isActive && (
-                <Badge variant="secondary" className="bg-green-50 text-green-700 border-green-200">
-                  Active Partnership
+              {hasContract ? (
+                profile.contractDetails.isActive && (
+                  <Badge variant="secondary" className="bg-green-50 text-green-700 border-green-200">
+                    Active Partnership
+                  </Badge>
+                )
+              ) : (
+                <Badge variant="secondary" className="bg-amber-50 text-amber-700 border-amber-200">
+                  Awaiting Contract
                 </Badge>
               )}
               <button
@@ -295,8 +308,10 @@ export default function ClientDashboard() {
                 <Timer className="w-4 h-4" />
               </IconBox>
               <div>
-                <p className="text-xs text-fm-neutral-500">Partner Since</p>
-                <p className="font-medium text-fm-neutral-900 text-sm">{partnerDuration.text}</p>
+                <p className="text-xs text-fm-neutral-500">{hasContract ? 'Partner Since' : 'Client Since'}</p>
+                <p className="font-medium text-fm-neutral-900 text-sm">
+                  {partnerDuration ? partnerDuration.text : formatPartnerDuration(profile.createdAt).text}
+                </p>
               </div>
             </div>
 
@@ -337,99 +352,120 @@ export default function ClientDashboard() {
           >
             <div className="border-t border-fm-neutral-100 pt-6">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* Left — Detailed Financial Info */}
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-3">
-                    <IconBox size="sm">
-                      <TrendingUp className="w-4 h-4" />
-                    </IconBox>
-                    <div>
-                      <p className="text-sm text-fm-neutral-500">Contract Value</p>
-                      <p className="font-medium text-fm-neutral-900">
-                        {formatContractCurrency(profile.contractDetails.value, profile.contractDetails.currency)}
-                        {profile.contractDetails.retainerAmount > 0 && (
-                          <span className="text-fm-neutral-500 font-normal">
-                            {' '}(Retainer: {formatContractCurrency(profile.contractDetails.retainerAmount, profile.contractDetails.currency)}/mo)
-                          </span>
-                        )}
-                      </p>
-                    </div>
-                  </div>
-
-                  {nextBilling && (
-                    <div className="flex items-center space-x-3">
-                      <IconBox size="sm">
-                        <Calendar className="w-4 h-4" />
-                      </IconBox>
-                      <div>
-                        <p className="text-sm text-fm-neutral-500">Next Billing</p>
-                        <p className="font-medium text-fm-neutral-900">{nextBilling}</p>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="flex items-center space-x-3">
-                    <IconBox size="sm">
-                      <Timer className="w-4 h-4" />
-                    </IconBox>
-                    <div>
-                      <p className="text-sm text-fm-neutral-500">Started</p>
-                      <p className="font-medium text-fm-neutral-900">{partnerDuration.exact}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Right — Services & Timeline */}
-                <div className="space-y-6">
-                  {/* Services Subscribed */}
-                  <div>
-                    <p className="text-sm text-fm-neutral-500 mb-3 font-medium">Services Subscribed</p>
-                    {profile.contractDetails.services.length > 0 ? (
-                      <div className="space-y-2">
-                        {profile.contractDetails.services.map((serviceId) => (
-                          <div key={serviceId} className="flex items-center space-x-2">
-                            <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />
-                            <span className="text-sm text-fm-neutral-700">{getServiceName(serviceId)}</span>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-sm text-fm-neutral-400 italic">No specific services listed</p>
-                    )}
-                  </div>
-
-                  {/* Contract Timeline */}
-                  <div>
-                    <p className="text-sm text-fm-neutral-500 mb-3 font-medium">Contract Period</p>
-                    <div className="text-sm text-fm-neutral-700 mb-2">
-                      {new Date(profile.contractDetails.startDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-                      {' — '}
-                      {profile.contractDetails.endDate
-                        ? new Date(profile.contractDetails.endDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
-                        : 'Ongoing'
-                      }
-                    </div>
-                    {contractProgress !== null ? (
-                      <div className="space-y-1">
-                        <div className="w-full bg-fm-neutral-200 rounded-full h-2.5">
-                          <div
-                            className="bg-gradient-to-r from-fm-magenta-500 to-fm-magenta-600 h-2.5 rounded-full transition-all duration-500"
-                            style={{ width: `${contractProgress}%` }}
-                          />
+                {hasContract ? (
+                  <>
+                    {/* Left — Detailed Financial Info */}
+                    <div className="space-y-4">
+                      <div className="flex items-center space-x-3">
+                        <IconBox size="sm">
+                          <TrendingUp className="w-4 h-4" />
+                        </IconBox>
+                        <div>
+                          <p className="text-sm text-fm-neutral-500">Contract Value</p>
+                          <p className="font-medium text-fm-neutral-900">
+                            {formatContractCurrency(profile.contractDetails.value, profile.contractDetails.currency)}
+                            {(profile.contractDetails.retainerAmount ?? 0) > 0 && (
+                              <span className="text-fm-neutral-500 font-normal">
+                                {' '}(Retainer: {formatContractCurrency(profile.contractDetails.retainerAmount!, profile.contractDetails.currency)}/mo)
+                              </span>
+                            )}
+                          </p>
                         </div>
-                        <p className="text-xs text-fm-neutral-500">{contractProgress}% elapsed</p>
                       </div>
-                    ) : (
-                      <div className="flex items-center space-x-2">
-                        <span className="relative flex h-2.5 w-2.5">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
-                        </span>
-                        <span className="text-xs text-green-600 font-medium">Ongoing — No fixed end date</span>
+
+                      {nextBilling && (
+                        <div className="flex items-center space-x-3">
+                          <IconBox size="sm">
+                            <Calendar className="w-4 h-4" />
+                          </IconBox>
+                          <div>
+                            <p className="text-sm text-fm-neutral-500">Next Billing</p>
+                            <p className="font-medium text-fm-neutral-900">{nextBilling}</p>
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="flex items-center space-x-3">
+                        <IconBox size="sm">
+                          <Timer className="w-4 h-4" />
+                        </IconBox>
+                        <div>
+                          <p className="text-sm text-fm-neutral-500">Started</p>
+                          <p className="font-medium text-fm-neutral-900">{partnerDuration!.exact}</p>
+                        </div>
                       </div>
-                    )}
+                    </div>
+
+                    {/* Right — Services & Timeline */}
+                    <div className="space-y-6">
+                      {/* Services Subscribed */}
+                      <div>
+                        <p className="text-sm text-fm-neutral-500 mb-3 font-medium">Services Subscribed</p>
+                        {profile.contractDetails.services.length > 0 ? (
+                          <div className="space-y-2">
+                            {profile.contractDetails.services.map((serviceId) => (
+                              <div key={serviceId} className="flex items-center space-x-2">
+                                <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />
+                                <span className="text-sm text-fm-neutral-700">{getServiceName(serviceId)}</span>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-sm text-fm-neutral-400 italic">No specific services listed</p>
+                        )}
+                      </div>
+
+                      {/* Contract Timeline */}
+                      <div>
+                        <p className="text-sm text-fm-neutral-500 mb-3 font-medium">Contract Period</p>
+                        <div className="text-sm text-fm-neutral-700 mb-2">
+                          {new Date(profile.contractDetails.startDate!).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                          {' — '}
+                          {profile.contractDetails.endDate
+                            ? new Date(profile.contractDetails.endDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+                            : 'Ongoing'
+                          }
+                        </div>
+                        {contractProgress !== null ? (
+                          <div className="space-y-1">
+                            <div className="w-full bg-fm-neutral-200 rounded-full h-2.5">
+                              <div
+                                className="bg-gradient-to-r from-fm-magenta-500 to-fm-magenta-600 h-2.5 rounded-full transition-all duration-500"
+                                style={{ width: `${contractProgress}%` }}
+                              />
+                            </div>
+                            <p className="text-xs text-fm-neutral-500">{contractProgress}% elapsed</p>
+                          </div>
+                        ) : (
+                          <div className="flex items-center space-x-2">
+                            <span className="relative flex h-2.5 w-2.5">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
+                            </span>
+                            <span className="text-xs text-green-600 font-medium">Ongoing — No fixed end date</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="lg:col-span-2 flex flex-col items-center justify-center py-8 text-center">
+                    <div className="w-12 h-12 rounded-full bg-amber-50 flex items-center justify-center mb-4">
+                      <FileText className="w-6 h-6 text-amber-500" />
+                    </div>
+                    <p className="font-medium text-fm-neutral-900 mb-1">Awaiting Contract Signature</p>
+                    <p className="text-sm text-fm-neutral-500 max-w-md">
+                      Partnership details will appear here once your contract has been reviewed and accepted.
+                    </p>
+                    <Link
+                      href={`/client/${slug}/contracts`}
+                      className="mt-4 inline-flex items-center text-sm font-medium text-fm-magenta-600 hover:text-fm-magenta-700 hover:bg-fm-magenta-50 px-4 py-2 rounded-md transition-colors"
+                    >
+                      <FileText className="w-4 h-4 mr-2" />
+                      View Contracts
+                    </Link>
                   </div>
-                </div>
+                )}
               </div>
             </div>
           </div>

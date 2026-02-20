@@ -498,7 +498,9 @@ export default function AdminClientDetail() {
                   <div>
                     <p className="text-sm text-fm-neutral-600">Start Date</p>
                     <p className="text-lg font-medium text-fm-neutral-900">
-                      {new Date(clientProfile.contractDetails.startDate).toLocaleDateString()}
+                      {clientProfile.contractDetails.startDate
+                        ? new Date(clientProfile.contractDetails.startDate).toLocaleDateString()
+                        : 'Not set'}
                     </p>
                   </div>
                   

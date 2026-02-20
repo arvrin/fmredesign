@@ -11,15 +11,16 @@ export interface ClientProfile {
   health: string;
   accountManager: string;
   onboardedAt: string;
+  createdAt: string;
   primaryContact?: { email: string };
   contractDetails: {
     type: string;
     value: number;
     currency: string;
-    startDate: string;
+    startDate: string | null;
     endDate?: string;
     billingCycle: string;
-    retainerAmount: number;
+    retainerAmount?: number;
     services: string[];
     isActive: boolean;
   };
