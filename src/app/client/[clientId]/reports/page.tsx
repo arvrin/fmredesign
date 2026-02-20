@@ -30,6 +30,7 @@ import {
   X,
 } from 'lucide-react';
 import { useClientPortal } from '@/lib/client-portal/context';
+import { formatContractCurrency } from '@/lib/admin/contract-types';
 import { downloadCSV } from '@/lib/client-portal/export';
 
 interface Report {
@@ -75,7 +76,7 @@ interface ReportsSummary {
 }
 
 export default function ClientReportsPage() {
-  const { clientId } = useClientPortal();
+  const { clientId, profile } = useClientPortal();
 
   const [summary, setSummary] = useState<ReportsSummary | null>(null);
   const [reports, setReports] = useState<Report[]>([]);
@@ -394,11 +395,7 @@ export default function ClientReportsPage() {
                             <span className="text-lg font-semibold text-fm-neutral-900">
                               {typeof metric.value === 'number'
                                 ? metric.name.includes('Budget')
-                                  ? new Intl.NumberFormat('en-IN', {
-                                      style: 'currency',
-                                      currency: 'INR',
-                                      notation: 'compact'
-                                    }).format(metric.value)
+                                  ? formatContractCurrency(metric.value, profile.contractDetails.currency)
                                   : metric.value.toLocaleString()
                                 : metric.value}
                             </span>

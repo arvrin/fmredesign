@@ -29,6 +29,7 @@ import {
   X,
 } from 'lucide-react';
 import { useClientPortal } from '@/lib/client-portal/context';
+import { formatContractCurrency } from '@/lib/admin/contract-types';
 import { getStatusColor, getPriorityColor } from '@/lib/client-portal/status-colors';
 import { downloadCSV } from '@/lib/client-portal/export';
 
@@ -69,7 +70,7 @@ interface ProjectDetail {
 export default function ProjectDetailPage() {
   const params = useParams();
   const projectId = params?.projectId as string;
-  const { clientId, slug } = useClientPortal();
+  const { clientId, slug, profile } = useClientPortal();
 
   const [project, setProject] = useState<ProjectDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -326,13 +327,13 @@ export default function ProjectDetailPage() {
               <div>
                 <p className="text-sm text-fm-neutral-600 mb-1">Budget</p>
                 <p className="text-lg font-semibold text-fm-neutral-900">
-                  {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', notation: 'compact' }).format(project.budget)}
+                  {formatContractCurrency(project.budget, profile.contractDetails.currency)}
                 </p>
               </div>
               <div>
                 <p className="text-sm text-fm-neutral-600 mb-1">Spent</p>
                 <p className="text-lg font-semibold text-fm-neutral-900">
-                  {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', notation: 'compact' }).format(project.spent)}
+                  {formatContractCurrency(project.spent, profile.contractDetails.currency)}
                   <span className="text-sm font-normal text-fm-neutral-500 ml-1">({budgetPercent}%)</span>
                 </p>
               </div>

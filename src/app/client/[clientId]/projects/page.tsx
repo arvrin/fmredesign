@@ -23,6 +23,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { useClientPortal } from '@/lib/client-portal/context';
+import { formatContractCurrency } from '@/lib/admin/contract-types';
 import { getStatusColor, getPriorityColor } from '@/lib/client-portal/status-colors';
 import { downloadCSV } from '@/lib/client-portal/export';
 
@@ -51,7 +52,7 @@ interface Project {
 }
 
 export default function ClientProjectsPage() {
-  const { clientId, slug } = useClientPortal();
+  const { clientId, slug, profile } = useClientPortal();
 
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
@@ -181,11 +182,7 @@ export default function ClientProjectsPage() {
           subtitle="Across all projects"
           icon={<DollarSign className="w-6 h-6" />}
           variant="client"
-          formatter={(val) => new Intl.NumberFormat('en-IN', {
-            style: 'currency',
-            currency: 'INR',
-            notation: 'compact'
-          }).format(Number(val))}
+          formatter={(val) => formatContractCurrency(Number(val), profile.contractDetails.currency)}
         />
 
         <MetricCard
@@ -276,11 +273,7 @@ export default function ClientProjectsPage() {
                     <DollarSign className="w-4 h-4 mr-1 text-fm-neutral-400" />
                     {project.budget > 0 ? Math.round((project.spent / project.budget) * 100) : 0}%
                     <span className="text-fm-neutral-500 ml-1">
-                      ({new Intl.NumberFormat('en-IN', {
-                        style: 'currency',
-                        currency: 'INR',
-                        notation: 'compact'
-                      }).format(project.spent)})
+                      ({formatContractCurrency(project.spent, profile.contractDetails.currency)})
                     </span>
                   </div>
                 </div>
