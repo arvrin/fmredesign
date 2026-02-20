@@ -145,9 +145,33 @@ function NumberedTerms({ text }: { text: string }) {
   );
 }
 
+/* ───────── Logo loader (cached) ───────── */
+let _logoCache: string | null = null;
+async function loadLogoBase64(): Promise<string | null> {
+  if (_logoCache) return _logoCache;
+  try {
+    const res = await fetch('/logo.png');
+    const blob = await res.blob();
+    return await new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        _logoCache = reader.result as string;
+        resolve(_logoCache);
+      };
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    return null;
+  }
+}
+
 /* ───────── PDF download ───────── */
 async function downloadContractPDF(contract: Contract) {
-  const { default: jsPDF } = await import('jspdf');
+  const [{ default: jsPDF }, logoBase64] = await Promise.all([
+    import('jspdf'),
+    loadLogoBase64(),
+  ]);
 
   const doc = new jsPDF('portrait', 'mm', 'a4');
   const W = doc.internal.pageSize.getWidth();
@@ -159,13 +183,20 @@ async function downloadContractPDF(contract: Contract) {
   doc.setFillColor(199, 50, 118);
   doc.rect(0, 0, W, 5, 'F');
 
-  // ── Company header
+  // ── Company header with logo
   y = 16;
-  doc.setFillColor(199, 50, 118);
-  doc.rect(M, 10, 22, 22, 'F');
-  doc.setFontSize(10);
-  doc.setTextColor(255, 255, 255);
-  doc.text('FM', M + 6.5, 23);
+  const logoX = M;
+  const logoSize = 22;
+  if (logoBase64) {
+    doc.addImage(logoBase64, 'PNG', logoX, 10, logoSize, logoSize);
+  } else {
+    // Fallback: magenta box with FM text
+    doc.setFillColor(199, 50, 118);
+    doc.rect(logoX, 10, logoSize, logoSize, 'F');
+    doc.setFontSize(10);
+    doc.setTextColor(255, 255, 255);
+    doc.text('FM', logoX + 6.5, 23);
+  }
 
   doc.setFontSize(24);
   doc.setTextColor(26, 26, 26);
@@ -292,23 +323,81 @@ async function downloadContractPDF(contract: Contract) {
   doc.setTextColor(199, 50, 118);
   doc.text(fmt(contract.totalValue), W - M - 3, y, { align: 'right' });
 
-  // ── Terms & Conditions
+  // ── Terms & Conditions (properly formatted)
   if (contract.termsAndConditions) {
     y += 14;
+    if (y > 250) { doc.addPage(); y = 20; }
+
+    // Section heading
     doc.setFontSize(12);
     doc.setTextColor(26, 26, 26);
     doc.text('Terms & Conditions', M, y);
+    y += 2;
+    doc.setDrawColor(199, 50, 118);
+    doc.setLineWidth(0.5);
+    doc.line(M, y, M + 40, y);
     y += 6;
-    doc.setFontSize(8);
-    doc.setTextColor(80, 80, 80);
-    const termLines = doc.splitTextToSize(contract.termsAndConditions, W - 2 * M);
-    termLines.forEach((line: string) => {
+
+    // Parse T&C into structured blocks
+    const paragraphs = contract.termsAndConditions.split('\n');
+    let clauseNum = 0;
+    const contentW = W - 2 * M;
+    const bulletIndent = 6;
+
+    paragraphs.forEach((rawLine) => {
+      const trimmed = rawLine.trim();
+      if (!trimmed) {
+        y += 2; // blank line → small gap
+        return;
+      }
+
+      const isBullet = trimmed.startsWith('•') || trimmed.startsWith('-');
+      const isHeader = trimmed.endsWith(':') && !isBullet;
+
+      // Page break check
       if (y > 270) {
         doc.addPage();
         y = 20;
       }
-      doc.text(line, M, y);
-      y += 4;
+
+      if (isHeader) {
+        // Numbered section header — bold, slightly larger
+        clauseNum++;
+        y += 3; // extra space before header
+        doc.setFontSize(9);
+        doc.setTextColor(26, 26, 26);
+        doc.setFont('helvetica', 'bold');
+        const headerText = `${clauseNum}. ${trimmed}`;
+        const headerLines = doc.splitTextToSize(headerText, contentW);
+        headerLines.forEach((hl: string) => {
+          if (y > 270) { doc.addPage(); y = 20; }
+          doc.text(hl, M, y);
+          y += 4.5;
+        });
+        doc.setFont('helvetica', 'normal');
+      } else if (isBullet) {
+        // Bullet point — indented with bullet character
+        const bulletText = trimmed.replace(/^[•\-]\s*/, '');
+        doc.setFontSize(8);
+        doc.setTextColor(80, 80, 80);
+        doc.text('•', M + bulletIndent - 3, y);
+        const bulletLines = doc.splitTextToSize(bulletText, contentW - bulletIndent - 2);
+        bulletLines.forEach((bl: string, i: number) => {
+          if (y > 270) { doc.addPage(); y = 20; }
+          doc.text(bl, M + bulletIndent, y);
+          y += 3.8;
+        });
+      } else {
+        // Body text
+        doc.setFontSize(8);
+        doc.setTextColor(80, 80, 80);
+        const bodyLines = doc.splitTextToSize(trimmed, contentW - 2);
+        bodyLines.forEach((bl: string) => {
+          if (y > 270) { doc.addPage(); y = 20; }
+          doc.text(bl, M + 2, y);
+          y += 3.8;
+        });
+      }
     });
   }
 
