@@ -6,7 +6,7 @@
 'use client';
 
 import { useState } from 'react';
-import { X, Loader } from 'lucide-react';
+import { X } from 'lucide-react';
 import { Button } from '@/design-system/components/primitives/Button';
 
 interface AddLeadModalProps {
@@ -186,10 +186,10 @@ export function AddLeadModal({ isOpen, onClose, onLeadAdded }: AddLeadModalProps
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-6 border-b border-fm-neutral-200">
-          <h2 className="text-xl font-semibold text-fm-neutral-900">Add New Lead</h2>
+    <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50" onClick={onClose}>
+      <div className="bg-white rounded-t-2xl sm:rounded-xl shadow-2xl max-w-2xl w-full sm:mx-4 max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-fm-neutral-200 shrink-0">
+          <h2 className="text-lg sm:text-xl font-semibold text-fm-neutral-900">Add New Lead</h2>
           <button
             onClick={onClose}
             className="p-2 hover:bg-fm-neutral-100 rounded-lg transition-colors"
@@ -198,7 +198,7 @@ export function AddLeadModal({ isOpen, onClose, onLeadAdded }: AddLeadModalProps
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6">
+        <form onSubmit={handleSubmit} className="p-4 sm:p-6 overflow-y-auto flex-1">
           {error && (
             <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
               <p className="text-red-800 text-sm">{error}</p>
@@ -208,11 +208,11 @@ export function AddLeadModal({ isOpen, onClose, onLeadAdded }: AddLeadModalProps
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Contact Information */}
             <div className="md:col-span-2">
-              <h3 className="text-lg font-medium text-fm-neutral-900 mb-4">Contact Information</h3>
+              <h3 className="text-sm font-semibold text-fm-neutral-500 uppercase tracking-wider pb-2 border-b border-fm-neutral-100">Contact Information</h3>
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
+              <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">
                 Full Name *
               </label>
               <input
@@ -221,13 +221,13 @@ export function AddLeadModal({ isOpen, onClose, onLeadAdded }: AddLeadModalProps
                 value={formData.name}
                 onChange={handleInputChange}
                 required
-                className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
                 placeholder="Enter full name"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
+              <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">
                 Email *
               </label>
               <input
@@ -236,13 +236,13 @@ export function AddLeadModal({ isOpen, onClose, onLeadAdded }: AddLeadModalProps
                 value={formData.email}
                 onChange={handleInputChange}
                 required
-                className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
                 placeholder="Enter email address"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
+              <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">
                 Phone
               </label>
               <input
@@ -250,13 +250,13 @@ export function AddLeadModal({ isOpen, onClose, onLeadAdded }: AddLeadModalProps
                 name="phone"
                 value={formData.phone}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
                 placeholder="Enter phone number"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
+              <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">
                 Company *
               </label>
               <input
@@ -265,20 +265,20 @@ export function AddLeadModal({ isOpen, onClose, onLeadAdded }: AddLeadModalProps
                 value={formData.company}
                 onChange={handleInputChange}
                 required
-                className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
                 placeholder="Enter company name"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
+              <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">
                 Company Size
               </label>
               <select
                 name="companySize"
                 value={formData.companySize}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
               >
                 {COMPANY_SIZES.map((size) => (
                   <option key={size} value={size}>
@@ -289,12 +289,12 @@ export function AddLeadModal({ isOpen, onClose, onLeadAdded }: AddLeadModalProps
             </div>
 
             {/* Project Information */}
-            <div className="md:col-span-2 mt-4">
-              <h3 className="text-lg font-medium text-fm-neutral-900 mb-4">Project Information</h3>
+            <div className="md:col-span-2 mt-2">
+              <h3 className="text-sm font-semibold text-fm-neutral-500 uppercase tracking-wider pb-2 border-b border-fm-neutral-100">Project Information</h3>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
+              <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">
                 Project Type *
               </label>
               <select
@@ -302,7 +302,7 @@ export function AddLeadModal({ isOpen, onClose, onLeadAdded }: AddLeadModalProps
                 value={formData.projectType}
                 onChange={handleInputChange}
                 required
-                className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
               >
                 {PROJECT_TYPES.map((type) => (
                   <option key={type} value={type}>
@@ -313,7 +313,7 @@ export function AddLeadModal({ isOpen, onClose, onLeadAdded }: AddLeadModalProps
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
+              <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">
                 Budget Range *
               </label>
               <select
@@ -321,7 +321,7 @@ export function AddLeadModal({ isOpen, onClose, onLeadAdded }: AddLeadModalProps
                 value={formData.budgetRange}
                 onChange={handleInputChange}
                 required
-                className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
               >
                 {BUDGET_RANGES.map((range) => (
                   <option key={range} value={range}>
@@ -332,7 +332,7 @@ export function AddLeadModal({ isOpen, onClose, onLeadAdded }: AddLeadModalProps
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
+              <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">
                 Timeline *
               </label>
               <select
@@ -340,7 +340,7 @@ export function AddLeadModal({ isOpen, onClose, onLeadAdded }: AddLeadModalProps
                 value={formData.timeline}
                 onChange={handleInputChange}
                 required
-                className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
               >
                 {TIMELINES.map((timeline) => (
                   <option key={timeline} value={timeline}>
@@ -368,7 +368,7 @@ export function AddLeadModal({ isOpen, onClose, onLeadAdded }: AddLeadModalProps
                 required
                 minLength={10}
                 rows={3}
-                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500 ${
+                className={`w-full px-3 py-2 text-base bg-fm-neutral-50 border rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 ${
                   formData.projectDescription.length > 0 && formData.projectDescription.length < 10
                     ? 'border-red-300 bg-red-50'
                     : 'border-fm-neutral-300'
@@ -400,7 +400,7 @@ export function AddLeadModal({ isOpen, onClose, onLeadAdded }: AddLeadModalProps
                 required
                 minLength={5}
                 rows={2}
-                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500 ${
+                className={`w-full px-3 py-2 text-base bg-fm-neutral-50 border rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 ${
                   formData.primaryChallenge.length > 0 && formData.primaryChallenge.length < 5
                     ? 'border-red-300 bg-red-50'
                     : 'border-fm-neutral-300'
@@ -415,7 +415,7 @@ export function AddLeadModal({ isOpen, onClose, onLeadAdded }: AddLeadModalProps
             </div>
 
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
+              <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">
                 Specific Requirements
               </label>
               <textarea
@@ -423,25 +423,29 @@ export function AddLeadModal({ isOpen, onClose, onLeadAdded }: AddLeadModalProps
                 value={formData.specificRequirements}
                 onChange={handleInputChange}
                 rows={2}
-                className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
                 placeholder="Any specific requirements or preferences?"
               />
             </div>
           </div>
 
-          <div className="flex justify-end space-x-3 mt-6 pt-6 border-t border-fm-neutral-200">
+          <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 mt-6 pt-6 border-t border-fm-neutral-200">
             <Button
               type="button"
               variant="outline"
               onClick={onClose}
               disabled={isSubmitting}
+              fullWidth
+              className="sm:w-auto"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={isSubmitting || formData.projectDescription.length < 10 || formData.primaryChallenge.length < 5}
-              icon={isSubmitting ? <Loader className="h-4 w-4 animate-spin" /> : undefined}
+              loading={isSubmitting}
+              fullWidth
+              className="sm:w-auto"
             >
               {isSubmitting ? 'Creating...' : 'Create Lead'}
             </Button>

@@ -120,39 +120,39 @@ export default function EditContentPage({ params }: { params: Promise<{ id: stri
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-fm-neutral-700 mb-1">Title</label>
+            <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Title</label>
             <input
               type="text"
               value={item.title}
               onChange={(e) => updateField('title', e.target.value)}
-              className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+              className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-fm-neutral-700 mb-1">Description</label>
+            <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Description</label>
             <textarea
               value={item.description || ''}
               onChange={(e) => updateField('description', e.target.value)}
               rows={2}
-              className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+              className="w-full px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-fm-neutral-700 mb-1">Content / Caption</label>
+            <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Content / Caption</label>
             <textarea
               value={item.content || ''}
               onChange={(e) => updateField('content', e.target.value)}
               rows={6}
-              className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+              className="w-full px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
             />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
-              <label className="block text-sm font-medium text-fm-neutral-700 mb-1">Status</label>
+              <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Status</label>
               <select
                 value={item.status}
                 onChange={(e) => updateField('status', e.target.value as ContentStatus)}
-                className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
+                className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400 appearance-none"
               >
                 <option value="draft">Draft</option>
                 <option value="review">Review</option>
@@ -163,11 +163,11 @@ export default function EditContentPage({ params }: { params: Promise<{ id: stri
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-fm-neutral-700 mb-1">Platform</label>
+              <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Platform</label>
               <select
                 value={item.platform}
                 onChange={(e) => updateField('platform', e.target.value as Platform)}
-                className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
+                className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400 appearance-none"
               >
                 <option value="instagram">Instagram</option>
                 <option value="facebook">Facebook</option>
@@ -180,11 +180,11 @@ export default function EditContentPage({ params }: { params: Promise<{ id: stri
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-fm-neutral-700 mb-1">Content Type</label>
+              <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Content Type</label>
               <select
                 value={item.type}
                 onChange={(e) => updateField('type', e.target.value as ContentType)}
-                className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
+                className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400 appearance-none"
               >
                 <option value="post">Post</option>
                 <option value="story">Story</option>
@@ -197,12 +197,12 @@ export default function EditContentPage({ params }: { params: Promise<{ id: stri
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-fm-neutral-700 mb-1">Scheduled Date</label>
+              <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Scheduled Date</label>
               <input
                 type="date"
                 value={item.scheduledDate || ''}
                 onChange={(e) => updateField('scheduledDate', e.target.value)}
-                className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
+                className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
               />
             </div>
           </div>
@@ -217,22 +217,22 @@ export default function EditContentPage({ params }: { params: Promise<{ id: stri
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-fm-neutral-700 mb-1">Assigned Designer</label>
+              <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Assigned Designer</label>
               <input
                 type="text"
                 value={item.assignedDesigner || ''}
                 onChange={(e) => updateField('assignedDesigner', e.target.value)}
-                className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
+                className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
                 placeholder="Designer name"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-fm-neutral-700 mb-1">Assigned Writer</label>
+              <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Assigned Writer</label>
               <input
                 type="text"
                 value={item.assignedWriter || ''}
                 onChange={(e) => updateField('assignedWriter', e.target.value)}
-                className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
+                className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
                 placeholder="Writer name"
               />
             </div>
@@ -248,22 +248,22 @@ export default function EditContentPage({ params }: { params: Promise<{ id: stri
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-fm-neutral-700 mb-1">Image URL</label>
+              <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Image URL</label>
               <input
                 type="url"
                 value={item.imageUrl || ''}
                 onChange={(e) => updateField('imageUrl', e.target.value)}
-                className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
+                className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
                 placeholder="https://..."
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-fm-neutral-700 mb-1">Video URL</label>
+              <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Video URL</label>
               <input
                 type="url"
                 value={item.videoUrl || ''}
                 onChange={(e) => updateField('videoUrl', e.target.value)}
-                className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
+                className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
                 placeholder="https://..."
               />
             </div>
@@ -278,32 +278,32 @@ export default function EditContentPage({ params }: { params: Promise<{ id: stri
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-fm-neutral-700 mb-1">Hashtags (comma-separated)</label>
+            <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Hashtags (comma-separated)</label>
             <input
               type="text"
               value={(item.hashtags || []).join(', ')}
               onChange={(e) => updateField('hashtags', e.target.value.split(',').map(t => t.trim()).filter(Boolean))}
-              className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
+              className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
               placeholder="#marketing, #design, #socialmedia"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-fm-neutral-700 mb-1">Mentions (comma-separated)</label>
+            <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Mentions (comma-separated)</label>
             <input
               type="text"
               value={(item.mentions || []).join(', ')}
               onChange={(e) => updateField('mentions', e.target.value.split(',').map(t => t.trim()).filter(Boolean))}
-              className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
+              className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
               placeholder="@user1, @brand"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-fm-neutral-700 mb-1">Tags (comma-separated)</label>
+            <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Tags (comma-separated)</label>
             <input
               type="text"
               value={(item.tags || []).join(', ')}
               onChange={(e) => updateField('tags', e.target.value.split(',').map(t => t.trim()).filter(Boolean))}
-              className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
+              className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
               placeholder="campaign-name, q1-2026"
             />
           </div>
@@ -317,22 +317,22 @@ export default function EditContentPage({ params }: { params: Promise<{ id: stri
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-fm-neutral-700 mb-1">Client Feedback</label>
+            <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Client Feedback</label>
             <textarea
               value={item.clientFeedback || ''}
               onChange={(e) => updateField('clientFeedback', e.target.value)}
               rows={3}
-              className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+              className="w-full px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
               placeholder="Client feedback or comments..."
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-fm-neutral-700 mb-1">Revision Notes</label>
+            <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Revision Notes</label>
             <textarea
               value={item.revisionNotes || ''}
               onChange={(e) => updateField('revisionNotes', e.target.value)}
               rows={3}
-              className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+              className="w-full px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
               placeholder="Notes on revisions needed..."
             />
           </div>

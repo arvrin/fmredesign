@@ -376,7 +376,7 @@ export default function NewTeamMemberPage() {
           <CardContent>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-fm-neutral-700 mb-3">
+                <label className="block text-sm font-medium text-fm-neutral-900 mb-3">
                   Select Skills
                 </label>
                 <div className="flex flex-wrap gap-2">
@@ -407,14 +407,14 @@ export default function NewTeamMemberPage() {
           </CardHeader>
           <CardContent>
             <div>
-              <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
+              <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">
                 Notes (Optional)
               </label>
               <textarea
                 rows={4}
                 value={formData.notes || ''}
                 onChange={(e) => handleInputChange('notes', e.target.value)}
-                className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500 resize-none"
+                className="w-full px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400 resize-none"
                 placeholder="Any additional notes about this team member..."
               />
             </div>

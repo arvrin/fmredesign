@@ -391,9 +391,13 @@ export function InvoiceFormNew() {
       year: 'numeric',
     });
 
-  // ---- Shared input class ----
+  // ---- Shared input classes ----
   const inputCls =
-    'w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500 bg-white text-fm-neutral-900';
+    'w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400';
+  const selectCls =
+    'w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400 appearance-none';
+  const textareaCls =
+    'w-full px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400';
 
   // =========================================================================
   // RENDER
@@ -439,7 +443,7 @@ export function InvoiceFormNew() {
                 <div className="flex items-center gap-4">
                   <div>
                     <div className="flex items-center gap-2">
-                      <label className="text-sm font-medium text-fm-neutral-700">
+                      <label className="text-sm font-medium text-fm-neutral-900">
                         Invoice #
                       </label>
                       <input
@@ -502,7 +506,7 @@ export function InvoiceFormNew() {
             <CardContent className="space-y-4">
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label className="text-sm font-medium text-fm-neutral-700">
+                  <label className="text-sm font-medium text-fm-neutral-900">
                     Select Client
                   </label>
                   <button
@@ -517,7 +521,7 @@ export function InvoiceFormNew() {
                 <select
                   value={invoice.client.id}
                   onChange={e => selectClient(e.target.value)}
-                  className={inputCls}
+                  className={selectCls}
                 >
                   <option value="">
                     Choose a client... ({clients.length} available)
@@ -565,7 +569,7 @@ export function InvoiceFormNew() {
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
+                  <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">
                     Invoice Date
                   </label>
                   <input
@@ -578,7 +582,7 @@ export function InvoiceFormNew() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
+                  <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">
                     Due Date
                   </label>
                   <input
@@ -640,7 +644,7 @@ export function InvoiceFormNew() {
                             selectService(item.id, e.target.value);
                           else updateLineItem(item.id, 'serviceId', '');
                         }}
-                        className={inputCls}
+                        className={selectCls}
                       >
                         <option value="">Custom entry...</option>
                         {Object.entries(grouped).map(([cat, services]) => (
@@ -668,7 +672,7 @@ export function InvoiceFormNew() {
                           updateLineItem(item.id, 'description', e.target.value)
                         }
                         placeholder="Describe the service or product..."
-                        className={`${inputCls} resize-none`}
+                        className={`${textareaCls} resize-none`}
                       />
                     </div>
 
@@ -745,7 +749,7 @@ export function InvoiceFormNew() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
+                <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">
                   Notes
                 </label>
                 <textarea
@@ -754,12 +758,12 @@ export function InvoiceFormNew() {
                   onChange={e =>
                     setInvoice(p => ({ ...p, notes: e.target.value }))
                   }
-                  className={`${inputCls} resize-none`}
+                  className={`${textareaCls} resize-none`}
                   placeholder="Any additional notes..."
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
+                <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">
                   Payment Terms
                 </label>
                 <textarea
@@ -768,7 +772,7 @@ export function InvoiceFormNew() {
                   onChange={e =>
                     setInvoice(p => ({ ...p, terms: e.target.value }))
                   }
-                  className={`${inputCls} resize-none`}
+                  className={`${textareaCls} resize-none`}
                   placeholder="Payment terms and conditions..."
                 />
               </div>
@@ -802,7 +806,7 @@ export function InvoiceFormNew() {
               <CardTitle>Tax Settings</CardTitle>
             </CardHeader>
             <CardContent>
-              <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
+              <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">
                 Tax Rate (%)
               </label>
               <input

@@ -1116,6 +1116,15 @@ section:not(.v2-section):not([class*="v2-"]):not([class*="pt-"]):not([class*="py
    ═══════════════════════════════════════════════════════════════════════════ */
 
 @layer utilities {
+  /* Hide scrollbar but keep scroll functionality */
+  .scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+
   /* Font Display Utility - replaces inline styles */
   .font-display {
     font-family: var(--font-family-display);

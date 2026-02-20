@@ -139,6 +139,13 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   /* Auto-detect active nav item from pathname */
   const isActive = (href: string) => {
     if (href === '/admin' || href === '/client') return pathname === href;
+    // Dashboard root paths (e.g. /client/slug, /admin) should use exact match
+    // to avoid the root item staying highlighted on every sub-page
+    const segments = href.replace(/\/$/, '').split('/').filter(Boolean);
+    const isRootPath =
+      (segments[0] === 'client' && segments.length === 2) ||
+      (segments[0] === 'admin' && segments.length === 1);
+    if (isRootPath) return pathname === href;
     return pathname?.startsWith(href) ?? false;
   };
 

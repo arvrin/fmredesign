@@ -49,27 +49,27 @@ export function BudgetResourcesForm({ session, onUpdate }: BudgetResourcesFormPr
       <div className="bg-white rounded-xl border border-fm-neutral-200 p-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div>
-            <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
+            <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">
               Total Budget Amount *
             </label>
             <input
               type="number"
               value={formData.totalBudget.amount}
               onChange={(e) => handleBudgetChange('amount', parseFloat(e.target.value) || 0)}
-              className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+              className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
               placeholder="₹ 100000"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
+            <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">
               Currency
             </label>
             <select
               value={formData.totalBudget.currency}
               onChange={(e) => handleBudgetChange('currency', e.target.value)}
-              className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+              className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400 appearance-none"
             >
               <option value="INR">INR (₹)</option>
               <option value="USD">USD ($)</option>
@@ -78,13 +78,13 @@ export function BudgetResourcesForm({ session, onUpdate }: BudgetResourcesFormPr
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
+            <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">
               Budget Flexibility
             </label>
             <select
               value={formData.totalBudget.flexibility}
               onChange={(e) => handleBudgetChange('flexibility', e.target.value)}
-              className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+              className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400 appearance-none"
             >
               <option value="fixed">Fixed - Cannot exceed</option>
               <option value="flexible">Flexible - Some room</option>
@@ -93,14 +93,14 @@ export function BudgetResourcesForm({ session, onUpdate }: BudgetResourcesFormPr
           </div>
 
           <div className="md:col-span-3">
-            <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
+            <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">
               ROI Expectations
             </label>
             <textarea
               value={formData.roiExpectations}
               onChange={(e) => handleInputChange('roiExpectations', e.target.value)}
               rows={3}
-              className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+              className="w-full px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
               placeholder="What return on investment do you expect?"
             />
           </div>

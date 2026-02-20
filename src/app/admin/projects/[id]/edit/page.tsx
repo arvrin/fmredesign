@@ -114,30 +114,30 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-fm-neutral-700 mb-1">Project Name</label>
+            <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Project Name</label>
             <input
               type="text"
               value={project.name}
               onChange={(e) => updateField('name', e.target.value)}
-              className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+              className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-fm-neutral-700 mb-1">Description</label>
+            <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Description</label>
             <textarea
               value={project.description || ''}
               onChange={(e) => updateField('description', e.target.value)}
               rows={4}
-              className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+              className="w-full px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
             />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium text-fm-neutral-700 mb-1">Status</label>
+              <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Status</label>
               <select
                 value={project.status}
                 onChange={(e) => updateField('status', e.target.value as ProjectStatus)}
-                className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
+                className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400 appearance-none"
               >
                 <option value="planning">Planning</option>
                 <option value="active">Active</option>
@@ -148,11 +148,11 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-fm-neutral-700 mb-1">Priority</label>
+              <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Priority</label>
               <select
                 value={project.priority}
                 onChange={(e) => updateField('priority', e.target.value as ProjectPriority)}
-                className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
+                className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400 appearance-none"
               >
                 <option value="low">Low</option>
                 <option value="medium">Medium</option>
@@ -161,36 +161,36 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-fm-neutral-700 mb-1">Progress (%)</label>
+              <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Progress (%)</label>
               <input
                 type="number"
                 min={0}
                 max={100}
                 value={project.progress}
                 onChange={(e) => updateField('progress', parseInt(e.target.value) || 0)}
-                className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
+                className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
               />
             </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-fm-neutral-700 mb-1">End Date</label>
+              <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">End Date</label>
               <input
                 type="date"
                 value={project.endDate || ''}
                 onChange={(e) => updateField('endDate', e.target.value)}
-                className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
+                className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-fm-neutral-700 mb-1">Client Satisfaction (0-100)</label>
+              <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Client Satisfaction (0-100)</label>
               <input
                 type="number"
                 min={0}
                 max={100}
                 value={project.clientSatisfaction || ''}
                 onChange={(e) => updateField('clientSatisfaction', parseInt(e.target.value) || 0)}
-                className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
+                className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
               />
             </div>
           </div>
@@ -204,21 +204,21 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-fm-neutral-700 mb-1">Notes</label>
+            <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Notes</label>
             <textarea
               value={project.notes || ''}
               onChange={(e) => updateField('notes', e.target.value)}
               rows={4}
-              className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+              className="w-full px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-fm-neutral-700 mb-1">Tags (comma-separated)</label>
+            <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Tags (comma-separated)</label>
             <input
               type="text"
               value={(project.tags || []).join(', ')}
               onChange={(e) => updateField('tags', e.target.value.split(',').map(t => t.trim()).filter(Boolean))}
-              className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
+              className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
               placeholder="e.g. urgent, redesign, phase-2"
             />
           </div>

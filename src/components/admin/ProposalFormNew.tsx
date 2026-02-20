@@ -383,7 +383,7 @@ export function ProposalFormNew({ initialProposal, onSaveSuccess }: ProposalForm
                 <div className="flex items-center space-x-4">
                   <div>
                     <div className="flex items-center space-x-2">
-                      <label className="text-sm font-medium text-fm-neutral-700">Proposal #</label>
+                      <label className="text-sm font-medium text-fm-neutral-900">Proposal #</label>
                       <input
                         type="text"
                         value={proposal.proposalNumber}
@@ -434,27 +434,27 @@ export function ProposalFormNew({ initialProposal, onSaveSuccess }: ProposalForm
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
+                <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">
                   Proposal Title
                 </label>
                 <input
                   type="text"
                   value={proposal.title}
                   onChange={(e) => setProposal(prev => ({ ...prev, title: e.target.value }))}
-                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
+                  className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
                   placeholder="Digital Marketing Strategy Proposal"
                 />
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
+                  <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">
                     Proposal Type
                   </label>
                   <select
                     value={proposal.proposalType}
                     onChange={(e) => setProposal(prev => ({ ...prev, proposalType: e.target.value as any }))}
-                    className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
+                    className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400 appearance-none"
                   >
                     <option value="retainer">Monthly Retainer</option>
                     <option value="project">One-time Project</option>
@@ -464,14 +464,14 @@ export function ProposalFormNew({ initialProposal, onSaveSuccess }: ProposalForm
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
+                  <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">
                     Valid Until
                   </label>
                   <input
                     type="date"
                     value={proposal.validUntil}
                     onChange={(e) => setProposal(prev => ({ ...prev, validUntil: e.target.value }))}
-                    className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
+                    className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
                   />
                 </div>
               </div>
@@ -494,13 +494,13 @@ export function ProposalFormNew({ initialProposal, onSaveSuccess }: ProposalForm
             <CardContent className="space-y-4">
               {proposal.client.isExisting ? (
                 <div>
-                  <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
+                  <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">
                     Select Existing Client
                   </label>
                   <select
                     value={proposal.client.clientId || ''}
                     onChange={(e) => selectClient(e.target.value)}
-                    className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
+                    className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400 appearance-none"
                   >
                     <option value="">Choose a client... ({clients.length} available)</option>
                     {clients.map(client => (
@@ -513,42 +513,42 @@ export function ProposalFormNew({ initialProposal, onSaveSuccess }: ProposalForm
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-fm-neutral-700 mb-2">Company Name</label>
+                    <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Company Name</label>
                     <input
                       type="text"
                       value={proposal.client.prospectInfo?.company || ''}
                       onChange={(e) => updateProspectInfo('company', e.target.value)}
-                      className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
+                      className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
                       placeholder="Company Name"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-fm-neutral-700 mb-2">Contact Name</label>
+                    <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Contact Name</label>
                     <input
                       type="text"
                       value={proposal.client.prospectInfo?.name || ''}
                       onChange={(e) => updateProspectInfo('name', e.target.value)}
-                      className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
+                      className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
                       placeholder="Contact Person"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-fm-neutral-700 mb-2">Email</label>
+                    <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Email</label>
                     <input
                       type="email"
                       value={proposal.client.prospectInfo?.email || ''}
                       onChange={(e) => updateProspectInfo('email', e.target.value)}
-                      className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
+                      className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
                       placeholder="email@company.com"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-fm-neutral-700 mb-2">Industry</label>
+                    <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Industry</label>
                     <input
                       type="text"
                       value={proposal.client.prospectInfo?.industry || ''}
                       onChange={(e) => updateProspectInfo('industry', e.target.value)}
-                      className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
+                      className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
                       placeholder="Technology, Healthcare, etc."
                     />
                   </div>
@@ -573,7 +573,7 @@ export function ProposalFormNew({ initialProposal, onSaveSuccess }: ProposalForm
                         e.target.value = '';
                       }
                     }}
-                    className="px-3 py-1 text-sm border border-fm-neutral-300 rounded-md focus:ring-2 focus:ring-fm-magenta-500"
+                    className="px-3 py-1 text-sm bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400 appearance-none"
                   >
                     <option value="">Add Service Package...</option>
                     {DIGITAL_MARKETING_PACKAGES.map(pkg => (
@@ -610,11 +610,11 @@ export function ProposalFormNew({ initialProposal, onSaveSuccess }: ProposalForm
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     {selected.package.variants && selected.package.variants.length > 0 && (
                       <div>
-                        <label className="block text-sm font-medium text-fm-neutral-700 mb-1">Variant</label>
+                        <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Variant</label>
                         <select
                           value={selected.variant || ''}
                           onChange={(e) => updateSelectedPackage(index, { variant: e.target.value || undefined })}
-                          className="w-full px-3 py-2 text-sm border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
+                          className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400 appearance-none"
                         >
                           <option value="">Standard</option>
                           {selected.package.variants.map(variant => (
@@ -626,30 +626,30 @@ export function ProposalFormNew({ initialProposal, onSaveSuccess }: ProposalForm
                       </div>
                     )}
                     <div>
-                      <label className="block text-sm font-medium text-fm-neutral-700 mb-1">Quantity</label>
+                      <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Quantity</label>
                       <input
                         type="number"
                         min="1"
                         value={selected.quantity}
                         onChange={(e) => updateSelectedPackage(index, { quantity: parseInt(e.target.value) || 1 })}
-                        className="w-full px-3 py-2 text-sm border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
+                        className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-fm-neutral-700 mb-1">Custom Price (Optional)</label>
+                      <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Custom Price (Optional)</label>
                       <input
                         type="number"
                         placeholder={`${selected.package.basePrice}`}
                         value={selected.customPrice || ''}
                         onChange={(e) => updateSelectedPackage(index, { customPrice: parseFloat(e.target.value) || undefined })}
-                        className="w-full px-3 py-2 text-sm border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
+                        className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
                       />
                     </div>
                   </div>
                   
                   {/* Deliverables */}
                   <div className="mt-3">
-                    <p className="text-sm font-medium text-fm-neutral-700 mb-2">Deliverables:</p>
+                    <p className="text-sm font-medium text-fm-neutral-900 mb-1.5">Deliverables:</p>
                     <ul className="text-sm text-fm-neutral-600 space-y-1">
                       {selected.package.deliverables.map((deliverable, i) => (
                         <li key={i} className="flex items-center">
@@ -703,11 +703,11 @@ export function ProposalFormNew({ initialProposal, onSaveSuccess }: ProposalForm
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-fm-neutral-700 mb-2">Client Size</label>
+                    <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Client Size</label>
                     <select
                       value={clientSizeMultiplier}
                       onChange={(e) => setClientSizeMultiplier(e.target.value)}
-                      className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
+                      className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400 appearance-none"
                     >
                       <option value="startup">Startup ({Math.round(PRICING_MODIFIERS.clientSize.startup * 100 - 100)}%)</option>
                       <option value="small">Small Business ({Math.round(PRICING_MODIFIERS.clientSize.small * 100 - 100)}%)</option>
@@ -717,11 +717,11 @@ export function ProposalFormNew({ initialProposal, onSaveSuccess }: ProposalForm
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-fm-neutral-700 mb-2">Timeline</label>
+                    <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Timeline</label>
                     <select
                       value={urgencyMultiplier}
                       onChange={(e) => setUrgencyMultiplier(e.target.value)}
-                      className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
+                      className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400 appearance-none"
                     >
                       <option value="standard">Standard Timeline</option>
                       <option value="priority">Priority (+{Math.round(PRICING_MODIFIERS.urgency.priority * 100 - 100)}%)</option>
@@ -730,11 +730,11 @@ export function ProposalFormNew({ initialProposal, onSaveSuccess }: ProposalForm
                   </div>
                   {proposal.proposalType === 'retainer' && (
                     <div>
-                      <label className="block text-sm font-medium text-fm-neutral-700 mb-2">Retainer Period</label>
+                      <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Retainer Period</label>
                       <select
                         value={retainerDuration}
                         onChange={(e) => setRetainerDuration(e.target.value)}
-                        className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
+                        className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400 appearance-none"
                       >
                         <option value="3-months">3 Months (-{Math.round(PRICING_MODIFIERS.retainerDiscount['3-months'] * 100)}%)</option>
                         <option value="6-months">6 Months (-{Math.round(PRICING_MODIFIERS.retainerDiscount['6-months'] * 100)}%)</option>
@@ -746,14 +746,14 @@ export function ProposalFormNew({ initialProposal, onSaveSuccess }: ProposalForm
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-fm-neutral-700 mb-2">Payment Terms</label>
+                  <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Payment Terms</label>
                   <select
                     value={proposal.investment.paymentTerms}
                     onChange={(e) => setProposal(prev => ({
                       ...prev,
                       investment: { ...prev.investment, paymentTerms: e.target.value as any }
                     }))}
-                    className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 max-w-md"
+                    className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400 appearance-none max-w-md"
                   >
                     <option value="50-50">50% Advance, 50% on Delivery</option>
                     <option value="monthly">Monthly Billing (Retainer)</option>

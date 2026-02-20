@@ -91,27 +91,27 @@ export function ProjectOverviewForm({ session, onUpdate }: ProjectOverviewFormPr
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
+              <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">
                 Project Name *
               </label>
               <input
                 type="text"
                 value={formData.projectName}
                 onChange={(e) => handleInputChange('projectName', e.target.value)}
-                className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
                 placeholder="Give your project a name"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
+              <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">
                 Project Type *
               </label>
               <select
                 value={formData.projectType}
                 onChange={(e) => handleInputChange('projectType', e.target.value)}
-                className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400 appearance-none"
                 required
               >
                 <option value="">Select project type</option>
@@ -122,14 +122,14 @@ export function ProjectOverviewForm({ session, onUpdate }: ProjectOverviewFormPr
             </div>
 
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
+              <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">
                 Project Description *
               </label>
               <textarea
                 value={formData.projectDescription}
                 onChange={(e) => handleInputChange('projectDescription', e.target.value)}
                 rows={4}
-                className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                className="w-full px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
                 placeholder="Provide a detailed description of what you want to achieve"
                 required
               />
@@ -164,7 +164,7 @@ export function ProjectOverviewForm({ session, onUpdate }: ProjectOverviewFormPr
                     type="text"
                     value={objective}
                     onChange={(e) => handleArrayUpdate('keyObjectives', index, e.target.value)}
-                    className="flex-1 px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                    className="flex-1 h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
                     placeholder={`Objective ${index + 1}`}
                   />
                   <Button
@@ -188,38 +188,38 @@ export function ProjectOverviewForm({ session, onUpdate }: ProjectOverviewFormPr
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
-              <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
+              <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">
                 Preferred Start Date
               </label>
               <input
                 type="date"
                 value={formData.timeline.startDate}
                 onChange={(e) => handleTimelineChange('startDate', e.target.value)}
-                className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
+              <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">
                 Desired Launch Date *
               </label>
               <input
                 type="date"
                 value={formData.timeline.desiredLaunch}
                 onChange={(e) => handleTimelineChange('desiredLaunch', e.target.value)}
-                className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
+              <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">
                 Timeline Flexibility *
               </label>
               <select
                 value={formData.timeline.flexibility}
                 onChange={(e) => handleTimelineChange('flexibility', e.target.value)}
-                className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400 appearance-none"
                 required
               >
                 {TIMELINE_FLEXIBILITY.map((option) => (
@@ -250,7 +250,7 @@ export function ProjectOverviewForm({ session, onUpdate }: ProjectOverviewFormPr
                   type="text"
                   value={item}
                   onChange={(e) => handleArrayUpdate('projectScope', index, e.target.value)}
-                  className="flex-1 px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                  className="flex-1 h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
                   placeholder="Describe what's included in scope"
                 />
                 <Button
@@ -290,7 +290,7 @@ export function ProjectOverviewForm({ session, onUpdate }: ProjectOverviewFormPr
                   type="text"
                   value={metric}
                   onChange={(e) => handleArrayUpdate('successMetrics', index, e.target.value)}
-                  className="flex-1 px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                  className="flex-1 h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
                   placeholder="How will you measure success?"
                 />
                 <Button
@@ -330,7 +330,7 @@ export function ProjectOverviewForm({ session, onUpdate }: ProjectOverviewFormPr
                   type="text"
                   value={constraint}
                   onChange={(e) => handleArrayUpdate('constraints', index, e.target.value)}
-                  className="flex-1 px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                  className="flex-1 h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
                   placeholder="Any limitations or constraints we should know about?"
                 />
                 <Button

@@ -47,40 +47,40 @@ export function NextStepsForm({ session, onUpdate }: NextStepsFormProps) {
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
+              <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">
                 Decision Makers <span className="text-xs text-fm-neutral-500">(comma-separated)</span>
               </label>
               <input
                 type="text"
                 value={formData.decisionMakers.join(', ')}
                 onChange={(e) => handleArrayChange('decisionMakers', e.target.value)}
-                className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
                 placeholder="Who will make final decisions?"
               />
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
+              <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">
                 Follow-up Date
               </label>
               <input
                 type="date"
                 value={formData.followUpDate}
                 onChange={(e) => handleInputChange('followUpDate', e.target.value)}
-                className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
               />
             </div>
           </div>
           
           <div className="mt-6">
-            <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
+            <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">
               Approval Process
             </label>
             <textarea
               value={formData.approvalProcess}
               onChange={(e) => handleInputChange('approvalProcess', e.target.value)}
               rows={3}
-              className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+              className="w-full px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
               placeholder="Describe the approval process for this project"
             />
           </div>
@@ -91,27 +91,27 @@ export function NextStepsForm({ session, onUpdate }: NextStepsFormProps) {
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
+              <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">
                 Risk Factors <span className="text-xs text-fm-neutral-500">(comma-separated)</span>
               </label>
               <textarea
                 value={formData.riskFactors.join(', ')}
                 onChange={(e) => handleArrayChange('riskFactors', e.target.value)}
                 rows={3}
-                className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                className="w-full px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
                 placeholder="What could potentially go wrong?"
               />
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
+              <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">
                 Success Factors <span className="text-xs text-fm-neutral-500">(comma-separated)</span>
               </label>
               <textarea
                 value={formData.successFactors.join(', ')}
                 onChange={(e) => handleArrayChange('successFactors', e.target.value)}
                 rows={3}
-                className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                className="w-full px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
                 placeholder="What will ensure project success?"
               />
             </div>

@@ -44,40 +44,40 @@ export function CompetitionMarketForm({ session, onUpdate }: CompetitionMarketFo
       <div className="bg-white rounded-xl border border-fm-neutral-200 p-6">
         <div className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
+            <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">
               Market Position
             </label>
             <textarea
               value={formData.marketPosition}
               onChange={(e) => handleInputChange('marketPosition', e.target.value)}
               rows={2}
-              className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+              className="w-full px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
               placeholder="Where do you position yourself in the market?"
             />
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
+            <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">
               Key Differentiators <span className="text-xs text-fm-neutral-500">(comma-separated)</span>
             </label>
             <textarea
               value={formData.differentiators.join(', ')}
               onChange={(e) => handleArrayChange('differentiators', e.target.value)}
               rows={2}
-              className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+              className="w-full px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
               placeholder="What sets you apart from competitors?"
             />
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
+            <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">
               Market Trends <span className="text-xs text-fm-neutral-500">(comma-separated)</span>
             </label>
             <textarea
               value={formData.marketTrends.join(', ')}
               onChange={(e) => handleArrayChange('marketTrends', e.target.value)}
               rows={2}
-              className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+              className="w-full px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
               placeholder="Current trends in your industry"
             />
           </div>

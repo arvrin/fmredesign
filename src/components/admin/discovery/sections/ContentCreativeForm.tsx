@@ -64,14 +64,14 @@ export function ContentCreativeForm({ session, onUpdate }: ContentCreativeFormPr
         <div className="bg-white rounded-xl border border-fm-neutral-200 p-6">
           <h3 className="text-lg font-semibold text-fm-neutral-900 mb-6">Brand Personality</h3>
           <div>
-            <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
+            <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">
               Brand Personality Traits <span className="text-xs text-fm-neutral-500">(comma-separated)</span>
             </label>
             <input
               type="text"
               value={formData.brandPersonality.join(', ')}
               onChange={(e) => handleArrayChange('brandPersonality', e.target.value)}
-              className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+              className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
               placeholder="e.g., Professional, Friendly, Innovative, Trustworthy"
             />
           </div>
@@ -80,14 +80,14 @@ export function ContentCreativeForm({ session, onUpdate }: ContentCreativeFormPr
         <div className="bg-white rounded-xl border border-fm-neutral-200 p-6">
           <h3 className="text-lg font-semibold text-fm-neutral-900 mb-6">Tone of Voice</h3>
           <div>
-            <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
+            <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">
               Primary Tone
             </label>
             <input
               type="text"
               value={formData.toneOfVoice.primary}
               onChange={(e) => handleToneChange('primary', e.target.value)}
-              className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+              className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
               placeholder="e.g., Conversational, Professional, Enthusiastic"
             />
           </div>
@@ -97,27 +97,27 @@ export function ContentCreativeForm({ session, onUpdate }: ContentCreativeFormPr
           <h3 className="text-lg font-semibold text-fm-neutral-900 mb-6">Visual Style</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
+              <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">
                 Color Preferences <span className="text-xs text-fm-neutral-500">(comma-separated)</span>
               </label>
               <input
                 type="text"
                 value={formData.visualStyle.colorPreferences.join(', ')}
                 onChange={(e) => handleVisualChange('colorPreferences', e.target.value)}
-                className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
                 placeholder="e.g., Blue, White, Modern, Minimalist"
               />
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
+              <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">
                 Design Inspiration <span className="text-xs text-fm-neutral-500">(comma-separated)</span>
               </label>
               <input
                 type="text"
                 value={formData.visualStyle.designInspiration.join(', ')}
                 onChange={(e) => handleVisualChange('designInspiration', e.target.value)}
-                className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
                 placeholder="Inspiration sources or reference websites"
               />
             </div>

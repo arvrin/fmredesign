@@ -162,7 +162,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
         {change && (
           <div className={cn(
             'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium',
-            'transition-all duration-300 hover:scale-105',
+            'transition-all duration-200 hover:scale-[1.02]',
             getChangeStyles()
           )}>
             {getTrendIcon()}

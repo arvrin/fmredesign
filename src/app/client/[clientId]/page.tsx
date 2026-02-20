@@ -27,6 +27,7 @@ import {
   CreditCard,
   CheckCircle2,
   Timer,
+  ChevronDown,
 } from 'lucide-react';
 import { AGENCY_SERVICES } from '@/lib/admin/types';
 import { useClientPortal } from '@/lib/client-portal/context';
@@ -113,6 +114,7 @@ export default function ClientDashboard() {
   const [contentItems, setContentItems] = useState<ContentItem[]>([]);
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [pageLoading, setPageLoading] = useState(true);
+  const [partnershipExpanded, setPartnershipExpanded] = useState(true);
 
   useEffect(() => {
     if (!clientId) return;
@@ -258,7 +260,7 @@ export default function ClientDashboard() {
         />
       </div>
 
-      {/* Partnership Details */}
+      {/* Partnership Details — Collapsible */}
       <Card variant="client" hover glow className="mb-8">
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -266,135 +268,172 @@ export default function ClientDashboard() {
               <IconBox>
                 <Handshake className="w-5 h-5" />
               </IconBox>
-              <CardTitle className="text-xl">Partnership Details</CardTitle>
+              <div>
+                <CardTitle className="text-xl">Partnership Details</CardTitle>
+                <CardDescription className="mt-0.5">Your engagement overview with FreakingMinds</CardDescription>
+              </div>
             </div>
-            {profile.contractDetails.isActive && (
-              <Badge variant="secondary" className="bg-green-50 text-green-700 border-green-200">
-                Active Partnership
-              </Badge>
-            )}
+            <div className="flex items-center space-x-3">
+              {profile.contractDetails.isActive && (
+                <Badge variant="secondary" className="bg-green-50 text-green-700 border-green-200">
+                  Active Partnership
+                </Badge>
+              )}
+              <button
+                onClick={() => setPartnershipExpanded(!partnershipExpanded)}
+                className="p-2 rounded-lg hover:bg-fm-neutral-100 transition-colors"
+                aria-label={partnershipExpanded ? 'Collapse details' : 'Expand details'}
+              >
+                <ChevronDown
+                  className={`w-5 h-5 text-fm-neutral-500 transition-transform duration-300 ${partnershipExpanded ? 'rotate-180' : ''}`}
+                />
+              </button>
+            </div>
           </div>
-          <CardDescription>Your engagement overview with FreakingMinds</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Left Column -- Key Info */}
-            <div className="space-y-4">
-              {/* Partner Since */}
-              <div className="flex items-center space-x-3">
-                <IconBox size="sm">
-                  <Timer className="w-4 h-4" />
-                </IconBox>
-                <div>
-                  <p className="text-sm text-fm-neutral-500">Partner Since</p>
-                  <p className="font-medium text-fm-neutral-900">{partnerDuration.text} <span className="text-fm-neutral-500 font-normal">(since {partnerDuration.exact})</span></p>
-                </div>
-              </div>
-
-              {/* Package Type */}
-              <div className="flex items-center space-x-3">
-                <IconBox size="sm">
-                  <Briefcase className="w-4 h-4" />
-                </IconBox>
-                <div>
-                  <p className="text-sm text-fm-neutral-500">Package Type</p>
-                  <p className="font-medium text-fm-neutral-900 capitalize">{profile.contractDetails.type.replace(/-/g, ' ')} Plan</p>
-                </div>
-              </div>
-
-              {/* Billing Cycle */}
-              <div className="flex items-center space-x-3">
-                <IconBox size="sm">
-                  <CreditCard className="w-4 h-4" />
-                </IconBox>
-                <div>
-                  <p className="text-sm text-fm-neutral-500">Billing Cycle</p>
-                  <p className="font-medium text-fm-neutral-900 capitalize">
-                    {profile.contractDetails.billingCycle.replace(/-/g, ' ')}
-                    {nextBilling && <span className="text-fm-neutral-500 font-normal"> — Next billing: {nextBilling}</span>}
-                  </p>
-                </div>
-              </div>
-
-              {/* Contract Value */}
-              <div className="flex items-center space-x-3">
-                <IconBox size="sm">
-                  <TrendingUp className="w-4 h-4" />
-                </IconBox>
-                <div>
-                  <p className="text-sm text-fm-neutral-500">Contract Value</p>
-                  <p className="font-medium text-fm-neutral-900">
-                    {new Intl.NumberFormat('en-IN', { style: 'currency', currency: profile.contractDetails.currency, minimumFractionDigits: 0 }).format(profile.contractDetails.value)}
-                    {profile.contractDetails.retainerAmount > 0 && (
-                      <span className="text-fm-neutral-500 font-normal">
-                        {' '}(Retainer: {new Intl.NumberFormat('en-IN', { style: 'currency', currency: profile.contractDetails.currency, minimumFractionDigits: 0 }).format(profile.contractDetails.retainerAmount)}/mo)
-                      </span>
-                    )}
-                  </p>
-                </div>
-              </div>
-
-              {/* Account Manager */}
-              <div className="flex items-center space-x-3">
-                <IconBox size="sm">
-                  <Users className="w-4 h-4" />
-                </IconBox>
-                <div>
-                  <p className="text-sm text-fm-neutral-500">Account Manager</p>
-                  <p className="font-medium text-fm-neutral-900">{profile.accountManager}</p>
-                </div>
+          {/* Key Info — Always Visible */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="flex items-center space-x-3">
+              <IconBox size="sm">
+                <Timer className="w-4 h-4" />
+              </IconBox>
+              <div>
+                <p className="text-xs text-fm-neutral-500">Partner Since</p>
+                <p className="font-medium text-fm-neutral-900 text-sm">{partnerDuration.text}</p>
               </div>
             </div>
 
-            {/* Right Column -- Services & Timeline */}
-            <div className="space-y-6">
-              {/* Services Subscribed */}
+            <div className="flex items-center space-x-3">
+              <IconBox size="sm">
+                <Briefcase className="w-4 h-4" />
+              </IconBox>
               <div>
-                <p className="text-sm text-fm-neutral-500 mb-3 font-medium">Services Subscribed</p>
-                {profile.contractDetails.services.length > 0 ? (
-                  <div className="space-y-2">
-                    {profile.contractDetails.services.map((serviceId) => (
-                      <div key={serviceId} className="flex items-center space-x-2">
-                        <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />
-                        <span className="text-sm text-fm-neutral-700">{getServiceName(serviceId)}</span>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-fm-neutral-400 italic">No specific services listed</p>
-                )}
+                <p className="text-xs text-fm-neutral-500">Package</p>
+                <p className="font-medium text-fm-neutral-900 text-sm capitalize">{profile.contractDetails.type.replace(/-/g, ' ')}</p>
               </div>
+            </div>
 
-              {/* Contract Timeline */}
+            <div className="flex items-center space-x-3">
+              <IconBox size="sm">
+                <CreditCard className="w-4 h-4" />
+              </IconBox>
               <div>
-                <p className="text-sm text-fm-neutral-500 mb-3 font-medium">Contract Period</p>
-                <div className="text-sm text-fm-neutral-700 mb-2">
-                  {new Date(profile.contractDetails.startDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-                  {' — '}
-                  {profile.contractDetails.endDate
-                    ? new Date(profile.contractDetails.endDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
-                    : 'Ongoing'
-                  }
-                </div>
-                {contractProgress !== null ? (
-                  <div className="space-y-1">
-                    <div className="w-full bg-fm-neutral-200 rounded-full h-2.5">
-                      <div
-                        className="bg-gradient-to-r from-fm-magenta-500 to-fm-magenta-600 h-2.5 rounded-full transition-all duration-500"
-                        style={{ width: `${contractProgress}%` }}
-                      />
+                <p className="text-xs text-fm-neutral-500">Billing</p>
+                <p className="font-medium text-fm-neutral-900 text-sm capitalize">{profile.contractDetails.billingCycle.replace(/-/g, ' ')}</p>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-3">
+              <IconBox size="sm">
+                <Users className="w-4 h-4" />
+              </IconBox>
+              <div>
+                <p className="text-xs text-fm-neutral-500">Account Manager</p>
+                <p className="font-medium text-fm-neutral-900 text-sm">{profile.accountManager}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Expanded Details — Collapsible */}
+          <div
+            className={`overflow-hidden transition-all duration-300 ease-in-out ${partnershipExpanded ? 'max-h-[600px] opacity-100 mt-6' : 'max-h-0 opacity-0 mt-0'}`}
+          >
+            <div className="border-t border-fm-neutral-100 pt-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Left — Detailed Financial Info */}
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-3">
+                    <IconBox size="sm">
+                      <TrendingUp className="w-4 h-4" />
+                    </IconBox>
+                    <div>
+                      <p className="text-sm text-fm-neutral-500">Contract Value</p>
+                      <p className="font-medium text-fm-neutral-900">
+                        {new Intl.NumberFormat('en-IN', { style: 'currency', currency: profile.contractDetails.currency, minimumFractionDigits: 0 }).format(profile.contractDetails.value)}
+                        {profile.contractDetails.retainerAmount > 0 && (
+                          <span className="text-fm-neutral-500 font-normal">
+                            {' '}(Retainer: {new Intl.NumberFormat('en-IN', { style: 'currency', currency: profile.contractDetails.currency, minimumFractionDigits: 0 }).format(profile.contractDetails.retainerAmount)}/mo)
+                          </span>
+                        )}
+                      </p>
                     </div>
-                    <p className="text-xs text-fm-neutral-500">{contractProgress}% elapsed</p>
                   </div>
-                ) : (
-                  <div className="flex items-center space-x-2">
-                    <span className="relative flex h-2.5 w-2.5">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
-                    </span>
-                    <span className="text-xs text-green-600 font-medium">Ongoing — No fixed end date</span>
+
+                  {nextBilling && (
+                    <div className="flex items-center space-x-3">
+                      <IconBox size="sm">
+                        <Calendar className="w-4 h-4" />
+                      </IconBox>
+                      <div>
+                        <p className="text-sm text-fm-neutral-500">Next Billing</p>
+                        <p className="font-medium text-fm-neutral-900">{nextBilling}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex items-center space-x-3">
+                    <IconBox size="sm">
+                      <Timer className="w-4 h-4" />
+                    </IconBox>
+                    <div>
+                      <p className="text-sm text-fm-neutral-500">Started</p>
+                      <p className="font-medium text-fm-neutral-900">{partnerDuration.exact}</p>
+                    </div>
                   </div>
-                )}
+                </div>
+
+                {/* Right — Services & Timeline */}
+                <div className="space-y-6">
+                  {/* Services Subscribed */}
+                  <div>
+                    <p className="text-sm text-fm-neutral-500 mb-3 font-medium">Services Subscribed</p>
+                    {profile.contractDetails.services.length > 0 ? (
+                      <div className="space-y-2">
+                        {profile.contractDetails.services.map((serviceId) => (
+                          <div key={serviceId} className="flex items-center space-x-2">
+                            <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />
+                            <span className="text-sm text-fm-neutral-700">{getServiceName(serviceId)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-fm-neutral-400 italic">No specific services listed</p>
+                    )}
+                  </div>
+
+                  {/* Contract Timeline */}
+                  <div>
+                    <p className="text-sm text-fm-neutral-500 mb-3 font-medium">Contract Period</p>
+                    <div className="text-sm text-fm-neutral-700 mb-2">
+                      {new Date(profile.contractDetails.startDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      {' — '}
+                      {profile.contractDetails.endDate
+                        ? new Date(profile.contractDetails.endDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+                        : 'Ongoing'
+                      }
+                    </div>
+                    {contractProgress !== null ? (
+                      <div className="space-y-1">
+                        <div className="w-full bg-fm-neutral-200 rounded-full h-2.5">
+                          <div
+                            className="bg-gradient-to-r from-fm-magenta-500 to-fm-magenta-600 h-2.5 rounded-full transition-all duration-500"
+                            style={{ width: `${contractProgress}%` }}
+                          />
+                        </div>
+                        <p className="text-xs text-fm-neutral-500">{contractProgress}% elapsed</p>
+                      </div>
+                    ) : (
+                      <div className="flex items-center space-x-2">
+                        <span className="relative flex h-2.5 w-2.5">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
+                        </span>
+                        <span className="text-xs text-green-600 font-medium">Ongoing — No fixed end date</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
