@@ -365,53 +365,52 @@ export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
   ];
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
+    <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
+      <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-4 sm:p-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3 sm:gap-4 min-w-0">
             <Button
               variant="ghost"
               onClick={onBack}
               icon={<ArrowLeft className="h-4 w-4" />}
+              className="shrink-0"
             >
-              Back
+              <span className="hidden sm:inline">Back</span>
             </Button>
-            <div className="flex items-center space-x-4">
-              <div className="w-16 h-16 bg-fm-magenta-100 rounded-xl flex items-center justify-center">
-                <span className="text-fm-magenta-700 font-bold text-2xl">
-                  {client.name.charAt(0)}
-                </span>
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-fm-neutral-900">{client.name}</h1>
-                <p className="text-fm-neutral-600">{(client as any).industry || 'Not specified'}</p>
-                <div className="flex items-center space-x-4 mt-2">
-                  <div className={`flex items-center space-x-2 px-3 py-1 rounded-full text-sm font-medium ${getHealthColor(client.health)}`}>
-                    {getHealthIcon(client.health)}
-                    <span className="capitalize">{client.health}</span>
-                  </div>
-                  <span className="px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 capitalize">
-                    {client.status}
-                  </span>
+            <div className="w-10 h-10 sm:w-16 sm:h-16 bg-fm-magenta-100 rounded-xl flex items-center justify-center shrink-0">
+              <span className="text-fm-magenta-700 font-bold text-lg sm:text-2xl">
+                {client.name.charAt(0)}
+              </span>
+            </div>
+            <div className="min-w-0">
+              <h1 className="text-lg sm:text-2xl font-bold text-fm-neutral-900 truncate">{client.name}</h1>
+              <p className="text-sm text-fm-neutral-600">{(client as any).industry || 'Not specified'}</p>
+              <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                <div className={`flex items-center gap-1.5 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs sm:text-sm font-medium ${getHealthColor(client.health)}`}>
+                  {getHealthIcon(client.health)}
+                  <span className="capitalize">{client.health}</span>
                 </div>
+                <span className="px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs sm:text-sm font-medium bg-green-100 text-green-800 capitalize">
+                  {client.status}
+                </span>
               </div>
             </div>
           </div>
-          
-          <div className="flex items-center space-x-3">
+
+          <div className="flex items-center gap-2 flex-wrap shrink-0">
             <Button variant="secondary" size="sm">
-              <MessageSquare className="h-4 w-4 mr-2" />
-              Message
+              <MessageSquare className="h-4 w-4" />
+              <span className="hidden sm:inline ml-2">Message</span>
             </Button>
             <Button variant="secondary" size="sm">
-              <Calendar className="h-4 w-4 mr-2" />
-              Schedule
+              <Calendar className="h-4 w-4" />
+              <span className="hidden sm:inline ml-2">Schedule</span>
             </Button>
             {!isEditing ? (
               <Button variant="secondary" size="sm" onClick={handleEditStart}>
-                <Edit className="h-4 w-4 mr-2" />
-                Edit
+                <Edit className="h-4 w-4" />
+                <span className="hidden sm:inline ml-2">Edit</span>
               </Button>
             ) : (
               <div className="flex gap-2">
@@ -431,38 +430,40 @@ export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
       </div>
 
       {/* Navigation Tabs */}
-      <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-1">
-        <div className="flex space-x-1">
+      <div className="relative bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-1">
+        <div className="flex gap-1 overflow-x-auto scrollbar-none">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
+                className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-lg transition-colors whitespace-nowrap shrink-0 text-xs sm:text-sm ${
                   activeTab === tab.id
                     ? 'bg-fm-magenta-700 text-white'
                     : 'text-fm-neutral-600 hover:text-fm-neutral-900 hover:bg-fm-neutral-50'
                 }`}
               >
-                <Icon className="h-4 w-4" />
+                <Icon className="h-4 w-4 shrink-0" />
                 <span className="font-medium">{tab.name}</span>
               </button>
             );
           })}
         </div>
+        {/* Right fade hint for scroll on mobile */}
+        <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white to-transparent pointer-events-none sm:hidden rounded-r-xl" />
       </div>
 
       {/* Tab Content */}
       <div className="space-y-6">
         {activeTab === 'overview' && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
             {/* Client Information */}
-            <div className="lg:col-span-2 space-y-6">
+            <div className="lg:col-span-2 space-y-4 sm:space-y-6">
               {/* Basic Info Card */}
-              <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-6">
+              <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-4 sm:p-6">
                 <h3 className="text-sm font-semibold text-fm-neutral-500 uppercase tracking-wider pb-2 border-b border-fm-neutral-100">Client Information</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                   <div className="space-y-4">
                     <div className="flex items-center space-x-3">
                       <Building className="h-5 w-5 text-fm-neutral-400" />
@@ -513,28 +514,28 @@ export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
               </div>
 
               {/* Contact Information - Editable */}
-              <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-6">
+              <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-4 sm:p-6">
                 <h3 className="text-sm font-semibold text-fm-neutral-500 uppercase tracking-wider pb-2 border-b border-fm-neutral-100">Primary Contact</h3>
-                
+
                 {!isEditing ? (
                   // Display mode
-                  <div className="flex items-center space-x-4">
-                    <div className="w-12 h-12 bg-fm-neutral-100 rounded-full flex items-center justify-center">
-                      <User className="h-6 w-6 text-fm-neutral-600" />
+                  <div className="flex items-center gap-3 sm:gap-4">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-fm-neutral-100 rounded-full flex items-center justify-center shrink-0">
+                      <User className="h-5 w-5 sm:h-6 sm:w-6 text-fm-neutral-600" />
                     </div>
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-fm-neutral-900">{client.name || 'N/A'}</h4>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-semibold text-fm-neutral-900 truncate">{client.name || 'N/A'}</h4>
                       <p className="text-sm text-fm-neutral-600">Primary Contact</p>
-                      <div className="flex items-center space-x-4 mt-2">
-                        <a href={`mailto:${client.primaryContact?.email}`} 
-                           className="flex items-center text-sm text-fm-neutral-600 hover:text-fm-magenta-700">
-                          <Mail className="h-4 w-4 mr-1" />
-                          {client.primaryContact?.email || 'N/A'}
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 mt-2">
+                        <a href={`mailto:${client.primaryContact?.email}`}
+                           className="flex items-center text-sm text-fm-neutral-600 hover:text-fm-magenta-700 truncate">
+                          <Mail className="h-4 w-4 mr-1 shrink-0" />
+                          <span className="truncate">{client.primaryContact?.email || 'N/A'}</span>
                         </a>
                         {client.primaryContact?.phone && (
-                          <a href={`tel:${client.primaryContact?.phone}`} 
+                          <a href={`tel:${client.primaryContact?.phone}`}
                              className="flex items-center text-sm text-fm-neutral-600 hover:text-fm-magenta-700">
-                            <Phone className="h-4 w-4 mr-1" />
+                            <Phone className="h-4 w-4 mr-1 shrink-0" />
                             {client.primaryContact?.phone}
                           </a>
                         )}
@@ -797,7 +798,7 @@ export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
 
               {/* Description */}
               {(client as any).description && (
-                <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-6">
+                <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-4 sm:p-6">
                   <h3 className="text-sm font-semibold text-fm-neutral-500 uppercase tracking-wider pb-2 border-b border-fm-neutral-100">About</h3>
                   <p className="text-fm-neutral-700 leading-relaxed">{(client as any).description}</p>
                 </div>
@@ -805,9 +806,9 @@ export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
             </div>
 
             {/* Sidebar */}
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               {/* Contract Overview */}
-              <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-6">
+              <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-4 sm:p-6">
                 <h3 className="text-sm font-semibold text-fm-neutral-500 uppercase tracking-wider pb-2 border-b border-fm-neutral-100">Contract Details</h3>
                 <div className="space-y-4">
                   <div>
@@ -840,7 +841,7 @@ export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
               </div>
 
               {/* Quick Stats */}
-              <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-6">
+              <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-4 sm:p-6">
                 <h3 className="text-sm font-semibold text-fm-neutral-500 uppercase tracking-wider pb-2 border-b border-fm-neutral-100">Quick Stats</h3>
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
@@ -870,7 +871,7 @@ export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
 
               {/* Tags */}
               {((client as any).tags && (client as any).tags.length > 0) && (
-                <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-6">
+                <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-4 sm:p-6">
                   <h3 className="text-sm font-semibold text-fm-neutral-500 uppercase tracking-wider pb-2 border-b border-fm-neutral-100">Tags</h3>
                   <div className="flex flex-wrap gap-2">
                     {((client as any).tags || []).map((tag: string, index: number) => (
@@ -890,9 +891,9 @@ export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
 
         {/* Campaigns Tab */}
         {activeTab === 'campaigns' && (
-          <div className="space-y-6">
-            <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-6">
-              <div className="flex items-center justify-between mb-6">
+          <div className="space-y-4 sm:space-y-6">
+            <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-4 sm:p-6">
+              <div className="flex items-center justify-between mb-4 sm:mb-6">
                 <h3 className="text-sm font-semibold text-fm-neutral-500 uppercase tracking-wider pb-2 border-b border-fm-neutral-100">Campaigns & Projects</h3>
                 <Button size="sm" icon={<Plus className="h-4 w-4" />}>
                   New Campaign
@@ -901,11 +902,11 @@ export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
               
               <div className="space-y-4">
                 {campaigns.map((campaign) => (
-                  <div key={campaign.id} className="border border-fm-neutral-200 rounded-lg p-4">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-3 mb-2">
-                          <h4 className="font-semibold text-fm-neutral-900">{campaign.name}</h4>
+                  <div key={campaign.id} className="border border-fm-neutral-200 rounded-lg p-3 sm:p-4">
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap mb-2">
+                          <h4 className="font-semibold text-fm-neutral-900 text-sm sm:text-base">{campaign.name}</h4>
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                             campaign.status === 'active' ? 'bg-green-100 text-green-800' :
                             campaign.status === 'completed' ? 'bg-blue-100 text-blue-800' :
@@ -955,7 +956,7 @@ export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
                         </div>
                       </div>
                       
-                      <div className="flex items-center space-x-2 ml-4">
+                      <div className="flex items-center gap-2 shrink-0">
                         <Button size="sm" variant="secondary">
                           <Eye className="h-4 w-4" />
                         </Button>
@@ -981,12 +982,12 @@ export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
 
         {/* Analytics Tab */}
         {activeTab === 'analytics' && analytics && (
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
               {/* Social Media Metrics */}
-              <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h4 className="font-semibold text-fm-neutral-900">Followers</h4>
+              <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-3 sm:p-6">
+                <div className="flex items-center justify-between mb-2 sm:mb-4">
+                  <h4 className="font-semibold text-fm-neutral-900 text-sm sm:text-base">Followers</h4>
                   <TrendingUp className="h-5 w-5 text-green-600" />
                 </div>
                 <p className="text-2xl font-bold text-fm-neutral-900">
@@ -997,49 +998,49 @@ export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
                 </p>
               </div>
 
-              <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h4 className="font-semibold text-fm-neutral-900">Engagement</h4>
-                  <Activity className="h-5 w-5 text-blue-600" />
+              <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-3 sm:p-6">
+                <div className="flex items-center justify-between mb-2 sm:mb-4">
+                  <h4 className="font-semibold text-fm-neutral-900 text-sm sm:text-base">Engagement</h4>
+                  <Activity className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
                 </div>
-                <p className="text-2xl font-bold text-fm-neutral-900">
+                <p className="text-xl sm:text-2xl font-bold text-fm-neutral-900">
                   {analytics.socialMedia.engagement.current}%
                 </p>
-                <p className="text-sm text-green-600">
-                  +{analytics.socialMedia.engagement.changePercent}% from last period
+                <p className="text-xs sm:text-sm text-green-600">
+                  +{analytics.socialMedia.engagement.changePercent}%
                 </p>
               </div>
 
-              <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h4 className="font-semibold text-fm-neutral-900">Website Traffic</h4>
-                  <BarChart3 className="h-5 w-5 text-purple-600" />
+              <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-3 sm:p-6">
+                <div className="flex items-center justify-between mb-2 sm:mb-4">
+                  <h4 className="font-semibold text-fm-neutral-900 text-sm sm:text-base">Traffic</h4>
+                  <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600" />
                 </div>
-                <p className="text-2xl font-bold text-fm-neutral-900">
+                <p className="text-xl sm:text-2xl font-bold text-fm-neutral-900">
                   {analytics.website.traffic.current.toLocaleString()}
                 </p>
-                <p className="text-sm text-green-600">
-                  +{analytics.website.traffic.changePercent}% from last period
+                <p className="text-xs sm:text-sm text-green-600">
+                  +{analytics.website.traffic.changePercent}%
                 </p>
               </div>
 
-              <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h4 className="font-semibold text-fm-neutral-900">ROAS</h4>
-                  <DollarSign className="h-5 w-5 text-green-600" />
+              <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-3 sm:p-6">
+                <div className="flex items-center justify-between mb-2 sm:mb-4">
+                  <h4 className="font-semibold text-fm-neutral-900 text-sm sm:text-base">ROAS</h4>
+                  <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
                 </div>
-                <p className="text-2xl font-bold text-fm-neutral-900">
+                <p className="text-xl sm:text-2xl font-bold text-fm-neutral-900">
                   {analytics.paidAds.roas.current}x
                 </p>
-                <p className="text-sm text-green-600">
-                  +{analytics.paidAds.roas.changePercent}% from last period
+                <p className="text-xs sm:text-sm text-green-600">
+                  +{analytics.paidAds.roas.changePercent}%
                 </p>
               </div>
             </div>
 
             {/* Detailed Analytics */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+              <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-4 sm:p-6">
                 <h4 className="font-semibold text-fm-neutral-900 mb-4">Social Media Performance</h4>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
@@ -1057,7 +1058,7 @@ export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
                 </div>
               </div>
 
-              <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-6">
+              <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-4 sm:p-6">
                 <h4 className="font-semibold text-fm-neutral-900 mb-4">Paid Advertising</h4>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
@@ -1086,18 +1087,19 @@ export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
 
         {/* Communication Tab */}
         {activeTab === 'communication' && (
-          <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-6">
-            <div className="flex items-center justify-between mb-6">
+          <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-4 sm:p-6">
+            <div className="flex items-center justify-between mb-4 sm:mb-6">
               <h3 className="text-sm font-semibold text-fm-neutral-500 uppercase tracking-wider pb-2 border-b border-fm-neutral-100">Communication Hub</h3>
               <Button size="sm" icon={<Plus className="h-4 w-4" />}>
-                New Message
+                <span className="hidden sm:inline">New Message</span>
+                <span className="sm:hidden">New</span>
               </Button>
             </div>
-            
-            <div className="text-center py-12">
-              <MessageSquare className="h-12 w-12 text-fm-neutral-400 mx-auto mb-4" />
+
+            <div className="text-center py-8 sm:py-12">
+              <MessageSquare className="h-10 w-10 sm:h-12 sm:w-12 text-fm-neutral-400 mx-auto mb-4" />
               <h4 className="font-semibold text-fm-neutral-900 mb-2">Communication Center</h4>
-              <p className="text-fm-neutral-600">
+              <p className="text-sm sm:text-base text-fm-neutral-600">
                 Message center, meeting notes, and collaboration tools will be available here
               </p>
             </div>
@@ -1106,18 +1108,19 @@ export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
 
         {/* Files Tab */}
         {activeTab === 'files' && (
-          <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-6">
-            <div className="flex items-center justify-between mb-6">
+          <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-4 sm:p-6">
+            <div className="flex items-center justify-between mb-4 sm:mb-6">
               <h3 className="text-sm font-semibold text-fm-neutral-500 uppercase tracking-wider pb-2 border-b border-fm-neutral-100">Files & Assets</h3>
               <Button size="sm" icon={<Upload className="h-4 w-4" />}>
-                Upload Files
+                <span className="hidden sm:inline">Upload Files</span>
+                <span className="sm:hidden">Upload</span>
               </Button>
             </div>
-            
-            <div className="text-center py-12">
-              <FileText className="h-12 w-12 text-fm-neutral-400 mx-auto mb-4" />
+
+            <div className="text-center py-8 sm:py-12">
+              <FileText className="h-10 w-10 sm:h-12 sm:w-12 text-fm-neutral-400 mx-auto mb-4" />
               <h4 className="font-semibold text-fm-neutral-900 mb-2">Document Library</h4>
-              <p className="text-fm-neutral-600">
+              <p className="text-sm sm:text-base text-fm-neutral-600">
                 Shared files, creative assets, and project documents will be managed here
               </p>
             </div>
