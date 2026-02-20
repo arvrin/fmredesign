@@ -6,12 +6,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { 
-  Plus, 
-  Search, 
-  Filter, 
-  Eye, 
-  Edit, 
+import {
+  Plus,
+  Search,
+  Filter,
+  Eye,
+  Edit,
   Copy,
   Trash2,
   FileText,
@@ -24,7 +24,7 @@ import {
   Send,
   BarChart3
 } from 'lucide-react';
-import { 
+import {
   DashboardCard as Card,
   CardContent,
   CardDescription,
@@ -33,6 +33,11 @@ import {
   DashboardButton as Button,
   MetricCard
 } from '@/design-system';
+import { PageHeader } from '@/components/ui/page-header';
+import { StatusBadge } from '@/components/ui/status-badge';
+import { EmptyState } from '@/components/ui/empty-state';
+import { Input } from '@/components/ui/Input';
+import { Select } from '@/components/ui/select-native';
 import { Badge } from '@/components/ui/Badge';
 import { Proposal } from '@/lib/admin/proposal-types';
 import { adminToast } from '@/lib/admin/toast';
@@ -177,47 +182,20 @@ export function ProposalDashboard({ onCreateNew, onEditProposal }: ProposalDashb
     }
   };
 
-  const getStatusBadgeVariant = (status: Proposal['status']) => {
-    switch (status) {
-      case 'draft': return 'secondary';
-      case 'sent': return 'outline';
-      case 'viewed': return 'default';
-      case 'approved': return 'success';
-      case 'declined': return 'destructive';
-      case 'expired': return 'secondary';
-      case 'converted': return 'success';
-      default: return 'secondary';
-    }
-  };
-
-  const getStatusIcon = (status: Proposal['status']) => {
-    switch (status) {
-      case 'draft': return <Edit className="w-3 h-3" />;
-      case 'sent': return <Send className="w-3 h-3" />;
-      case 'viewed': return <Eye className="w-3 h-3" />;
-      case 'approved': return <CheckCircle className="w-3 h-3" />;
-      case 'declined': return <XCircle className="w-3 h-3" />;
-      case 'expired': return <Clock className="w-3 h-3" />;
-      case 'converted': return <TrendingUp className="w-3 h-3" />;
-      default: return <FileText className="w-3 h-3" />;
-    }
-  };
-
   const formatCurrency = (amount: number) => `₹${amount.toLocaleString('en-IN')}`;
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-fm-neutral-900">Proposal Dashboard</h1>
-          <p className="text-fm-neutral-600">Manage and track your client proposals</p>
-        </div>
-        <Button variant="admin" onClick={onCreateNew}>
-          <Plus className="w-4 h-4 mr-2" />
-          New Proposal
-        </Button>
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        title="Proposal Dashboard"
+        description="Manage and track your client proposals"
+        actions={
+          <Button variant="admin" onClick={onCreateNew}>
+            <Plus className="w-4 h-4 mr-2" />
+            New Proposal
+          </Button>
+        }
+      />
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -259,22 +237,21 @@ export function ProposalDashboard({ onCreateNew, onEditProposal }: ProposalDashb
             <div className="flex-1">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-fm-neutral-400" />
-                <input
+                <Input
                   type="text"
                   placeholder="Search proposals..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 pr-4 py-2 w-full border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
+                  className="pl-10"
                 />
               </div>
             </div>
 
             {/* Status Filter */}
             <div className="sm:w-48">
-              <select
+              <Select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
               >
                 <option value="all">All Status</option>
                 <option value="draft">Draft</option>
@@ -284,15 +261,14 @@ export function ProposalDashboard({ onCreateNew, onEditProposal }: ProposalDashb
                 <option value="declined">Declined</option>
                 <option value="expired">Expired</option>
                 <option value="converted">Converted</option>
-              </select>
+              </Select>
             </div>
 
             {/* Type Filter */}
             <div className="sm:w-48">
-              <select
+              <Select
                 value={typeFilter}
                 onChange={(e) => setTypeFilter(e.target.value)}
-                className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500"
               >
                 <option value="all">All Types</option>
                 <option value="retainer">Retainer</option>
@@ -300,7 +276,7 @@ export function ProposalDashboard({ onCreateNew, onEditProposal }: ProposalDashb
                 <option value="audit">Audit</option>
                 <option value="consultation">Consultation</option>
                 <option value="hybrid">Hybrid</option>
-              </select>
+              </Select>
             </div>
           </div>
         </CardContent>
@@ -309,26 +285,21 @@ export function ProposalDashboard({ onCreateNew, onEditProposal }: ProposalDashb
       {/* Proposals List */}
       <div className="space-y-4">
         {filteredProposals.length === 0 ? (
-          <Card variant="admin">
-            <CardContent className="p-8 text-center">
-              <FileText className="w-16 h-16 mx-auto mb-4 text-fm-neutral-300" />
-              <h3 className="text-lg font-semibold text-fm-neutral-900 mb-2">
-                {proposals.length === 0 ? 'No proposals yet' : 'No proposals match your filters'}
-              </h3>
-              <p className="text-fm-neutral-600 mb-4">
-                {proposals.length === 0 
-                  ? 'Create your first proposal to get started'
-                  : 'Try adjusting your search or filter criteria'
-                }
-              </p>
-              {proposals.length === 0 && (
-                <Button variant="admin" onClick={onCreateNew}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create First Proposal
-                </Button>
-              )}
-            </CardContent>
-          </Card>
+          <EmptyState
+            icon={<FileText className="w-6 h-6" />}
+            title={proposals.length === 0 ? 'No proposals yet' : 'No proposals match your filters'}
+            description={
+              proposals.length === 0
+                ? 'Create your first proposal to get started'
+                : 'Try adjusting your search or filter criteria'
+            }
+            action={proposals.length === 0 ? (
+              <Button variant="admin" onClick={onCreateNew}>
+                <Plus className="w-4 h-4 mr-2" />
+                Create First Proposal
+              </Button>
+            ) : undefined}
+          />
         ) : (
           filteredProposals.map((proposal) => (
             <Card key={proposal.id} variant="admin" className="hover:shadow-lg transition-shadow">
@@ -339,13 +310,7 @@ export function ProposalDashboard({ onCreateNew, onEditProposal }: ProposalDashb
                       <h3 className="text-lg font-semibold text-fm-neutral-900">
                         {proposal.title}
                       </h3>
-                      <Badge 
-                        variant={getStatusBadgeVariant(proposal.status)}
-                        className="flex items-center gap-1"
-                      >
-                        {getStatusIcon(proposal.status)}
-                        {proposal.status}
-                      </Badge>
+                      <StatusBadge status={proposal.status} />
                       <Badge variant="outline">
                         {proposal.proposalType}
                       </Badge>
@@ -374,8 +339,8 @@ export function ProposalDashboard({ onCreateNew, onEditProposal }: ProposalDashb
 
                     <div className="text-sm text-fm-neutral-700">
                       <span className="font-medium">Client: </span>
-                      {proposal.client.prospectInfo?.company || 
-                       proposal.client.prospectInfo?.name || 
+                      {proposal.client.prospectInfo?.company ||
+                       proposal.client.prospectInfo?.name ||
                        'Existing Client'}
                       {proposal.client.prospectInfo?.email && (
                         <span className="text-fm-neutral-500 ml-2">
@@ -422,7 +387,7 @@ export function ProposalDashboard({ onCreateNew, onEditProposal }: ProposalDashb
                     >
                       <Copy className="w-4 h-4" />
                     </Button>
-                    
+
                     {proposal.status === 'draft' && (
                       <Button
                         variant="ghost"
@@ -434,7 +399,7 @@ export function ProposalDashboard({ onCreateNew, onEditProposal }: ProposalDashb
                         <Send className="w-4 h-4" />
                       </Button>
                     )}
-                    
+
                     {(proposal.status === 'sent' || proposal.status === 'viewed') && (
                       <div className="flex">
                         <Button
@@ -457,7 +422,7 @@ export function ProposalDashboard({ onCreateNew, onEditProposal }: ProposalDashb
                         </Button>
                       </div>
                     )}
-                    
+
                     <Button
                       variant="ghost"
                       size="sm"

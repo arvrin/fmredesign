@@ -31,14 +31,21 @@ import {
 } from 'lucide-react';
 import { adminToast } from '@/lib/admin/toast';
 import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
-import { 
-  DashboardButton, 
-  DashboardCard, 
-  CardContent, 
-  CardHeader, 
-  CardTitle, 
-  MetricCard 
+import {
+  DashboardButton,
+  DashboardCard,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  MetricCard,
+  MetricCardSkeleton
 } from '@/design-system';
+import { PageHeader } from '@/components/ui/page-header';
+import { StatusBadge } from '@/components/ui/status-badge';
+import { EmptyState } from '@/components/ui/empty-state';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Input } from '@/components/ui/Input';
+import { Select } from '@/components/ui/select-native';
 import type { ContentItem, ContentStatus, ContentType, Platform } from '@/lib/admin/project-types';
 import { ProjectUtils } from '@/lib/admin/project-types';
 
@@ -66,15 +73,15 @@ export default function ContentCalendarPage() {
           fetch('/api/content?sortBy=scheduledDate&sortDirection=asc'),
           fetch('/api/projects')
         ]);
-        
+
         const contentResult = await contentResponse.json();
         const projectsResult = await projectsResponse.json();
-        
+
         if (contentResult.success) {
           setContentItems(contentResult.data);
           setFilteredContent(contentResult.data);
         }
-        
+
         if (projectsResult.success) {
           setProjects(projectsResult.data);
         }
@@ -160,25 +167,6 @@ export default function ContentCalendarPage() {
     }
   };
 
-  const getStatusColor = (status: ContentStatus) => {
-    switch (status) {
-      case 'draft':
-        return 'bg-fm-neutral-100 text-fm-neutral-800';
-      case 'review':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'approved':
-        return 'bg-blue-100 text-blue-800';
-      case 'scheduled':
-        return 'bg-purple-100 text-purple-800';
-      case 'published':
-        return 'bg-green-100 text-green-800';
-      case 'revision_needed':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-fm-neutral-100 text-fm-neutral-800';
-    }
-  };
-
   const getTypeIcon = (type: ContentType) => {
     switch (type) {
       case 'video':
@@ -238,10 +226,10 @@ export default function ContentCalendarPage() {
     const now = new Date();
     const sevenDaysFromNow = new Date();
     sevenDaysFromNow.setDate(now.getDate() + 7);
-    
+
     return contentItems.filter(item => {
       const scheduleDate = new Date(item.scheduledDate);
-      return scheduleDate >= now && scheduleDate <= sevenDaysFromNow && 
+      return scheduleDate >= now && scheduleDate <= sevenDaysFromNow &&
              ['approved', 'scheduled'].includes(item.status);
     });
   };
@@ -252,24 +240,36 @@ export default function ContentCalendarPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-fm-neutral-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-fm-magenta-600 mx-auto mb-4"></div>
-          <p className="text-fm-neutral-600">Loading content calendar...</p>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-8 w-56" />
+          <div className="flex gap-3">
+            <Skeleton className="h-10 w-24" />
+            <Skeleton className="h-10 w-32" />
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          {[...Array(4)].map((_, i) => (
+            <MetricCardSkeleton key={i} />
+          ))}
+        </div>
+        <Skeleton className="h-16 rounded-xl" />
+        <div className="space-y-4">
+          {[...Array(3)].map((_, i) => (
+            <Skeleton key={i} className="h-48 rounded-xl" />
+          ))}
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-fm-neutral-50">
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-          <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-fm-magenta-600 to-fm-magenta-700 bg-clip-text text-transparent">Content Calendar</h1>
-            <p className="text-fm-neutral-600 font-medium">Plan, create, and schedule your content across all platforms</p>
-          </div>
+    <div className="space-y-6">
+      {/* Header */}
+      <PageHeader
+        title="Content Calendar"
+        description="Plan, create, and schedule your content across all platforms"
+        actions={
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1 bg-white border border-fm-neutral-200 rounded-lg p-1">
               <DashboardButton
@@ -291,263 +291,254 @@ export default function ContentCalendarPage() {
             </div>
             <DashboardButton
               variant="admin"
-              size="lg"
+              size="sm"
               onClick={() => router.push('/admin/content/new')}
             >
               <Plus className="h-4 w-4 mr-2" />
               New Content
             </DashboardButton>
           </div>
-        </div>
+        }
+      />
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <MetricCard
-            title="Total Content"
-            value={contentItems.length}
-            subtitle="All content pieces"
-            icon={<FileText className="w-6 h-6" />}
-            variant="admin"
-          />
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <MetricCard
+          title="Total Content"
+          value={contentItems.length}
+          subtitle="All content pieces"
+          icon={<FileText className="w-6 h-6" />}
+          variant="admin"
+        />
 
-          <MetricCard
-            title="Scheduled"
-            value={getContentByStatus('scheduled')}
-            subtitle="Ready to publish"
-            icon={<Clock className="w-6 h-6" />}
-            variant="admin"
-            change={{
-              value: Math.round((getContentByStatus('scheduled') / (contentItems.length || 1)) * 100),
-              type: 'neutral',
-              period: 'of total'
-            }}
-          />
+        <MetricCard
+          title="Scheduled"
+          value={getContentByStatus('scheduled')}
+          subtitle="Ready to publish"
+          icon={<Clock className="w-6 h-6" />}
+          variant="admin"
+          change={{
+            value: Math.round((getContentByStatus('scheduled') / (contentItems.length || 1)) * 100),
+            type: 'neutral',
+            period: 'of total'
+          }}
+        />
 
-          <MetricCard
-            title="Published"
-            value={getContentByStatus('published')}
-            subtitle="Live content"
-            icon={<CheckCircle className="w-6 h-6" />}
-            variant="admin"
-            change={{
-              value: Math.round((getContentByStatus('published') / (contentItems.length || 1)) * 100),
-              type: 'increase',
-              period: 'success rate'
-            }}
-          />
+        <MetricCard
+          title="Published"
+          value={getContentByStatus('published')}
+          subtitle="Live content"
+          icon={<CheckCircle className="w-6 h-6" />}
+          variant="admin"
+          change={{
+            value: Math.round((getContentByStatus('published') / (contentItems.length || 1)) * 100),
+            type: 'increase',
+            period: 'success rate'
+          }}
+        />
 
-          <MetricCard
-            title="This Week"
-            value={getUpcomingContent().length}
-            subtitle="Upcoming posts"
-            icon={<Calendar className="w-6 h-6" />}
-            variant="admin"
-          />
-        </div>
+        <MetricCard
+          title="This Week"
+          value={getUpcomingContent().length}
+          subtitle="Upcoming posts"
+          icon={<Calendar className="w-6 h-6" />}
+          variant="admin"
+        />
+      </div>
 
-        {/* Filters and Search */}
-        <DashboardCard variant="admin" className="p-6 mb-8">
-          <div className="flex flex-col lg:flex-row gap-4">
-            {/* Search */}
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-fm-neutral-400" />
-                <input
-                  type="text"
-                  placeholder="Search content..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-fm-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:border-transparent"
-                />
-              </div>
-            </div>
-
-            {/* Quick Filters */}
-            <div className="flex flex-wrap gap-2">
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value as ContentStatus | 'all')}
-                className="px-3 py-2 border border-fm-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-fm-magenta-700"
-              >
-                <option value="all">All Status</option>
-                <option value="draft">Draft</option>
-                <option value="review">Review</option>
-                <option value="approved">Approved</option>
-                <option value="scheduled">Scheduled</option>
-                <option value="published">Published</option>
-                <option value="revision_needed">Needs Revision</option>
-              </select>
-
-              <select
-                value={typeFilter}
-                onChange={(e) => setTypeFilter(e.target.value as ContentType | 'all')}
-                className="px-3 py-2 border border-fm-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-fm-magenta-700"
-              >
-                <option value="all">All Types</option>
-                <option value="post">Post</option>
-                <option value="story">Story</option>
-                <option value="reel">Reel</option>
-                <option value="carousel">Carousel</option>
-                <option value="video">Video</option>
-                <option value="article">Article</option>
-                <option value="ad">Ad</option>
-                <option value="email">Email</option>
-              </select>
-
-              <select
-                value={platformFilter}
-                onChange={(e) => setPlatformFilter(e.target.value as Platform | 'all')}
-                className="px-3 py-2 border border-fm-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-fm-magenta-700"
-              >
-                <option value="all">All Platforms</option>
-                <option value="instagram">Instagram</option>
-                <option value="facebook">Facebook</option>
-                <option value="linkedin">LinkedIn</option>
-                <option value="twitter">Twitter</option>
-                <option value="youtube">YouTube</option>
-                <option value="tiktok">TikTok</option>
-                <option value="website">Website</option>
-                <option value="email">Email</option>
-              </select>
-
-              <select
-                value={projectFilter}
-                onChange={(e) => setProjectFilter(e.target.value)}
-                className="px-3 py-2 border border-fm-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-fm-magenta-700"
-              >
-                <option value="all">All Projects</option>
-                {projects.map(project => (
-                  <option key={project.id} value={project.id}>{project.name}</option>
-                ))}
-              </select>
-            </div>
+      {/* Filters and Search */}
+      <DashboardCard variant="admin" className="p-6">
+        <div className="flex flex-col lg:flex-row gap-4">
+          {/* Search */}
+          <div className="flex-1">
+            <Input
+              placeholder="Search content..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              leftIcon={<Search className="w-4 h-4" />}
+            />
           </div>
-        </DashboardCard>
 
-        {/* Content List */}
-        <div className="space-y-4">
-          {filteredContent.length === 0 ? (
-            <div className="text-center py-12">
-              <Calendar className="mx-auto h-12 w-12 text-fm-neutral-400 mb-4" />
-              <h3 className="text-lg font-medium text-fm-neutral-900 mb-2">No content found</h3>
-              <p className="text-fm-neutral-600 mb-4">
-                {contentItems.length === 0 
-                  ? "Get started by creating your first content piece"
-                  : "Try adjusting your search or filter criteria"
-                }
-              </p>
-              {contentItems.length === 0 && (
-                <DashboardButton onClick={() => router.push('/admin/content/new')}>
+          {/* Quick Filters */}
+          <div className="flex flex-wrap gap-2">
+            <Select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as ContentStatus | 'all')}
+            >
+              <option value="all">All Status</option>
+              <option value="draft">Draft</option>
+              <option value="review">Review</option>
+              <option value="approved">Approved</option>
+              <option value="scheduled">Scheduled</option>
+              <option value="published">Published</option>
+              <option value="revision_needed">Needs Revision</option>
+            </Select>
+
+            <Select
+              value={typeFilter}
+              onChange={(e) => setTypeFilter(e.target.value as ContentType | 'all')}
+            >
+              <option value="all">All Types</option>
+              <option value="post">Post</option>
+              <option value="story">Story</option>
+              <option value="reel">Reel</option>
+              <option value="carousel">Carousel</option>
+              <option value="video">Video</option>
+              <option value="article">Article</option>
+              <option value="ad">Ad</option>
+              <option value="email">Email</option>
+            </Select>
+
+            <Select
+              value={platformFilter}
+              onChange={(e) => setPlatformFilter(e.target.value as Platform | 'all')}
+            >
+              <option value="all">All Platforms</option>
+              <option value="instagram">Instagram</option>
+              <option value="facebook">Facebook</option>
+              <option value="linkedin">LinkedIn</option>
+              <option value="twitter">Twitter</option>
+              <option value="youtube">YouTube</option>
+              <option value="tiktok">TikTok</option>
+              <option value="website">Website</option>
+              <option value="email">Email</option>
+            </Select>
+
+            <Select
+              value={projectFilter}
+              onChange={(e) => setProjectFilter(e.target.value)}
+            >
+              <option value="all">All Projects</option>
+              {projects.map(project => (
+                <option key={project.id} value={project.id}>{project.name}</option>
+              ))}
+            </Select>
+          </div>
+        </div>
+      </DashboardCard>
+
+      {/* Content List */}
+      <div className="space-y-4">
+        {filteredContent.length === 0 ? (
+          <EmptyState
+            icon={<Calendar className="w-6 h-6" />}
+            title="No content found"
+            description={
+              contentItems.length === 0
+                ? "Get started by creating your first content piece"
+                : "Try adjusting your search or filter criteria"
+            }
+            action={
+              contentItems.length === 0 ? (
+                <DashboardButton variant="admin" size="sm" onClick={() => router.push('/admin/content/new')}>
                   Create First Content
                 </DashboardButton>
-              )}
-            </div>
-          ) : (
-            filteredContent.map((content) => {
-              const project = projects.find(p => p.id === content.projectId);
-              return (
-                <div key={content.id} className="bg-white rounded-xl border border-fm-neutral-200 p-6 hover:shadow-lg transition-shadow">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        {getStatusIcon(content.status)}
-                        <div className="flex items-center gap-2">
-                          {getTypeIcon(content.type)}
-                          <h3 className="text-lg font-semibold text-fm-neutral-900">
-                            {content.title}
-                          </h3>
-                        </div>
-                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(content.status)}`}>
-                          {content.status.replace('_', ' ')}
-                        </span>
-                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${getPlatformColor(content.platform)}`}>
-                          {content.platform}
+              ) : undefined
+            }
+          />
+        ) : (
+          filteredContent.map((content) => {
+            const project = projects.find(p => p.id === content.projectId);
+            return (
+              <div key={content.id} className="bg-white rounded-xl border border-fm-neutral-200 p-6 hover:shadow-lg transition-shadow">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      {getStatusIcon(content.status)}
+                      <div className="flex items-center gap-2">
+                        {getTypeIcon(content.type)}
+                        <h3 className="text-lg font-semibold text-fm-neutral-900">
+                          {content.title}
+                        </h3>
+                      </div>
+                      <StatusBadge status={content.status} />
+                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${getPlatformColor(content.platform)}`}>
+                        {content.platform}
+                      </span>
+                    </div>
+
+                    <p className="text-fm-neutral-600 mb-4 line-clamp-2">{content.description}</p>
+
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
+                      <div>
+                        <span className="text-fm-neutral-500">Project:</span>
+                        <span className="ml-2 font-medium">{project?.name || 'N/A'}</span>
+                      </div>
+                      <div>
+                        <span className="text-fm-neutral-500">Scheduled:</span>
+                        <span className="ml-2 font-medium">
+                          {new Date(content.scheduledDate).toLocaleDateString()}
                         </span>
                       </div>
-                      
-                      <p className="text-fm-neutral-600 mb-4 line-clamp-2">{content.description}</p>
-                      
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
-                        <div>
-                          <span className="text-fm-neutral-500">Project:</span>
-                          <span className="ml-2 font-medium">{project?.name || 'N/A'}</span>
-                        </div>
-                        <div>
-                          <span className="text-fm-neutral-500">Scheduled:</span>
-                          <span className="ml-2 font-medium">
-                            {new Date(content.scheduledDate).toLocaleDateString()}
-                          </span>
-                        </div>
-                        <div>
-                          <span className="text-fm-neutral-500">Designer:</span>
-                          <span className="ml-2 font-medium">{content.assignedDesigner || 'Unassigned'}</span>
-                        </div>
-                        <div>
-                          <span className="text-fm-neutral-500">Writer:</span>
-                          <span className="ml-2 font-medium">{content.assignedWriter || 'Unassigned'}</span>
-                        </div>
+                      <div>
+                        <span className="text-fm-neutral-500">Designer:</span>
+                        <span className="ml-2 font-medium">{content.assignedDesigner || 'Unassigned'}</span>
                       </div>
-
-                      {/* Content preview */}
-                      {content.content && (
-                        <div className="bg-fm-neutral-50 rounded-lg p-3 mb-4">
-                          <p className="text-sm text-fm-neutral-700 line-clamp-2">{content.content}</p>
-                        </div>
-                      )}
-
-                      {/* Hashtags and Mentions */}
-                      <div className="flex flex-wrap gap-2">
-                        {content.hashtags.slice(0, 3).map((tag, index) => (
-                          <span key={index} className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-blue-50 text-blue-600 rounded-full">
-                            <Hash className="h-3 w-3" />
-                            {tag}
-                          </span>
-                        ))}
-                        {content.mentions.slice(0, 2).map((mention, index) => (
-                          <span key={index} className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-green-50 text-green-600 rounded-full">
-                            <AtSign className="h-3 w-3" />
-                            {mention}
-                          </span>
-                        ))}
-                        {(content.hashtags.length > 3 || content.mentions.length > 2) && (
-                          <span className="px-2 py-1 text-xs bg-fm-neutral-100 text-fm-neutral-600 rounded-full">
-                            +{(content.hashtags.length - 3) + (content.mentions.length - 2)} more
-                          </span>
-                        )}
+                      <div>
+                        <span className="text-fm-neutral-500">Writer:</span>
+                        <span className="ml-2 font-medium">{content.assignedWriter || 'Unassigned'}</span>
                       </div>
                     </div>
 
-                    {/* Actions */}
-                    <div className="flex items-center gap-2 ml-4">
-                      <DashboardButton
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => router.push(`/admin/content/${content.id}`)}
-                      >
-                        <Eye className="h-4 w-4" />
-                      </DashboardButton>
-                      <DashboardButton
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => router.push(`/admin/content/${content.id}/edit`)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </DashboardButton>
-                      <DashboardButton
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setDeleteConfirm(content.id)}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </DashboardButton>
+                    {/* Content preview */}
+                    {content.content && (
+                      <div className="bg-fm-neutral-50 rounded-lg p-3 mb-4">
+                        <p className="text-sm text-fm-neutral-700 line-clamp-2">{content.content}</p>
+                      </div>
+                    )}
+
+                    {/* Hashtags and Mentions */}
+                    <div className="flex flex-wrap gap-2">
+                      {content.hashtags.slice(0, 3).map((tag, index) => (
+                        <span key={index} className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-blue-50 text-blue-600 rounded-full">
+                          <Hash className="h-3 w-3" />
+                          {tag}
+                        </span>
+                      ))}
+                      {content.mentions.slice(0, 2).map((mention, index) => (
+                        <span key={index} className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-green-50 text-green-600 rounded-full">
+                          <AtSign className="h-3 w-3" />
+                          {mention}
+                        </span>
+                      ))}
+                      {(content.hashtags.length > 3 || content.mentions.length > 2) && (
+                        <span className="px-2 py-1 text-xs bg-fm-neutral-100 text-fm-neutral-600 rounded-full">
+                          +{(content.hashtags.length - 3) + (content.mentions.length - 2)} more
+                        </span>
+                      )}
                     </div>
                   </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-2 ml-4">
+                    <DashboardButton
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => router.push(`/admin/content/${content.id}`)}
+                    >
+                      <Eye className="h-4 w-4" />
+                    </DashboardButton>
+                    <DashboardButton
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => router.push(`/admin/content/${content.id}/edit`)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </DashboardButton>
+                    <DashboardButton
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setDeleteConfirm(content.id)}
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </DashboardButton>
+                  </div>
                 </div>
-              );
-            })
-          )}
-        </div>
+              </div>
+            );
+          })
+        )}
       </div>
 
       <ConfirmDialog

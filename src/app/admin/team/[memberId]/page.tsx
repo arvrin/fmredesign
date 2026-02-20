@@ -33,10 +33,14 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-  DashboardButton as Button,
+  DashboardButton,
   MetricCard
 } from '@/design-system';
 import { Badge } from '@/components/ui/Badge';
+import { PageHeader } from '@/components/ui/page-header';
+import { StatusBadge } from '@/components/ui/status-badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { EmptyState } from '@/components/ui/empty-state';
 import { TeamMember, TEAM_ROLES, TEAM_DEPARTMENTS } from '@/lib/admin/types';
 
 interface TeamMemberProfileProps {
@@ -89,16 +93,6 @@ export default function TeamMemberProfilePage({ params }: TeamMemberProfileProps
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active': return 'text-green-600 bg-green-100';
-      case 'inactive': return 'text-fm-neutral-600 bg-fm-neutral-100';
-      case 'on-leave': return 'text-yellow-600 bg-yellow-100';
-      case 'terminated': return 'text-red-600 bg-red-100';
-      default: return 'text-fm-neutral-600 bg-fm-neutral-100';
-    }
-  };
-
   const getWorkloadColor = (workload: number) => {
     if (workload >= 100) return 'text-red-600';
     if (workload >= 80) return 'text-orange-600';
@@ -117,77 +111,62 @@ export default function TeamMemberProfilePage({ params }: TeamMemberProfileProps
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-fm-magenta-600"></div>
+      <div className="space-y-6">
+        <Skeleton className="h-8 w-64" />
+        <Skeleton className="h-48 rounded-xl" />
+        <Skeleton className="h-64 rounded-xl" />
       </div>
     );
   }
 
   if (!member) {
     return (
-      <div className="max-w-4xl mx-auto text-center py-12">
-        <User className="w-16 h-16 text-fm-neutral-400 mx-auto mb-4" />
-        <h2 className="text-xl font-semibold text-fm-neutral-900 mb-2">Team Member Not Found</h2>
-        <p className="text-fm-neutral-600 mb-6">The requested team member could not be found.</p>
-        <Button onClick={() => router.push('/admin/team')}>
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Team
-        </Button>
+      <div className="space-y-6">
+        <EmptyState
+          icon={<User className="h-6 w-6" />}
+          title="Team Member Not Found"
+          description="The requested team member could not be found."
+          action={
+            <DashboardButton onClick={() => router.push('/admin/team')}>
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Team
+            </DashboardButton>
+          }
+        />
       </div>
     );
   }
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8">
-      {/* Header */}
-      <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-6">
-            <Button
+    <div className="space-y-6">
+      <PageHeader
+        title={member.name}
+        description={`${TEAM_ROLES[member.role]} - ${TEAM_DEPARTMENTS[member.department]}`}
+        actions={
+          <div className="flex items-center gap-3">
+            <DashboardButton
               variant="ghost"
               size="sm"
               onClick={() => router.push('/admin/team')}
-              className="flex items-center gap-2"
             >
-              <ArrowLeft className="w-4 h-4" />
+              <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Team
-            </Button>
-
-            {/* Member Avatar and Basic Info */}
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-full bg-fm-magenta-100 flex items-center justify-center text-fm-magenta-600 font-bold text-xl">
-                {member.name.split(' ').map(n => n[0]).join('').toUpperCase()}
-              </div>
-              <div>
-                <div className="flex items-center gap-3 mb-2">
-                  <h1 className="text-2xl font-bold text-fm-neutral-900">{member.name}</h1>
-                  <Badge className={getStatusColor(member.status)}>
-                    {member.status}
-                  </Badge>
-                  <Badge variant="outline">
-                    {member.type}
-                  </Badge>
-                </div>
-                <p className="text-lg text-fm-magenta-600 font-medium">
-                  {TEAM_ROLES[member.role]} - {TEAM_DEPARTMENTS[member.department]}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Button
+            </DashboardButton>
+            <StatusBadge status={member.status} />
+            <Badge variant="outline">
+              {member.type}
+            </Badge>
+            <DashboardButton
               variant="admin"
               size="sm"
               onClick={() => router.push(`/admin/team/${memberId}/edit`)}
-              className="flex items-center gap-2"
             >
-              <Edit3 className="w-4 h-4" />
+              <Edit3 className="w-4 h-4 mr-2" />
               Edit Profile
-            </Button>
+            </DashboardButton>
           </div>
-        </div>
-      </div>
+        }
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left Column - Main Info */}
@@ -323,17 +302,15 @@ export default function TeamMemberProfilePage({ params }: TeamMemberProfileProps
                         <h4 className="font-medium text-fm-neutral-900">{client.name}</h4>
                         <p className="text-sm text-fm-neutral-600">{client.industry}</p>
                       </div>
-                      <Badge variant="outline">
-                        {client.status}
-                      </Badge>
+                      <StatusBadge status={client.status} />
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-6">
-                  <Users className="w-12 h-12 text-fm-neutral-400 mx-auto mb-3" />
-                  <p className="text-fm-neutral-500">No clients assigned yet</p>
-                </div>
+                <EmptyState
+                  icon={<Users className="h-6 w-6" />}
+                  title="No clients assigned yet"
+                />
               )}
             </CardContent>
           </Card>
@@ -438,30 +415,30 @@ export default function TeamMemberProfilePage({ params }: TeamMemberProfileProps
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Button
+              <DashboardButton
                 variant="outline"
                 className="w-full justify-start"
                 onClick={() => router.push(`/admin/team/${memberId}/assignments`)}
               >
                 <Users className="w-4 h-4 mr-2" />
                 Manage Assignments
-              </Button>
-              <Button
+              </DashboardButton>
+              <DashboardButton
                 variant="outline"
                 className="w-full justify-start"
                 onClick={() => router.push(`/admin/team/${memberId}/performance`)}
               >
                 <TrendingUp className="w-4 h-4 mr-2" />
                 View Performance
-              </Button>
-              <Button
+              </DashboardButton>
+              <DashboardButton
                 variant="outline"
                 className="w-full justify-start"
                 onClick={() => router.push(`/admin/team/${memberId}/documents`)}
               >
                 <FileText className="w-4 h-4 mr-2" />
                 Manage Documents
-              </Button>
+              </DashboardButton>
             </CardContent>
           </Card>
         </div>

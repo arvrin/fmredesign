@@ -20,7 +20,7 @@ export default function ClientsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-fm-neutral-50 p-6">
+    <div className="space-y-6">
       {selectedClient ? (
         <ClientProfile
           clientId={selectedClient.id}

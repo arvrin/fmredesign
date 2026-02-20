@@ -7,7 +7,14 @@
 
 import { useState, useEffect } from 'react';
 import { TalentApplication, TalentProfile, TALENT_CATEGORIES, CURRENCIES } from '@/lib/admin/talent-types';
-import { Button } from '@/design-system/components/primitives/Button';
+import { DashboardButton } from '@/design-system';
+import { PageHeader } from '@/components/ui/page-header';
+import { StatusBadge } from '@/components/ui/status-badge';
+import { EmptyState } from '@/components/ui/empty-state';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Input } from '@/components/ui/Input';
+import { Select } from '@/components/ui/select-native';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { adminToast } from '@/lib/admin/toast';
 import {
   Users,
@@ -126,115 +133,97 @@ export default function CreativeMindsAdminPage() {
   });
 
   return (
-    <div className="min-h-screen bg-fm-neutral-50">
-      {/* Header */}
-      <div className="bg-white border-b border-fm-neutral-200">
-        <div className="max-w-7xl mx-auto px-6 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-fm-neutral-900">CreativeMinds Network</h1>
-              <p className="text-fm-neutral-600">Manage talent applications and network members</p>
+    <div className="space-y-6">
+      <PageHeader
+        title="CreativeMinds Network"
+        description="Manage talent applications and network members"
+        actions={
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 text-sm">
+              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+              <span>{talents.length} Active Talents</span>
             </div>
-
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2 text-sm">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span>{talents.length} Active Talents</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm">
-                <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                <span>{applications.filter((a) => a.status === 'submitted').length} Pending Reviews</span>
-              </div>
+            <div className="flex items-center gap-2 text-sm">
+              <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+              <span>{applications.filter((a) => a.status === 'submitted').length} Pending Reviews</span>
             </div>
           </div>
+        }
+      />
 
-          {/* Tab Navigation */}
-          <div className="flex border-b border-fm-neutral-200 mt-6">
-            <button
-              onClick={() => setActiveTab('applications')}
-              className={`px-6 py-3 text-sm font-medium border-b-2 ${
-                activeTab === 'applications'
-                  ? 'border-fm-magenta-500 text-fm-magenta-600'
-                  : 'border-transparent text-fm-neutral-600 hover:text-fm-neutral-900'
-              }`}
-            >
-              Applications ({applications.filter((a) => a.status === 'submitted').length})
-            </button>
-            <button
-              onClick={() => setActiveTab('talents')}
-              className={`px-6 py-3 text-sm font-medium border-b-2 ${
-                activeTab === 'talents'
-                  ? 'border-fm-magenta-500 text-fm-magenta-600'
-                  : 'border-transparent text-fm-neutral-600 hover:text-fm-neutral-900'
-              }`}
-            >
-              Network ({talents.length})
-            </button>
-            <button
-              onClick={() => setActiveTab('analytics')}
-              className={`px-6 py-3 text-sm font-medium border-b-2 ${
-                activeTab === 'analytics'
-                  ? 'border-fm-magenta-500 text-fm-magenta-600'
-                  : 'border-transparent text-fm-neutral-600 hover:text-fm-neutral-900'
-              }`}
-            >
-              Analytics
-            </button>
-          </div>
-        </div>
-      </div>
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as Tab)}>
+        <TabsList variant="line">
+          <TabsTrigger value="applications">
+            Applications ({applications.filter((a) => a.status === 'submitted').length})
+          </TabsTrigger>
+          <TabsTrigger value="talents">
+            Network ({talents.length})
+          </TabsTrigger>
+          <TabsTrigger value="analytics">
+            Analytics
+          </TabsTrigger>
+        </TabsList>
 
-      {/* Filters */}
-      <div className="max-w-7xl mx-auto px-6 py-4">
-        <div className="flex items-center gap-4">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-fm-neutral-400" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by name or email..."
-              className="pl-10 pr-4 py-2 w-full border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
-            />
-          </div>
+        <TabsContent value="applications">
+          {/* Filters */}
+          <div className="flex items-center gap-4 py-4">
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-fm-neutral-400" />
+              <Input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search by name or email..."
+                className="pl-10"
+              />
+            </div>
 
-          {activeTab === 'applications' && (
-            <select
+            <Select
               value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value)}
-              className="px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
             >
               <option value="all">All Status</option>
               <option value="submitted">Submitted</option>
               <option value="under_review">Under Review</option>
               <option value="approved">Approved</option>
               <option value="rejected">Rejected</option>
-            </select>
-          )}
-        </div>
-      </div>
+            </Select>
+          </div>
 
-      {/* Content */}
-      <div className="max-w-7xl mx-auto px-6 pb-12">
-        {activeTab === 'applications' && (
           <ApplicationsList
             applications={filteredApplications}
             isLoading={isLoading}
             onAction={handleApplicationAction}
           />
-        )}
+        </TabsContent>
 
-        {activeTab === 'talents' && <TalentsList talents={filteredTalents} isLoading={isLoading} />}
+        <TabsContent value="talents">
+          {/* Filters */}
+          <div className="flex items-center gap-4 py-4">
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-fm-neutral-400" />
+              <Input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search by name or email..."
+                className="pl-10"
+              />
+            </div>
+          </div>
 
-        {activeTab === 'analytics' && (
+          <TalentsList talents={filteredTalents} isLoading={isLoading} />
+        </TabsContent>
+
+        <TabsContent value="analytics">
           <AnalyticsView applications={applications} talents={talents} />
-        )}
-      </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
 
-/* ─── Helpers ─── */
+/* --- Helpers --- */
 
 function getCurrencySymbol(code?: string): string {
   return CURRENCIES.find((c) => c.code === code)?.symbol || '₹';
@@ -290,7 +279,7 @@ function PriceRange({
   );
 }
 
-/* ─── Applications ─── */
+/* --- Applications --- */
 
 function ApplicationsList({
   applications,
@@ -303,19 +292,35 @@ function ApplicationsList({
 }) {
   if (isLoading) {
     return (
-      <div className="text-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-fm-magenta-600 mx-auto mb-4"></div>
-        <p className="text-fm-neutral-600">Loading applications...</p>
+      <div className="space-y-4">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="bg-white rounded-xl border border-fm-neutral-200 p-6">
+            <div className="flex items-start gap-4">
+              <Skeleton className="h-10 w-10 rounded-full" />
+              <div className="flex-1 space-y-3">
+                <Skeleton className="h-5 w-48" />
+                <Skeleton className="h-4 w-64" />
+                <div className="grid grid-cols-4 gap-4">
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-full" />
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
     );
   }
 
   if (applications.length === 0) {
     return (
-      <div className="text-center py-12">
-        <Users className="h-12 w-12 mx-auto mb-4 text-fm-neutral-400" />
-        <p className="text-fm-neutral-600">No applications found</p>
-      </div>
+      <EmptyState
+        icon={<Users className="h-6 w-6" />}
+        title="No applications found"
+        description="There are no talent applications matching your current filters."
+      />
     );
   }
 
@@ -340,21 +345,6 @@ function ApplicationCard({
   const portfolioLinks = (application as any).portfolioLinks;
   const sym = getCurrencySymbol(application.preferences?.currency);
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'submitted':
-        return 'bg-blue-100 text-blue-800';
-      case 'under_review':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'approved':
-        return 'bg-green-100 text-green-800';
-      case 'rejected':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-fm-neutral-100 text-fm-neutral-800';
-    }
-  };
-
   return (
     <div className="bg-white rounded-xl border border-fm-neutral-200 shadow-sm">
       <div className="p-6">
@@ -370,13 +360,7 @@ function ApplicationCard({
                 </p>
               </div>
 
-              <span
-                className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                  application.status
-                )}`}
-              >
-                {application.status.replace('_', ' ')}
-              </span>
+              <StatusBadge status={application.status} />
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
@@ -450,26 +434,26 @@ function ApplicationCard({
           </div>
 
           <div className="flex items-center gap-2 flex-shrink-0 ml-4">
-            <Button
+            <DashboardButton
               variant="secondary"
               size="sm"
               onClick={() => setExpanded(!expanded)}
               icon={<Eye className="h-4 w-4" />}
             >
               {expanded ? 'Less' : 'View'}
-            </Button>
+            </DashboardButton>
 
             {application.status === 'submitted' && (
               <>
-                <Button
+                <DashboardButton
                   size="sm"
                   onClick={() => onAction(application.id, 'approve')}
                   icon={<CheckCircle className="h-4 w-4" />}
                   className="bg-green-600 hover:bg-green-700"
                 >
                   Approve
-                </Button>
-                <Button
+                </DashboardButton>
+                <DashboardButton
                   variant="secondary"
                   size="sm"
                   onClick={() => onAction(application.id, 'reject')}
@@ -477,7 +461,7 @@ function ApplicationCard({
                   className="text-red-600 border-red-300 hover:bg-red-50"
                 >
                   Reject
-                </Button>
+                </DashboardButton>
               </>
             )}
           </div>
@@ -683,14 +667,23 @@ function ApplicationCard({
   );
 }
 
-/* ─── Talents List ─── */
+/* --- Talents List --- */
 
 function TalentsList({ talents, isLoading }: { talents: TalentProfile[]; isLoading: boolean }) {
   if (isLoading) {
     return (
-      <div className="text-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-fm-magenta-600 mx-auto mb-4"></div>
-        <p className="text-fm-neutral-600">Loading talents...</p>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="bg-white rounded-xl border border-fm-neutral-200 p-6">
+            <div className="space-y-3">
+              <Skeleton className="h-5 w-32" />
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-full" />
+            </div>
+          </div>
+        ))}
       </div>
     );
   }
@@ -787,16 +780,16 @@ function TalentCard({ talent }: { talent: TalentProfile }) {
           {talent.preferences.minimumProjectValue.toLocaleString()}+
         </span>
         <a href={`/talent/${slug}`} target="_blank" rel="noopener noreferrer">
-          <Button size="sm" variant="secondary">
+          <DashboardButton size="sm" variant="secondary">
             View Profile
-          </Button>
+          </DashboardButton>
         </a>
       </div>
     </div>
   );
 }
 
-/* ─── Analytics ─── */
+/* --- Analytics --- */
 
 function AnalyticsView({
   applications,

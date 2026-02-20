@@ -21,8 +21,11 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-  DashboardButton as Button
+  DashboardButton
 } from '@/design-system';
+import { PageHeader } from '@/components/ui/page-header';
+import { Input } from '@/components/ui/Input';
+import { Select } from '@/components/ui/select-native';
 import {
   TeamMember,
   TeamRole,
@@ -128,32 +131,22 @@ export default function NewTeamMemberPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
-      {/* Header */}
-      <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => router.back()}
-              className="flex items-center gap-2"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Back to Team
-            </Button>
-            <div>
-              <h1 className="text-2xl font-bold text-fm-neutral-900 flex items-center gap-3">
-                <User className="w-8 h-8 text-fm-magenta-600" />
-                Add New Team Member
-              </h1>
-              <p className="text-sm text-fm-neutral-500 mt-1">
-                Create a new team member profile
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        title="Add New Team Member"
+        description="Create a new team member profile"
+        icon={<User className="w-6 h-6" />}
+        actions={
+          <DashboardButton
+            variant="outline"
+            size="sm"
+            onClick={() => router.back()}
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Team
+          </DashboardButton>
+        }
+      />
 
       {/* Error Display */}
       {errors.length > 0 && (
@@ -186,60 +179,40 @@ export default function NewTeamMemberPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
-                  Full Name *
-                </label>
-                <input
-                  type="text"
-                  value={formData.name || ''}
-                  onChange={(e) => handleInputChange('name', e.target.value)}
-                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
-                  placeholder="Enter full name"
-                  required
-                />
-              </div>
+              <Input
+                label="Full Name"
+                type="text"
+                value={formData.name || ''}
+                onChange={(e) => handleInputChange('name', e.target.value)}
+                placeholder="Enter full name"
+                required
+              />
 
-              <div>
-                <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
-                  Email Address *
-                </label>
-                <input
-                  type="email"
-                  value={formData.email || ''}
-                  onChange={(e) => handleInputChange('email', e.target.value)}
-                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
-                  placeholder="Enter email address"
-                  required
-                />
-              </div>
+              <Input
+                label="Email Address"
+                type="email"
+                value={formData.email || ''}
+                onChange={(e) => handleInputChange('email', e.target.value)}
+                placeholder="Enter email address"
+                required
+              />
 
-              <div>
-                <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
-                  Phone Number *
-                </label>
-                <input
-                  type="tel"
-                  value={formData.phone || ''}
-                  onChange={(e) => handleInputChange('phone', e.target.value)}
-                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
-                  placeholder="Enter phone number"
-                  required
-                />
-              </div>
+              <Input
+                label="Phone Number"
+                type="tel"
+                value={formData.phone || ''}
+                onChange={(e) => handleInputChange('phone', e.target.value)}
+                placeholder="Enter phone number"
+                required
+              />
 
-              <div>
-                <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
-                  Start Date *
-                </label>
-                <input
-                  type="date"
-                  value={formData.startDate || new Date().toISOString().split('T')[0]}
-                  onChange={(e) => handleInputChange('startDate', e.target.value)}
-                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
-                  required
-                />
-              </div>
+              <Input
+                label="Start Date"
+                type="date"
+                value={formData.startDate || new Date().toISOString().split('T')[0]}
+                onChange={(e) => handleInputChange('startDate', e.target.value)}
+                required
+              />
             </div>
           </CardContent>
         </Card>
@@ -254,72 +227,52 @@ export default function NewTeamMemberPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
-                  Employment Type *
-                </label>
-                <select
-                  value={formData.type || 'employee'}
-                  onChange={(e) => handleInputChange('type', e.target.value)}
-                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
-                  required
-                >
-                  <option value="employee">Employee</option>
-                  <option value="freelancer">Freelancer</option>
-                  <option value="contractor">Contractor</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
-                  Department *
-                </label>
-                <select
-                  value={formData.department || 'creative'}
-                  onChange={(e) => handleInputChange('department', e.target.value as TeamDepartment)}
-                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
-                  required
-                >
-                  {Object.entries(TEAM_DEPARTMENTS).map(([key, value]) => (
-                    <option key={key} value={key}>{value}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
-                  Seniority Level *
-                </label>
-                <select
-                  value={formData.seniority || 'junior'}
-                  onChange={(e) => handleInputChange('seniority', e.target.value)}
-                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
-                  required
-                >
-                  <option value="junior">Junior</option>
-                  <option value="mid">Mid-level</option>
-                  <option value="senior">Senior</option>
-                  <option value="lead">Lead</option>
-                  <option value="director">Director</option>
-                </select>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
-                Job Role *
-              </label>
-              <select
-                value={formData.role || 'content-writer'}
-                onChange={(e) => handleInputChange('role', e.target.value as TeamRole)}
-                className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+              <Select
+                label="Employment Type"
+                value={formData.type || 'employee'}
+                onChange={(e) => handleInputChange('type', e.target.value)}
                 required
               >
-                {Object.entries(TEAM_ROLES).map(([key, value]) => (
+                <option value="employee">Employee</option>
+                <option value="freelancer">Freelancer</option>
+                <option value="contractor">Contractor</option>
+              </Select>
+
+              <Select
+                label="Department"
+                value={formData.department || 'creative'}
+                onChange={(e) => handleInputChange('department', e.target.value as TeamDepartment)}
+                required
+              >
+                {Object.entries(TEAM_DEPARTMENTS).map(([key, value]) => (
                   <option key={key} value={key}>{value}</option>
                 ))}
-              </select>
+              </Select>
+
+              <Select
+                label="Seniority Level"
+                value={formData.seniority || 'junior'}
+                onChange={(e) => handleInputChange('seniority', e.target.value)}
+                required
+              >
+                <option value="junior">Junior</option>
+                <option value="mid">Mid-level</option>
+                <option value="senior">Senior</option>
+                <option value="lead">Lead</option>
+                <option value="director">Director</option>
+              </Select>
             </div>
+
+            <Select
+              label="Job Role"
+              value={formData.role || 'content-writer'}
+              onChange={(e) => handleInputChange('role', e.target.value as TeamRole)}
+              required
+            >
+              {Object.entries(TEAM_ROLES).map(([key, value]) => (
+                <option key={key} value={key}>{value}</option>
+              ))}
+            </Select>
           </CardContent>
         </Card>
 
@@ -333,53 +286,38 @@ export default function NewTeamMemberPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
-                  Work Type *
-                </label>
-                <select
-                  value={formData.workType || 'full-time'}
-                  onChange={(e) => handleInputChange('workType', e.target.value)}
-                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
-                  required
-                >
-                  <option value="full-time">Full-time</option>
-                  <option value="part-time">Part-time</option>
-                  <option value="contract">Contract</option>
-                  <option value="freelance">Freelance</option>
-                </select>
-              </div>
+              <Select
+                label="Work Type"
+                value={formData.workType || 'full-time'}
+                onChange={(e) => handleInputChange('workType', e.target.value)}
+                required
+              >
+                <option value="full-time">Full-time</option>
+                <option value="part-time">Part-time</option>
+                <option value="contract">Contract</option>
+                <option value="freelance">Freelance</option>
+              </Select>
 
-              <div>
-                <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
-                  Location *
-                </label>
-                <select
-                  value={formData.location || 'office'}
-                  onChange={(e) => handleInputChange('location', e.target.value)}
-                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
-                  required
-                >
-                  <option value="office">Office</option>
-                  <option value="remote">Remote</option>
-                  <option value="hybrid">Hybrid</option>
-                </select>
-              </div>
+              <Select
+                label="Location"
+                value={formData.location || 'office'}
+                onChange={(e) => handleInputChange('location', e.target.value)}
+                required
+              >
+                <option value="office">Office</option>
+                <option value="remote">Remote</option>
+                <option value="hybrid">Hybrid</option>
+              </Select>
 
-              <div>
-                <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
-                  Weekly Capacity (Hours) *
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  max="60"
-                  value={formData.capacity || 40}
-                  onChange={(e) => handleInputChange('capacity', parseInt(e.target.value) || 40)}
-                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
-                  required
-                />
-              </div>
+              <Input
+                label="Weekly Capacity (Hours)"
+                type="number"
+                min={1}
+                max={60}
+                value={formData.capacity || 40}
+                onChange={(e) => handleInputChange('capacity', parseInt(e.target.value) || 40)}
+                required
+              />
             </div>
           </CardContent>
         </Card>
@@ -394,50 +332,35 @@ export default function NewTeamMemberPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
-                  Compensation Type *
-                </label>
-                <select
-                  value={formData.compensation?.type || 'salary'}
-                  onChange={(e) => handleCompensationChange('type', e.target.value)}
-                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
-                  required
-                >
-                  <option value="salary">Salary</option>
-                  <option value="hourly">Hourly</option>
-                  <option value="project-based">Project-based</option>
-                </select>
-              </div>
+              <Select
+                label="Compensation Type"
+                value={formData.compensation?.type || 'salary'}
+                onChange={(e) => handleCompensationChange('type', e.target.value)}
+                required
+              >
+                <option value="salary">Salary</option>
+                <option value="hourly">Hourly</option>
+                <option value="project-based">Project-based</option>
+              </Select>
 
-              <div>
-                <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
-                  Amount (INR) *
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  value={formData.compensation?.amount || 0}
-                  onChange={(e) => handleCompensationChange('amount', parseFloat(e.target.value) || 0)}
-                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
-                  placeholder="Enter amount"
-                  required
-                />
-              </div>
+              <Input
+                label="Amount (INR)"
+                type="number"
+                min={0}
+                value={formData.compensation?.amount || 0}
+                onChange={(e) => handleCompensationChange('amount', parseFloat(e.target.value) || 0)}
+                placeholder="Enter amount"
+                required
+              />
 
-              <div>
-                <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
-                  Client Billing Rate (INR/hour)
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  value={formData.compensation?.billingRate || 0}
-                  onChange={(e) => handleCompensationChange('billingRate', parseFloat(e.target.value) || 0)}
-                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
-                  placeholder="Enter billing rate"
-                />
-              </div>
+              <Input
+                label="Client Billing Rate (INR/hour)"
+                type="number"
+                min={0}
+                value={formData.compensation?.billingRate || 0}
+                onChange={(e) => handleCompensationChange('billingRate', parseFloat(e.target.value) || 0)}
+                placeholder="Enter billing rate"
+              />
             </div>
           </CardContent>
         </Card>
@@ -500,15 +423,15 @@ export default function NewTeamMemberPage() {
 
         {/* Submit Buttons */}
         <div className="flex items-center justify-end gap-4 pt-6 border-t border-fm-neutral-200">
-          <Button
+          <DashboardButton
             type="button"
             variant="ghost"
             onClick={() => router.back()}
             disabled={isSubmitting}
           >
             Cancel
-          </Button>
-          <Button
+          </DashboardButton>
+          <DashboardButton
             type="submit"
             variant="admin"
             disabled={isSubmitting}
@@ -516,7 +439,7 @@ export default function NewTeamMemberPage() {
           >
             <Save className="w-4 h-4" />
             {isSubmitting ? 'Creating...' : 'Create Team Member'}
-          </Button>
+          </DashboardButton>
         </div>
       </form>
     </div>

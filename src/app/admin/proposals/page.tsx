@@ -10,7 +10,8 @@ import { Proposal } from '@/lib/admin/proposal-types';
 import { ProposalDashboard } from '@/components/admin/ProposalDashboard';
 import { ProposalFormNew } from '@/components/admin/ProposalFormNew';
 import { ArrowLeft } from 'lucide-react';
-import { DashboardButton as Button } from '@/design-system';
+import { DashboardButton } from '@/design-system';
+import { PageHeader } from '@/components/ui/page-header';
 
 export default function AdminProposalsPage() {
   const [currentView, setCurrentView] = useState<'dashboard' | 'create' | 'edit'>('dashboard');
@@ -32,53 +33,44 @@ export default function AdminProposalsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-fm-neutral-50">
+    <div className="space-y-6">
       {/* Navigation */}
       {currentView !== 'dashboard' && (
-        <div className="bg-white border-b border-fm-neutral-200 px-4 py-4">
-          <div className="max-w-7xl mx-auto">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleBackToDashboard}
-              className="flex items-center gap-2"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Back to Dashboard
-            </Button>
-          </div>
-        </div>
+        <DashboardButton
+          variant="ghost"
+          size="sm"
+          onClick={handleBackToDashboard}
+          className="flex items-center gap-2"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to Dashboard
+        </DashboardButton>
       )}
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        {currentView === 'dashboard' && (
-          <ProposalDashboard
-            onCreateNew={handleCreateNew}
-            onEditProposal={handleEditProposal}
-          />
-        )}
+      {currentView === 'dashboard' && (
+        <ProposalDashboard
+          onCreateNew={handleCreateNew}
+          onEditProposal={handleEditProposal}
+        />
+      )}
 
-        {(currentView === 'create' || currentView === 'edit') && (
-          <div>
-            <div className="mb-6">
-              <h1 className="text-2xl font-bold text-fm-neutral-900">
-                {currentView === 'create' ? 'Create New Proposal' : 'Edit Proposal'}
-              </h1>
-              <p className="text-fm-neutral-600">
-                {currentView === 'create' 
-                  ? 'Create a professional digital marketing proposal for your client'
-                  : `Editing proposal: ${editingProposal?.proposalNumber}`
-                }
-              </p>
-            </div>
-            <ProposalFormNew 
-              initialProposal={editingProposal}
-              onSaveSuccess={handleBackToDashboard}
-            />
-          </div>
-        )}
-      </div>
+      {(currentView === 'create' || currentView === 'edit') && (
+        <div>
+          <PageHeader
+            title={currentView === 'create' ? 'Create New Proposal' : 'Edit Proposal'}
+            description={
+              currentView === 'create'
+                ? 'Create a professional digital marketing proposal for your client'
+                : `Editing proposal: ${editingProposal?.proposalNumber}`
+            }
+          />
+          <ProposalFormNew
+            initialProposal={editingProposal}
+            onSaveSuccess={handleBackToDashboard}
+          />
+        </div>
+      )}
     </div>
   );
 }

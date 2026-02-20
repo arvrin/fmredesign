@@ -3,14 +3,20 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Card, CardContent, CardHeader, CardTitle } from '@/design-system/components/primitives/Card';
-import { Button } from '@/design-system/components/primitives/Button';
+import { DashboardCard as Card, CardContent, CardHeader, CardTitle, DashboardButton } from '@/design-system';
 import { Badge } from '@/components/ui/Badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { PageHeader } from '@/components/ui/page-header';
+import { StatusBadge } from '@/components/ui/status-badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { EmptyState } from '@/components/ui/empty-state';
+import { Input } from '@/components/ui/Input';
+import { Select } from '@/components/ui/select-native';
 import ClientPortalLink from '@/components/admin/ClientPortalLink';
 import { TEAM_ROLES, type TeamRole } from '@/lib/admin/types';
 import { adminToast } from '@/lib/admin/toast';
-import { 
+import ContractsTab from '@/components/admin/ContractsTab';
+import {
   ArrowLeft,
   Building,
   Mail,
@@ -28,7 +34,8 @@ import {
   Briefcase,
   Save,
   UserCheck,
-  UserMinus
+  UserMinus,
+  FileText,
 } from 'lucide-react';
 
 interface ClientProfile {
@@ -241,16 +248,6 @@ export default function AdminClientDetail() {
     }
   }, [clientProfile, fetchClientProjects, fetchActivityFeed]);
 
-  const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'active': return 'bg-green-100 text-green-800';
-      case 'inactive': return 'bg-fm-neutral-100 text-fm-neutral-800';
-      case 'paused': return 'bg-yellow-100 text-yellow-800';
-      case 'churned': return 'bg-red-100 text-red-800';
-      default: return 'bg-fm-neutral-100 text-fm-neutral-800';
-    }
-  };
-
   const getHealthColor = (health: string) => {
     switch (health.toLowerCase()) {
       case 'excellent': return 'text-green-600';
@@ -328,30 +325,30 @@ export default function AdminClientDetail() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-fm-neutral-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-fm-magenta-600 mx-auto"></div>
-          <p className="mt-4 text-fm-neutral-600">Loading client details...</p>
-        </div>
+      <div className="space-y-6">
+        <Skeleton className="h-8 w-64" />
+        <Skeleton className="h-48 rounded-xl" />
+        <Skeleton className="h-64 rounded-xl" />
       </div>
     );
   }
 
   if (error || !clientProfile) {
     return (
-      <div className="min-h-screen bg-fm-neutral-50 flex items-center justify-center">
-        <div className="text-center">
-          <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-          <p className="text-fm-neutral-900 font-medium">{error || 'Client not found'}</p>
-          <Button 
-            onClick={() => router.back()} 
-            variant="outline" 
-            className="mt-4"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Go Back
-          </Button>
-        </div>
+      <div className="space-y-6">
+        <EmptyState
+          icon={<AlertCircle className="h-6 w-6" />}
+          title={error || 'Client not found'}
+          action={
+            <DashboardButton
+              onClick={() => router.back()}
+              variant="outline"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Go Back
+            </DashboardButton>
+          }
+        />
       </div>
     );
   }
@@ -360,60 +357,35 @@ export default function AdminClientDetail() {
   const additionalEmails = clientProfile.additionalContacts.map(contact => contact.email);
 
   return (
-    <div className="min-h-screen bg-fm-neutral-50">
-      {/* Header */}
-      <div className="bg-white border-b border-fm-neutral-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="py-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <Button
-                  onClick={() => router.back()}
-                  variant="ghost"
-                  size="sm"
-                >
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Back
-                </Button>
-                
-                <div className="flex items-center space-x-4">
-                  {clientProfile.logo && (
-                    <img 
-                      src={clientProfile.logo} 
-                      alt={clientProfile.name}
-                      className="h-12 w-12 rounded-lg object-cover"
-                    />
-                  )}
-                  <div>
-                    <h1 className="text-2xl font-bold text-fm-neutral-900">{clientProfile.name}</h1>
-                    <p className="text-fm-neutral-600 capitalize">
-                      {clientProfile.industry} • Managed by {clientProfile.accountManager}
-                    </p>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="flex items-center space-x-4">
-                <Badge className={getStatusColor(clientProfile.status)}>
-                  {clientProfile.status}
-                </Badge>
-                <div className={`flex items-center ${getHealthColor(clientProfile.health)}`}>
-                  <div className="h-2 w-2 rounded-full bg-current mr-2"></div>
-                  <span className="text-sm font-medium capitalize">{clientProfile.health}</span>
-                </div>
-              </div>
+    <div className="space-y-6">
+      <PageHeader
+        title={clientProfile.name}
+        description={`${clientProfile.industry} • Managed by ${clientProfile.accountManager}`}
+        actions={
+          <div className="flex items-center space-x-4">
+            <DashboardButton
+              onClick={() => router.back()}
+              variant="ghost"
+              size="sm"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back
+            </DashboardButton>
+            <StatusBadge status={clientProfile.status} />
+            <div className={`flex items-center ${getHealthColor(clientProfile.health)}`}>
+              <div className="h-2 w-2 rounded-full bg-current mr-2"></div>
+              <span className="text-sm font-medium capitalize">{clientProfile.health}</span>
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        }
+      />
+      <div>
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="portal">Client Portal</TabsTrigger>
             <TabsTrigger value="projects">Projects</TabsTrigger>
+            <TabsTrigger value="contracts">Contracts</TabsTrigger>
             <TabsTrigger value="team">Team</TabsTrigger>
             <TabsTrigger value="communication">Communication</TabsTrigger>
           </TabsList>
@@ -555,32 +527,25 @@ export default function AdminClientDetail() {
 
           <TabsContent value="projects" className="space-y-6" onFocusCapture={() => { if (clientProjects.length === 0 && !projectsLoading) fetchClientProjects(); }}>
             {projectsLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-fm-magenta-600"></div>
+              <div className="space-y-4">
+                <Skeleton className="h-24 rounded-xl" />
+                <Skeleton className="h-24 rounded-xl" />
               </div>
             ) : clientProjects.length === 0 ? (
-              <Card>
-                <CardContent className="p-8 text-center">
-                  <Briefcase className="h-12 w-12 text-fm-neutral-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-fm-neutral-900 mb-2">No Projects Yet</h3>
-                  <p className="text-fm-neutral-500 mb-4">This client does not have any projects.</p>
-                  <Button onClick={() => router.push('/admin/projects/new')}>
+              <EmptyState
+                icon={<Briefcase className="h-6 w-6" />}
+                title="No Projects Yet"
+                description="This client does not have any projects."
+                action={
+                  <DashboardButton onClick={() => router.push('/admin/projects/new')}>
                     <Plus className="h-4 w-4 mr-2" />
                     Create Project
-                  </Button>
-                </CardContent>
-              </Card>
+                  </DashboardButton>
+                }
+              />
             ) : (
               <div className="space-y-4">
                 {clientProjects.map((project: any) => {
-                  const statusColors: Record<string, string> = {
-                    planning: 'bg-fm-neutral-100 text-fm-neutral-800',
-                    active: 'bg-blue-100 text-blue-800',
-                    review: 'bg-yellow-100 text-yellow-800',
-                    completed: 'bg-green-100 text-green-800',
-                    paused: 'bg-orange-100 text-orange-800',
-                    cancelled: 'bg-red-100 text-red-800',
-                  };
                   return (
                     <Card key={project.id}>
                       <CardContent className="p-6">
@@ -588,9 +553,7 @@ export default function AdminClientDetail() {
                           <div className="flex-1">
                             <div className="flex items-center gap-3 mb-2">
                               <h3 className="text-lg font-semibold text-fm-neutral-900">{project.name}</h3>
-                              <span className={`px-2 py-1 text-xs font-medium rounded-full ${statusColors[project.status] || 'bg-fm-neutral-100 text-fm-neutral-800'}`}>
-                                {project.status}
-                              </span>
+                              <StatusBadge status={project.status} />
                             </div>
                             {project.description && (
                               <p className="text-sm text-fm-neutral-600 mb-3">{project.description}</p>
@@ -619,9 +582,9 @@ export default function AdminClientDetail() {
                             </div>
                           </div>
                           <Link href={`/admin/projects/${project.id}`}>
-                            <Button variant="outline" size="sm">
+                            <DashboardButton variant="outline" size="sm">
                               View Project
-                            </Button>
+                            </DashboardButton>
                           </Link>
                         </div>
                       </CardContent>
@@ -630,6 +593,10 @@ export default function AdminClientDetail() {
                 })}
               </div>
             )}
+          </TabsContent>
+
+          <TabsContent value="contracts" className="space-y-6">
+            <ContractsTab clientId={clientId} />
           </TabsContent>
 
           <TabsContent value="team" className="space-y-6">
@@ -645,13 +612,10 @@ export default function AdminClientDetail() {
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
-                        Select Team Member *
-                      </label>
-                      <select
+                      <Select
+                        label="Select Team Member *"
                         value={newTeamAssignment.teamMemberId}
                         onChange={(e) => setNewTeamAssignment(prev => ({ ...prev, teamMemberId: e.target.value }))}
-                        className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-700 focus:border-fm-magenta-700"
                         required
                       >
                         <option value="">Choose a team member...</option>
@@ -660,20 +624,17 @@ export default function AdminClientDetail() {
                             {member.name} - {TEAM_ROLES[member.role as TeamRole]}
                           </option>
                         ))}
-                      </select>
+                      </Select>
                     </div>
                     
                     <div>
-                      <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
-                        Weekly Hours *
-                      </label>
-                      <input
+                      <Input
+                        label="Weekly Hours"
                         type="number"
-                        min="1"
-                        max="40"
+                        min={1}
+                        max={40}
                         value={newTeamAssignment.hoursAllocated}
                         onChange={(e) => setNewTeamAssignment(prev => ({ ...prev, hoursAllocated: parseInt(e.target.value) || 1 }))}
-                        className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-700 focus:border-fm-magenta-700"
                         required
                       />
                     </div>
@@ -697,20 +658,20 @@ export default function AdminClientDetail() {
                   </div>
                   
                   <div className="flex items-center justify-end space-x-4 pt-4 border-t border-fm-neutral-200">
-                    <Button
+                    <DashboardButton
                       onClick={() => setShowAddTeamForm(false)}
                       variant="outline"
                     >
                       Cancel
-                    </Button>
-                    <Button
+                    </DashboardButton>
+                    <DashboardButton
                       onClick={handleAddTeamMember}
                       disabled={!newTeamAssignment.teamMemberId}
                       className="flex items-center"
                     >
                       <Save className="h-4 w-4 mr-2" />
                       Assign Team Member
-                    </Button>
+                    </DashboardButton>
                   </div>
                 </CardContent>
               </Card>
@@ -724,13 +685,13 @@ export default function AdminClientDetail() {
                     <Users className="h-5 w-5 mr-2" />
                     Assigned Team Members ({assignedTeamMembers.length})
                   </CardTitle>
-                  <Button
+                  <DashboardButton
                     onClick={() => setShowAddTeamForm(true)}
                     className="flex items-center"
                   >
                     <Plus className="h-4 w-4 mr-2" />
                     Assign Member
-                  </Button>
+                  </DashboardButton>
                 </div>
               </CardHeader>
               <CardContent>
@@ -768,36 +729,33 @@ export default function AdminClientDetail() {
                         </div>
                         
                         <div className="flex items-center space-x-2">
-                          <Badge variant="outline">
-                            {member.status}
-                          </Badge>
-                          <Button
+                          <StatusBadge status={member.status} />
+                          <DashboardButton
                             onClick={() => handleRemoveTeamMember(member)}
                             variant="ghost"
                             size="sm"
                             className="text-red-600 hover:text-red-700 hover:bg-red-50"
                           >
                             <UserMinus className="h-4 w-4" />
-                          </Button>
+                          </DashboardButton>
                         </div>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-8">
-                    <Users className="h-12 w-12 text-fm-neutral-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-fm-neutral-900 mb-2">No Team Members Assigned</h3>
-                    <p className="text-fm-neutral-500 mb-4">
-                      This client doesn't have any team members assigned yet.
-                    </p>
-                    <Button
-                      onClick={() => setShowAddTeamForm(true)}
-                      className="flex items-center"
-                    >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Assign First Member
-                    </Button>
-                  </div>
+                  <EmptyState
+                    icon={<Users className="h-6 w-6" />}
+                    title="No Team Members Assigned"
+                    description="This client doesn't have any team members assigned yet."
+                    action={
+                      <DashboardButton
+                        onClick={() => setShowAddTeamForm(true)}
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Assign First Member
+                      </DashboardButton>
+                    }
+                  />
                 )}
               </CardContent>
             </Card>
@@ -805,17 +763,17 @@ export default function AdminClientDetail() {
 
           <TabsContent value="communication" className="space-y-6">
             {activityLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-fm-magenta-600"></div>
+              <div className="space-y-4">
+                <Skeleton className="h-16 rounded-xl" />
+                <Skeleton className="h-16 rounded-xl" />
+                <Skeleton className="h-16 rounded-xl" />
               </div>
             ) : activityFeed.length === 0 ? (
-              <Card>
-                <CardContent className="p-8 text-center">
-                  <Clock className="h-12 w-12 text-fm-neutral-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-fm-neutral-900 mb-2">No Activity Yet</h3>
-                  <p className="text-fm-neutral-500">Support tickets and content items will appear here.</p>
-                </CardContent>
-              </Card>
+              <EmptyState
+                icon={<Clock className="h-6 w-6" />}
+                title="No Activity Yet"
+                description="Support tickets and content items will appear here."
+              />
             ) : (
               <Card>
                 <CardHeader>

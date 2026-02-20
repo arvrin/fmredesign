@@ -6,6 +6,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   FileText,
@@ -19,7 +20,7 @@ import {
   Eye,
 } from 'lucide-react';
 import { InvoiceUtils } from '@/lib/admin/types';
-import { MetricCard, MetricCardSkeleton } from '@/design-system';
+import { MetricCard, MetricCardSkeleton, DashboardButton } from '@/design-system';
 import { PageHeader } from '@/components/ui/page-header';
 import { EmptyState } from '@/components/ui/empty-state';
 import { StatusBadge } from '@/components/ui/status-badge';
@@ -108,6 +109,7 @@ function DashboardSkeleton() {
 
 /* ── Main dashboard ── */
 export default function AdminDashboard() {
+  const router = useRouter();
   const [stats, setStats] = useState<DashboardStats>({
     totalInvoices: 0,
     totalClients: 0,
@@ -318,9 +320,9 @@ export default function AdminDashboard() {
               title="No invoices yet"
               description="Create your first invoice to start tracking revenue."
               action={
-                <Link href="/admin/invoice" className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg bg-fm-magenta-600 text-white hover:bg-fm-magenta-700 transition-colors">
-                  <Plus className="w-4 h-4" /> Create Invoice
-                </Link>
+                <DashboardButton variant="admin" size="sm" onClick={() => router.push('/admin/invoice')}>
+                  <Plus className="w-4 h-4 mr-2" /> Create Invoice
+                </DashboardButton>
               }
               className="py-10"
             />
@@ -361,9 +363,9 @@ export default function AdminDashboard() {
               title="No projects yet"
               description="Create your first project to get started."
               action={
-                <Link href="/admin/projects/new" className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg bg-fm-magenta-600 text-white hover:bg-fm-magenta-700 transition-colors">
-                  <Plus className="w-4 h-4" /> Create Project
-                </Link>
+                <DashboardButton variant="admin" size="sm" onClick={() => router.push('/admin/projects/new')}>
+                  <Plus className="w-4 h-4 mr-2" /> Create Project
+                </DashboardButton>
               }
               className="py-10"
             />

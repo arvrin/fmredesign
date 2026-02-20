@@ -14,6 +14,7 @@ import {
   MessageSquare,
   AlertCircle,
   FolderOpen,
+  FileText,
   Settings,
 } from 'lucide-react';
 import {
@@ -116,6 +117,11 @@ export default function ClientDashboardLayout({
           label: 'Support',
           href: `${basePath}/support`,
           icon: <MessageSquare className="w-5 h-5" />,
+        },
+        {
+          label: 'Contracts',
+          href: `${basePath}/contracts`,
+          icon: <FileText className="w-5 h-5" />,
         },
         {
           label: 'Settings',

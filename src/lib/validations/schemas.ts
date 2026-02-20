@@ -266,6 +266,43 @@ export const submitTalentApplicationSchema = z.object({
 });
 
 // ---------------------------------------------------------------------------
+// Contract schemas
+// ---------------------------------------------------------------------------
+
+const contractServiceItemSchema = z.object({
+  serviceId: optionalString,
+  name: nonEmptyString,
+  description: optionalString,
+  quantity: z.number().min(1).default(1),
+  unitPrice: z.number().min(0),
+  total: z.number().min(0),
+});
+
+export const createContractSchema = z.object({
+  clientId: nonEmptyString,
+  title: nonEmptyString,
+  contractNumber: optionalString,
+  services: z.array(contractServiceItemSchema).min(1, 'At least one service is required'),
+  totalValue: z.number().min(0),
+  currency: z.string().default('INR'),
+  startDate: optionalString,
+  endDate: optionalString,
+  paymentTerms: optionalString,
+  billingCycle: z.enum(['monthly', 'quarterly', 'annually', 'milestone', 'one-time']).optional(),
+  termsAndConditions: optionalString,
+});
+
+export const updateContractSchema = z.object({
+  id: nonEmptyString,
+}).catchall(z.unknown());
+
+export const contractActionSchema = z.object({
+  contractId: nonEmptyString,
+  action: z.enum(['accept', 'reject', 'request_edit']),
+  feedback: optionalString,
+});
+
+// ---------------------------------------------------------------------------
 // Helper: validate request body
 // ---------------------------------------------------------------------------
 

@@ -30,11 +30,16 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-  DashboardButton as Button,
+  DashboardButton,
   MetricCard,
 } from '@/design-system';
 import { Badge } from '@/components/ui/Badge';
 import { PageHeader } from '@/components/ui/page-header';
+import { StatusBadge } from '@/components/ui/status-badge';
+import { EmptyState } from '@/components/ui/empty-state';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Input } from '@/components/ui/Input';
+import { Select } from '@/components/ui/select-native';
 import { adminToast } from '@/lib/admin/toast';
 import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
 import { SimplePDFGenerator } from '@/lib/admin/pdf-simple';
@@ -89,42 +94,6 @@ interface InvoiceStats {
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-const STATUS_CONFIG: Record<
-  string,
-  { label: string; color: string; bg: string; icon: React.ReactNode }
-> = {
-  draft: {
-    label: 'Draft',
-    color: 'text-fm-neutral-600',
-    bg: 'bg-fm-neutral-100',
-    icon: <FileText className="w-3 h-3" />,
-  },
-  sent: {
-    label: 'Sent',
-    color: 'text-blue-700',
-    bg: 'bg-blue-100',
-    icon: <Send className="w-3 h-3" />,
-  },
-  paid: {
-    label: 'Paid',
-    color: 'text-green-700',
-    bg: 'bg-green-100',
-    icon: <CheckCircle2 className="w-3 h-3" />,
-  },
-  overdue: {
-    label: 'Overdue',
-    color: 'text-red-700',
-    bg: 'bg-red-100',
-    icon: <AlertCircle className="w-3 h-3" />,
-  },
-  cancelled: {
-    label: 'Cancelled',
-    color: 'text-fm-neutral-500',
-    bg: 'bg-fm-neutral-100',
-    icon: <Trash2 className="w-3 h-3" />,
-  },
-};
 
 const fmt = (n: number) => `₹${n.toLocaleString('en-IN')}`;
 
@@ -245,10 +214,10 @@ export default function InvoicesPage() {
         description="Manage and track all your invoices."
         actions={
           <Link href="/admin/invoice">
-            <Button variant="admin" size="sm">
+            <DashboardButton variant="admin" size="sm">
               <Plus className="w-4 h-4 mr-1" />
               New Invoice
-            </Button>
+            </DashboardButton>
           </Link>
         }
       />
@@ -294,22 +263,21 @@ export default function InvoicesPage() {
             {/* Search */}
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-fm-neutral-400" />
-              <input
+              <Input
                 type="text"
                 placeholder="Search by invoice # or client..."
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500 text-sm"
+                className="pl-9"
               />
             </div>
 
             {/* Status filter */}
             <div className="flex items-center gap-2">
               <Filter className="w-4 h-4 text-fm-neutral-500" />
-              <select
+              <Select
                 value={statusFilter}
                 onChange={e => setStatusFilter(e.target.value)}
-                className="px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 text-sm"
               >
                 <option value="all">All Status</option>
                 <option value="draft">Draft</option>
@@ -317,12 +285,12 @@ export default function InvoicesPage() {
                 <option value="paid">Paid</option>
                 <option value="overdue">Overdue</option>
                 <option value="cancelled">Cancelled</option>
-              </select>
+              </Select>
             </div>
 
-            <Button variant="ghost" size="sm" onClick={fetchInvoices}>
+            <DashboardButton variant="ghost" size="sm" onClick={fetchInvoices}>
               <RefreshCw className="w-4 h-4" />
-            </Button>
+            </DashboardButton>
           </div>
         </CardContent>
       </Card>
@@ -331,26 +299,37 @@ export default function InvoicesPage() {
       <Card variant="admin">
         <CardContent className="p-0">
           {loading ? (
-            <div className="p-12 flex items-center justify-center">
-              <RefreshCw className="w-5 h-5 animate-spin text-fm-magenta-500 mr-2" />
-              <span className="text-fm-neutral-500">Loading invoices...</span>
+            <div className="p-6 space-y-4">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="flex items-center gap-4">
+                  <Skeleton className="h-5 w-24" />
+                  <Skeleton className="h-5 w-32 flex-1" />
+                  <Skeleton className="h-5 w-20" />
+                  <Skeleton className="h-5 w-20" />
+                  <Skeleton className="h-5 w-24" />
+                  <Skeleton className="h-6 w-16 rounded-full" />
+                  <Skeleton className="h-5 w-16" />
+                </div>
+              ))}
             </div>
           ) : invoices.length === 0 ? (
-            <div className="p-12 flex flex-col items-center justify-center">
-              <FileText className="w-10 h-10 text-fm-neutral-300 mb-3" />
-              <p className="text-fm-neutral-600 font-medium">No invoices found</p>
-              <p className="text-sm text-fm-neutral-500 mb-4">
-                {searchQuery || statusFilter !== 'all'
+            <EmptyState
+              icon={<FileText className="w-6 h-6" />}
+              title="No invoices found"
+              description={
+                searchQuery || statusFilter !== 'all'
                   ? 'Try adjusting your filters.'
-                  : 'Create your first invoice to get started.'}
-              </p>
-              <Link href="/admin/invoice">
-                <Button variant="admin" size="sm">
-                  <Plus className="w-4 h-4 mr-1" />
-                  Create Invoice
-                </Button>
-              </Link>
-            </div>
+                  : 'Create your first invoice to get started.'
+              }
+              action={
+                <Link href="/admin/invoice">
+                  <DashboardButton variant="admin" size="sm">
+                    <Plus className="w-4 h-4 mr-1" />
+                    Create Invoice
+                  </DashboardButton>
+                </Link>
+              }
+            />
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -381,7 +360,6 @@ export default function InvoicesPage() {
                 </thead>
                 <tbody>
                   {invoices.map(inv => {
-                    const sc = STATUS_CONFIG[inv.status] || STATUS_CONFIG.draft;
                     return (
                       <tr
                         key={inv.id}
@@ -422,12 +400,7 @@ export default function InvoicesPage() {
                         {/* Status */}
                         <td className="py-3 px-4">
                           <div className="flex justify-center">
-                            <span
-                              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${sc.bg} ${sc.color}`}
-                            >
-                              {sc.icon}
-                              {sc.label}
-                            </span>
+                            <StatusBadge status={inv.status} />
                           </div>
                         </td>
 

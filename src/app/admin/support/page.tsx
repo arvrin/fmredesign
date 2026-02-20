@@ -25,7 +25,12 @@ import {
   CardTitle,
   MetricCard,
 } from '@/design-system';
-import { Badge } from '@/components/ui/Badge';
+import { PageHeader } from '@/components/ui/page-header';
+import { StatusBadge } from '@/components/ui/status-badge';
+import { EmptyState } from '@/components/ui/empty-state';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Input } from '@/components/ui/Input';
+import { Select } from '@/components/ui/select-native';
 import { adminToast } from '@/lib/admin/toast';
 
 interface AdminTicket {
@@ -43,36 +48,6 @@ interface AdminTicket {
 }
 
 const statusOptions = ['open', 'in-progress', 'resolved', 'closed'] as const;
-
-function getStatusColor(status: string) {
-  switch (status) {
-    case 'open':
-      return 'bg-blue-100 text-blue-800 border-blue-200';
-    case 'in-progress':
-      return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-    case 'resolved':
-      return 'bg-green-100 text-green-800 border-green-200';
-    case 'closed':
-      return 'bg-fm-neutral-100 text-fm-neutral-800 border-fm-neutral-200';
-    default:
-      return 'bg-fm-neutral-100 text-fm-neutral-800 border-fm-neutral-200';
-  }
-}
-
-function getPriorityColor(priority: string) {
-  switch (priority) {
-    case 'urgent':
-      return 'bg-red-100 text-red-800 border-red-200';
-    case 'high':
-      return 'bg-orange-100 text-orange-800 border-orange-200';
-    case 'medium':
-      return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-    case 'low':
-      return 'bg-green-100 text-green-800 border-green-200';
-    default:
-      return 'bg-fm-neutral-100 text-fm-neutral-800 border-fm-neutral-200';
-  }
-}
 
 export default function AdminSupportPage() {
   const [tickets, setTickets] = useState<AdminTicket[]>([]);
@@ -160,43 +135,61 @@ export default function AdminSupportPage() {
     (t) => t.priority === 'urgent' || t.priority === 'high'
   ).length;
 
-  return (
-    <div>
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-fm-neutral-900">
-          Support Tickets
-        </h1>
-        <p className="text-fm-neutral-600 mt-1">
-          Manage support requests from all clients
-        </p>
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-8 w-48" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-28 rounded-xl" />)}
+        </div>
+        <Skeleton className="h-16 rounded-xl" />
+        <div className="space-y-4">
+          {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-24 rounded-xl" />)}
+        </div>
       </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <PageHeader
+        title="Support Tickets"
+        icon={<MessageSquare className="w-6 h-6" />}
+        description="Manage support requests from all clients"
+      />
 
       {/* Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <MetricCard
           title="Open Tickets"
           value={openCount}
           subtitle="Awaiting response"
           icon={<MessageSquare className="w-6 h-6" />}
+          variant="admin"
         />
         <MetricCard
           title="In Progress"
           value={inProgressCount}
           subtitle="Being worked on"
           icon={<Clock className="w-6 h-6" />}
+          variant="admin"
         />
         <MetricCard
           title="Resolved"
           value={resolvedCount}
           subtitle="Successfully resolved"
           icon={<CheckCircle className="w-6 h-6" />}
+          variant="admin"
         />
         <MetricCard
           title="High Priority"
           value={urgentCount}
           subtitle="Urgent + High"
           icon={<AlertCircle className="w-6 h-6" />}
+          variant="admin"
         />
       </div>
 
@@ -206,48 +199,43 @@ export default function AdminSupportPage() {
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
             <div className="relative flex-1 w-full">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-fm-neutral-400" />
-              <input
+              <Input
                 type="text"
                 placeholder="Search tickets, clients..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 text-sm border border-fm-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-fm-magenta-500"
+                className="pl-10"
               />
             </div>
             <div className="flex items-center gap-2">
               <Filter className="h-4 w-4 text-fm-neutral-500" />
-              <select
+              <Select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="text-sm border border-fm-neutral-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-fm-magenta-500"
               >
                 <option value="all">All Status</option>
                 <option value="open">Open</option>
                 <option value="in-progress">In Progress</option>
                 <option value="resolved">Resolved</option>
                 <option value="closed">Closed</option>
-              </select>
+              </Select>
             </div>
           </div>
         </CardContent>
       </DashboardCard>
 
       {/* Tickets List */}
-      {loading ? (
-        <div className="flex items-center justify-center py-20">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-fm-magenta-600" />
-        </div>
-      ) : filteredTickets.length === 0 ? (
-        <DashboardCard className="p-12 text-center">
-          <MessageSquare className="w-12 h-12 text-fm-neutral-400 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-fm-neutral-900 mb-2">
-            No tickets found
-          </h3>
-          <p className="text-fm-neutral-600">
-            {statusFilter !== 'all'
-              ? `No ${statusFilter} tickets at the moment`
-              : 'No support tickets have been submitted yet'}
-          </p>
+      {filteredTickets.length === 0 ? (
+        <DashboardCard>
+          <EmptyState
+            icon={<MessageSquare className="w-6 h-6" />}
+            title="No tickets found"
+            description={
+              statusFilter !== 'all'
+                ? `No ${statusFilter} tickets at the moment`
+                : 'No support tickets have been submitted yet'
+            }
+          />
         </DashboardCard>
       ) : (
         <div className="space-y-4">
@@ -268,18 +256,8 @@ export default function AdminSupportPage() {
                         <h3 className="font-semibold text-fm-neutral-900 truncate">
                           {ticket.title}
                         </h3>
-                        <Badge
-                          className={getPriorityColor(ticket.priority)}
-                          variant="secondary"
-                        >
-                          {ticket.priority}
-                        </Badge>
-                        <Badge
-                          className={getStatusColor(ticket.status)}
-                          variant="secondary"
-                        >
-                          {ticket.status}
-                        </Badge>
+                        <StatusBadge status={ticket.priority} />
+                        <StatusBadge status={ticket.status} />
                       </div>
                       <div className="flex items-center gap-4 text-sm text-fm-neutral-500">
                         <span className="font-medium text-fm-neutral-700">
@@ -313,7 +291,7 @@ export default function AdminSupportPage() {
                         <label className="text-sm text-fm-neutral-600">
                           Status:
                         </label>
-                        <select
+                        <Select
                           value={ticket.status}
                           onChange={(e) =>
                             updateTicket(ticket.id, {
@@ -321,19 +299,18 @@ export default function AdminSupportPage() {
                             })
                           }
                           disabled={updatingId === ticket.id}
-                          className="text-sm border border-fm-neutral-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-fm-magenta-500"
                         >
                           {statusOptions.map((s) => (
                             <option key={s} value={s}>
                               {s}
                             </option>
                           ))}
-                        </select>
+                        </Select>
 
                         <label className="text-sm text-fm-neutral-600 ml-4">
                           Assigned to:
                         </label>
-                        <input
+                        <Input
                           type="text"
                           defaultValue={ticket.assignedTo}
                           onBlur={(e) => {
@@ -344,7 +321,7 @@ export default function AdminSupportPage() {
                             }
                           }}
                           disabled={updatingId === ticket.id}
-                          className="text-sm border border-fm-neutral-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-fm-magenta-500 w-48"
+                          className="w-48"
                         />
 
                         {updatingId === ticket.id && (

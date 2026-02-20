@@ -20,16 +20,20 @@ import {
   Globe,
   Search,
 } from 'lucide-react';
-import { Button } from '@/design-system/components/primitives/Button';
 import {
+  DashboardButton,
   DashboardCard,
   CardContent,
   CardHeader,
   CardTitle,
   CardDescription,
 } from '@/design-system';
+import { PageHeader } from '@/components/ui/page-header';
+import { EmptyState } from '@/components/ui/empty-state';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/Badge';
 import { Input } from '@/components/ui/Input';
+import { Select } from '@/components/ui/select-native';
 import { adminToast } from '@/lib/admin/toast';
 import type { AuditAction, AuditEntry } from '@/lib/admin/audit-log';
 
@@ -133,21 +137,17 @@ export default function AuditLogPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-fm-neutral-900 flex items-center gap-2">
-            <ScrollText className="w-6 h-6 text-fm-magenta-600" />
-            Audit Log
-          </h1>
-          <p className="text-fm-neutral-600 mt-1">
-            Track all admin actions — who changed what and when.
-          </p>
-        </div>
-        <Button variant="outline" size="sm" onClick={fetchEntries} disabled={loading}>
-          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-          Refresh
-        </Button>
-      </div>
+      <PageHeader
+        title="Audit Log"
+        icon={<ScrollText className="w-6 h-6" />}
+        description="Track all admin actions -- who changed what and when."
+        actions={
+          <DashboardButton variant="outline" size="sm" onClick={fetchEntries} disabled={loading}>
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </DashboardButton>
+        }
+      />
 
       {/* Filters */}
       <DashboardCard variant="admin">
@@ -165,36 +165,28 @@ export default function AuditLogPage() {
             </div>
 
             {/* Resource Type Filter */}
-            <div className="relative">
-              <select
-                value={resourceFilter}
-                onChange={(e) => setResourceFilter(e.target.value)}
-                className="appearance-none bg-white border border-fm-neutral-200 rounded-lg px-3 py-2 pr-8 text-sm text-fm-neutral-700 focus:outline-none focus:ring-2 focus:ring-fm-magenta-500 focus:border-transparent cursor-pointer"
-              >
-                {RESOURCE_TYPES.map((type) => (
-                  <option key={type} value={type}>
-                    {type === 'all' ? 'All Resources' : type.charAt(0).toUpperCase() + type.slice(1) + 's'}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-fm-neutral-400 pointer-events-none" />
-            </div>
+            <Select
+              value={resourceFilter}
+              onChange={(e) => setResourceFilter(e.target.value)}
+            >
+              {RESOURCE_TYPES.map((type) => (
+                <option key={type} value={type}>
+                  {type === 'all' ? 'All Resources' : type.charAt(0).toUpperCase() + type.slice(1) + 's'}
+                </option>
+              ))}
+            </Select>
 
             {/* Action Filter */}
-            <div className="relative">
-              <select
-                value={actionFilter}
-                onChange={(e) => setActionFilter(e.target.value)}
-                className="appearance-none bg-white border border-fm-neutral-200 rounded-lg px-3 py-2 pr-8 text-sm text-fm-neutral-700 focus:outline-none focus:ring-2 focus:ring-fm-magenta-500 focus:border-transparent cursor-pointer"
-              >
-                {ACTIONS.map((action) => (
-                  <option key={action} value={action}>
-                    {action === 'all' ? 'All Actions' : action.charAt(0).toUpperCase() + action.slice(1)}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-fm-neutral-400 pointer-events-none" />
-            </div>
+            <Select
+              value={actionFilter}
+              onChange={(e) => setActionFilter(e.target.value)}
+            >
+              {ACTIONS.map((action) => (
+                <option key={action} value={action}>
+                  {action === 'all' ? 'All Actions' : action.charAt(0).toUpperCase() + action.slice(1)}
+                </option>
+              ))}
+            </Select>
           </div>
         </CardContent>
       </DashboardCard>
@@ -218,26 +210,26 @@ export default function AuditLogPage() {
           {loading ? (
             <div className="space-y-3">
               {Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="animate-pulse flex items-center gap-4 py-3">
-                  <div className="w-8 h-8 bg-fm-neutral-100 rounded-full" />
+                <div key={i} className="flex items-center gap-4 py-3">
+                  <Skeleton className="w-8 h-8 rounded-full" />
                   <div className="flex-1 space-y-2">
-                    <div className="h-4 bg-fm-neutral-100 rounded w-3/4" />
-                    <div className="h-3 bg-fm-neutral-100 rounded w-1/2" />
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-3 w-1/2" />
                   </div>
-                  <div className="h-3 bg-fm-neutral-100 rounded w-16" />
+                  <Skeleton className="h-3 w-16" />
                 </div>
               ))}
             </div>
           ) : filteredEntries.length === 0 ? (
-            <div className="text-center py-12">
-              <ScrollText className="w-12 h-12 text-fm-neutral-300 mx-auto mb-3" />
-              <p className="text-fm-neutral-600 font-medium">No audit entries found</p>
-              <p className="text-sm text-fm-neutral-500 mt-1">
-                {searchQuery || resourceFilter !== 'all' || actionFilter !== 'all'
+            <EmptyState
+              icon={<ScrollText className="w-6 h-6" />}
+              title="No audit entries found"
+              description={
+                searchQuery || resourceFilter !== 'all' || actionFilter !== 'all'
                   ? 'Try adjusting your filters.'
-                  : 'Actions will appear here once admin operations are performed.'}
-              </p>
-            </div>
+                  : 'Actions will appear here once admin operations are performed.'
+              }
+            />
           ) : (
             <div className="divide-y divide-fm-neutral-100">
               {filteredEntries.map((entry) => (
@@ -278,7 +270,7 @@ export default function AuditLogPage() {
                   <div className="flex-shrink-0 text-right">
                     <div className="flex items-center gap-1 text-xs text-fm-neutral-500">
                       <Clock className="w-3 h-3" />
-                      {entry.created_at ? timeAgo(entry.created_at) : '—'}
+                      {entry.created_at ? timeAgo(entry.created_at) : '---'}
                     </div>
                     {entry.ip_address && entry.ip_address !== 'unknown' && (
                       <div className="text-xs text-fm-neutral-400 mt-0.5 font-mono">
@@ -294,13 +286,13 @@ export default function AuditLogPage() {
           {/* Load more */}
           {!loading && filteredEntries.length >= limit && (
             <div className="mt-4 text-center">
-              <Button
+              <DashboardButton
                 variant="ghost"
                 size="sm"
                 onClick={() => setLimit((prev) => prev + 50)}
               >
                 Load more
-              </Button>
+              </DashboardButton>
             </div>
           )}
         </CardContent>

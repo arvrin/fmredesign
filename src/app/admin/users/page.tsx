@@ -6,7 +6,17 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useAdminAuth, MobileUser } from '@/lib/admin/auth';
 import { ROLES, Role } from '@/lib/admin/permissions';
-import { Button } from '@/design-system/components/primitives/Button';
+import {
+  DashboardButton,
+  DashboardCard,
+  CardContent,
+} from '@/design-system';
+import { PageHeader } from '@/components/ui/page-header';
+import { StatusBadge } from '@/components/ui/status-badge';
+import { EmptyState } from '@/components/ui/empty-state';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Input } from '@/components/ui/Input';
+import { Select } from '@/components/ui/select-native';
 import {
   Plus,
   Edit3,
@@ -68,7 +78,7 @@ export default function UsersManagementPage() {
       setLoading(true);
       const response = await fetch('/api/admin/users');
       const result = await response.json();
-      
+
       if (result.success) {
         const formattedUsers: AuthorizedUser[] = result.users.map((user: any) => ({
           id: user.id,
@@ -103,9 +113,9 @@ export default function UsersManagementPage() {
       const response = await fetch(`/api/admin/users?id=${userId}`, {
         method: 'DELETE',
       });
-      
+
       const result = await response.json();
-      
+
       if (result.success) {
         await loadUsers();
       } else {
@@ -131,9 +141,9 @@ export default function UsersManagementPage() {
           status: newStatus
         }),
       });
-      
+
       const result = await response.json();
-      
+
       if (result.success) {
         await loadUsers();
       } else {
@@ -150,7 +160,7 @@ export default function UsersManagementPage() {
     const matchesSearch = user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          user.mobileNumber.includes(searchQuery);
-    
+
     const matchesStatus = statusFilter === 'all' || user.status === statusFilter;
     const matchesRole = roleFilter === 'all' || user.role === roleFilter;
 
@@ -160,104 +170,112 @@ export default function UsersManagementPage() {
   // Check permissions first
   if (!isAuthenticated || !hasPermission('users.read')) {
     return (
-      <div className="p-6">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
-          <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-red-800 mb-2">Access Denied</h3>
-          <p className="text-red-600">You don't have permission to view user management.</p>
-        </div>
+      <div className="space-y-6">
+        <DashboardCard>
+          <CardContent className="p-6">
+            <EmptyState
+              icon={<AlertTriangle className="w-6 h-6" />}
+              title="Access Denied"
+              description="You don't have permission to view user management."
+            />
+          </CardContent>
+        </DashboardCard>
       </div>
     );
   }
 
   if (loading) {
     return (
-      <div className="p-6">
-        <div className="animate-pulse">
-          <div className="h-8 bg-fm-neutral-200 rounded w-1/4 mb-6"></div>
-          <div className="space-y-4">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="h-16 bg-fm-neutral-200 rounded"></div>
-            ))}
-          </div>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-10 w-32" />
+        </div>
+        <Skeleton className="h-16 rounded-xl" />
+        <div className="space-y-4">
+          {[...Array(5)].map((_, i) => (
+            <Skeleton key={i} className="h-16 rounded-xl" />
+          ))}
         </div>
       </div>
     );
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-fm-neutral-900">User Management</h1>
-          <p className="text-fm-neutral-600 mt-1">Manage authorized users and their permissions</p>
-        </div>
-        
-        {canManageUsers && (
-          <Button
-            onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-2"
-          >
-            <Plus className="w-4 h-4" />
-            Add User
-          </Button>
-        )}
-      </div>
+      <PageHeader
+        title="User Management"
+        icon={<Shield className="w-6 h-6" />}
+        description="Manage authorized users and their permissions"
+        actions={
+          canManageUsers ? (
+            <DashboardButton
+              variant="admin"
+              size="sm"
+              onClick={() => setShowAddModal(true)}
+              className="flex items-center gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              Add User
+            </DashboardButton>
+          ) : undefined
+        }
+      />
 
       {/* Filters */}
-      <div className="bg-white p-4 rounded-lg border space-y-4">
-        <div className="flex flex-col md:flex-row gap-4">
-          {/* Search */}
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-fm-neutral-400" />
-            <input
-              type="text"
-              placeholder="Search by name, email, or mobile..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-4 py-2 w-full border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-700 focus:border-fm-magenta-700"
-            />
+      <DashboardCard>
+        <CardContent className="p-4">
+          <div className="flex flex-col md:flex-row gap-4">
+            {/* Search */}
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-fm-neutral-400" />
+              <Input
+                type="text"
+                placeholder="Search by name, email, or mobile..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+
+            {/* Status Filter */}
+            <Select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as any)}
+            >
+              <option value="all">All Status</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+              <option value="suspended">Suspended</option>
+            </Select>
+
+            {/* Role Filter */}
+            <Select
+              value={roleFilter}
+              onChange={(e) => setRoleFilter(e.target.value)}
+            >
+              <option value="all">All Roles</option>
+              {ROLES.map(role => (
+                <option key={role.key} value={role.key}>{role.name}</option>
+              ))}
+            </Select>
           </div>
-
-          {/* Status Filter */}
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as any)}
-            className="px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-700 focus:border-fm-magenta-700"
-          >
-            <option value="all">All Status</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-            <option value="suspended">Suspended</option>
-          </select>
-
-          {/* Role Filter */}
-          <select
-            value={roleFilter}
-            onChange={(e) => setRoleFilter(e.target.value)}
-            className="px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-700 focus:border-fm-magenta-700"
-          >
-            <option value="all">All Roles</option>
-            {ROLES.map(role => (
-              <option key={role.key} value={role.key}>{role.name}</option>
-            ))}
-          </select>
-        </div>
-      </div>
+        </CardContent>
+      </DashboardCard>
 
       {/* Users List */}
-      <div className="bg-white rounded-lg border overflow-hidden">
+      <DashboardCard className="overflow-hidden">
         {filteredUsers.length === 0 ? (
-          <div className="p-12 text-center">
-            <User className="w-12 h-12 text-fm-neutral-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-fm-neutral-900 mb-2">No users found</h3>
-            <p className="text-fm-neutral-500">
-              {users.length === 0 
+          <EmptyState
+            icon={<User className="w-6 h-6" />}
+            title="No users found"
+            description={
+              users.length === 0
                 ? 'No authorized users have been added yet.'
-                : 'No users match your current filters.'}
-            </p>
-          </div>
+                : 'No users match your current filters.'
+            }
+          />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -312,13 +330,13 @@ export default function UsersManagementPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <StatusBadge 
-                        status={user.status} 
+                      <UserStatusBadge
+                        status={user.status}
                         onChange={canManageUsers ? (status) => handleStatusChange(user.id, status) : undefined}
                       />
                     </td>
                     <td className="px-6 py-4 text-sm text-fm-neutral-500">
-                      {user.lastLogin 
+                      {user.lastLogin
                         ? new Date(user.lastLogin).toLocaleDateString()
                         : 'Never'
                       }
@@ -334,7 +352,7 @@ export default function UsersManagementPage() {
                             <Edit3 className="w-4 h-4" />
                           </button>
                         )}
-                        
+
                         {canDeleteUsers && (
                           <button
                             onClick={() => setDeleteConfirm(user.id)}
@@ -352,7 +370,7 @@ export default function UsersManagementPage() {
             </table>
           </div>
         )}
-      </div>
+      </DashboardCard>
 
       {/* Modals */}
       {showAddModal && (
@@ -398,12 +416,13 @@ export default function UsersManagementPage() {
   );
 }
 
-// Status Badge Component
-function StatusBadge({ 
-  status, 
-  onChange 
-}: { 
-  status: AuthorizedUser['status']; 
+// User Status Badge Component — this one has a special "onChange" dropdown behavior
+// that StatusBadge from the shared component doesn't support, so we keep it local.
+function UserStatusBadge({
+  status,
+  onChange
+}: {
+  status: AuthorizedUser['status'];
   onChange?: (status: AuthorizedUser['status']) => void;
 }) {
   const statusConfig = {
@@ -417,7 +436,7 @@ function StatusBadge({
 
   if (onChange) {
     return (
-      <select
+      <Select
         value={status}
         onChange={(e) => onChange(e.target.value as AuthorizedUser['status'])}
         className={`text-xs font-medium px-2 py-1 rounded-full border-0 ${config.bg} ${config.text} cursor-pointer`}
@@ -425,15 +444,12 @@ function StatusBadge({
         <option value="active">Active</option>
         <option value="inactive">Inactive</option>
         <option value="suspended">Suspended</option>
-      </select>
+      </Select>
     );
   }
 
   return (
-    <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full ${config.bg} ${config.text}`}>
-      <Icon className="w-3 h-3" />
-      {status.charAt(0).toUpperCase() + status.slice(1)}
-    </span>
+    <StatusBadge status={status} />
   );
 }
 
@@ -559,12 +575,12 @@ function UserFormModal({
           </div>
 
           <div className="flex gap-3 pt-4">
-            <Button type="submit" disabled={isSubmitting} className="flex-1">
+            <DashboardButton type="submit" variant="admin" disabled={isSubmitting} className="flex-1">
               {isSubmitting ? (isEdit ? 'Updating...' : 'Adding...') : (isEdit ? 'Update User' : 'Add User')}
-            </Button>
-            <Button type="button" variant="outline" onClick={onClose} className="flex-1">
+            </DashboardButton>
+            <DashboardButton type="button" variant="outline" onClick={onClose} className="flex-1">
               Cancel
-            </Button>
+            </DashboardButton>
           </div>
         </form>
       </div>

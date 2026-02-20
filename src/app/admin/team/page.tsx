@@ -7,10 +7,10 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { 
-  Users, 
-  Search, 
-  Plus, 
+import {
+  Users,
+  Search,
+  Plus,
   Filter,
   Star,
   MapPin,
@@ -23,15 +23,21 @@ import {
   Calendar,
   Award
 } from 'lucide-react';
-import { 
+import {
   DashboardCard as Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-  DashboardButton as Button,
+  DashboardButton,
   MetricCard
 } from '@/design-system';
+import { PageHeader } from '@/components/ui/page-header';
+import { StatusBadge } from '@/components/ui/status-badge';
+import { EmptyState } from '@/components/ui/empty-state';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Input } from '@/components/ui/Input';
+import { Select } from '@/components/ui/select-native';
 import { Badge } from '@/components/ui/Badge';
 import { adminToast } from '@/lib/admin/toast';
 import { TeamMember, TeamMetrics, TEAM_ROLES, TEAM_DEPARTMENTS } from '@/lib/admin/types';
@@ -69,22 +75,12 @@ export default function TeamDashboardPage() {
     const matchesSearch = member.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       member.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
       TEAM_ROLES[member.role].toLowerCase().includes(searchQuery.toLowerCase());
-    
+
     const matchesDepartment = selectedDepartment === 'all' || member.department === selectedDepartment;
     const matchesType = selectedType === 'all' || member.type === selectedType;
-    
+
     return matchesSearch && matchesDepartment && matchesType;
   });
-
-  const getStatusBadgeVariant = (status: string) => {
-    switch (status) {
-      case 'active': return 'success';
-      case 'inactive': return 'secondary';
-      case 'on-leave': return 'warning';
-      case 'terminated': return 'destructive';
-      default: return 'secondary';
-    }
-  };
 
   const getWorkloadColor = (workload: number) => {
     if (workload >= 100) return 'text-red-600';
@@ -104,8 +100,16 @@ export default function TeamDashboardPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-fm-magenta-600"></div>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-10 w-40" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-28 rounded-xl" />)}
+        </div>
+        <Skeleton className="h-16 rounded-xl" />
+        <Skeleton className="h-96 rounded-xl" />
       </div>
     );
   }
@@ -113,27 +117,21 @@ export default function TeamDashboardPage() {
   return (
     <div className="space-y-8">
       {/* Page Header */}
-      <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-fm-neutral-900 flex items-center gap-3">
-              <Users className="w-8 h-8 text-fm-magenta-600" />
-              Team Management
-            </h1>
-            <p className="text-sm text-fm-neutral-500 mt-1">
-              Manage your in-house employees and freelancers
-            </p>
-          </div>
-          <Button 
-            variant="admin" 
+      <PageHeader
+        title="Team Management"
+        icon={<Users className="w-6 h-6" />}
+        description="Manage your in-house employees and freelancers"
+        actions={
+          <DashboardButton
+            variant="admin"
             className="flex items-center gap-2"
             onClick={() => router.push('/admin/team/new')}
           >
             <Plus className="w-4 h-4" />
             Add Team Member
-          </Button>
-        </div>
-      </div>
+          </DashboardButton>
+        }
+      />
 
       {/* Team Metrics */}
       {teamMetrics && (
@@ -181,38 +179,36 @@ export default function TeamDashboardPage() {
             {/* Search */}
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-fm-neutral-400 w-4 h-4" />
-              <input
+              <Input
                 type="text"
                 placeholder="Search team members..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                className="pl-10"
               />
             </div>
 
             {/* Department Filter */}
-            <select
+            <Select
               value={selectedDepartment}
               onChange={(e) => setSelectedDepartment(e.target.value)}
-              className="px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
             >
               <option value="all">All Departments</option>
               {Object.entries(TEAM_DEPARTMENTS).map(([key, value]) => (
                 <option key={key} value={key}>{value}</option>
               ))}
-            </select>
+            </Select>
 
             {/* Type Filter */}
-            <select
+            <Select
               value={selectedType}
               onChange={(e) => setSelectedType(e.target.value)}
-              className="px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
             >
               <option value="all">All Types</option>
               <option value="employee">Employees</option>
               <option value="freelancer">Freelancers</option>
               <option value="contractor">Contractors</option>
-            </select>
+            </Select>
           </div>
         </CardContent>
       </Card>
@@ -245,21 +241,19 @@ export default function TeamDashboardPage() {
                     <div className="w-12 h-12 rounded-full bg-fm-magenta-100 flex items-center justify-center text-fm-magenta-600 font-semibold text-lg">
                       {member.name.split(' ').map(n => n[0]).join('').toUpperCase()}
                     </div>
-                    
+
                     {/* Member Info */}
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
                         <h3 className="font-semibold text-lg text-fm-neutral-900">
                           {member.name}
                         </h3>
-                        <Badge variant={getStatusBadgeVariant(member.status)}>
-                          {member.status}
-                        </Badge>
+                        <StatusBadge status={member.status} />
                         <Badge variant="outline">
                           {member.type}
                         </Badge>
                       </div>
-                      
+
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                         <div className="space-y-2">
                           <p className="text-fm-magenta-600 font-medium">
@@ -274,7 +268,7 @@ export default function TeamDashboardPage() {
                             <span>{member.phone}</span>
                           </div>
                         </div>
-                        
+
                         <div className="space-y-2">
                           <div className="flex items-center gap-2 text-fm-neutral-600">
                             <MapPin className="w-4 h-4" />
@@ -324,31 +318,31 @@ export default function TeamDashboardPage() {
                         <span className="text-sm font-medium">{member.clientRatings}</span>
                       </div>
                     )}
-                    <Button 
-                      variant="ghost" 
+                    <DashboardButton
+                      variant="ghost"
                       size="sm"
                       onClick={() => router.push(`/admin/team/${member.id}`)}
                     >
                       View Profile
-                    </Button>
-                    <Button 
-                      variant="outline" 
+                    </DashboardButton>
+                    <DashboardButton
+                      variant="outline"
                       size="sm"
                       onClick={() => router.push(`/admin/team/${member.id}/edit`)}
                     >
                       Edit
-                    </Button>
+                    </DashboardButton>
                   </div>
                 </div>
               </div>
             ))}
 
             {filteredTeamMembers.length === 0 && (
-              <div className="text-center py-12">
-                <Users className="w-12 h-12 text-fm-neutral-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-fm-neutral-900 mb-2">No team members found</h3>
-                <p className="text-fm-neutral-500">Try adjusting your search or filters</p>
-              </div>
+              <EmptyState
+                icon={<Users className="w-6 h-6" />}
+                title="No team members found"
+                description="Try adjusting your search or filters"
+              />
             )}
           </div>
         </CardContent>

@@ -30,23 +30,30 @@ import {
   CheckCircle
 } from 'lucide-react';
 import { adminToast } from '@/lib/admin/toast';
-import { 
-  DashboardButton, 
-  DashboardCard, 
-  CardContent, 
-  CardHeader, 
-  CardTitle, 
-  MetricCard 
+import {
+  DashboardButton,
+  DashboardCard,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  MetricCard,
+  MetricCardSkeleton
 } from '@/design-system';
+import { PageHeader } from '@/components/ui/page-header';
+import { StatusBadge } from '@/components/ui/status-badge';
+import { EmptyState } from '@/components/ui/empty-state';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Input } from '@/components/ui/Input';
+import { Select } from '@/components/ui/select-native';
 import { AddLeadModal } from '@/components/admin/AddLeadModal';
-import type { 
-  LeadProfile, 
-  LeadStatus, 
-  LeadPriority, 
-  LeadSource, 
+import type {
+  LeadProfile,
+  LeadStatus,
+  LeadPriority,
+  LeadSource,
   LeadAnalytics,
   LeadDashboardStats,
-  LeadFilters 
+  LeadFilters
 } from '@/lib/admin/lead-types';
 
 export default function LeadDashboard() {
@@ -72,19 +79,19 @@ export default function LeadDashboard() {
     try {
       // Build query parameters
       const params = new URLSearchParams();
-      
+
       if (filters.status) params.set('status', filters.status.join(','));
       if (filters.priority) params.set('priority', filters.priority.join(','));
       if (filters.source) params.set('source', filters.source.join(','));
       if (searchQuery) params.set('search', searchQuery);
-      
+
       params.set('sortBy', sortBy);
       params.set('sortDirection', sortDirection);
 
       // Fetch leads
       const leadsResponse = await fetch(`/api/leads?${params}`);
       const leadsData = await leadsResponse.json();
-      
+
       if (leadsData.success) {
         setLeads(leadsData.data);
       }
@@ -92,7 +99,7 @@ export default function LeadDashboard() {
       // Fetch analytics
       const analyticsResponse = await fetch('/api/leads/analytics?type=full');
       const analyticsData = await analyticsResponse.json();
-      
+
       if (analyticsData.success) {
         setAnalytics(analyticsData.data);
       }
@@ -100,7 +107,7 @@ export default function LeadDashboard() {
       // Fetch dashboard stats
       const statsResponse = await fetch('/api/leads/analytics?type=dashboard');
       const statsData = await statsResponse.json();
-      
+
       if (statsData.success) {
         setDashboardStats(statsData.data);
       }
@@ -176,32 +183,6 @@ export default function LeadDashboard() {
     URL.revokeObjectURL(url);
   }, [leads]);
 
-  const getPriorityColor = (priority: LeadPriority) => {
-    const colors = {
-      hot: 'text-red-600 bg-red-100',
-      warm: 'text-orange-600 bg-orange-100',
-      cool: 'text-blue-600 bg-blue-100',
-      cold: 'text-fm-neutral-600 bg-fm-neutral-100'
-    };
-    return colors[priority] || colors.cold;
-  };
-
-  const getStatusColor = (status: LeadStatus) => {
-    const colors = {
-      new: 'text-green-600 bg-green-100',
-      contacted: 'text-blue-600 bg-blue-100',
-      qualified: 'text-fm-magenta-600 bg-purple-100',
-      discovery_scheduled: 'text-fm-magenta-700 bg-fm-magenta-100',
-      discovery_completed: 'text-cyan-600 bg-cyan-100',
-      proposal_sent: 'text-yellow-600 bg-yellow-100',
-      negotiating: 'text-orange-600 bg-orange-100',
-      won: 'text-green-600 bg-green-100',
-      lost: 'text-red-600 bg-red-100',
-      archived: 'text-fm-neutral-600 bg-fm-neutral-100'
-    };
-    return colors[status] || colors.new;
-  };
-
   const formatStatus = (status: LeadStatus) => {
     return status.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
@@ -212,118 +193,102 @@ export default function LeadDashboard() {
 
   if (loading) {
     return (
-      <div className="p-6">
-        <div className="animate-pulse space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="bg-white p-6 rounded-lg shadow">
-                <div className="h-4 bg-fm-neutral-200 rounded w-1/2 mb-2"></div>
-                <div className="h-6 bg-fm-neutral-200 rounded w-1/3"></div>
-              </div>
-            ))}
-          </div>
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="h-64 bg-fm-neutral-200 rounded"></div>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-8 w-48" />
+          <div className="flex gap-3">
+            <Skeleton className="h-10 w-24" />
+            <Skeleton className="h-10 w-28" />
           </div>
         </div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          {[...Array(4)].map((_, i) => (
+            <MetricCardSkeleton key={i} />
+          ))}
+        </div>
+        <Skeleton className="h-16 rounded-xl" />
+        <Skeleton className="h-96 rounded-xl" />
       </div>
     );
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-fm-magenta-600 to-fm-magenta-700 bg-clip-text text-transparent">Lead Management</h1>
-          <p className="text-fm-neutral-600 mt-1 font-medium">Track, qualify, and convert your leads</p>
-        </div>
-        <div className="flex items-center space-x-3 mt-4 md:mt-0">
-          <DashboardButton variant="outline" size="sm" onClick={exportLeads}>
-            <Download className="w-4 h-4 mr-2" />
-            Export
-          </DashboardButton>
-          <DashboardButton variant="admin" size="sm" onClick={() => setShowAddLead(true)}>
-            <Plus className="w-4 h-4 mr-2" />
-            Add Lead
-          </DashboardButton>
-        </div>
-      </div>
+      <PageHeader
+        title="Lead Management"
+        description="Track, qualify, and convert your leads"
+        actions={
+          <div className="flex items-center gap-3">
+            <DashboardButton variant="outline" size="sm" onClick={exportLeads}>
+              <Download className="w-4 h-4 mr-2" />
+              Export
+            </DashboardButton>
+            <DashboardButton variant="admin" size="sm" onClick={() => setShowAddLead(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Add Lead
+            </DashboardButton>
+          </div>
+        }
+      />
 
       {/* Stats Cards */}
       {dashboardStats && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-fm-neutral-600">Total Leads</p>
-                <p className="text-2xl font-bold text-fm-neutral-900">{dashboardStats.totalLeads}</p>
-              </div>
-              <Users className="w-8 h-8 text-blue-600" />
-            </div>
-            <div className="mt-4 flex items-center text-sm">
-              <span className="text-green-600">+{dashboardStats.recentLeads}</span>
-              <span className="text-fm-neutral-500 ml-1">new this week</span>
-            </div>
-          </div>
+          <MetricCard
+            title="Total Leads"
+            value={dashboardStats.totalLeads}
+            subtitle={`+${dashboardStats.recentLeads} new this week`}
+            icon={<Users className="w-6 h-6" />}
+            variant="admin"
+            change={{
+              value: dashboardStats.recentLeads,
+              type: dashboardStats.recentLeads > 0 ? 'increase' : 'neutral',
+              period: 'this week'
+            }}
+          />
 
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-fm-neutral-600">Hot Leads</p>
-                <p className="text-2xl font-bold text-red-600">{dashboardStats.hotLeads}</p>
-              </div>
-              <Target className="w-8 h-8 text-red-600" />
-            </div>
-            <div className="mt-4 flex items-center text-sm">
-              <span className="text-fm-neutral-500">Require immediate attention</span>
-            </div>
-          </div>
+          <MetricCard
+            title="Hot Leads"
+            value={dashboardStats.hotLeads}
+            subtitle="Require immediate attention"
+            icon={<Target className="w-6 h-6" />}
+            variant="admin"
+            change={{
+              value: dashboardStats.hotLeads,
+              type: dashboardStats.hotLeads > 0 ? 'increase' : 'neutral',
+              period: 'active'
+            }}
+          />
 
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-fm-neutral-600">Conversion Rate</p>
-                <p className="text-2xl font-bold text-green-600">
-                  {dashboardStats.conversionRate.toFixed(1)}%
-                </p>
-              </div>
-              <TrendingUp className="w-8 h-8 text-green-600" />
-            </div>
-            <div className="mt-4 flex items-center text-sm">
-              <span className="text-fm-neutral-500">Lead to client conversion</span>
-            </div>
-          </div>
+          <MetricCard
+            title="Conversion Rate"
+            value={`${dashboardStats.conversionRate.toFixed(1)}%`}
+            subtitle="Lead to client conversion"
+            icon={<TrendingUp className="w-6 h-6" />}
+            variant="admin"
+          />
 
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-fm-neutral-600">Avg Lead Value</p>
-                <p className="text-2xl font-bold text-fm-magenta-600">
-                  ₹{Math.round(dashboardStats.averageLeadValue / 1000)}K
-                </p>
-              </div>
-              <Star className="w-8 h-8 text-fm-magenta-600" />
-            </div>
-            <div className="mt-4 flex items-center text-sm">
-              <span className="text-fm-neutral-500">Based on budget range</span>
-            </div>
-          </div>
+          <MetricCard
+            title="Avg Lead Value"
+            value={`₹${Math.round(dashboardStats.averageLeadValue / 1000)}K`}
+            subtitle="Based on budget range"
+            icon={<Star className="w-6 h-6" />}
+            variant="admin"
+          />
         </div>
       )}
 
       {/* Filters and Search */}
-      <div className="bg-white p-4 rounded-lg shadow">
+      <DashboardCard variant="admin" className="p-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
           <div className="flex items-center space-x-4">
-            <div className="relative">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-fm-neutral-400" />
-              <input
-                type="text"
+            <div className="w-64">
+              <Input
                 placeholder="Search leads..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-4 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-transparent"
+                leftIcon={<Search className="w-4 h-4" />}
               />
             </div>
             <DashboardButton variant="outline" size="sm">
@@ -333,14 +298,13 @@ export default function LeadDashboard() {
           </div>
 
           <div className="flex items-center space-x-4">
-            <select
+            <Select
               value={`${sortBy}-${sortDirection}`}
               onChange={(e) => {
                 const [field, direction] = e.target.value.split('-');
                 setSortBy(field);
                 setSortDirection(direction as 'asc' | 'desc');
               }}
-              className="px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-transparent"
             >
               <option value="createdAt-desc">Newest First</option>
               <option value="createdAt-asc">Oldest First</option>
@@ -348,37 +312,33 @@ export default function LeadDashboard() {
               <option value="leadScore-asc">Lowest Score</option>
               <option value="company-asc">Company A-Z</option>
               <option value="company-desc">Company Z-A</option>
-            </select>
+            </Select>
 
-            <div className="flex rounded-lg border border-fm-neutral-300">
-              <button
+            <div className="flex items-center gap-1 bg-white border border-fm-neutral-200 rounded-lg p-1">
+              <DashboardButton
+                variant={viewMode === 'table' ? 'admin' : 'ghost'}
+                size="sm"
                 onClick={() => setViewMode('table')}
-                className={`px-3 py-2 text-sm font-medium ${
-                  viewMode === 'table'
-                    ? 'bg-fm-magenta-600 text-white'
-                    : 'text-fm-neutral-500 hover:text-fm-neutral-700'
-                }`}
+                className="text-xs"
               >
                 Table
-              </button>
-              <button
+              </DashboardButton>
+              <DashboardButton
+                variant={viewMode === 'cards' ? 'admin' : 'ghost'}
+                size="sm"
                 onClick={() => setViewMode('cards')}
-                className={`px-3 py-2 text-sm font-medium ${
-                  viewMode === 'cards'
-                    ? 'bg-fm-magenta-600 text-white'
-                    : 'text-fm-neutral-500 hover:text-fm-neutral-700'
-                }`}
+                className="text-xs"
               >
                 Cards
-              </button>
+              </DashboardButton>
             </div>
           </div>
         </div>
-      </div>
+      </DashboardCard>
 
       {/* Leads Table */}
       {viewMode === 'table' && (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="bg-white rounded-xl border border-fm-neutral-200 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-fm-neutral-200">
               <thead className="bg-fm-neutral-50">
@@ -468,9 +428,9 @@ export default function LeadDashboard() {
                       {lead.website && (
                         <div className="text-sm text-fm-neutral-500 flex items-center">
                           <Globe className="w-3 h-3 mr-1" />
-                          <a 
-                            href={lead.website} 
-                            target="_blank" 
+                          <a
+                            href={lead.website}
+                            target="_blank"
                             rel="noopener noreferrer"
                             className="hover:underline"
                           >
@@ -497,15 +457,15 @@ export default function LeadDashboard() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPriorityColor(lead.priority)}`}>
+                      <StatusBadge status={lead.priority}>
                         {formatPriority(lead.priority)}
-                      </span>
+                      </StatusBadge>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <select
                         value={lead.status}
                         onChange={(e) => updateLeadStatus(lead.id, e.target.value as LeadStatus)}
-                        className={`text-xs font-medium rounded-full px-2.5 py-0.5 border-0 ${getStatusColor(lead.status)}`}
+                        className="text-xs font-medium rounded-full px-2.5 py-0.5 border border-fm-neutral-200 bg-white text-fm-neutral-700 focus:ring-2 focus:ring-fm-magenta-500 focus:border-transparent"
                       >
                         <option value="new">New</option>
                         <option value="contacted">Contacted</option>
@@ -525,7 +485,7 @@ export default function LeadDashboard() {
                           {lead.leadScore}
                         </div>
                         <div className="ml-2 w-12 bg-fm-neutral-200 rounded-full h-2">
-                          <div 
+                          <div
                             className="h-2 rounded-full bg-fm-magenta-600"
                             style={{ width: `${lead.leadScore}%` }}
                           ></div>
@@ -570,7 +530,7 @@ export default function LeadDashboard() {
       {viewMode === 'cards' && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {leads.map((lead) => (
-            <div key={lead.id} className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow">
+            <div key={lead.id} className="bg-white rounded-xl border border-fm-neutral-200 hover:shadow-lg transition-shadow">
               <div className="p-6">
                 <div className="flex items-start justify-between mb-4">
                   <div>
@@ -579,13 +539,13 @@ export default function LeadDashboard() {
                     <p className="text-sm text-fm-neutral-500">{lead.email}</p>
                   </div>
                   <div className="flex flex-col items-end space-y-2">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPriorityColor(lead.priority)}`}>
+                    <StatusBadge status={lead.priority}>
                       {formatPriority(lead.priority)}
-                    </span>
+                    </StatusBadge>
                     <span className="text-sm font-medium text-fm-neutral-900">{lead.leadScore}/100</span>
                   </div>
                 </div>
-                
+
                 <div className="mb-4">
                   <p className="text-sm font-medium text-fm-neutral-700 capitalize">
                     {lead.projectType.replace(/_/g, ' ')}
@@ -594,7 +554,7 @@ export default function LeadDashboard() {
                     {lead.projectDescription}
                   </p>
                 </div>
-                
+
                 <div className="flex items-center justify-between mb-4">
                   <div className="text-sm text-fm-neutral-600">
                     Budget: <span className="font-medium">{lead.budgetRange.replace(/_/g, ' ')}</span>
@@ -603,12 +563,12 @@ export default function LeadDashboard() {
                     {lead.timeline.replace(/_/g, ' ')}
                   </div>
                 </div>
-                
+
                 <div className="flex items-center justify-between">
                   <select
                     value={lead.status}
                     onChange={(e) => updateLeadStatus(lead.id, e.target.value as LeadStatus)}
-                    className={`text-xs font-medium rounded-full px-3 py-1 border-0 ${getStatusColor(lead.status)}`}
+                    className="text-xs font-medium rounded-full px-3 py-1 border border-fm-neutral-200 bg-white text-fm-neutral-700 focus:ring-2 focus:ring-fm-magenta-500 focus:border-transparent"
                   >
                     <option value="new">New</option>
                     <option value="contacted">Contacted</option>
@@ -621,7 +581,7 @@ export default function LeadDashboard() {
                     <option value="lost">Lost</option>
                     <option value="archived">Archived</option>
                   </select>
-                  
+
                   <div className="flex items-center space-x-1">
                     <DashboardButton variant="ghost" size="sm" onClick={() => setSelectedLead(lead)} title="View details">
                       <Eye className="w-4 h-4" />
@@ -649,19 +609,21 @@ export default function LeadDashboard() {
 
       {/* Empty State */}
       {leads.length === 0 && !loading && (
-        <div className="bg-white rounded-lg shadow p-12 text-center">
-          <Users className="w-12 h-12 text-fm-neutral-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-fm-neutral-900 mb-2">No leads found</h3>
-          <p className="text-fm-neutral-600 mb-6">
-            {searchQuery || Object.keys(filters).length > 0
+        <EmptyState
+          icon={<Users className="w-6 h-6" />}
+          title="No leads found"
+          description={
+            searchQuery || Object.keys(filters).length > 0
               ? 'Try adjusting your search or filters'
-              : 'Get started by capturing your first lead'}
-          </p>
-          <DashboardButton variant="primary" onClick={() => setShowAddLead(true)}>
-            <Plus className="w-4 h-4 mr-2" />
-            Add First Lead
-          </DashboardButton>
-        </div>
+              : 'Get started by capturing your first lead'
+          }
+          action={
+            <DashboardButton variant="admin" size="sm" onClick={() => setShowAddLead(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Add First Lead
+            </DashboardButton>
+          }
+        />
       )}
 
       {/* Lead Detail Drawer */}
@@ -672,7 +634,9 @@ export default function LeadDashboard() {
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-bold text-fm-neutral-900">Lead Details</h2>
-                <button onClick={() => setSelectedLead(null)} className="text-fm-neutral-400 hover:text-fm-neutral-600 text-2xl">&times;</button>
+                <DashboardButton variant="ghost" size="sm" onClick={() => setSelectedLead(null)}>
+                  &times;
+                </DashboardButton>
               </div>
               <div className="space-y-5">
                 <div>
@@ -730,15 +694,15 @@ export default function LeadDashboard() {
                 <div className="grid grid-cols-3 gap-4 text-sm">
                   <div>
                     <span className="text-fm-neutral-500 block">Status</span>
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(selectedLead.status)}`}>
+                    <StatusBadge status={selectedLead.status}>
                       {formatStatus(selectedLead.status)}
-                    </span>
+                    </StatusBadge>
                   </div>
                   <div>
                     <span className="text-fm-neutral-500 block">Priority</span>
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPriorityColor(selectedLead.priority)}`}>
+                    <StatusBadge status={selectedLead.priority}>
                       {formatPriority(selectedLead.priority)}
-                    </span>
+                    </StatusBadge>
                   </div>
                   <div>
                     <span className="text-fm-neutral-500 block">Score</span>

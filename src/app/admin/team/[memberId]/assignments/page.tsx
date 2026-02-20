@@ -26,10 +26,16 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-  DashboardButton as Button,
+  DashboardButton,
   MetricCard
 } from '@/design-system';
 import { Badge } from '@/components/ui/Badge';
+import { PageHeader } from '@/components/ui/page-header';
+import { StatusBadge } from '@/components/ui/status-badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { EmptyState } from '@/components/ui/empty-state';
+import { Input } from '@/components/ui/Input';
+import { Select } from '@/components/ui/select-native';
 import { TeamMember, TeamAssignment, TEAM_ROLES } from '@/lib/admin/types';
 import { adminToast } from '@/lib/admin/toast';
 
@@ -160,22 +166,28 @@ export default function TeamAssignmentManagementPage({ params }: TeamAssignmentM
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-fm-magenta-600"></div>
+      <div className="space-y-6">
+        <Skeleton className="h-8 w-64" />
+        <Skeleton className="h-48 rounded-xl" />
+        <Skeleton className="h-64 rounded-xl" />
       </div>
     );
   }
 
   if (!member) {
     return (
-      <div className="max-w-4xl mx-auto text-center py-12">
-        <User className="w-16 h-16 text-fm-neutral-400 mx-auto mb-4" />
-        <h2 className="text-xl font-semibold text-fm-neutral-900 mb-2">Team Member Not Found</h2>
-        <p className="text-fm-neutral-600 mb-6">The requested team member could not be found.</p>
-        <Button onClick={() => router.push('/admin/team')}>
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Team
-        </Button>
+      <div className="space-y-6">
+        <EmptyState
+          icon={<User className="h-6 w-6" />}
+          title="Team Member Not Found"
+          description="The requested team member could not be found."
+          action={
+            <DashboardButton onClick={() => router.push('/admin/team')}>
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Team
+            </DashboardButton>
+          }
+        />
       </div>
     );
   }
@@ -184,44 +196,30 @@ export default function TeamAssignmentManagementPage({ params }: TeamAssignmentM
   const workloadPercentage = Math.round((totalAllocatedHours / member.capacity) * 100);
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8">
-      {/* Header */}
-      <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-6">
-            <Button
-              variant="ghost"
+    <div className="space-y-6">
+      <PageHeader
+        title={`${member.name} - Assignments`}
+        description={`${TEAM_ROLES[member.role]} - Assignment Management`}
+        actions={
+          <div className="flex items-center gap-3">
+            <DashboardButton
+              variant="outline"
               size="sm"
               onClick={() => router.push(`/admin/team/${memberId}`)}
-              className="flex items-center gap-2"
             >
-              <ArrowLeft className="w-4 h-4" />
+              <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Profile
-            </Button>
-
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-fm-magenta-100 flex items-center justify-center text-fm-magenta-600 font-bold">
-                {member.name.split(' ').map(n => n[0]).join('').toUpperCase()}
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-fm-neutral-900">{member.name}</h1>
-                <p className="text-fm-magenta-600 font-medium">
-                  {TEAM_ROLES[member.role]} - Assignment Management
-                </p>
-              </div>
-            </div>
+            </DashboardButton>
+            <DashboardButton
+              variant="admin"
+              onClick={() => setShowAddForm(true)}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add Assignment
+            </DashboardButton>
           </div>
-
-          <Button
-            variant="admin"
-            onClick={() => setShowAddForm(true)}
-            className="flex items-center gap-2"
-          >
-            <Plus className="w-4 h-4" />
-            Add Assignment
-          </Button>
-        </div>
-      </div>
+        }
+      />
 
       {/* Workload Overview */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -286,39 +284,29 @@ export default function TeamAssignmentManagementPage({ params }: TeamAssignmentM
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
-                  Select Client *
-                </label>
-                <select
-                  value={newAssignment.clientId}
-                  onChange={(e) => setNewAssignment(prev => ({ ...prev, clientId: e.target.value }))}
-                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
-                  required
-                >
-                  <option value="">Choose a client...</option>
-                  {availableClients.map(client => (
-                    <option key={client.id} value={client.id}>
-                      {client.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <Select
+                label="Select Client"
+                value={newAssignment.clientId}
+                onChange={(e) => setNewAssignment(prev => ({ ...prev, clientId: e.target.value }))}
+                required
+              >
+                <option value="">Choose a client...</option>
+                {availableClients.map(client => (
+                  <option key={client.id} value={client.id}>
+                    {client.name}
+                  </option>
+                ))}
+              </Select>
 
-              <div>
-                <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
-                  Weekly Hours *
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  max={member.capacity}
-                  value={newAssignment.hoursAllocated}
-                  onChange={(e) => setNewAssignment(prev => ({ ...prev, hoursAllocated: parseInt(e.target.value) || 1 }))}
-                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
-                  required
-                />
-              </div>
+              <Input
+                label="Weekly Hours"
+                type="number"
+                min={1}
+                max={member.capacity}
+                value={newAssignment.hoursAllocated}
+                onChange={(e) => setNewAssignment(prev => ({ ...prev, hoursAllocated: parseInt(e.target.value) || 1 }))}
+                required
+              />
 
               <div>
                 <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
@@ -339,13 +327,13 @@ export default function TeamAssignmentManagementPage({ params }: TeamAssignmentM
             </div>
 
             <div className="flex items-center justify-end gap-3 pt-4 border-t border-fm-neutral-200">
-              <Button
+              <DashboardButton
                 variant="ghost"
                 onClick={() => setShowAddForm(false)}
               >
                 Cancel
-              </Button>
-              <Button
+              </DashboardButton>
+              <DashboardButton
                 variant="admin"
                 onClick={handleAddAssignment}
                 disabled={!newAssignment.clientId}
@@ -353,7 +341,7 @@ export default function TeamAssignmentManagementPage({ params }: TeamAssignmentM
               >
                 <Save className="w-4 h-4" />
                 Add Assignment
-              </Button>
+              </DashboardButton>
             </div>
           </CardContent>
         </Card>
@@ -410,41 +398,35 @@ export default function TeamAssignmentManagementPage({ params }: TeamAssignmentM
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <Badge
-                        variant="outline"
-                        className={assignment.status === 'active' ? 'border-green-300 text-green-700' : ''}
-                      >
-                        {assignment.status}
-                      </Badge>
-                      <Button
+                      <StatusBadge status={assignment.status} />
+                      <DashboardButton
                         variant="ghost"
                         size="sm"
                         onClick={() => handleRemoveAssignment(assignment.id)}
                         className="text-red-600 hover:text-red-700 hover:bg-red-50"
                       >
                         <Trash2 className="w-4 h-4" />
-                      </Button>
+                      </DashboardButton>
                     </div>
                   </div>
                 );
               })}
             </div>
           ) : (
-            <div className="text-center py-8">
-              <Users className="w-12 h-12 text-fm-neutral-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-fm-neutral-900 mb-2">No Client Assignments</h3>
-              <p className="text-fm-neutral-500 mb-4">
-                This team member hasn't been assigned to any clients yet.
-              </p>
-              <Button
-                variant="admin"
-                onClick={() => setShowAddForm(true)}
-                className="flex items-center gap-2"
-              >
-                <Plus className="w-4 h-4" />
-                Add First Assignment
-              </Button>
-            </div>
+            <EmptyState
+              icon={<Users className="h-6 w-6" />}
+              title="No Client Assignments"
+              description="This team member hasn't been assigned to any clients yet."
+              action={
+                <DashboardButton
+                  variant="admin"
+                  onClick={() => setShowAddForm(true)}
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add First Assignment
+                </DashboardButton>
+              }
+            />
           )}
         </CardContent>
       </Card>
@@ -461,10 +443,10 @@ export default function TeamAssignmentManagementPage({ params }: TeamAssignmentM
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-6">
-            <Clock className="w-12 h-12 text-fm-neutral-400 mx-auto mb-3" />
-            <p className="text-fm-neutral-500">Assignment history tracking coming soon</p>
-          </div>
+          <EmptyState
+            icon={<Clock className="h-6 w-6" />}
+            title="Assignment history tracking coming soon"
+          />
         </CardContent>
       </Card>
     </div>

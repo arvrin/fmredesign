@@ -21,8 +21,8 @@ const cardVariants = {
   // Visual variants
   variant: {
     default: [
-      'bg-white border-gray-200 shadow-md',
-      'hover:shadow-lg hover:border-gray-300'
+      'bg-white border-fm-neutral-200 shadow-sm',
+      'hover:shadow-md hover:border-fm-neutral-300'
     ].join(' '),
 
     glass: [
@@ -30,12 +30,12 @@ const cardVariants = {
     ].join(' '),
 
     elevated: [
-      'bg-white border-gray-100 shadow-xl',
+      'bg-white border-fm-neutral-100 shadow-xl',
       'hover:shadow-2xl hover:-translate-y-1'
     ].join(' '),
 
     flat: [
-      'bg-gray-50 border-gray-200 shadow-none',
+      'bg-fm-neutral-50 border-fm-neutral-200 shadow-none',
       'hover:bg-white hover:shadow-sm'
     ].join(' '),
 

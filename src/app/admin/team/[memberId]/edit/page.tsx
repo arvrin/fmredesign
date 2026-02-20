@@ -23,8 +23,13 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-  DashboardButton as Button
+  DashboardButton
 } from '@/design-system';
+import { PageHeader } from '@/components/ui/page-header';
+import { Skeleton } from '@/components/ui/skeleton';
+import { EmptyState } from '@/components/ui/empty-state';
+import { Input } from '@/components/ui/Input';
+import { Select } from '@/components/ui/select-native';
 import {
   TeamMember,
   TeamRole,
@@ -159,62 +164,59 @@ export default function EditTeamMemberPage({ params }: EditTeamMemberProps) {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-fm-magenta-600"></div>
+      <div className="space-y-6">
+        <Skeleton className="h-8 w-64" />
+        <Skeleton className="h-48 rounded-xl" />
+        <Skeleton className="h-64 rounded-xl" />
       </div>
     );
   }
 
   if (!originalMember || !formData.name) {
     return (
-      <div className="max-w-4xl mx-auto text-center py-12">
-        <User className="w-16 h-16 text-fm-neutral-400 mx-auto mb-4" />
-        <h2 className="text-xl font-semibold text-fm-neutral-900 mb-2">Team Member Not Found</h2>
-        <p className="text-fm-neutral-600 mb-6">The requested team member could not be found.</p>
-        <Button onClick={() => router.push('/admin/team')}>
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Team
-        </Button>
+      <div className="space-y-6">
+        <EmptyState
+          icon={<User className="h-6 w-6" />}
+          title="Team Member Not Found"
+          description="The requested team member could not be found."
+          action={
+            <DashboardButton onClick={() => router.push('/admin/team')}>
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Team
+            </DashboardButton>
+          }
+        />
       </div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
-      {/* Header */}
-      <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
+    <div className="space-y-6">
+      <PageHeader
+        title={`Edit ${originalMember.name}`}
+        description="Update team member information"
+        icon={<User className="w-6 h-6" />}
+        actions={
+          <div className="flex items-center gap-3">
+            <DashboardButton
+              variant="outline"
               size="sm"
               onClick={() => router.push(`/admin/team/${memberId}`)}
-              className="flex items-center gap-2"
             >
-              <ArrowLeft className="w-4 h-4" />
+              <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Profile
-            </Button>
-            <div>
-              <h1 className="text-2xl font-bold text-fm-neutral-900 flex items-center gap-3">
-                <User className="w-8 h-8 text-fm-magenta-600" />
-                Edit {originalMember.name}
-              </h1>
-              <p className="text-sm text-fm-neutral-500 mt-1">
-                Update team member information
-              </p>
-            </div>
+            </DashboardButton>
+            <DashboardButton
+              variant="destructive"
+              size="sm"
+              onClick={() => setShowDeleteConfirm(true)}
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              Delete Member
+            </DashboardButton>
           </div>
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={() => setShowDeleteConfirm(true)}
-            className="flex items-center gap-2"
-          >
-            <Trash2 className="w-4 h-4" />
-            Delete Member
-          </Button>
-        </div>
-      </div>
+        }
+      />
 
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
@@ -228,14 +230,14 @@ export default function EditTeamMemberPage({ params }: EditTeamMemberProps) {
               Are you sure you want to delete {originalMember.name}? This action cannot be undone and will remove all their assignments and data.
             </p>
             <div className="flex items-center justify-end gap-3">
-              <Button
+              <DashboardButton
                 variant="ghost"
                 onClick={() => setShowDeleteConfirm(false)}
                 disabled={isDeleting}
               >
                 Cancel
-              </Button>
-              <Button
+              </DashboardButton>
+              <DashboardButton
                 variant="destructive"
                 onClick={handleDelete}
                 disabled={isDeleting}
@@ -243,7 +245,7 @@ export default function EditTeamMemberPage({ params }: EditTeamMemberProps) {
               >
                 <Trash2 className="w-4 h-4" />
                 {isDeleting ? 'Deleting...' : 'Delete'}
-              </Button>
+              </DashboardButton>
             </div>
           </div>
         </div>
@@ -280,61 +282,41 @@ export default function EditTeamMemberPage({ params }: EditTeamMemberProps) {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
-                  Full Name *
-                </label>
-                <input
-                  type="text"
-                  value={formData.name || ''}
-                  onChange={(e) => handleInputChange('name', e.target.value)}
-                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
-                  required
-                />
-              </div>
+              <Input
+                label="Full Name"
+                type="text"
+                value={formData.name || ''}
+                onChange={(e) => handleInputChange('name', e.target.value)}
+                required
+              />
 
-              <div>
-                <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
-                  Email Address *
-                </label>
-                <input
-                  type="email"
-                  value={formData.email || ''}
-                  onChange={(e) => handleInputChange('email', e.target.value)}
-                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
-                  required
-                />
-              </div>
+              <Input
+                label="Email Address"
+                type="email"
+                value={formData.email || ''}
+                onChange={(e) => handleInputChange('email', e.target.value)}
+                required
+              />
 
-              <div>
-                <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
-                  Phone Number *
-                </label>
-                <input
-                  type="tel"
-                  value={formData.phone || ''}
-                  onChange={(e) => handleInputChange('phone', e.target.value)}
-                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
-                  required
-                />
-              </div>
+              <Input
+                label="Phone Number"
+                type="tel"
+                value={formData.phone || ''}
+                onChange={(e) => handleInputChange('phone', e.target.value)}
+                required
+              />
 
-              <div>
-                <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
-                  Status *
-                </label>
-                <select
-                  value={formData.status || 'active'}
-                  onChange={(e) => handleInputChange('status', e.target.value)}
-                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
-                  required
-                >
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
-                  <option value="on-leave">On Leave</option>
-                  <option value="terminated">Terminated</option>
-                </select>
-              </div>
+              <Select
+                label="Status"
+                value={formData.status || 'active'}
+                onChange={(e) => handleInputChange('status', e.target.value)}
+                required
+              >
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+                <option value="on-leave">On Leave</option>
+                <option value="terminated">Terminated</option>
+              </Select>
             </div>
           </CardContent>
         </Card>
@@ -349,72 +331,52 @@ export default function EditTeamMemberPage({ params }: EditTeamMemberProps) {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
-                  Employment Type *
-                </label>
-                <select
-                  value={formData.type || 'employee'}
-                  onChange={(e) => handleInputChange('type', e.target.value)}
-                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
-                  required
-                >
-                  <option value="employee">Employee</option>
-                  <option value="freelancer">Freelancer</option>
-                  <option value="contractor">Contractor</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
-                  Department *
-                </label>
-                <select
-                  value={formData.department || 'creative'}
-                  onChange={(e) => handleInputChange('department', e.target.value as TeamDepartment)}
-                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
-                  required
-                >
-                  {Object.entries(TEAM_DEPARTMENTS).map(([key, value]) => (
-                    <option key={key} value={key}>{value}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
-                  Seniority Level *
-                </label>
-                <select
-                  value={formData.seniority || 'junior'}
-                  onChange={(e) => handleInputChange('seniority', e.target.value)}
-                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
-                  required
-                >
-                  <option value="junior">Junior</option>
-                  <option value="mid">Mid-level</option>
-                  <option value="senior">Senior</option>
-                  <option value="lead">Lead</option>
-                  <option value="director">Director</option>
-                </select>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
-                Job Role *
-              </label>
-              <select
-                value={formData.role || 'content-writer'}
-                onChange={(e) => handleInputChange('role', e.target.value as TeamRole)}
-                className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+              <Select
+                label="Employment Type"
+                value={formData.type || 'employee'}
+                onChange={(e) => handleInputChange('type', e.target.value)}
                 required
               >
-                {Object.entries(TEAM_ROLES).map(([key, value]) => (
+                <option value="employee">Employee</option>
+                <option value="freelancer">Freelancer</option>
+                <option value="contractor">Contractor</option>
+              </Select>
+
+              <Select
+                label="Department"
+                value={formData.department || 'creative'}
+                onChange={(e) => handleInputChange('department', e.target.value as TeamDepartment)}
+                required
+              >
+                {Object.entries(TEAM_DEPARTMENTS).map(([key, value]) => (
                   <option key={key} value={key}>{value}</option>
                 ))}
-              </select>
+              </Select>
+
+              <Select
+                label="Seniority Level"
+                value={formData.seniority || 'junior'}
+                onChange={(e) => handleInputChange('seniority', e.target.value)}
+                required
+              >
+                <option value="junior">Junior</option>
+                <option value="mid">Mid-level</option>
+                <option value="senior">Senior</option>
+                <option value="lead">Lead</option>
+                <option value="director">Director</option>
+              </Select>
             </div>
+
+            <Select
+              label="Job Role"
+              value={formData.role || 'content-writer'}
+              onChange={(e) => handleInputChange('role', e.target.value as TeamRole)}
+              required
+            >
+              {Object.entries(TEAM_ROLES).map(([key, value]) => (
+                <option key={key} value={key}>{value}</option>
+              ))}
+            </Select>
           </CardContent>
         </Card>
 
@@ -428,53 +390,38 @@ export default function EditTeamMemberPage({ params }: EditTeamMemberProps) {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
-                  Work Type *
-                </label>
-                <select
-                  value={formData.workType || 'full-time'}
-                  onChange={(e) => handleInputChange('workType', e.target.value)}
-                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
-                  required
-                >
-                  <option value="full-time">Full-time</option>
-                  <option value="part-time">Part-time</option>
-                  <option value="contract">Contract</option>
-                  <option value="freelance">Freelance</option>
-                </select>
-              </div>
+              <Select
+                label="Work Type"
+                value={formData.workType || 'full-time'}
+                onChange={(e) => handleInputChange('workType', e.target.value)}
+                required
+              >
+                <option value="full-time">Full-time</option>
+                <option value="part-time">Part-time</option>
+                <option value="contract">Contract</option>
+                <option value="freelance">Freelance</option>
+              </Select>
 
-              <div>
-                <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
-                  Location *
-                </label>
-                <select
-                  value={formData.location || 'office'}
-                  onChange={(e) => handleInputChange('location', e.target.value)}
-                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
-                  required
-                >
-                  <option value="office">Office</option>
-                  <option value="remote">Remote</option>
-                  <option value="hybrid">Hybrid</option>
-                </select>
-              </div>
+              <Select
+                label="Location"
+                value={formData.location || 'office'}
+                onChange={(e) => handleInputChange('location', e.target.value)}
+                required
+              >
+                <option value="office">Office</option>
+                <option value="remote">Remote</option>
+                <option value="hybrid">Hybrid</option>
+              </Select>
 
-              <div>
-                <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
-                  Weekly Capacity (Hours) *
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  max="60"
-                  value={formData.capacity || 40}
-                  onChange={(e) => handleInputChange('capacity', parseInt(e.target.value) || 40)}
-                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
-                  required
-                />
-              </div>
+              <Input
+                label="Weekly Capacity (Hours)"
+                type="number"
+                min={1}
+                max={60}
+                value={formData.capacity || 40}
+                onChange={(e) => handleInputChange('capacity', parseInt(e.target.value) || 40)}
+                required
+              />
             </div>
           </CardContent>
         </Card>
@@ -489,48 +436,33 @@ export default function EditTeamMemberPage({ params }: EditTeamMemberProps) {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
-                  Compensation Type *
-                </label>
-                <select
-                  value={formData.compensation?.type || 'salary'}
-                  onChange={(e) => handleCompensationChange('type', e.target.value)}
-                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
-                  required
-                >
-                  <option value="salary">Salary</option>
-                  <option value="hourly">Hourly</option>
-                  <option value="project-based">Project-based</option>
-                </select>
-              </div>
+              <Select
+                label="Compensation Type"
+                value={formData.compensation?.type || 'salary'}
+                onChange={(e) => handleCompensationChange('type', e.target.value)}
+                required
+              >
+                <option value="salary">Salary</option>
+                <option value="hourly">Hourly</option>
+                <option value="project-based">Project-based</option>
+              </Select>
 
-              <div>
-                <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
-                  Amount (INR) *
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  value={formData.compensation?.amount || 0}
-                  onChange={(e) => handleCompensationChange('amount', parseFloat(e.target.value) || 0)}
-                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
-                  required
-                />
-              </div>
+              <Input
+                label="Amount (INR)"
+                type="number"
+                min={0}
+                value={formData.compensation?.amount || 0}
+                onChange={(e) => handleCompensationChange('amount', parseFloat(e.target.value) || 0)}
+                required
+              />
 
-              <div>
-                <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
-                  Client Billing Rate (INR/hour)
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  value={formData.compensation?.billingRate || 0}
-                  onChange={(e) => handleCompensationChange('billingRate', parseFloat(e.target.value) || 0)}
-                  className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
-                />
-              </div>
+              <Input
+                label="Client Billing Rate (INR/hour)"
+                type="number"
+                min={0}
+                value={formData.compensation?.billingRate || 0}
+                onChange={(e) => handleCompensationChange('billingRate', parseFloat(e.target.value) || 0)}
+              />
             </div>
           </CardContent>
         </Card>
@@ -593,15 +525,15 @@ export default function EditTeamMemberPage({ params }: EditTeamMemberProps) {
 
         {/* Submit Buttons */}
         <div className="flex items-center justify-end gap-4 pt-6 border-t border-fm-neutral-200">
-          <Button
+          <DashboardButton
             type="button"
             variant="ghost"
             onClick={() => router.push(`/admin/team/${memberId}`)}
             disabled={isSubmitting}
           >
             Cancel
-          </Button>
-          <Button
+          </DashboardButton>
+          <DashboardButton
             type="submit"
             variant="admin"
             disabled={isSubmitting}
@@ -609,7 +541,7 @@ export default function EditTeamMemberPage({ params }: EditTeamMemberProps) {
           >
             <Save className="w-4 h-4" />
             {isSubmitting ? 'Updating...' : 'Update Team Member'}
-          </Button>
+          </DashboardButton>
         </div>
       </form>
     </div>
