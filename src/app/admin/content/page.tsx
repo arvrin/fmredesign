@@ -248,7 +248,7 @@ export default function ContentCalendarPage() {
             <Skeleton className="h-10 w-32" />
           </div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
           {[...Array(4)].map((_, i) => (
             <MetricCardSkeleton key={i} />
           ))}
@@ -302,7 +302,7 @@ export default function ContentCalendarPage() {
       />
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
         <MetricCard
           title="Total Content"
           value={contentItems.length}
@@ -443,7 +443,7 @@ export default function ContentCalendarPage() {
               <div key={content.id} className="bg-white rounded-xl border border-fm-neutral-200 p-6 hover:shadow-lg transition-shadow">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2">
                       {getStatusIcon(content.status)}
                       <div className="flex items-center gap-2">
                         {getTypeIcon(content.type)}
@@ -510,7 +510,7 @@ export default function ContentCalendarPage() {
                   </div>
 
                   {/* Actions */}
-                  <div className="flex items-center gap-2 ml-4">
+                  <div className="flex items-center gap-1 sm:gap-2 ml-2 sm:ml-4">
                     <DashboardButton
                       variant="ghost"
                       size="sm"

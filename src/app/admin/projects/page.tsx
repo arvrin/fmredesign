@@ -181,7 +181,7 @@ export default function ProjectsPage() {
           <Skeleton className="h-8 w-48" />
           <Skeleton className="h-10 w-32" />
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
           {[...Array(4)].map((_, i) => (
             <MetricCardSkeleton key={i} />
           ))}
@@ -215,7 +215,7 @@ export default function ProjectsPage() {
       />
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
         <MetricCard
           title="Total Projects"
           value={projects.length}
@@ -332,7 +332,7 @@ export default function ProjectsPage() {
             <div key={project.id} className="bg-white rounded-xl border border-fm-neutral-200 p-6 hover:shadow-lg transition-shadow">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2">
                     {getStatusIcon(project.status)}
                     <h3 className="text-lg font-semibold text-fm-neutral-900">
                       {project.name}
@@ -396,7 +396,7 @@ export default function ProjectsPage() {
                 </div>
 
                 {/* Actions */}
-                <div className="flex items-center gap-2 ml-4">
+                <div className="flex items-center gap-1 sm:gap-2 ml-2 sm:ml-4">
                   <DashboardButton
                     variant="ghost"
                     size="sm"

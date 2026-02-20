@@ -231,7 +231,7 @@ export default function NewContentPage() {
 
   return (
     <div className="min-h-screen bg-fm-neutral-50">
-      <div className="max-w-4xl mx-auto px-6 py-8">
+      <div className="max-w-4xl mx-auto px-4 py-6 sm:px-6 sm:py-8">
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
           <Button
@@ -242,13 +242,13 @@ export default function NewContentPage() {
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
-            <h1 className="text-3xl font-bold text-fm-neutral-900">New Content</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-fm-neutral-900">New Content</h1>
             <p className="text-fm-neutral-600">Create new content for your content calendar</p>
           </div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-8">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
             {/* Main Content Form */}
             <div className="lg:col-span-2 space-y-6">
               {/* Basic Information */}

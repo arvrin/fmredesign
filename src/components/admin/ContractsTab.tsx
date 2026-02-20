@@ -373,8 +373,8 @@ export default function ContractsTab({ clientId, clientName }: Props) {
                 Services *
               </label>
               {services.map((svc, idx) => (
-                <div key={idx} className="grid grid-cols-12 gap-2 items-end mb-2">
-                  <div className="col-span-4">
+                <div key={idx} className="grid grid-cols-6 sm:grid-cols-12 gap-2 items-end mb-3 pb-3 border-b sm:border-0 border-fm-neutral-100 last:border-0">
+                  <div className="col-span-6 sm:col-span-4">
                     <Select
                       label={idx === 0 ? 'Service' : undefined}
                       value={svc.serviceId || ''}
@@ -396,7 +396,7 @@ export default function ContractsTab({ clientId, clientName }: Props) {
                       ))}
                     </Select>
                   </div>
-                  <div className="col-span-3">
+                  <div className="col-span-6 sm:col-span-3">
                     <Input
                       label={idx === 0 ? 'Name' : undefined}
                       value={svc.name}
@@ -442,7 +442,7 @@ export default function ContractsTab({ clientId, clientName }: Props) {
                   </div>
                   {/* Description row below each service */}
                   {svc.description && (
-                    <div className="col-span-12 -mt-1 mb-1">
+                    <div className="col-span-6 sm:col-span-12 -mt-1 mb-1">
                       <textarea
                         value={svc.description}
                         onChange={(e) => updateService(idx, { description: e.target.value })}
@@ -471,7 +471,7 @@ export default function ContractsTab({ clientId, clientName }: Props) {
             </div>
 
             {/* Duration & Payment */}
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
               <Input
                 label="Start Date"
                 type="date"

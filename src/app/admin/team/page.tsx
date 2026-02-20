@@ -235,17 +235,17 @@ export default function TeamDashboardPage() {
                 key={member.id}
                 className="bg-fm-neutral-50 rounded-lg p-4 border border-fm-neutral-200 hover:shadow-sm transition-shadow"
               >
-                <div className="flex items-start justify-between">
-                  <div className="flex items-start gap-4 flex-1">
+                <div className="flex flex-col sm:flex-row items-start sm:justify-between gap-3 sm:gap-0">
+                  <div className="flex items-start gap-3 sm:gap-4 flex-1 min-w-0">
                     {/* Avatar */}
-                    <div className="w-12 h-12 rounded-full bg-fm-magenta-100 flex items-center justify-center text-fm-magenta-600 font-semibold text-lg">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-fm-magenta-100 flex items-center justify-center text-fm-magenta-600 font-semibold text-base sm:text-lg shrink-0">
                       {member.name.split(' ').map(n => n[0]).join('').toUpperCase()}
                     </div>
 
                     {/* Member Info */}
                     <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="font-semibold text-lg text-fm-neutral-900">
+                      <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2">
+                        <h3 className="font-semibold text-base sm:text-lg text-fm-neutral-900">
                           {member.name}
                         </h3>
                         <StatusBadge status={member.status} />
@@ -311,7 +311,7 @@ export default function TeamDashboardPage() {
                   </div>
 
                   {/* Action Buttons */}
-                  <div className="flex items-center gap-2 ml-4">
+                  <div className="flex items-center gap-1 sm:gap-2 ml-2 sm:ml-4">
                     {member.clientRatings > 0 && (
                       <div className="flex items-center gap-1 text-yellow-500">
                         <Star className="w-4 h-4 fill-current" />

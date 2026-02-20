@@ -362,7 +362,7 @@ export default function AdminClientDetail() {
         title={clientProfile.name}
         description={`${clientProfile.industry} • Managed by ${clientProfile.accountManager}`}
         actions={
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center gap-2 flex-wrap">
             <DashboardButton
               onClick={() => router.back()}
               variant="ghost"
@@ -381,7 +381,7 @@ export default function AdminClientDetail() {
       />
       <div>
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList>
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="portal">Client Portal</TabsTrigger>
             <TabsTrigger value="projects">Projects</TabsTrigger>

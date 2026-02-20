@@ -252,14 +252,14 @@ export default function AdminSupportPage() {
                     }
                   >
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-3 mb-1">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
                         <h3 className="font-semibold text-fm-neutral-900 truncate">
                           {ticket.title}
                         </h3>
                         <StatusBadge status={ticket.priority} />
                         <StatusBadge status={ticket.status} />
                       </div>
-                      <div className="flex items-center gap-4 text-sm text-fm-neutral-500">
+                      <div className="flex items-center gap-x-4 gap-y-1 text-sm text-fm-neutral-500 flex-wrap">
                         <span className="font-medium text-fm-neutral-700">
                           {ticket.clientName}
                         </span>
@@ -287,7 +287,7 @@ export default function AdminSupportPage() {
                       <p className="text-sm text-fm-neutral-700 mb-4">
                         {ticket.description}
                       </p>
-                      <div className="flex items-center gap-3 flex-wrap">
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
                         <label className="text-sm text-fm-neutral-600">
                           Status:
                         </label>
@@ -307,7 +307,7 @@ export default function AdminSupportPage() {
                           ))}
                         </Select>
 
-                        <label className="text-sm text-fm-neutral-600 ml-4">
+                        <label className="text-sm text-fm-neutral-600">
                           Assigned to:
                         </label>
                         <Input
@@ -321,7 +321,7 @@ export default function AdminSupportPage() {
                             }
                           }}
                           disabled={updatingId === ticket.id}
-                          className="w-48"
+                          className="w-full sm:w-48"
                         />
 
                         {updatingId === ticket.id && (

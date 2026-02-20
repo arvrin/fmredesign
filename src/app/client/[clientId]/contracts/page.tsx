@@ -183,29 +183,35 @@ async function downloadContractPDF(contract: Contract) {
   doc.setLineWidth(1.5);
   doc.line(M, y, W - M, y);
 
-  // ── CONTRACT title box
+  // ── Contract title (full width, above the badge)
   y = 50;
-  doc.setFillColor(26, 26, 26);
-  doc.rect(W - M - 65, y, 65, 20, 'F');
-  doc.setDrawColor(199, 50, 118);
-  doc.setLineWidth(1);
-  doc.rect(W - M - 65, y, 65, 20);
-  doc.setFontSize(16);
-  doc.setTextColor(255, 255, 255);
-  doc.text('SERVICE CONTRACT', W - M - 32.5, y + 9, { align: 'center' });
-  doc.setFontSize(10);
-  doc.setTextColor(199, 50, 118);
-  doc.text(contract.contractNumber ? `#${contract.contractNumber}` : '', W - M - 32.5, y + 16, {
-    align: 'center',
-  });
-
-  // ── Contract title
   doc.setFontSize(14);
   doc.setTextColor(26, 26, 26);
-  doc.text(contract.title, M, y + 10);
+  const titleLines = doc.splitTextToSize(contract.title, W - 2 * M);
+  titleLines.forEach((line: string, i: number) => {
+    doc.text(line, M, y + (i * 6));
+  });
+  y += titleLines.length * 6 + 4;
+
+  // ── CONTRACT badge box (right-aligned, below title)
+  const badgeW = 65;
+  const badgeH = 20;
+  doc.setFillColor(26, 26, 26);
+  doc.rect(W - M - badgeW, y, badgeW, badgeH, 'F');
+  doc.setDrawColor(199, 50, 118);
+  doc.setLineWidth(1);
+  doc.rect(W - M - badgeW, y, badgeW, badgeH);
+  doc.setFontSize(16);
+  doc.setTextColor(255, 255, 255);
+  doc.text('SERVICE CONTRACT', W - M - badgeW / 2, y + 9, { align: 'center' });
+  doc.setFontSize(10);
+  doc.setTextColor(199, 50, 118);
+  doc.text(contract.contractNumber ? `#${contract.contractNumber}` : '', W - M - badgeW / 2, y + 16, {
+    align: 'center',
+  });
+  y += badgeH + 6;
 
   // ── Contract meta
-  y = 78;
   doc.setFillColor(249, 250, 251);
   doc.rect(M, y, W - 2 * M, 20, 'F');
   doc.setDrawColor(229, 229, 229);
@@ -235,7 +241,7 @@ async function downloadContractPDF(contract: Contract) {
   doc.text(contract.paymentTerms || '—', M + 124, y + 14);
 
   // ── Services table
-  y = 106;
+  y += 28;
   doc.setFontSize(12);
   doc.setTextColor(26, 26, 26);
   doc.text('Scope of Services', M, y);
@@ -394,6 +400,7 @@ export default function ClientContractsPage() {
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [expandedAction, setExpandedAction] = useState<'accept' | 'reject' | 'request_edit' | null>(null);
   const [feedbackMap, setFeedbackMap] = useState<Record<string, string>>({});
   const [actioningId, setActioningId] = useState<string | null>(null);
 
@@ -450,6 +457,7 @@ export default function ClientContractsPage() {
           )
         );
         setExpandedId(null);
+        setExpandedAction(null);
         setFeedbackMap((prev) => {
           const next = { ...prev };
           delete next[contractId];
@@ -744,8 +752,20 @@ export default function ClientContractsPage() {
                   {/* ── Action Buttons — only for "sent" status ── */}
                   {contract.status === 'sent' && (
                     <div className="pt-4 border-t border-fm-neutral-100 space-y-3">
-                      {expandedId === contract.id ? (
+                      {expandedId === contract.id && expandedAction ? (
                         <>
+                          {/* Contextual header */}
+                          <div className={`text-sm font-medium px-3 py-2 rounded-md ${
+                            expandedAction === 'accept'
+                              ? 'bg-green-50 text-green-700'
+                              : expandedAction === 'reject'
+                              ? 'bg-red-50 text-red-700'
+                              : 'bg-orange-50 text-orange-700'
+                          }`}>
+                            {expandedAction === 'accept' && 'You are accepting this contract'}
+                            {expandedAction === 'reject' && 'You are rejecting this contract'}
+                            {expandedAction === 'request_edit' && 'Describe the changes you need'}
+                          </div>
                           <textarea
                             value={feedbackMap[contract.id] || ''}
                             onChange={(e) =>
@@ -754,76 +774,78 @@ export default function ClientContractsPage() {
                                 [contract.id]: e.target.value,
                               }))
                             }
-                            placeholder="Add feedback or comments (optional)..."
+                            placeholder={
+                              expandedAction === 'request_edit'
+                                ? 'Describe the changes you would like us to make...'
+                                : 'Add any comments or notes (optional)...'
+                            }
                             rows={3}
                             className="w-full rounded-md border border-fm-neutral-300 bg-fm-neutral-50 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-fm-magenta-500"
                           />
-                          <div className="flex items-center gap-2 flex-wrap">
+                          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                             <Button
-                              variant="client"
+                              variant={expandedAction === 'accept' ? 'client' : 'ghost'}
                               size="sm"
-                              disabled={actioningId === contract.id}
-                              onClick={() => handleAction(contract.id, 'accept')}
+                              className={
+                                expandedAction === 'reject'
+                                  ? 'text-red-600 hover:bg-red-50 border border-red-200'
+                                  : expandedAction === 'request_edit'
+                                  ? 'text-orange-600 hover:bg-orange-50 border border-orange-200'
+                                  : ''
+                              }
+                              disabled={
+                                actioningId === contract.id ||
+                                (expandedAction === 'request_edit' && !(feedbackMap[contract.id] || '').trim())
+                              }
+                              onClick={() => handleAction(contract.id, expandedAction)}
                             >
-                              <CheckCircle2 className="w-4 h-4 mr-1" />
-                              Accept Contract
+                              {expandedAction === 'accept' && <CheckCircle2 className="w-4 h-4 mr-1.5" />}
+                              {expandedAction === 'reject' && <XCircle className="w-4 h-4 mr-1.5" />}
+                              {expandedAction === 'request_edit' && <Send className="w-4 h-4 mr-1.5" />}
+                              {actioningId === contract.id
+                                ? 'Sending...'
+                                : expandedAction === 'accept'
+                                ? 'Confirm & Accept'
+                                : expandedAction === 'reject'
+                                ? 'Confirm Rejection'
+                                : 'Send Edit Request'}
                             </Button>
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="text-red-600 hover:bg-red-50"
-                              disabled={actioningId === contract.id}
-                              onClick={() => handleAction(contract.id, 'reject')}
-                            >
-                              <XCircle className="w-4 h-4 mr-1" />
-                              Reject
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="text-orange-600 hover:bg-orange-50"
-                              disabled={actioningId === contract.id}
-                              onClick={() => handleAction(contract.id, 'request_edit')}
-                            >
-                              <Edit3 className="w-4 h-4 mr-1" />
-                              Request Edits
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => setExpandedId(null)}
+                              onClick={() => { setExpandedId(null); setExpandedAction(null); }}
                             >
                               Cancel
                             </Button>
                           </div>
                         </>
                       ) : (
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                           <Button
                             variant="client"
                             size="sm"
-                            onClick={() => setExpandedId(contract.id)}
+                            onClick={() => { setExpandedId(contract.id); setExpandedAction('accept'); }}
                           >
-                            <CheckCircle2 className="w-4 h-4 mr-1" />
+                            <CheckCircle2 className="w-4 h-4 mr-1.5" />
                             Accept Contract
                           </Button>
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="text-red-600 hover:bg-red-50"
-                            onClick={() => setExpandedId(contract.id)}
+                            className="text-orange-600 hover:bg-orange-50 border border-orange-200"
+                            onClick={() => { setExpandedId(contract.id); setExpandedAction('request_edit'); }}
                           >
-                            <XCircle className="w-4 h-4 mr-1" />
-                            Reject
+                            <Edit3 className="w-4 h-4 mr-1.5" />
+                            Request Edits
                           </Button>
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="text-orange-600 hover:bg-orange-50"
-                            onClick={() => setExpandedId(contract.id)}
+                            className="text-red-600 hover:bg-red-50"
+                            onClick={() => { setExpandedId(contract.id); setExpandedAction('reject'); }}
                           >
-                            <Edit3 className="w-4 h-4 mr-1" />
-                            Request Edits
+                            <XCircle className="w-4 h-4 mr-1.5" />
+                            Reject
                           </Button>
                         </div>
                       )}
