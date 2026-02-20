@@ -10,6 +10,7 @@ import { Select } from '@/components/ui/select-native';
 import { adminToast } from '@/lib/admin/toast';
 import { AGENCY_SERVICES } from '@/lib/admin/types';
 import { formatContractCurrency, type Contract, type ContractServiceItem } from '@/lib/admin/contract-types';
+import { CONTRACT_TEMPLATES, type ContractTemplate } from '@/lib/admin/contract-templates';
 import {
   Plus,
   FileText,
@@ -20,10 +21,14 @@ import {
   X,
   AlertCircle,
   DollarSign,
+  Globe,
+  MapPin,
+  Sparkles,
 } from 'lucide-react';
 
 interface Props {
   clientId: string;
+  clientName?: string;
 }
 
 const EMPTY_SERVICE: ContractServiceItem = {
@@ -35,11 +40,10 @@ const EMPTY_SERVICE: ContractServiceItem = {
   total: 0,
 };
 
-// Currency is now dynamic per contract — see formatContractCurrency()
-
-export default function ContractsTab({ clientId }: Props) {
+export default function ContractsTab({ clientId, clientName }: Props) {
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showTemplatePicker, setShowTemplatePicker] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -88,6 +92,25 @@ export default function ContractsTab({ clientId }: Props) {
     setRevisionNotes('');
     setEditingId(null);
     setShowForm(false);
+    setShowTemplatePicker(false);
+  };
+
+  const applyTemplate = (template: ContractTemplate) => {
+    const name = clientName || 'Client';
+    setTitle(template.generateTitle(name));
+    setCurrency(template.currency);
+    setBillingCycle(template.billingCycle);
+    setPaymentTerms(template.paymentTerms);
+    setServices(template.defaultServices.map((s) => ({ ...s })));
+    setTermsAndConditions(template.termsAndConditions);
+    setShowTemplatePicker(false);
+    setShowForm(true);
+  };
+
+  const startBlankContract = () => {
+    resetForm();
+    setShowTemplatePicker(false);
+    setShowForm(true);
   };
 
   const populateForm = (c: Contract) => {
@@ -212,7 +235,102 @@ export default function ContractsTab({ clientId }: Props) {
 
   return (
     <div className="space-y-6">
-      {/* Create/Edit Form */}
+      {/* ── Template Picker ── */}
+      {showTemplatePicker && !showForm && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center">
+                <Sparkles className="h-5 w-5 mr-2 text-fm-magenta-600" />
+                Choose a Template
+              </CardTitle>
+              <DashboardButton variant="ghost" size="sm" onClick={resetForm}>
+                <X className="h-4 w-4" />
+              </DashboardButton>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-fm-neutral-600 mb-4">
+              Select a template to auto-fill the contract with appropriate terms, pricing, and legal clauses.
+              {clientName && (
+                <span className="font-medium text-fm-neutral-800"> Creating for: {clientName}</span>
+              )}
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Indian template */}
+              <button
+                onClick={() => applyTemplate(CONTRACT_TEMPLATES[0])}
+                className="group border-2 border-fm-neutral-200 rounded-xl p-5 hover:border-fm-magenta-500 hover:bg-fm-magenta-50/30 transition-all text-left"
+              >
+                <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center mb-3 group-hover:bg-orange-200 transition-colors">
+                  <MapPin className="h-5 w-5 text-orange-600" />
+                </div>
+                <h4 className="font-semibold text-fm-neutral-900 mb-1">
+                  {CONTRACT_TEMPLATES[0].label}
+                </h4>
+                <p className="text-xs text-fm-neutral-500">
+                  {CONTRACT_TEMPLATES[0].description}
+                </p>
+                <div className="mt-3 flex items-center gap-2">
+                  <span className="text-xs bg-fm-neutral-100 text-fm-neutral-700 px-2 py-0.5 rounded-full">
+                    ₹ INR
+                  </span>
+                  <span className="text-xs bg-fm-neutral-100 text-fm-neutral-700 px-2 py-0.5 rounded-full">
+                    Indian Law
+                  </span>
+                </div>
+              </button>
+
+              {/* International template */}
+              <button
+                onClick={() => applyTemplate(CONTRACT_TEMPLATES[1])}
+                className="group border-2 border-fm-neutral-200 rounded-xl p-5 hover:border-fm-magenta-500 hover:bg-fm-magenta-50/30 transition-all text-left"
+              >
+                <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center mb-3 group-hover:bg-blue-200 transition-colors">
+                  <Globe className="h-5 w-5 text-blue-600" />
+                </div>
+                <h4 className="font-semibold text-fm-neutral-900 mb-1">
+                  {CONTRACT_TEMPLATES[1].label}
+                </h4>
+                <p className="text-xs text-fm-neutral-500">
+                  {CONTRACT_TEMPLATES[1].description}
+                </p>
+                <div className="mt-3 flex items-center gap-2">
+                  <span className="text-xs bg-fm-neutral-100 text-fm-neutral-700 px-2 py-0.5 rounded-full">
+                    £ GBP
+                  </span>
+                  <span className="text-xs bg-fm-neutral-100 text-fm-neutral-700 px-2 py-0.5 rounded-full">
+                    International
+                  </span>
+                </div>
+              </button>
+
+              {/* Blank */}
+              <button
+                onClick={startBlankContract}
+                className="group border-2 border-dashed border-fm-neutral-300 rounded-xl p-5 hover:border-fm-neutral-400 hover:bg-fm-neutral-50 transition-all text-left"
+              >
+                <div className="w-10 h-10 rounded-lg bg-fm-neutral-100 flex items-center justify-center mb-3 group-hover:bg-fm-neutral-200 transition-colors">
+                  <FileText className="h-5 w-5 text-fm-neutral-500" />
+                </div>
+                <h4 className="font-semibold text-fm-neutral-900 mb-1">
+                  Blank Contract
+                </h4>
+                <p className="text-xs text-fm-neutral-500">
+                  Start from scratch with an empty form
+                </p>
+                <div className="mt-3">
+                  <span className="text-xs bg-fm-neutral-100 text-fm-neutral-700 px-2 py-0.5 rounded-full">
+                    Custom
+                  </span>
+                </div>
+              </button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* ── Create/Edit Form ── */}
       {showForm && (
         <Card>
           <CardHeader>
@@ -316,17 +434,30 @@ export default function ContractsTab({ clientId }: Props) {
                       <Trash2 className="h-4 w-4 text-red-500" />
                     </DashboardButton>
                   </div>
+                  {/* Description row below each service */}
+                  {svc.description && (
+                    <div className="col-span-12 -mt-1 mb-1">
+                      <textarea
+                        value={svc.description}
+                        onChange={(e) => updateService(idx, { description: e.target.value })}
+                        rows={2}
+                        className="w-full rounded-md border border-fm-neutral-200 bg-fm-neutral-50 px-3 py-1.5 text-xs text-fm-neutral-600 focus:outline-none focus:ring-1 focus:ring-fm-magenta-500"
+                        placeholder="Service description..."
+                      />
+                    </div>
+                  )}
                 </div>
               ))}
-              <DashboardButton
-                variant="outline"
-                size="sm"
-                className="mt-2"
-                onClick={() => setServices((prev) => [...prev, { ...EMPTY_SERVICE }])}
-              >
-                <Plus className="h-4 w-4 mr-1" />
-                Add Service
-              </DashboardButton>
+              <div className="flex items-center gap-2 mt-2">
+                <DashboardButton
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setServices((prev) => [...prev, { ...EMPTY_SERVICE }])}
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add Service
+                </DashboardButton>
+              </div>
               <div className="mt-3 text-right">
                 <span className="text-sm text-fm-neutral-600 mr-2">Total:</span>
                 <span className="text-lg font-bold text-fm-neutral-900">{formatContractCurrency(totalValue, currency)}</span>
@@ -389,13 +520,18 @@ export default function ContractsTab({ clientId }: Props) {
               <textarea
                 value={termsAndConditions}
                 onChange={(e) => setTermsAndConditions(e.target.value)}
-                rows={3}
+                rows={termsAndConditions.length > 500 ? 12 : 4}
                 className="w-full rounded-md border border-fm-neutral-300 bg-fm-neutral-50 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-fm-magenta-500"
                 placeholder="Custom terms and conditions..."
               />
+              {termsAndConditions && (
+                <p className="text-xs text-fm-neutral-400 mt-1">
+                  {termsAndConditions.split('\n').filter((l) => l.trim()).length} lines
+                </p>
+              )}
             </div>
 
-            {/* Revision notes (only when editing an edit_requested contract) */}
+            {/* Revision notes (only when editing) */}
             {editingId && (
               <div>
                 <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
@@ -425,28 +561,28 @@ export default function ContractsTab({ clientId }: Props) {
         </Card>
       )}
 
-      {/* Header + Create button */}
-      {!showForm && (
+      {/* ── Header + Create button ── */}
+      {!showForm && !showTemplatePicker && (
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold text-fm-neutral-900 flex items-center">
             <FileText className="h-5 w-5 mr-2" />
             Contracts ({contracts.length})
           </h3>
-          <DashboardButton onClick={() => setShowForm(true)}>
+          <DashboardButton onClick={() => setShowTemplatePicker(true)}>
             <Plus className="h-4 w-4 mr-2" />
             New Contract
           </DashboardButton>
         </div>
       )}
 
-      {/* Contracts List */}
-      {contracts.length === 0 && !showForm ? (
+      {/* ── Contracts List ── */}
+      {contracts.length === 0 && !showForm && !showTemplatePicker ? (
         <EmptyState
           icon={<FileText className="h-6 w-6" />}
           title="No Contracts Yet"
           description="Create a contract for this client to get started."
           action={
-            <DashboardButton onClick={() => setShowForm(true)}>
+            <DashboardButton onClick={() => setShowTemplatePicker(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Create First Contract
             </DashboardButton>
@@ -537,16 +673,14 @@ export default function ContractsTab({ clientId }: Props) {
                       </>
                     )}
                     {contract.status === 'edit_requested' && (
-                      <>
-                        <DashboardButton
-                          variant="outline"
-                          size="sm"
-                          onClick={() => populateForm(contract)}
-                        >
-                          <Edit2 className="h-4 w-4 mr-1" />
-                          Edit & Re-send
-                        </DashboardButton>
-                      </>
+                      <DashboardButton
+                        variant="outline"
+                        size="sm"
+                        onClick={() => populateForm(contract)}
+                      >
+                        <Edit2 className="h-4 w-4 mr-1" />
+                        Edit & Re-send
+                      </DashboardButton>
                     )}
                     {contract.status === 'rejected' && (
                       <DashboardButton

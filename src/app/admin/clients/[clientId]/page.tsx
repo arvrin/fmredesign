@@ -596,7 +596,7 @@ export default function AdminClientDetail() {
           </TabsContent>
 
           <TabsContent value="contracts" className="space-y-6">
-            <ContractsTab clientId={clientId} />
+            <ContractsTab clientId={clientId} clientName={clientProfile?.name} />
           </TabsContent>
 
           <TabsContent value="team" className="space-y-6">

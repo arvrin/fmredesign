@@ -461,7 +461,7 @@ export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
             <div className="lg:col-span-2 space-y-6">
               {/* Basic Info Card */}
               <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-6">
-                <h3 className="text-lg font-semibold text-fm-neutral-900 mb-4">Client Information</h3>
+                <h3 className="text-sm font-semibold text-fm-neutral-500 uppercase tracking-wider pb-2 border-b border-fm-neutral-100">Client Information</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-4">
                     <div className="flex items-center space-x-3">
@@ -514,7 +514,7 @@ export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
 
               {/* Contact Information - Editable */}
               <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-6">
-                <h3 className="text-lg font-semibold text-fm-neutral-900 mb-4">Primary Contact</h3>
+                <h3 className="text-sm font-semibold text-fm-neutral-500 uppercase tracking-wider pb-2 border-b border-fm-neutral-100">Primary Contact</h3>
                 
                 {!isEditing ? (
                   // Display mode
@@ -549,59 +549,59 @@ export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
                       <h4 className="text-sm font-semibold text-fm-neutral-900 mb-3 pb-2 border-b border-fm-neutral-200">Basic Information</h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                          <label className="block text-sm font-medium text-fm-neutral-700 mb-1">Client Name *</label>
+                          <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Client Name *</label>
                           <input
                             type="text"
                             value={editData.name || ''}
                             onChange={(e) => setEditData({...editData, name: e.target.value})}
-                            className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                            className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-fm-neutral-700 mb-1">Email *</label>
+                          <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Email *</label>
                           <input
                             type="email"
                             value={editData.email || ''}
                             onChange={(e) => setEditData({...editData, email: e.target.value})}
-                            className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                            className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-fm-neutral-700 mb-1">Phone</label>
+                          <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Phone</label>
                           <input
                             type="tel"
                             value={editData.phone || ''}
                             onChange={(e) => setEditData({...editData, phone: e.target.value})}
-                            className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                            className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-fm-neutral-700 mb-1">Website</label>
+                          <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Website</label>
                           <input
                             type="url"
                             value={editData.website || ''}
                             onChange={(e) => setEditData({...editData, website: e.target.value})}
                             placeholder="https://example.com"
-                            className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                            className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-fm-neutral-700 mb-1">Contact Role</label>
+                          <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Contact Role</label>
                           <input
                             type="text"
                             value={editData.contactRole || ''}
                             onChange={(e) => setEditData({...editData, contactRole: e.target.value})}
-                            className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                            className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-fm-neutral-700 mb-1">LinkedIn</label>
+                          <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">LinkedIn</label>
                           <input
                             type="url"
                             value={editData.linkedIn || ''}
                             onChange={(e) => setEditData({...editData, linkedIn: e.target.value})}
                             placeholder="https://linkedin.com/in/..."
-                            className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                            className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
                           />
                         </div>
                       </div>
@@ -612,47 +612,47 @@ export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
                       <h4 className="text-sm font-semibold text-fm-neutral-900 mb-3 pb-2 border-b border-fm-neutral-200">Address Information</h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="md:col-span-2">
-                          <label className="block text-sm font-medium text-fm-neutral-700 mb-1">Street Address</label>
+                          <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Street Address</label>
                           <input
                             type="text"
                             value={editData.street || ''}
                             onChange={(e) => setEditData({...editData, street: e.target.value})}
-                            className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                            className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-fm-neutral-700 mb-1">City</label>
+                          <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">City</label>
                           <input
                             type="text"
                             value={editData.city || ''}
                             onChange={(e) => setEditData({...editData, city: e.target.value})}
-                            className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                            className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-fm-neutral-700 mb-1">State</label>
+                          <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">State</label>
                           <input
                             type="text"
                             value={editData.state || ''}
                             onChange={(e) => setEditData({...editData, state: e.target.value})}
-                            className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                            className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-fm-neutral-700 mb-1">ZIP Code</label>
+                          <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">ZIP Code</label>
                           <input
                             type="text"
                             value={editData.zipCode || ''}
                             onChange={(e) => setEditData({...editData, zipCode: e.target.value})}
-                            className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                            className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-fm-neutral-700 mb-1">Country</label>
+                          <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Country</label>
                           <select
                             value={editData.country || ''}
                             onChange={(e) => setEditData({...editData, country: e.target.value})}
-                            className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                            className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400 appearance-none"
                           >
                             <option value="India">India</option>
                             <option value="United States">United States</option>
@@ -669,11 +669,11 @@ export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
                       <h4 className="text-sm font-semibold text-fm-neutral-900 mb-3 pb-2 border-b border-fm-neutral-200">Business Information</h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                          <label className="block text-sm font-medium text-fm-neutral-700 mb-1">Industry</label>
+                          <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Industry</label>
                           <select
                             value={editData.industry || ''}
                             onChange={(e) => setEditData({...editData, industry: e.target.value})}
-                            className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                            className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400 appearance-none"
                           >
                             <option value="">Select Industry</option>
                             <option value="technology">Technology</option>
@@ -687,11 +687,11 @@ export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
                           </select>
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-fm-neutral-700 mb-1">Company Size</label>
+                          <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Company Size</label>
                           <select
                             value={editData.companySize || ''}
                             onChange={(e) => setEditData({...editData, companySize: e.target.value})}
-                            className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                            className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400 appearance-none"
                           >
                             <option value="startup">Startup (1-10)</option>
                             <option value="small">Small (11-50)</option>
@@ -700,24 +700,24 @@ export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
                           </select>
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-fm-neutral-700 mb-1">Founded Year</label>
+                          <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Founded Year</label>
                           <input
                             type="number"
                             value={editData.founded || ''}
                             onChange={(e) => setEditData({...editData, founded: e.target.value})}
                             min="1900"
                             max="2025"
-                            className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                            className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-fm-neutral-700 mb-1">GST Number</label>
+                          <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">GST Number</label>
                           <input
                             type="text"
                             value={editData.gstNumber || ''}
                             onChange={(e) => setEditData({...editData, gstNumber: e.target.value})}
                             placeholder="22AAAAA0000A1Z5"
-                            className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                            className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
                           />
                         </div>
                       </div>
@@ -728,11 +728,11 @@ export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
                       <h4 className="text-sm font-semibold text-fm-neutral-900 mb-3 pb-2 border-b border-fm-neutral-200">Account Management</h4>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
-                          <label className="block text-sm font-medium text-fm-neutral-700 mb-1">Status</label>
+                          <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Status</label>
                           <select
                             value={editData.status || ''}
                             onChange={(e) => setEditData({...editData, status: e.target.value})}
-                            className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                            className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400 appearance-none"
                           >
                             <option value="active">Active</option>
                             <option value="inactive">Inactive</option>
@@ -741,11 +741,11 @@ export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
                           </select>
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-fm-neutral-700 mb-1">Health Status</label>
+                          <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Health Status</label>
                           <select
                             value={editData.health || ''}
                             onChange={(e) => setEditData({...editData, health: e.target.value})}
-                            className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                            className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400 appearance-none"
                           >
                             <option value="excellent">Excellent</option>
                             <option value="good">Good</option>
@@ -754,11 +754,11 @@ export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
                           </select>
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-fm-neutral-700 mb-1">Contract Type</label>
+                          <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Contract Type</label>
                           <select
                             value={editData.contractType || ''}
                             onChange={(e) => setEditData({...editData, contractType: e.target.value})}
-                            className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                            className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400 appearance-none"
                           >
                             <option value="project">Project</option>
                             <option value="retainer">Retainer</option>
@@ -767,21 +767,21 @@ export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
                           </select>
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-fm-neutral-700 mb-1">Contract Value (₹)</label>
+                          <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Contract Value (₹)</label>
                           <input
                             type="number"
                             value={editData.contractValue || ''}
                             onChange={(e) => setEditData({...editData, contractValue: e.target.value})}
                             min="0"
-                            className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                            className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-fm-neutral-700 mb-1">Billing Cycle</label>
+                          <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Billing Cycle</label>
                           <select
                             value={editData.billingCycle || ''}
                             onChange={(e) => setEditData({...editData, billingCycle: e.target.value})}
-                            className="w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                            className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400 appearance-none"
                           >
                             <option value="monthly">Monthly</option>
                             <option value="quarterly">Quarterly</option>
@@ -798,7 +798,7 @@ export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
               {/* Description */}
               {(client as any).description && (
                 <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-6">
-                  <h3 className="text-lg font-semibold text-fm-neutral-900 mb-4">About</h3>
+                  <h3 className="text-sm font-semibold text-fm-neutral-500 uppercase tracking-wider pb-2 border-b border-fm-neutral-100">About</h3>
                   <p className="text-fm-neutral-700 leading-relaxed">{(client as any).description}</p>
                 </div>
               )}
@@ -808,7 +808,7 @@ export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
             <div className="space-y-6">
               {/* Contract Overview */}
               <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-6">
-                <h3 className="text-lg font-semibold text-fm-neutral-900 mb-4">Contract Details</h3>
+                <h3 className="text-sm font-semibold text-fm-neutral-500 uppercase tracking-wider pb-2 border-b border-fm-neutral-100">Contract Details</h3>
                 <div className="space-y-4">
                   <div>
                     <p className="text-sm text-fm-neutral-600">Contract Value</p>
@@ -841,7 +841,7 @@ export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
 
               {/* Quick Stats */}
               <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-6">
-                <h3 className="text-lg font-semibold text-fm-neutral-900 mb-4">Quick Stats</h3>
+                <h3 className="text-sm font-semibold text-fm-neutral-500 uppercase tracking-wider pb-2 border-b border-fm-neutral-100">Quick Stats</h3>
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-fm-neutral-600">Active Campaigns</span>
@@ -871,7 +871,7 @@ export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
               {/* Tags */}
               {((client as any).tags && (client as any).tags.length > 0) && (
                 <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-6">
-                  <h3 className="text-lg font-semibold text-fm-neutral-900 mb-4">Tags</h3>
+                  <h3 className="text-sm font-semibold text-fm-neutral-500 uppercase tracking-wider pb-2 border-b border-fm-neutral-100">Tags</h3>
                   <div className="flex flex-wrap gap-2">
                     {((client as any).tags || []).map((tag: string, index: number) => (
                       <span
@@ -893,7 +893,7 @@ export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
           <div className="space-y-6">
             <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-6">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold text-fm-neutral-900">Campaigns & Projects</h3>
+                <h3 className="text-sm font-semibold text-fm-neutral-500 uppercase tracking-wider pb-2 border-b border-fm-neutral-100">Campaigns & Projects</h3>
                 <Button size="sm" icon={<Plus className="h-4 w-4" />}>
                   New Campaign
                 </Button>
@@ -1088,7 +1088,7 @@ export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
         {activeTab === 'communication' && (
           <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-6">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-fm-neutral-900">Communication Hub</h3>
+              <h3 className="text-sm font-semibold text-fm-neutral-500 uppercase tracking-wider pb-2 border-b border-fm-neutral-100">Communication Hub</h3>
               <Button size="sm" icon={<Plus className="h-4 w-4" />}>
                 New Message
               </Button>
@@ -1108,7 +1108,7 @@ export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
         {activeTab === 'files' && (
           <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-6">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-fm-neutral-900">Files & Assets</h3>
+              <h3 className="text-sm font-semibold text-fm-neutral-500 uppercase tracking-wider pb-2 border-b border-fm-neutral-100">Files & Assets</h3>
               <Button size="sm" icon={<Upload className="h-4 w-4" />}>
                 Upload Files
               </Button>
@@ -1126,7 +1126,7 @@ export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
 
         {/* Contracts Tab */}
         {activeTab === 'contracts' && (
-          <ContractsTab clientId={clientId} />
+          <ContractsTab clientId={clientId} clientName={client?.name} />
         )}
 
         {/* Opportunities Tab */}
