@@ -28,16 +28,13 @@ export async function GET(request: NextRequest) {
     const sortBy = searchParams.get('sortBy') || 'scheduled_date';
     const sortDirection = searchParams.get('sortDirection') || 'asc';
 
-    const supabase = getSupabaseAdmin();
-    let query = supabase.from('content_calendar').select('*');
+    // Pagination: only active when `page` param is provided (backwards compat)
+    const pageParam = searchParams.get('page');
+    const isPaginated = pageParam !== null;
+    const page = Math.max(1, parseInt(pageParam || '1', 10));
+    const pageSize = Math.max(1, Math.min(100, parseInt(searchParams.get('pageSize') || '25', 10)));
 
-    if (projectId) query = query.eq('project_id', projectId);
-    if (clientId) query = query.eq('client_id', clientId);
-    if (status) query = query.in('status', status.split(','));
-    if (type) query = query.in('type', type.split(','));
-    if (platform) query = query.in('platform', platform.split(','));
-    if (startDate) query = query.gte('scheduled_date', startDate);
-    if (endDate) query = query.lte('scheduled_date', endDate);
+    const supabase = getSupabaseAdmin();
 
     const sortFieldMap: Record<string, string> = {
       scheduledDate: 'scheduled_date',
@@ -45,13 +42,49 @@ export async function GET(request: NextRequest) {
       updatedAt: 'updated_at',
     };
     const dbSortField = sortFieldMap[sortBy] || sortBy;
-    query = query.order(dbSortField, { ascending: sortDirection === 'asc' });
 
-    const { data, error } = await query;
-    if (error) throw error;
+    /** Apply shared filters to a query builder */
+    function applyFilters<T extends { eq: Function; in: Function; gte: Function; lte: Function }>(q: T): T {
+      if (projectId) q = q.eq('project_id', projectId) as T;
+      if (clientId) q = q.eq('client_id', clientId) as T;
+      if (status) q = q.in('status', status.split(',')) as T;
+      if (type) q = q.in('type', type.split(',')) as T;
+      if (platform) q = q.in('platform', platform.split(',')) as T;
+      if (startDate) q = q.gte('scheduled_date', startDate) as T;
+      if (endDate) q = q.lte('scheduled_date', endDate) as T;
+      return q;
+    }
+
+    let data;
+    let totalItems = 0;
+
+    if (isPaginated) {
+      // Get total count with same filters
+      const { count, error: countError } = await applyFilters(
+        supabase.from('content_calendar').select('*', { count: 'exact', head: true })
+      );
+      if (countError) throw countError;
+      totalItems = count || 0;
+
+      // Paginated data
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+      let query = applyFilters(supabase.from('content_calendar').select('*'));
+      query = query.order(dbSortField, { ascending: sortDirection === 'asc' });
+      query = query.range(from, to);
+      const result = await query;
+      if (result.error) throw result.error;
+      data = result.data;
+    } else {
+      let query = applyFilters(supabase.from('content_calendar').select('*'));
+      query = query.order(dbSortField, { ascending: sortDirection === 'asc' });
+      const result = await query;
+      if (result.error) throw result.error;
+      data = result.data;
+    }
 
     // Transform to camelCase for frontend
-    const contentItems = (data || []).map((item) => ({
+    const contentItems = (data || []).map((item: Record<string, any>) => ({
       id: item.id,
       projectId: item.project_id,
       clientId: item.client_id,
@@ -80,11 +113,22 @@ export async function GET(request: NextRequest) {
       updatedAt: item.updated_at,
     }));
 
-    return NextResponse.json({
+    const responseBody: Record<string, unknown> = {
       success: true,
       data: contentItems,
-      total: contentItems.length,
-    });
+      total: isPaginated ? totalItems : contentItems.length,
+    };
+
+    if (isPaginated) {
+      responseBody.pagination = {
+        page,
+        pageSize,
+        totalItems,
+        totalPages: Math.ceil(totalItems / pageSize),
+      };
+    }
+
+    return NextResponse.json(responseBody);
   } catch (error) {
     console.error('Error fetching content:', error);
     return NextResponse.json(

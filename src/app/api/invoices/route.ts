@@ -104,28 +104,63 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status');
     const search = searchParams.get('search');
 
-    const supabase = getSupabaseAdmin();
-    let query = supabase
-      .from('invoices')
-      .select(SELECT_COLS)
-      .order('created_at', { ascending: false });
+    // Pagination: only active when `page` param is provided (backwards compat)
+    const pageParam = searchParams.get('page');
+    const isPaginated = pageParam !== null;
+    const page = Math.max(1, parseInt(pageParam || '1', 10));
+    const pageSize = Math.max(1, Math.min(100, parseInt(searchParams.get('pageSize') || '25', 10)));
 
-    if (clientId) query = query.eq('client_id', clientId);
-    if (status) query = query.eq('status', status);
-    if (search) {
-      query = query.or(
-        `invoice_number.ilike.%${search}%,client_name.ilike.%${search}%`,
-      );
+    const supabase = getSupabaseAdmin();
+
+    /** Apply shared filters to a query builder */
+    function applyFilters<T extends { eq: Function; or: Function }>(q: T): T {
+      if (clientId) q = q.eq('client_id', clientId) as T;
+      if (status) q = q.eq('status', status) as T;
+      if (search) {
+        q = q.or(
+          `invoice_number.ilike.%${search}%,client_name.ilike.%${search}%`,
+        ) as T;
+      }
+      return q;
     }
 
-    const { data, error } = await query;
-    if (error) throw error;
+    let data;
+    let totalItems = 0;
+
+    if (isPaginated) {
+      // Get total count with same filters
+      const { count, error: countError } = await applyFilters(
+        supabase.from('invoices').select('*', { count: 'exact', head: true })
+      );
+      if (countError) throw countError;
+      totalItems = count || 0;
+
+      // Paginated data
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+      let query = applyFilters(
+        supabase.from('invoices').select(SELECT_COLS)
+      );
+      query = query.order('created_at', { ascending: false });
+      query = query.range(from, to);
+      const result = await query;
+      if (result.error) throw result.error;
+      data = result.data;
+    } else {
+      let query = applyFilters(
+        supabase.from('invoices').select(SELECT_COLS)
+      );
+      query = query.order('created_at', { ascending: false });
+      const result = await query;
+      if (result.error) throw result.error;
+      data = result.data;
+    }
 
     const invoices = ((data || []) as unknown as Record<string, unknown>[]).map(transformInvoice);
 
     // Summary stats
     const stats = {
-      total: invoices.length,
+      total: isPaginated ? totalItems : invoices.length,
       draft: invoices.filter(i => i.status === 'draft').length,
       sent: invoices.filter(i => i.status === 'sent').length,
       paid: invoices.filter(i => i.status === 'paid').length,
@@ -138,7 +173,18 @@ export async function GET(request: NextRequest) {
         .reduce((s, i) => s + i.total, 0),
     };
 
-    return NextResponse.json({ success: true, data: invoices, stats });
+    const responseBody: Record<string, unknown> = { success: true, data: invoices, stats };
+
+    if (isPaginated) {
+      responseBody.pagination = {
+        page,
+        pageSize,
+        totalItems,
+        totalPages: Math.ceil(totalItems / pageSize),
+      };
+    }
+
+    return NextResponse.json(responseBody);
   } catch (error) {
     console.error('Error fetching invoices:', error);
     return NextResponse.json(

@@ -91,12 +91,43 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: true, data: formatted });
     }
 
-    const { data: clients, error } = await supabase
-      .from('clients')
-      .select('id, name, email, phone, address, city, state, zip_code, country, gst_number, industry, company_size, website, status, health, account_manager, contract_type, contract_value, contract_start_date, contract_end_date, billing_cycle, services, created_at, updated_at, total_value, tags, notes')
-      .order('created_at', { ascending: false });
+    const selectCols = 'id, name, email, phone, address, city, state, zip_code, country, gst_number, industry, company_size, website, status, health, account_manager, contract_type, contract_value, contract_start_date, contract_end_date, billing_cycle, services, created_at, updated_at, total_value, tags, notes';
 
-    if (error) throw error;
+    // Pagination: only active when `page` param is provided (backwards compat)
+    const pageParam = searchParams.get('page');
+    const isPaginated = pageParam !== null;
+    const page = Math.max(1, parseInt(pageParam || '1', 10));
+    const pageSize = Math.max(1, Math.min(100, parseInt(searchParams.get('pageSize') || '25', 10)));
+
+    let clients;
+    let totalItems = 0;
+
+    if (isPaginated) {
+      // Get total count first
+      const { count, error: countError } = await supabase
+        .from('clients')
+        .select('*', { count: 'exact', head: true });
+      if (countError) throw countError;
+      totalItems = count || 0;
+
+      // Then get paginated data
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+      const { data, error } = await supabase
+        .from('clients')
+        .select(selectCols)
+        .order('created_at', { ascending: false })
+        .range(from, to);
+      if (error) throw error;
+      clients = data;
+    } else {
+      const { data, error } = await supabase
+        .from('clients')
+        .select(selectCols)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      clients = data;
+    }
 
     // Transform snake_case to camelCase for frontend compatibility
     const formatted = (clients || []).map((c) => ({
@@ -129,10 +160,21 @@ export async function GET(request: NextRequest) {
       notes: c.notes,
     }));
 
-    const response = NextResponse.json({
+    const body: Record<string, unknown> = {
       success: true,
       data: formatted,
-    });
+    };
+
+    if (isPaginated) {
+      body.pagination = {
+        page,
+        pageSize,
+        totalItems,
+        totalPages: Math.ceil(totalItems / pageSize),
+      };
+    }
+
+    const response = NextResponse.json(body);
 
     response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     response.headers.set('Pragma', 'no-cache');

@@ -77,15 +77,43 @@ export async function GET(request: NextRequest) {
       return response;
     }
 
-    // All members fetch
-    const { data, error } = await supabase
-      .from('team_members')
-      .select('*')
-      .order('created_at', { ascending: true });
+    // Pagination: only active when `page` param is provided (backwards compat)
+    const pageParam = searchParams.get('page');
+    const isPaginated = pageParam !== null;
+    const page = Math.max(1, parseInt(pageParam || '1', 10));
+    const pageSize = Math.max(1, Math.min(100, parseInt(searchParams.get('pageSize') || '25', 10)));
 
-    if (error) throw error;
+    let allData;
+    let totalItems = 0;
 
-    const members = (data || []).map(transformMember);
+    if (isPaginated) {
+      // Get total count
+      const { count, error: countError } = await supabase
+        .from('team_members')
+        .select('*', { count: 'exact', head: true });
+      if (countError) throw countError;
+      totalItems = count || 0;
+
+      // Paginated data
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+      const { data, error } = await supabase
+        .from('team_members')
+        .select('*')
+        .order('created_at', { ascending: true })
+        .range(from, to);
+      if (error) throw error;
+      allData = data;
+    } else {
+      const { data, error } = await supabase
+        .from('team_members')
+        .select('*')
+        .order('created_at', { ascending: true });
+      if (error) throw error;
+      allData = data;
+    }
+
+    const members = (allData || []).map(transformMember);
 
     // Calculate metrics
     const activeMembers = members.filter(m => m.status === 'active');
@@ -93,7 +121,7 @@ export async function GET(request: NextRequest) {
     const totalWorkload = activeMembers.reduce((sum, m) => sum + (m.workload * m.capacity / 100), 0);
 
     const metrics = {
-      totalMembers: members.length,
+      totalMembers: isPaginated ? totalItems : members.length,
       activeMembers: activeMembers.length,
       employees: members.filter(m => m.type === 'employee').length,
       freelancers: members.filter(m => m.type === 'freelancer').length,
@@ -101,11 +129,22 @@ export async function GET(request: NextRequest) {
       totalCapacity,
     };
 
-    const response = NextResponse.json({
+    const responseBody: Record<string, unknown> = {
       success: true,
       data: members,
       metrics,
-    });
+    };
+
+    if (isPaginated) {
+      responseBody.pagination = {
+        page,
+        pageSize,
+        totalItems,
+        totalPages: Math.ceil(totalItems / pageSize),
+      };
+    }
+
+    const response = NextResponse.json(responseBody);
     response.headers.set('Cache-Control', 'no-store');
     return response;
   } catch (error) {

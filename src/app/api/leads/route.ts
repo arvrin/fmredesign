@@ -21,63 +21,29 @@ export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
 
+    // Pagination: only active when `page` param is provided (backwards compat)
+    const pageParam = searchParams.get('page');
+    const isPaginated = pageParam !== null;
+    const page = Math.max(1, parseInt(pageParam || '1', 10));
+    const pageSize = Math.max(1, Math.min(100, parseInt(searchParams.get('pageSize') || '25', 10)));
+
     const supabase = getSupabaseAdmin();
-    let query = supabase.from('leads').select('*');
 
-    // Apply Supabase-level filters
+    // Shared filter params
     const statusFilter = searchParams.get('status');
-    if (statusFilter) {
-      query = query.in('status', statusFilter.split(','));
-    }
-
     const priorityFilter = searchParams.get('priority');
-    if (priorityFilter) {
-      query = query.in('priority', priorityFilter.split(','));
-    }
-
     const sourceFilter = searchParams.get('source');
-    if (sourceFilter) {
-      query = query.in('source', sourceFilter.split(','));
-    }
-
     const projectTypeFilter = searchParams.get('projectType');
-    if (projectTypeFilter) {
-      query = query.in('project_type', projectTypeFilter.split(','));
-    }
-
     const budgetRangeFilter = searchParams.get('budgetRange');
-    if (budgetRangeFilter) {
-      query = query.in('budget_range', budgetRangeFilter.split(','));
-    }
-
     const companySizeFilter = searchParams.get('companySize');
-    if (companySizeFilter) {
-      query = query.in('company_size', companySizeFilter.split(','));
-    }
-
     const assignedToFilter = searchParams.get('assignedTo');
-    if (assignedToFilter) {
-      query = query.in('assigned_to', assignedToFilter.split(','));
-    }
-
-    // Date range
     const startDate = searchParams.get('startDate');
     const endDate = searchParams.get('endDate');
-    if (startDate) query = query.gte('created_at', startDate);
-    if (endDate) query = query.lte('created_at', endDate);
-
-    // Text search
     const searchQuery = searchParams.get('search');
-    if (searchQuery) {
-      query = query.or(
-        `name.ilike.%${searchQuery}%,email.ilike.%${searchQuery}%,company.ilike.%${searchQuery}%,project_description.ilike.%${searchQuery}%`
-      );
-    }
 
     // Sorting
     const sortBy = searchParams.get('sortBy');
     const sortDirection = searchParams.get('sortDirection') || 'desc';
-    // Map camelCase sort fields to snake_case
     const sortFieldMap: Record<string, string> = {
       createdAt: 'created_at',
       updatedAt: 'updated_at',
@@ -88,13 +54,56 @@ export async function GET(request: NextRequest) {
       followUpDate: 'follow_up_date',
     };
     const dbSortField = sortBy ? (sortFieldMap[sortBy] || sortBy) : 'created_at';
-    query = query.order(dbSortField, { ascending: sortDirection === 'asc' });
 
-    const { data, error } = await query;
-    if (error) throw error;
+    /** Apply shared filters to a query builder */
+    function applyFilters<T extends { in: Function; gte: Function; lte: Function; or: Function }>(q: T): T {
+      if (statusFilter) q = q.in('status', statusFilter.split(',')) as T;
+      if (priorityFilter) q = q.in('priority', priorityFilter.split(',')) as T;
+      if (sourceFilter) q = q.in('source', sourceFilter.split(',')) as T;
+      if (projectTypeFilter) q = q.in('project_type', projectTypeFilter.split(',')) as T;
+      if (budgetRangeFilter) q = q.in('budget_range', budgetRangeFilter.split(',')) as T;
+      if (companySizeFilter) q = q.in('company_size', companySizeFilter.split(',')) as T;
+      if (assignedToFilter) q = q.in('assigned_to', assignedToFilter.split(',')) as T;
+      if (startDate) q = q.gte('created_at', startDate) as T;
+      if (endDate) q = q.lte('created_at', endDate) as T;
+      if (searchQuery) {
+        q = q.or(
+          `name.ilike.%${searchQuery}%,email.ilike.%${searchQuery}%,company.ilike.%${searchQuery}%,project_description.ilike.%${searchQuery}%`
+        ) as T;
+      }
+      return q;
+    }
+
+    let data;
+    let totalItems = 0;
+
+    if (isPaginated) {
+      // Get total count with same filters
+      const { count, error: countError } = await applyFilters(
+        supabase.from('leads').select('*', { count: 'exact', head: true })
+      );
+      if (countError) throw countError;
+      totalItems = count || 0;
+
+      // Paginated data
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+      let query = applyFilters(supabase.from('leads').select('*'));
+      query = query.order(dbSortField, { ascending: sortDirection === 'asc' });
+      query = query.range(from, to);
+      const result = await query;
+      if (result.error) throw result.error;
+      data = result.data;
+    } else {
+      let query = applyFilters(supabase.from('leads').select('*'));
+      query = query.order(dbSortField, { ascending: sortDirection === 'asc' });
+      const result = await query;
+      if (result.error) throw result.error;
+      data = result.data;
+    }
 
     // Transform to camelCase for frontend
-    const leads = (data || []).map((row) => ({
+    const leads = (data || []).map((row: Record<string, any>) => ({
       id: row.id,
       name: row.name,
       email: row.email,
@@ -127,11 +136,22 @@ export async function GET(request: NextRequest) {
       clientId: row.client_id,
     }));
 
-    return NextResponse.json({
+    const responseBody: Record<string, unknown> = {
       success: true,
       data: leads,
-      total: leads.length,
-    });
+      total: isPaginated ? totalItems : leads.length,
+    };
+
+    if (isPaginated) {
+      responseBody.pagination = {
+        page,
+        pageSize,
+        totalItems,
+        totalPages: Math.ceil(totalItems / pageSize),
+      };
+    }
+
+    return NextResponse.json(responseBody);
   } catch (error) {
     console.error('Error fetching leads:', error);
     return NextResponse.json(

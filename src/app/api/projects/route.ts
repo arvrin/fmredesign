@@ -64,12 +64,13 @@ export async function GET(request: NextRequest) {
     const sortBy = searchParams.get('sortBy') || 'created_at';
     const sortDirection = searchParams.get('sortDirection') || 'desc';
 
-    const supabase = getSupabaseAdmin();
-    let query = supabase.from('projects').select('*');
+    // Pagination: only active when `page` param is provided (backwards compat)
+    const pageParam = searchParams.get('page');
+    const isPaginated = pageParam !== null;
+    const page = Math.max(1, parseInt(pageParam || '1', 10));
+    const pageSize = Math.max(1, Math.min(100, parseInt(searchParams.get('pageSize') || '25', 10)));
 
-    if (clientId) query = query.eq('client_id', clientId);
-    if (status) query = query.in('status', status.split(','));
-    if (type) query = query.in('type', type.split(','));
+    const supabase = getSupabaseAdmin();
 
     // Map camelCase sort fields to snake_case
     const sortFieldMap: Record<string, string> = {
@@ -79,10 +80,42 @@ export async function GET(request: NextRequest) {
       endDate: 'end_date',
     };
     const dbSortField = sortFieldMap[sortBy] || sortBy;
-    query = query.order(dbSortField, { ascending: sortDirection === 'asc' });
 
-    const { data, error } = await query;
-    if (error) throw error;
+    let data;
+    let totalItems = 0;
+
+    if (isPaginated) {
+      // Get total count with same filters
+      let countQuery = supabase.from('projects').select('*', { count: 'exact', head: true });
+      if (clientId) countQuery = countQuery.eq('client_id', clientId);
+      if (status) countQuery = countQuery.in('status', status.split(','));
+      if (type) countQuery = countQuery.in('type', type.split(','));
+      const { count, error: countError } = await countQuery;
+      if (countError) throw countError;
+      totalItems = count || 0;
+
+      // Paginated data
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+      let query = supabase.from('projects').select('*');
+      if (clientId) query = query.eq('client_id', clientId);
+      if (status) query = query.in('status', status.split(','));
+      if (type) query = query.in('type', type.split(','));
+      query = query.order(dbSortField, { ascending: sortDirection === 'asc' });
+      query = query.range(from, to);
+      const result = await query;
+      if (result.error) throw result.error;
+      data = result.data;
+    } else {
+      let query = supabase.from('projects').select('*');
+      if (clientId) query = query.eq('client_id', clientId);
+      if (status) query = query.in('status', status.split(','));
+      if (type) query = query.in('type', type.split(','));
+      query = query.order(dbSortField, { ascending: sortDirection === 'asc' });
+      const result = await query;
+      if (result.error) throw result.error;
+      data = result.data;
+    }
 
     // Transform to camelCase for frontend
     const projects = (data || []).map((p) => ({
@@ -113,11 +146,22 @@ export async function GET(request: NextRequest) {
       updatedAt: p.updated_at,
     }));
 
-    return NextResponse.json({
+    const responseBody: Record<string, unknown> = {
       success: true,
       data: projects,
-      total: projects.length,
-    });
+      total: isPaginated ? totalItems : projects.length,
+    };
+
+    if (isPaginated) {
+      responseBody.pagination = {
+        page,
+        pageSize,
+        totalItems,
+        totalPages: Math.ceil(totalItems / pageSize),
+      };
+    }
+
+    return NextResponse.json(responseBody);
   } catch (error) {
     console.error('Error fetching projects:', error);
     return NextResponse.json(

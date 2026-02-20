@@ -24,6 +24,22 @@ export interface ApiResponse<T = unknown> {
   error?: string;
 }
 
+export interface PaginationMeta {
+  page: number;
+  pageSize: number;
+  totalItems: number;
+  totalPages: number;
+}
+
+export interface PaginatedResponse<T = unknown> extends ApiResponse<T[]> {
+  pagination: PaginationMeta;
+}
+
+export interface PaginationParams {
+  page?: number;
+  pageSize?: number;
+}
+
 export class ApiError extends Error {
   constructor(
     message: string,
@@ -262,7 +278,7 @@ export interface TalentApplication {
 // Filter/sort params
 // ---------------------------------------------------------------------------
 
-export interface ListParams {
+export interface ListParams extends PaginationParams {
   sortBy?: string;
   sortDirection?: 'asc' | 'desc';
   search?: string;
@@ -296,8 +312,11 @@ export const api = {
   // Clients
   // -----------------------------------------------------------------------
   clients: {
-    list: () =>
-      get<ApiResponse<Client[]>>('/api/clients'),
+    list: (params?: PaginationParams) =>
+      get<ApiResponse<Client[]> & { pagination?: PaginationMeta }>(`/api/clients${qs({
+        page: params?.page,
+        pageSize: params?.pageSize,
+      })}`),
 
     get: (id: string) =>
       get<ApiResponse<Client>>(`/api/clients${qs({ id })}`),
@@ -318,9 +337,11 @@ export const api = {
   // -----------------------------------------------------------------------
   projects: {
     list: (params?: ListParams) =>
-      get<ApiResponse<Project[]>>(`/api/projects${qs({
+      get<ApiResponse<Project[]> & { pagination?: PaginationMeta }>(`/api/projects${qs({
         sortBy: params?.sortBy ?? 'createdAt',
         sortDirection: params?.sortDirection ?? 'desc',
+        page: params?.page,
+        pageSize: params?.pageSize,
       })}`),
 
     get: (id: string) =>
@@ -350,10 +371,12 @@ export const api = {
   // -----------------------------------------------------------------------
   content: {
     list: (params?: ListParams & { clientId?: string }) =>
-      get<ApiResponse<ContentItem[]>>(`/api/content${qs({
+      get<ApiResponse<ContentItem[]> & { pagination?: PaginationMeta }>(`/api/content${qs({
         sortBy: params?.sortBy ?? 'scheduledDate',
         sortDirection: params?.sortDirection ?? 'asc',
         clientId: params?.clientId,
+        page: params?.page,
+        pageSize: params?.pageSize,
       })}`),
 
     get: (id: string) =>
@@ -379,8 +402,14 @@ export const api = {
   // Invoices
   // -----------------------------------------------------------------------
   invoices: {
-    list: () =>
-      get<ApiResponse<Invoice[]>>('/api/invoices'),
+    list: (params?: PaginationParams & { clientId?: string; status?: string; search?: string }) =>
+      get<ApiResponse<Invoice[]> & { stats?: unknown; pagination?: PaginationMeta }>(`/api/invoices${qs({
+        page: params?.page,
+        pageSize: params?.pageSize,
+        clientId: params?.clientId,
+        status: params?.status,
+        search: params?.search,
+      })}`),
 
     get: (id: string) =>
       get<ApiResponse<Invoice>>(`/api/invoices${qs({ id })}`),
@@ -408,8 +437,11 @@ export const api = {
   // Team
   // -----------------------------------------------------------------------
   team: {
-    list: () =>
-      get<ApiResponse<TeamMember[]> & { metrics?: TeamMetrics }>('/api/team'),
+    list: (params?: PaginationParams) =>
+      get<ApiResponse<TeamMember[]> & { metrics?: TeamMetrics; pagination?: PaginationMeta }>(`/api/team${qs({
+        page: params?.page,
+        pageSize: params?.pageSize,
+      })}`),
 
     get: (id: string) =>
       get<ApiResponse<TeamMember>>(`/api/team${qs({ id })}`),
@@ -446,11 +478,13 @@ export const api = {
   // -----------------------------------------------------------------------
   leads: {
     list: (params?: ListParams) =>
-      get<ApiResponse<Lead[]>>(`/api/leads${qs({
+      get<ApiResponse<Lead[]> & { pagination?: PaginationMeta }>(`/api/leads${qs({
         search: params?.search,
         status: params?.status,
         sortBy: params?.sortBy,
         sortDirection: params?.sortDirection,
+        page: params?.page,
+        pageSize: params?.pageSize,
       })}`),
 
     create: (data: Partial<Lead>) =>
