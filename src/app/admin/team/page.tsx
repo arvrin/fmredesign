@@ -105,7 +105,7 @@ export default function TeamDashboardPage() {
           <Skeleton className="h-8 w-48" />
           <Skeleton className="h-10 w-40" />
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
           {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-28 rounded-xl" />)}
         </div>
         <Skeleton className="h-16 rounded-xl" />
@@ -135,7 +135,7 @@ export default function TeamDashboardPage() {
 
       {/* Team Metrics */}
       {teamMetrics && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
           <MetricCard
             title="Total Team"
             value={teamMetrics.totalMembers.toString()}

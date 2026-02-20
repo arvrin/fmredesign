@@ -154,7 +154,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Fire-and-forget audit log
-    logAuditEvent({
+    await logAuditEvent({
       user_id: auth.user.id,
       user_name: auth.user.name,
       action: 'update',

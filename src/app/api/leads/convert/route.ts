@@ -112,7 +112,7 @@ export async function POST(request: NextRequest) {
 
     // Fire-and-forget audit log
     const auditUser = getAuditUser(request);
-    logAuditEvent({
+    await logAuditEvent({
       ...auditUser,
       action: 'create',
       resource_type: 'client',

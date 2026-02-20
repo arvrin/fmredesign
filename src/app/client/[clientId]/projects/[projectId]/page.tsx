@@ -186,10 +186,10 @@ export default function ProjectDetailPage() {
           Back to Projects
         </Link>
 
-        <div className="flex items-start justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
           <div>
-            <div className="flex items-center space-x-3 mb-2">
-              <h1 className="text-3xl font-display font-bold text-fm-neutral-900">
+            <div className="flex items-center gap-3 flex-wrap mb-2">
+              <h1 className="text-xl sm:text-3xl font-display font-bold text-fm-neutral-900">
                 {project.name}
               </h1>
               <div
@@ -198,9 +198,9 @@ export default function ProjectDetailPage() {
                 aria-label={`${project.priority} priority`}
               />
             </div>
-            <p className="text-fm-neutral-600 font-medium">{project.description}</p>
+            <p className="text-fm-neutral-600 font-medium text-sm sm:text-base">{project.description}</p>
           </div>
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
             <Badge className={getStatusColor(project.status)} variant="secondary">
               {project.status}
             </Badge>
@@ -216,32 +216,34 @@ export default function ProjectDetailPage() {
               disabled={shareLoading}
             >
               <Share2 className="w-4 h-4" />
-              {shareLoading ? 'Sharing...' : 'Share'}
+              {shareLoading ? '...' : 'Share'}
             </Button>
           </div>
         </div>
 
         {/* Share URL Popover */}
         {shareUrl && (
-          <div className="mt-4 p-4 bg-fm-neutral-50 border border-fm-neutral-200 rounded-lg flex items-center space-x-3">
+          <div className="mt-4 p-4 bg-fm-neutral-50 border border-fm-neutral-200 rounded-lg flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
             <input
               readOnly
               value={shareUrl}
               className="flex-1 text-sm bg-white border border-fm-neutral-300 rounded-md px-3 py-2 text-fm-neutral-700"
             />
-            <Button variant="client" size="sm" onClick={handleCopy}>
-              {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-              {copied ? 'Copied!' : 'Copy'}
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => setShareUrl(null)}>
-              <X className="w-4 h-4" />
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button variant="client" size="sm" onClick={handleCopy}>
+                {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                {copied ? 'Copied!' : 'Copy'}
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => setShareUrl(null)}>
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
         )}
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-8">
         <Card variant="client">
           <CardContent className="p-4">
             <div className="flex items-center space-x-3">

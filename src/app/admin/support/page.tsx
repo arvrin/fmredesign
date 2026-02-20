@@ -141,7 +141,7 @@ export default function AdminSupportPage() {
         <div className="flex items-center justify-between">
           <Skeleton className="h-8 w-48" />
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
           {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-28 rounded-xl" />)}
         </div>
         <Skeleton className="h-16 rounded-xl" />
@@ -162,7 +162,7 @@ export default function AdminSupportPage() {
       />
 
       {/* Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
         <MetricCard
           title="Open Tickets"
           value={openCount}

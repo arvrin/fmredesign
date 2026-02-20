@@ -361,7 +361,7 @@ export function GrowthEngine({ clientId }: GrowthEngineProps) {
       </div>
 
       {/* Growth Metrics Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
         {metrics.map((metric) => (
           <div key={metric.id} className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-6">
             <div className="flex items-center justify-between mb-4">

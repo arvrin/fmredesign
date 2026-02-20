@@ -266,7 +266,7 @@ export function V2PageWrapper({
       {/* Layer 6: Foreground Particles — absolute, parallax faster (closer) */}
       <div
         ref={foregroundRef}
-        className="absolute inset-0 pointer-events-none"
+        className="absolute inset-0 pointer-events-none hidden md:block"
         style={{ zIndex: 5 }}
       >
         {particles.map((p) => (

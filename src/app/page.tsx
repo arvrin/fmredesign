@@ -27,7 +27,7 @@ export default function Home() {
   return (
     <>
       <PageLoader />
-      <V2PageWrapper starCount={60}>
+      <V2PageWrapper starCount={25}>
         <HeroSectionV2 />
         <ServicesSectionV2 />
         <FeaturesSectionV2 />

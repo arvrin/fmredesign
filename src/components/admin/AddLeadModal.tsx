@@ -423,7 +423,7 @@ export function AddLeadModal({ isOpen, onClose, onLeadAdded }: AddLeadModalProps
                 value={formData.specificRequirements}
                 onChange={handleInputChange}
                 rows={2}
-                className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
+                className="w-full min-h-[4rem] px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
                 placeholder="Any specific requirements or preferences?"
               />
             </div>

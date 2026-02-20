@@ -320,7 +320,7 @@ export default function GetStartedPage() {
                 </div>
 
                 {/* Step Content */}
-                <div style={{ minHeight: '400px' }}>
+                <div style={{ minHeight: 'min(400px, 50vh)' }}>
                   {/* Step 1: Contact Information */}
                   {currentStep === 1 && (
                     <div className="space-y-8">
@@ -455,13 +455,13 @@ export default function GetStartedPage() {
                               key={type.value}
                               type="button"
                               onClick={() => updateFormData({ projectType: type.value })}
-                              className={`p-6 border-2 rounded-xl text-left hover:bg-fm-magenta-50 hover:border-fm-magenta-300 transition-[background-color,border-color] duration-300 group
+                              className={`p-4 sm:p-6 border-2 rounded-xl text-left hover:bg-fm-magenta-50 hover:border-fm-magenta-300 transition-[background-color,border-color] duration-300 group
                                 ${formData.projectType === type.value
                                   ? 'border-fm-magenta-700 bg-fm-magenta-50 shadow-lg'
                                   : 'border-fm-neutral-200'}`}
                             >
-                              <div className="flex items-start space-x-4">
-                                <span className="text-2xl">{type.icon}</span>
+                              <div className="flex items-start space-x-3 sm:space-x-4">
+                                <span className="text-xl sm:text-2xl">{type.icon}</span>
                                 <div>
                                   <div className="font-semibold text-fm-neutral-900 mb-1">{type.label}</div>
                                   <div className="text-sm text-fm-neutral-600">{type.description}</div>

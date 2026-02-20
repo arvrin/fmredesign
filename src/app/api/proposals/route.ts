@@ -183,7 +183,7 @@ export async function POST(request: NextRequest) {
     notifyTeam(emailData.subject, emailData.html);
 
     // Fire-and-forget audit log
-    logAuditEvent({
+    await logAuditEvent({
       user_id: auth.user.id,
       user_name: auth.user.name,
       action: 'create',
@@ -242,7 +242,7 @@ export async function PUT(request: NextRequest) {
     if (error) throw error;
 
     // Fire-and-forget audit log
-    logAuditEvent({
+    await logAuditEvent({
       user_id: auth.user.id,
       user_name: auth.user.name,
       action: 'update',
@@ -287,7 +287,7 @@ export async function DELETE(request: NextRequest) {
     if (error) throw error;
 
     // Fire-and-forget audit log
-    logAuditEvent({
+    await logAuditEvent({
       user_id: auth.user.id,
       user_name: auth.user.name,
       action: 'delete',

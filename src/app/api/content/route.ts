@@ -198,7 +198,7 @@ export async function POST(request: NextRequest) {
     };
 
     // Fire-and-forget audit log
-    logAuditEvent({
+    await logAuditEvent({
       user_id: auth.user.id,
       user_name: auth.user.name,
       action: 'create',
@@ -309,7 +309,7 @@ export async function PUT(request: NextRequest) {
     };
 
     // Fire-and-forget audit log
-    logAuditEvent({
+    await logAuditEvent({
       user_id: auth.user.id,
       user_name: auth.user.name,
       action: body.status === 'approved' ? 'approve' : 'update',
@@ -355,7 +355,7 @@ export async function DELETE(request: NextRequest) {
     if (error) throw error;
 
     // Fire-and-forget audit log
-    logAuditEvent({
+    await logAuditEvent({
       user_id: auth.user.id,
       user_name: auth.user.name,
       action: 'delete',

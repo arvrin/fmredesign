@@ -439,8 +439,8 @@ export function InvoiceFormNew() {
           {/* Header actions card */}
           <Card variant="admin">
             <CardContent className="p-4">
-              <div className="flex items-center justify-between flex-wrap gap-4">
-                <div className="flex items-center gap-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3 sm:gap-4">
                   <div>
                     <div className="flex items-center gap-2">
                       <label className="text-sm font-medium text-fm-neutral-900">
@@ -677,7 +677,7 @@ export function InvoiceFormNew() {
                     </div>
 
                     {/* Qty / Rate / Amount / Delete */}
-                    <div className="grid grid-cols-4 gap-3 items-end">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 items-end">
                       <div>
                         <label className="block text-xs font-medium text-fm-neutral-600 mb-1">
                           Qty
@@ -846,7 +846,7 @@ export function InvoiceFormNew() {
       </div>
 
       {/* ---- Sticky bottom action bar (mobile-friendly) ---- */}
-      <div className="fixed bottom-0 left-0 right-0 xl:hidden bg-white border-t border-fm-neutral-200 p-3 flex items-center justify-between gap-2 shadow-lg"
+      <div className="fixed bottom-0 left-0 right-0 xl:hidden bg-white border-t border-fm-neutral-200 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] flex items-center justify-between gap-2 shadow-lg"
         style={{ zIndex: 40 }}
       >
         <div className="text-sm font-semibold text-fm-neutral-900">

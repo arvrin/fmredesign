@@ -435,7 +435,7 @@ export function HeaderV2() {
                 style={{ transitionDelay: isMobileMenuOpen ? '100ms' : '0ms' }}
               >
                 <div className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: '#9a7888' }}>Services</div>
-                <div className="grid grid-cols-2 gap-1.5">
+                <div className="grid grid-cols-1 min-[400px]:grid-cols-2 gap-1.5">
                   {services.map((service) => (
                     <Link
                       key={service.name}

@@ -98,7 +98,7 @@ export async function POST(request: NextRequest) {
     });
     notifyTeam(emailData.subject, emailData.html);
 
-    logAuditEvent({
+    await logAuditEvent({
       user_id: auth.user.id,
       user_name: auth.user.name,
       action: 'create',
@@ -189,7 +189,7 @@ export async function PUT(request: NextRequest) {
       });
     }
 
-    logAuditEvent({
+    await logAuditEvent({
       user_id: auth.user.id,
       user_name: auth.user.name,
       action: 'update',
@@ -239,7 +239,7 @@ export async function DELETE(request: NextRequest) {
     const { error } = await supabase.from('contracts').delete().eq('id', id);
     if (error) throw error;
 
-    logAuditEvent({
+    await logAuditEvent({
       user_id: auth.user.id,
       user_name: auth.user.name,
       action: 'delete',

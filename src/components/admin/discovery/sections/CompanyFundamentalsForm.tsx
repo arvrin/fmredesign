@@ -254,7 +254,7 @@ export function CompanyFundamentalsForm({ session, onUpdate }: CompanyFundamenta
             <div className="space-y-4">
               {formData.keyStakeholders.map((stakeholder, index) => (
                 <div key={index} className="p-4 border border-fm-neutral-200 rounded-lg">
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">
                         Name

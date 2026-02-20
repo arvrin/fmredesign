@@ -130,12 +130,12 @@ export default function ClientProjectsPage() {
     <>
       {/* Header */}
       <div className="mb-8">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-display font-bold text-fm-neutral-900">
+            <h1 className="text-xl sm:text-3xl font-display font-bold text-fm-neutral-900">
               Your <span className="v2-accent">Projects</span>
             </h1>
-            <p className="text-fm-neutral-600 mt-1 font-medium">Track progress and milestones across all initiatives</p>
+            <p className="text-fm-neutral-600 mt-1 font-medium text-sm sm:text-base">Track progress and milestones across all initiatives</p>
           </div>
           <div className="flex items-center space-x-3">
             <Button
@@ -159,7 +159,7 @@ export default function ClientProjectsPage() {
       </div>
 
       {/* Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-8">
         <MetricCard
           title="Active Projects"
           value={activeProjects}

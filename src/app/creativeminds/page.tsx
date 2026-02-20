@@ -466,7 +466,7 @@ export default function CreativeMindsPage() {
           />
         </div>
 
-        <div className="relative max-w-7xl mx-auto px-6 md:px-12 lg:px-20">
+        <div className="relative v2-container">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             {/* Left: Copy */}
             <div className={`transition-[opacity,transform] duration-500 ease-out ${bentoVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
@@ -512,7 +512,7 @@ export default function CreativeMindsPage() {
                     <Link
                       key={cat.name}
                       href="/get-started"
-                      className="group relative rounded-2xl p-5 overflow-hidden transition-[opacity,transform] duration-300"
+                      className="group relative rounded-2xl p-4 overflow-hidden transition-[opacity,transform] duration-300"
                       style={{
                         opacity: bentoVisible ? 1 : 0,
                         transform: bentoVisible ? 'translateY(0)' : 'translateY(10px)',
@@ -525,8 +525,8 @@ export default function CreativeMindsPage() {
                       <div className={`w-10 h-10 rounded-xl ${cat.gradient} flex items-center justify-center shadow-lg mb-3`}>
                         <Icon className="w-5 h-5 text-white" />
                       </div>
-                      <h3 className="text-fm-neutral-900 font-semibold text-sm mb-0.5">{cat.name}</h3>
-                      <p className="text-fm-neutral-500 text-xs">{cat.description}</p>
+                      <h3 className="text-fm-neutral-900 font-semibold text-sm mb-0.5 line-clamp-1">{cat.name}</h3>
+                      <p className="text-fm-neutral-500 text-xs line-clamp-2">{cat.description}</p>
                     </Link>
                   );
                 })}

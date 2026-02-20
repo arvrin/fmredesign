@@ -545,7 +545,7 @@ export function AdminSystem() {
       {/* System Actions */}
       <div className="bg-white rounded-lg border border-fm-neutral-200 p-6">
         <h4 className="font-semibold text-fm-neutral-900 mb-4">System Actions</h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <Button variant="secondary" className="justify-start">
             <RefreshCw className="h-4 w-4 mr-2" />
             Restart Services

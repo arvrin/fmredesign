@@ -291,10 +291,10 @@ export function TalentApplicationForm({ onSubmit, onCancel }: TalentApplicationF
           )}
 
           {/* Navigation */}
-          <div className="flex justify-between items-center mt-8 pt-8 border-t border-fm-neutral-200">
+          <div className="flex flex-col-reverse sm:flex-row justify-between items-stretch sm:items-center mt-8 pt-8 border-t border-fm-neutral-200 gap-3">
             <button
               onClick={currentStep === 1 ? onCancel : handlePrev}
-              className="flex items-center gap-2 px-4 py-2 text-sm border border-fm-neutral-300 rounded-lg hover:bg-fm-neutral-50 transition-colors"
+              className="flex items-center justify-center gap-2 px-6 py-3 text-sm border border-fm-neutral-300 rounded-lg hover:bg-fm-neutral-50 transition-colors min-h-[48px]"
             >
               <ArrowLeft className="h-4 w-4" />
               {currentStep === 1 ? 'Cancel' : 'Previous'}
@@ -304,14 +304,14 @@ export function TalentApplicationForm({ onSubmit, onCancel }: TalentApplicationF
               <button
                 onClick={handleSubmit}
                 disabled={submitStatus === 'submitting'}
-                className="v2-btn v2-btn-magenta disabled:opacity-60"
+                className="v2-btn v2-btn-magenta disabled:opacity-60 min-h-[48px]"
               >
                 {submitStatus === 'submitting' ? 'Submitting...' : 'Submit Application'}
               </button>
             ) : (
               <button
                 onClick={handleNext}
-                className="flex items-center gap-2 px-5 py-2.5 bg-fm-magenta-600 text-white text-sm font-medium rounded-lg hover:bg-fm-magenta-700 transition-colors"
+                className="flex items-center justify-center gap-2 px-6 py-3 bg-fm-magenta-600 text-white text-sm font-medium rounded-lg hover:bg-fm-magenta-700 transition-colors min-h-[48px]"
               >
                 Next Step
                 <ArrowRight className="h-4 w-4" />
@@ -332,9 +332,9 @@ function FieldError({ message }: { message?: string }) {
 }
 
 const inputClass =
-  'w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500 text-sm';
+  'w-full px-4 py-3 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500 text-base';
 const inputErrorClass =
-  'w-full px-3 py-2 border border-red-400 rounded-lg focus:ring-2 focus:ring-red-400 focus:border-red-400 text-sm';
+  'w-full px-4 py-3 border border-red-400 rounded-lg focus:ring-2 focus:ring-red-400 focus:border-red-400 text-base';
 
 interface StepInternalProps {
   formData: Partial<TalentApplication>;
@@ -548,9 +548,9 @@ function ExpertiseStep({ formData, updateData, errors }: StepInternalProps) {
           <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">
             Subcategories *
           </label>
-          <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto border border-fm-neutral-200 rounded-lg p-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-60 sm:max-h-40 overflow-y-auto border border-fm-neutral-200 rounded-lg p-4">
             {TALENT_CATEGORIES[pd.category].subcategories.map((sub) => (
-              <label key={sub} className="flex items-center text-sm gap-1.5">
+              <label key={sub} className="flex items-center text-sm gap-2.5 min-h-[44px] px-1">
                 <input
                   type="checkbox"
                   checked={pd.subcategories.includes(sub)}
@@ -619,7 +619,7 @@ function ExpertiseStep({ formData, updateData, errors }: StepInternalProps) {
                 key={skill}
                 type="button"
                 onClick={() => handleSkillToggle(skill)}
-                className={`px-3 py-1 rounded-full text-sm border transition-colors ${
+                className={`px-4 py-2 rounded-full text-sm border transition-colors min-h-[44px] ${
                   pd.skills?.find((s) => s.name === skill)
                     ? 'bg-fm-magenta-100 border-fm-magenta-300 text-fm-magenta-800'
                     : 'bg-fm-neutral-100 border-fm-neutral-300 text-fm-neutral-700 hover:bg-fm-neutral-200'
@@ -640,7 +640,7 @@ function ExpertiseStep({ formData, updateData, errors }: StepInternalProps) {
                 key={tool}
                 type="button"
                 onClick={() => handleToolToggle(tool)}
-                className={`px-3 py-1 rounded-full text-sm border transition-colors ${
+                className={`px-4 py-2 rounded-full text-sm border transition-colors min-h-[44px] ${
                   pd.tools?.includes(tool)
                     ? 'bg-blue-100 border-blue-300 text-blue-800'
                     : 'bg-fm-neutral-100 border-fm-neutral-300 text-fm-neutral-700 hover:bg-fm-neutral-200'

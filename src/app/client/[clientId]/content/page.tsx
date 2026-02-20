@@ -198,12 +198,12 @@ export default function ClientContentPage() {
     <>
       {/* Header */}
       <div className="mb-8">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-display font-bold text-fm-neutral-900">
+            <h1 className="text-xl sm:text-3xl font-display font-bold text-fm-neutral-900">
               Content <span className="v2-accent">Calendar</span>
             </h1>
-            <p className="text-fm-neutral-600 mt-1 font-medium">Manage and track your content publishing schedule</p>
+            <p className="text-fm-neutral-600 mt-1 font-medium text-sm sm:text-base">Manage and track your content publishing schedule</p>
           </div>
           <div className="flex items-center space-x-3">
             <Button
@@ -226,7 +226,7 @@ export default function ClientContentPage() {
       </div>
 
       {/* Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-8">
         <MetricCard
           title="Published Content"
           value={publishedContent.length}
@@ -264,19 +264,21 @@ export default function ClientContentPage() {
       </div>
 
       {/* Filter Tabs */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center space-x-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 -mx-3 px-3 sm:mx-0 sm:px-0 sm:gap-4">
           <Button
             variant={filter === 'all' ? 'client' : 'ghost'}
             size="sm"
             onClick={() => setFilter('all')}
+            className="flex-shrink-0"
           >
-            All Content ({contentItems.length})
+            All ({contentItems.length})
           </Button>
           <Button
             variant={filter === 'published' ? 'client' : 'ghost'}
             size="sm"
             onClick={() => setFilter('published')}
+            className="flex-shrink-0"
           >
             Published ({publishedContent.length})
           </Button>
@@ -284,6 +286,7 @@ export default function ClientContentPage() {
             variant={filter === 'scheduled' ? 'client' : 'ghost'}
             size="sm"
             onClick={() => setFilter('scheduled')}
+            className="flex-shrink-0"
           >
             Scheduled ({scheduledContent.length})
           </Button>
@@ -291,6 +294,7 @@ export default function ClientContentPage() {
             variant={filter === 'review' ? 'client' : 'ghost'}
             size="sm"
             onClick={() => setFilter('review')}
+            className="flex-shrink-0"
           >
             Review ({reviewContent.length})
           </Button>
@@ -298,6 +302,7 @@ export default function ClientContentPage() {
             variant={filter === 'draft' ? 'client' : 'ghost'}
             size="sm"
             onClick={() => setFilter('draft')}
+            className="flex-shrink-0"
           >
             Drafts ({contentItems.filter(i => i.status === 'draft').length})
           </Button>
@@ -306,7 +311,7 @@ export default function ClientContentPage() {
           type="month"
           value={selectedMonth}
           onChange={(e) => setSelectedMonth(e.target.value)}
-          className="px-3 py-1.5 text-sm border border-fm-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-300"
+          className="px-3 py-1.5 text-sm border border-fm-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-300 flex-shrink-0"
         />
       </div>
 

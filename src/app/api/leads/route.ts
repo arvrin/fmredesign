@@ -327,7 +327,7 @@ export async function DELETE(request: NextRequest) {
 
     // Fire-and-forget audit log (uses header-based user identity — requireAdminAuth has no user object)
     const auditUser = getAuditUser(request);
-    logAuditEvent({
+    await logAuditEvent({
       ...auditUser,
       action: 'delete',
       resource_type: 'lead',
@@ -426,7 +426,7 @@ export async function PUT(request: NextRequest) {
     };
 
     // Fire-and-forget audit log
-    logAuditEvent({
+    await logAuditEvent({
       user_id: auth.user.id,
       user_name: auth.user.name,
       action: 'update',

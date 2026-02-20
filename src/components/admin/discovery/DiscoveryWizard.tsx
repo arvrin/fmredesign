@@ -177,45 +177,55 @@ export function DiscoveryWizard({ session, onUpdate, onComplete }: DiscoveryWiza
       {/* Header with progress */}
       <div className="bg-white border-b border-fm-neutral-200 sticky top-0 z-40">
         <div className="max-w-6xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3 sm:gap-4">
               <Button
                 variant="secondary"
                 icon={<ArrowLeft className="h-4 w-4" />}
                 onClick={() => router.push('/admin/clients')}
+                className="hidden sm:flex"
               >
                 Exit Discovery
               </Button>
-              <div>
-                <h1 className="text-lg font-semibold text-fm-neutral-900">
-                  Discovery Session: {session.companyFundamentals.companyName || 'New Client'}
+              <Button
+                variant="secondary"
+                icon={<ArrowLeft className="h-4 w-4" />}
+                onClick={() => router.push('/admin/clients')}
+                className="sm:hidden"
+              >
+                Exit
+              </Button>
+              <div className="min-w-0">
+                <h1 className="text-sm sm:text-lg font-semibold text-fm-neutral-900 truncate">
+                  Discovery: {session.companyFundamentals.companyName || 'New Client'}
                 </h1>
-                <p className="text-sm text-fm-neutral-600">
-                  Section {currentStep} of 10: {DISCOVERY_SECTIONS[currentStep as keyof typeof DISCOVERY_SECTIONS]}
+                <p className="text-xs sm:text-sm text-fm-neutral-600">
+                  Section {currentStep}/10: {DISCOVERY_SECTIONS[currentStep as keyof typeof DISCOVERY_SECTIONS]}
                 </p>
               </div>
             </div>
-            
-            <div className="flex items-center gap-4">
+
+            <div className="flex items-center gap-3 sm:gap-4">
               {autoSaving && (
                 <div className="flex items-center gap-2 text-sm text-fm-neutral-600">
                   <div className="animate-spin h-3 w-3 border border-fm-magenta-600 border-t-transparent rounded-full"></div>
-                  Auto-saving...
+                  <span className="hidden sm:inline">Auto-saving...</span>
                 </div>
               )}
-              
+
               {lastSaved && !autoSaving && (
-                <p className="text-xs text-fm-neutral-500">
+                <p className="text-xs text-fm-neutral-500 hidden sm:block">
                   Last saved: {lastSaved.toLocaleTimeString()}
                 </p>
               )}
-              
+
               <Button
                 variant="secondary"
                 icon={<FileText className="h-4 w-4" />}
                 onClick={() => router.push(`/admin/discovery/${session.id}/report`)}
               >
-                Preview Report
+                <span className="hidden sm:inline">Preview Report</span>
+                <span className="sm:hidden">Report</span>
               </Button>
             </div>
           </div>
@@ -240,10 +250,37 @@ export function DiscoveryWizard({ session, onUpdate, onComplete }: DiscoveryWiza
         </div>
       </div>
 
+      {/* Mobile Step Indicator */}
+      <div className="md:hidden bg-white border-b border-fm-neutral-200 px-4 py-3">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1">
+          {Object.entries(DISCOVERY_SECTIONS).map(([sectionNum, sectionName]) => {
+            const num = parseInt(sectionNum);
+            const isCompleted = session.completedSections.includes(num);
+            const isCurrent = currentStep === num;
+            return (
+              <button
+                key={sectionNum}
+                onClick={() => setCurrentStep(num)}
+                className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                  isCurrent
+                    ? 'bg-fm-magenta-100 text-fm-magenta-800 border border-fm-magenta-200'
+                    : isCompleted
+                    ? 'bg-green-50 text-green-700 border border-green-200'
+                    : 'bg-fm-neutral-100 text-fm-neutral-600'
+                }`}
+              >
+                {isCompleted ? <CheckCircle className="h-3 w-3" /> : null}
+                {sectionNum}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Sidebar + Content */}
       <div className="flex">
         {/* Section Navigation Sidebar */}
-        <div className="w-80 bg-white border-r border-fm-neutral-200 min-h-screen">
+        <div className="hidden md:block w-80 bg-white border-r border-fm-neutral-200 min-h-screen">
           <div className="p-6">
             <h3 className="text-sm font-semibold text-fm-neutral-900 mb-4">Discovery Sections</h3>
             <div className="space-y-2">

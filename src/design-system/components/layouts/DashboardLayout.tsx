@@ -106,7 +106,7 @@ const IconBtn: React.FC<
 > = ({ className, label, children, ...props }) => (
   <button
     className={cn(
-      'flex items-center justify-center w-8 h-8 rounded-lg shrink-0',
+      'flex items-center justify-center w-10 h-10 md:w-8 md:h-8 rounded-lg shrink-0',
       'text-fm-neutral-400 hover:text-fm-neutral-700 hover:bg-fm-neutral-100',
       'transition-colors duration-150',
       className
@@ -521,7 +521,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             <button
               ref={menuTriggerRef}
               onClick={() => setMobileOpen(true)}
-              className="md:hidden flex items-center justify-center w-9 h-9 rounded-lg text-fm-neutral-600 hover:text-fm-neutral-900 hover:bg-fm-neutral-100 transition-colors shrink-0"
+              className="md:hidden flex items-center justify-center w-11 h-11 rounded-lg text-fm-neutral-600 hover:text-fm-neutral-900 hover:bg-fm-neutral-100 transition-colors shrink-0"
               aria-label="Open menu"
             >
               <Menu className="w-5 h-5" />
@@ -551,7 +551,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             <div className="relative" ref={notifRef}>
               <IconBtn
                 label="Notifications"
-                className="relative w-9 h-9"
+                className="relative"
                 onClick={() => setNotifOpen((p) => !p)}
               >
                 <Bell className="w-[18px] h-[18px]" />
@@ -565,7 +565,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
               {/* Notification Panel */}
               {notifOpen && (
                 <div
-                  className="absolute right-0 top-full mt-2 w-80 sm:w-96 bg-white rounded-xl shadow-xl border border-fm-neutral-200 overflow-hidden"
+                  className="fixed inset-x-3 bottom-3 sm:absolute sm:inset-auto sm:right-0 sm:top-full sm:mt-2 w-auto sm:w-96 max-h-[80vh] sm:max-h-96 bg-white rounded-xl shadow-xl border border-fm-neutral-200 overflow-hidden"
                   style={{ zIndex: 100 }}
                 >
                   {/* Header */}

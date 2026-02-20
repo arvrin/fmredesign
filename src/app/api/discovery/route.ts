@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
 
     // Fire-and-forget audit log
     const auditUser = getAuditUser(request);
-    logAuditEvent({
+    await logAuditEvent({
       ...auditUser,
       action: 'create',
       resource_type: 'discovery_session',
@@ -174,7 +174,7 @@ export async function PUT(request: NextRequest) {
 
     // Fire-and-forget audit log
     const auditUser = getAuditUser(request);
-    logAuditEvent({
+    await logAuditEvent({
       ...auditUser,
       action: 'update',
       resource_type: 'discovery_session',

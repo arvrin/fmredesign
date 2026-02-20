@@ -982,7 +982,7 @@ export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
         {/* Analytics Tab */}
         {activeTab === 'analytics' && analytics && (
           <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
               {/* Social Media Metrics */}
               <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-6">
                 <div className="flex items-center justify-between mb-4">

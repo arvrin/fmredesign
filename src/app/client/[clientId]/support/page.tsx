@@ -258,7 +258,7 @@ export default function ClientSupportPage() {
                       <select
                         value={newTicket.priority}
                         onChange={(e) => setNewTicket({ ...newTicket, priority: e.target.value as any })}
-                        className="w-full p-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                        className="w-full h-12 px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
                       >
                         <option value="low">Low</option>
                         <option value="medium">Medium</option>
@@ -273,7 +273,7 @@ export default function ClientSupportPage() {
                       <select
                         value={newTicket.category}
                         onChange={(e) => setNewTicket({ ...newTicket, category: e.target.value })}
-                        className="w-full p-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
+                        className="w-full h-12 px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500"
                       >
                         <option value="general">General</option>
                         <option value="technical">Technical</option>

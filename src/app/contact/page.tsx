@@ -171,7 +171,7 @@ export default function ContactPage() {
         <div className="v2-container">
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-12">
             {/* Contact Form */}
-            <div className="v2-paper-lg rounded-3xl p-8 lg:p-10">
+            <div className="v2-paper-lg rounded-3xl p-5 sm:p-8 lg:p-10">
               <h2 className="font-display text-2xl font-bold text-fm-neutral-900 mb-2">
                 Let's Discuss Your Project
               </h2>

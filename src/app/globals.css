@@ -478,28 +478,19 @@ section:not(.v2-section):not([class*="v2-"]):not([class*="pt-"]):not([class*="py
     justify-content: center;
   }
 
-  /* Prevent iOS zoom on focus — only for inputs without explicit sizing */
-  input:not([class*="text-"]),
-  select:not([class*="text-"]),
-  textarea:not([class*="text-"]) {
-    font-size: 16px;
-  }
-
-  input, select, textarea {
-    padding: 0.75rem;
-  }
-
   /* Mobile menu button only */
   .mobile-menu-button {
     min-height: 48px;
   }
 }
 
-/* Mobile spacing (removed !important rules) */
-@media (max-width: 640px) {
-  .py-24 {
-    padding-top: 3rem;
-    padding-bottom: 3rem;
+/* Mobile form & spacing fixes — in @layer base so Tailwind utilities can override */
+@layer base {
+  @media (max-width: 768px) {
+    /* Prevent iOS zoom on focus — applies to all form elements */
+    input, select, textarea {
+      font-size: max(16px, 1em);
+    }
   }
 }
 

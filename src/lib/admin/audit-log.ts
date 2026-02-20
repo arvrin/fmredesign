@@ -29,7 +29,7 @@ export interface AuditEntry {
 export async function logAuditEvent(entry: Omit<AuditEntry, 'id' | 'created_at'>): Promise<void> {
   try {
     const supabase = getSupabaseAdmin();
-    await supabase.from('admin_audit_log').insert({
+    const { error } = await supabase.from('admin_audit_log').insert({
       user_id: entry.user_id,
       user_name: entry.user_name,
       action: entry.action,
@@ -38,6 +38,9 @@ export async function logAuditEvent(entry: Omit<AuditEntry, 'id' | 'created_at'>
       details: entry.details || null,
       ip_address: entry.ip_address || null,
     });
+    if (error) {
+      console.error('Audit log insert failed:', error.message, error.details);
+    }
   } catch (error) {
     // Never let audit logging break the main flow
     console.error('Audit log error:', error);

@@ -341,7 +341,7 @@ export async function PUT(request: NextRequest) {
 
     // Fire-and-forget audit log
     const auditUser = getAuditUser(request);
-    logAuditEvent({
+    await logAuditEvent({
       ...auditUser,
       action: status === 'approved' ? 'approve' : status === 'rejected' ? 'reject' : 'update',
       resource_type: 'talent_application',

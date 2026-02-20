@@ -210,7 +210,7 @@ export default function ClientDashboard() {
               </p>
             </div>
           </div>
-          <div className="flex items-center space-x-3 pl-15 sm:pl-0">
+          <div className="flex items-center space-x-3 pl-[60px] sm:pl-0">
             <Badge className={getStatusColor(profile.status)} variant="secondary">
               {profile.status}
             </Badge>

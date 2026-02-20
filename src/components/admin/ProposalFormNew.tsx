@@ -373,14 +373,14 @@ export function ProposalFormNew({ initialProposal, onSaveSuccess }: ProposalForm
 
   return (
     <div className="max-w-7xl mx-auto">
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Left Column - Proposal Form */}
         <div className="space-y-6">
           {/* Header */}
           <Card variant="admin">
             <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
                   <div>
                     <div className="flex items-center space-x-2">
                       <label className="text-sm font-medium text-fm-neutral-900">Proposal #</label>
@@ -390,7 +390,7 @@ export function ProposalFormNew({ initialProposal, onSaveSuccess }: ProposalForm
                         onChange={(e) => {
                           const newNumber = e.target.value;
                           setProposal(prev => ({ ...prev, proposalNumber: newNumber }));
-                          
+
                           if (ProposalNumbering.isValidFormat(newNumber)) {
                             ProposalNumbering.updateFromManualProposal(newNumber);
                           }
@@ -700,7 +700,7 @@ export function ProposalFormNew({ initialProposal, onSaveSuccess }: ProposalForm
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Client Size</label>
                     <select

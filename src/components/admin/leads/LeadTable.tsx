@@ -494,7 +494,7 @@ export function LeadTable({
                   </div>
                 </div>
                 <hr className="border-fm-neutral-200" />
-                <div className="grid grid-cols-3 gap-4 text-sm">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
                   <div>
                     <span className="text-fm-neutral-500 block">Status</span>
                     <StatusBadge status={selectedLead.status}>

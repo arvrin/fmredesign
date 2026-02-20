@@ -147,13 +147,14 @@ export default function ClientDocumentsPage() {
       </div>
 
       {/* Category Filter */}
-      <div className="flex items-center space-x-3 mb-6 overflow-x-auto pb-2">
+      <div className="flex items-center gap-2 sm:gap-3 mb-6 overflow-x-auto pb-2 -mx-3 px-3 sm:mx-0 sm:px-0">
         {CATEGORIES.map((cat) => (
           <Button
             key={cat.key}
             variant={category === cat.key ? 'client' : 'ghost'}
             size="sm"
             onClick={() => setCategory(cat.key)}
+            className="flex-shrink-0"
           >
             {cat.label}
           </Button>

@@ -187,17 +187,18 @@ export default function ClientReportsPage() {
     <>
       {/* Header */}
       <div className="mb-8">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-display font-bold text-fm-neutral-900">
+            <h1 className="text-xl sm:text-3xl font-display font-bold text-fm-neutral-900">
               Performance <span className="v2-accent">Reports</span>
             </h1>
-            <p className="text-fm-neutral-600 mt-1 font-medium">Track your marketing performance and ROI</p>
+            <p className="text-fm-neutral-600 mt-1 font-medium text-sm sm:text-base">Track your marketing performance and ROI</p>
           </div>
           <div className="flex items-center space-x-3">
             <Button variant="client" size="sm" onClick={handleDownloadReport}>
               <Download className="w-4 h-4" />
-              Download Report
+              <span className="hidden sm:inline">Download Report</span>
+              <span className="sm:hidden">Download</span>
             </Button>
             <Button
               variant="ghost"
@@ -207,32 +208,35 @@ export default function ClientReportsPage() {
               disabled={shareLoading}
             >
               <Share2 className="w-4 h-4" />
-              {shareLoading ? 'Sharing...' : 'Share Report'}
+              <span className="hidden sm:inline">{shareLoading ? 'Sharing...' : 'Share Report'}</span>
+              <span className="sm:hidden">{shareLoading ? '...' : 'Share'}</span>
             </Button>
           </div>
         </div>
 
         {/* Share URL */}
         {shareUrl && (
-          <div className="mt-4 p-4 bg-fm-neutral-50 border border-fm-neutral-200 rounded-lg flex items-center space-x-3">
+          <div className="mt-4 p-4 bg-fm-neutral-50 border border-fm-neutral-200 rounded-lg flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
             <input
               readOnly
               value={shareUrl}
               className="flex-1 text-sm bg-white border border-fm-neutral-300 rounded-md px-3 py-2 text-fm-neutral-700"
             />
-            <Button variant="client" size="sm" onClick={handleCopy}>
-              {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-              {copied ? 'Copied!' : 'Copy'}
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => setShareUrl(null)}>
-              <X className="w-4 h-4" />
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button variant="client" size="sm" onClick={handleCopy}>
+                {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                {copied ? 'Copied!' : 'Copy'}
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => setShareUrl(null)}>
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
         )}
       </div>
 
       {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-8">
         <MetricCard
           title="Active Projects"
           value={s.activeProjects}
@@ -275,9 +279,9 @@ export default function ClientReportsPage() {
       {/* Performance Chart */}
       <Card variant="client" className="mb-8" hover glow>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <CardTitle className="text-xl">Performance Overview</CardTitle>
+              <CardTitle className="text-lg sm:text-xl">Performance Overview</CardTitle>
               <CardDescription>Content metrics trend over the last 6 months</CardDescription>
             </div>
             <div className="flex items-center space-x-2">
@@ -325,7 +329,8 @@ export default function ClientReportsPage() {
             </div>
 
             {monthlyPerformance.length > 0 ? (
-              <div className="grid grid-cols-6 gap-4">
+              <div className="overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0">
+              <div className="grid grid-cols-6 gap-4 min-w-[400px]">
                 {monthlyPerformance.map((data, idx) => {
                   const maxPublished = Math.max(...monthlyPerformance.map(m => m.published), 1);
                   const maxTotal = Math.max(...monthlyPerformance.map(m => m.total), 1);
@@ -356,6 +361,7 @@ export default function ClientReportsPage() {
                     </div>
                   );
                 })}
+              </div>
               </div>
             ) : (
               <div className="text-center py-12 text-fm-neutral-500">

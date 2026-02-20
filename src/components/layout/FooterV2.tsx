@@ -90,7 +90,7 @@ export function FooterV2() {
             {/* Services */}
             <div>
               <h4
-                className="text-[10px] font-bold uppercase tracking-[0.25em] mb-5"
+                className="text-[11px] font-bold uppercase tracking-[0.25em] mb-5"
                 style={{ color: '#8c1d4a' }}
               >
                 Services
@@ -114,7 +114,7 @@ export function FooterV2() {
             {/* Company */}
             <div>
               <h4
-                className="text-[10px] font-bold uppercase tracking-[0.25em] mb-5"
+                className="text-[11px] font-bold uppercase tracking-[0.25em] mb-5"
                 style={{ color: '#8c1d4a' }}
               >
                 Company
@@ -138,7 +138,7 @@ export function FooterV2() {
             {/* Resources */}
             <div>
               <h4
-                className="text-[10px] font-bold uppercase tracking-[0.25em] mb-5"
+                className="text-[11px] font-bold uppercase tracking-[0.25em] mb-5"
                 style={{ color: '#8c1d4a' }}
               >
                 Resources
@@ -162,7 +162,7 @@ export function FooterV2() {
             {/* Legal */}
             <div>
               <h4
-                className="text-[10px] font-bold uppercase tracking-[0.25em] mb-5"
+                className="text-[11px] font-bold uppercase tracking-[0.25em] mb-5"
                 style={{ color: '#8c1d4a' }}
               >
                 Legal
@@ -193,7 +193,7 @@ export function FooterV2() {
             {/* Contact */}
             <div className="space-y-2 v2-text-secondary text-[13px]">
               <h4
-                className="text-[10px] font-bold uppercase tracking-[0.25em] mb-4"
+                className="text-[11px] font-bold uppercase tracking-[0.25em] mb-4"
                 style={{ color: '#8c1d4a' }}
               >
                 Contact
@@ -214,7 +214,7 @@ export function FooterV2() {
             {/* Social */}
             <div>
               <h4
-                className="text-[10px] font-bold uppercase tracking-[0.25em] mb-4"
+                className="text-[11px] font-bold uppercase tracking-[0.25em] mb-4"
                 style={{ color: '#8c1d4a' }}
               >
                 Follow Us
@@ -253,18 +253,18 @@ export function FooterV2() {
             {/* Newsletter */}
             <div>
               <h4
-                className="text-[10px] font-bold uppercase tracking-[0.25em] mb-4"
+                className="text-[11px] font-bold uppercase tracking-[0.25em] mb-4"
                 style={{ color: '#8c1d4a' }}
               >
                 Newsletter
               </h4>
-              <div className="flex gap-2">
+              <div className="flex flex-col min-[400px]:flex-row gap-2">
                 <input
                   type="email"
                   placeholder="your@email.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="flex-1 px-4 py-2.5 rounded-lg text-[13px] outline-none transition-colors"
+                  className="flex-1 px-3 min-[400px]:px-4 py-2.5 rounded-lg text-[13px] outline-none transition-colors"
                   style={{
                     background: 'rgba(255,255,255,0.6)',
                     border: '1px solid rgba(201, 50, 93, 0.12)',

@@ -112,9 +112,9 @@ export default function SharedResourcePage() {
       <main className="max-w-5xl mx-auto px-6 py-8">
         {resource.type === 'project' && (
           <div className="space-y-6">
-            <div className="flex items-start justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
               <div>
-                <h1 className="text-3xl font-display font-bold text-fm-neutral-900">{resource.name}</h1>
+                <h1 className="text-xl sm:text-3xl font-display font-bold text-fm-neutral-900">{resource.name}</h1>
                 {resource.description && (
                   <p className="text-fm-neutral-600 mt-2">{resource.description}</p>
                 )}
