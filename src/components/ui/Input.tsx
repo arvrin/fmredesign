@@ -101,14 +101,14 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         </div>
         
         {error && (
-          <p className="text-sm text-red-600 flex items-center gap-1">
-            <span className="w-4 h-4 text-red-500">⚠</span>
+          <p className="text-sm text-red-600 flex items-center gap-1.5">
+            <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm-.75 4a.75.75 0 011.5 0v3.5a.75.75 0 01-1.5 0V5zm.75 6.25a.75.75 0 100-1.5.75.75 0 000 1.5z"/></svg>
             {error}
           </p>
         )}
-        
+
         {hint && !error && (
-          <p className="text-sm text-fm-neutral-500">{hint}</p>
+          <p className="text-sm text-fm-neutral-600">{hint}</p>
         )}
       </div>
     );

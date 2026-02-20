@@ -18,10 +18,10 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 const buttonVariants = {
   // Base styles — includes 'group' so child shine div can use group-hover
   base: [
-    'inline-flex items-center justify-center font-medium transition-all duration-300',
+    'inline-flex items-center justify-center font-medium transition-all duration-200',
     'focus:outline-none focus:ring-2 focus:ring-offset-2',
-    'disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none',
-    'transform hover:scale-105 active:scale-95',
+    'disabled:cursor-not-allowed disabled:transform-none disabled:opacity-60 disabled:saturate-50',
+    'transform hover:scale-[1.02] active:scale-[0.98]',
     'relative overflow-hidden group'
   ].join(' '),
 
@@ -135,8 +135,8 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({
     >
       {/* Loading spinner */}
       {loading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-inherit">
-          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+        <div className="absolute inset-0 flex items-center justify-center bg-inherit rounded-[inherit]">
+          <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin opacity-80" />
         </div>
       )}
 

@@ -135,7 +135,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
       <div className="relative">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-medium text-fm-neutral-600 uppercase tracking-wide">
+          <h3 className="text-sm font-medium text-fm-neutral-600 uppercase tracking-wide truncate">
             {title}
           </h3>
           {icon && (

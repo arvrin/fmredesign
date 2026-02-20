@@ -156,8 +156,8 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           'transition-[width,transform] duration-300 ease-in-out',
           styles.sidebar,
           'w-64',
-          collapsed && 'lg:w-[72px]',
-          mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+          collapsed && 'md:w-[72px]',
+          mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         )}
         style={{ zIndex: 50 }}
       >
@@ -165,20 +165,20 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         <div
           className={cn(
             'shrink-0 flex items-center h-14 border-b border-fm-neutral-100',
-            collapsed ? 'px-4 lg:justify-center lg:px-0' : 'px-4 justify-between'
+            collapsed ? 'px-4 md:justify-center md:px-0' : 'px-4 justify-between'
           )}
         >
           <Link
             href="/admin"
             className={cn(
               'flex items-center gap-3 hover:opacity-80 transition-opacity min-w-0',
-              collapsed && 'lg:gap-0'
+              collapsed && 'md:gap-0'
             )}
           >
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-fm-magenta-600 to-fm-magenta-700 flex items-center justify-center text-white font-bold text-sm shrink-0">
               FM
             </div>
-            <div className={cn('min-w-0', collapsed && 'lg:hidden')}>
+            <div className={cn('min-w-0', collapsed && 'md:hidden')}>
               <h1 className="font-display font-bold text-[15px] leading-tight text-fm-neutral-900 truncate">
                 {styles.logo}
               </h1>
@@ -186,13 +186,13 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             </div>
           </Link>
 
-          <div className={cn('flex-1', collapsed && 'lg:hidden')} />
+          <div className={cn('flex-1', collapsed && 'md:hidden')} />
 
           {!collapsed && (
             <IconBtn
               onClick={() => setCollapsed(true)}
               label="Collapse sidebar (Cmd+B)"
-              className="hidden lg:flex"
+              className="hidden md:flex"
             >
               <PanelLeftClose className="w-4 h-4" />
             </IconBtn>
@@ -201,7 +201,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           <IconBtn
             onClick={() => setMobileOpen(false)}
             label="Close menu"
-            className="lg:hidden"
+            className="md:hidden"
           >
             <X className="w-4 h-4" />
           </IconBtn>
@@ -212,7 +212,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           className={cn(
             'flex-1 overflow-y-auto overflow-x-hidden',
             'py-3',
-            collapsed ? 'px-3 lg:px-2' : 'px-3'
+            collapsed ? 'px-3 md:px-2' : 'px-3'
           )}
           aria-label="Dashboard navigation"
         >
@@ -225,7 +225,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                 </p>
               )}
               {group.title && collapsed && (
-                <div className="hidden lg:block mx-auto w-6 border-t border-fm-neutral-200 mb-2" />
+                <div className="hidden md:block mx-auto w-6 border-t border-fm-neutral-200 mb-2" />
               )}
 
               <div className="space-y-0.5">
@@ -241,7 +241,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                         'group/nav relative flex items-center rounded-xl text-[13px] font-medium',
                         'transition-all duration-200',
                         collapsed
-                          ? 'gap-3 px-3 py-2.5 lg:justify-center lg:px-0 lg:py-2.5'
+                          ? 'gap-3 px-3 py-2.5 md:justify-center md:px-0 md:py-2.5'
                           : 'gap-3 px-3 py-2.5',
                         active
                           ? 'bg-gradient-to-r from-fm-magenta-600 to-fm-magenta-700 text-white shadow-[0_4px_12px_rgba(168,37,72,0.25)]'
@@ -257,12 +257,12 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                         >
                           {item.icon}
                           {collapsed && item.badge && (
-                            <span className="hidden lg:block absolute -top-1 -right-1.5 w-2 h-2 bg-fm-magenta-500 rounded-full ring-2 ring-white" />
+                            <span className="hidden md:block absolute -top-1 -right-1.5 w-2 h-2 bg-fm-magenta-500 rounded-full ring-2 ring-white" />
                           )}
                         </span>
                       )}
 
-                      <span className={cn('truncate', collapsed && 'lg:hidden')}>
+                      <span className={cn('truncate', collapsed && 'md:hidden')}>
                         {item.label}
                       </span>
 
@@ -273,7 +273,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                             active
                               ? 'bg-white/20 text-white'
                               : 'bg-fm-magenta-100 text-fm-magenta-700',
-                            collapsed && 'lg:hidden'
+                            collapsed && 'md:hidden'
                           )}
                         >
                           {item.badge}
@@ -284,7 +284,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                       {collapsed && (
                         <span
                           className={cn(
-                            'hidden lg:block absolute left-full ml-3 px-2.5 py-1 rounded-lg',
+                            'hidden md:block absolute left-full ml-3 px-2.5 py-1 rounded-lg',
                             'bg-fm-neutral-900 text-white text-xs font-medium whitespace-nowrap',
                             'opacity-0 pointer-events-none',
                             'group-hover/nav:opacity-100',
@@ -306,7 +306,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
         {/* ── Expand toggle — collapsed desktop only ── */}
         {collapsed && (
-          <div className="hidden lg:flex shrink-0 justify-center py-2 border-t border-fm-neutral-100">
+          <div className="hidden md:flex shrink-0 justify-center py-2 border-t border-fm-neutral-100">
             <IconBtn onClick={() => setCollapsed(false)} label="Expand sidebar (Cmd+B)">
               <PanelLeftOpen className="w-4 h-4" />
             </IconBtn>
@@ -318,14 +318,14 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           <div
             className={cn(
               'shrink-0 border-t border-fm-neutral-100',
-              collapsed ? 'p-3 lg:py-3 lg:px-2' : 'p-3'
+              collapsed ? 'p-3 md:py-3 md:px-2' : 'p-3'
             )}
           >
             <div
               className={cn(
                 'flex items-center rounded-xl transition-colors',
                 collapsed
-                  ? 'gap-3 px-1.5 py-1 lg:flex-col lg:items-center lg:gap-1.5 lg:px-0 lg:py-0'
+                  ? 'gap-3 px-1.5 py-1 md:flex-col md:items-center md:gap-1.5 md:px-0 md:py-0'
                   : 'gap-3 px-1.5 py-1 hover:bg-fm-magenta-50/30'
               )}
             >
@@ -344,7 +344,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                 )}
               </div>
 
-              <div className={cn('flex-1 min-w-0', collapsed && 'lg:hidden')}>
+              <div className={cn('flex-1 min-w-0', collapsed && 'md:hidden')}>
                 <p className="text-sm font-medium text-fm-neutral-900 truncate">{user.name}</p>
                 <p className="text-[11px] text-fm-neutral-500 truncate">
                   {user.role ?? user.email}
@@ -366,13 +366,13 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         className={cn(
           'flex-1 flex flex-col min-w-0',
           'transition-[margin-left] duration-300 ease-in-out',
-          collapsed ? 'lg:ml-[72px]' : 'lg:ml-64'
+          collapsed ? 'md:ml-[72px]' : 'md:ml-64'
         )}
       >
         {/* Top bar */}
         <header
           className={cn(
-            'sticky top-0 flex items-center justify-between h-14 px-4 lg:px-6',
+            'sticky top-0 flex items-center justify-between h-14 px-3 md:px-4 lg:px-6',
             styles.header
           )}
           style={{ zIndex: 30 }}
@@ -381,7 +381,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           <div className="flex items-center gap-3 min-w-0 flex-1">
             <button
               onClick={() => setMobileOpen(true)}
-              className="lg:hidden flex items-center justify-center w-9 h-9 rounded-lg text-fm-neutral-600 hover:text-fm-neutral-900 hover:bg-fm-neutral-100 transition-colors shrink-0"
+              className="md:hidden flex items-center justify-center w-9 h-9 rounded-lg text-fm-neutral-600 hover:text-fm-neutral-900 hover:bg-fm-neutral-100 transition-colors shrink-0"
               aria-label="Open menu"
             >
               <Menu className="w-5 h-5" />
@@ -389,7 +389,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
             {/* Breadcrumb slot */}
             {breadcrumb && (
-              <div className="hidden lg:block min-w-0">{breadcrumb}</div>
+              <div className="hidden md:block min-w-0">{breadcrumb}</div>
             )}
           </div>
 
@@ -415,7 +415,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         </header>
 
         {/* Page content */}
-        <main className="flex-1 p-4 lg:p-6 overflow-auto">
+        <main className="flex-1 p-3 md:p-4 lg:p-6 overflow-auto">
           <div className="max-w-7xl mx-auto">{children}</div>
         </main>
       </div>
@@ -423,7 +423,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       {/* ─────────────── Mobile overlay ─────────────── */}
       {mobileOpen && (
         <div
-          className="fixed inset-0 bg-black/20 lg:hidden"
+          className="fixed inset-0 bg-black/20 md:hidden"
           style={{ zIndex: 40 }}
           onClick={() => setMobileOpen(false)}
           aria-hidden="true"

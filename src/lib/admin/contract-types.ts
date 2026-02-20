@@ -42,6 +42,28 @@ export interface Contract {
   updatedAt: string;
 }
 
+/** Currency formatting — locale-aware based on contract currency */
+const CURRENCY_LOCALES: Record<string, string> = {
+  INR: 'en-IN',
+  GBP: 'en-GB',
+  USD: 'en-US',
+  EUR: 'de-DE',
+  AED: 'ar-AE',
+  AUD: 'en-AU',
+  CAD: 'en-CA',
+  SGD: 'en-SG',
+};
+
+export function formatContractCurrency(amount: number, currency: string): string {
+  const locale = CURRENCY_LOCALES[currency] || 'en-US';
+  return new Intl.NumberFormat(locale, {
+    style: 'currency',
+    currency,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }).format(amount);
+}
+
 /** DB row (snake_case) to API response (camelCase) */
 export function transformContract(row: Record<string, unknown>): Contract {
   return {

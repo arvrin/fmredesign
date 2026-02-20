@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/select-native';
 import { adminToast } from '@/lib/admin/toast';
 import { AGENCY_SERVICES } from '@/lib/admin/types';
-import type { Contract, ContractServiceItem } from '@/lib/admin/contract-types';
+import { formatContractCurrency, type Contract, type ContractServiceItem } from '@/lib/admin/contract-types';
 import {
   Plus,
   FileText,
@@ -35,11 +35,7 @@ const EMPTY_SERVICE: ContractServiceItem = {
   total: 0,
 };
 
-const INR = new Intl.NumberFormat('en-IN', {
-  style: 'currency',
-  currency: 'INR',
-  minimumFractionDigits: 0,
-});
+// Currency is now dynamic per contract — see formatContractCurrency()
 
 export default function ContractsTab({ clientId }: Props) {
   const [contracts, setContracts] = useState<Contract[]>([]);
@@ -54,6 +50,7 @@ export default function ContractsTab({ clientId }: Props) {
   const [services, setServices] = useState<ContractServiceItem[]>([{ ...EMPTY_SERVICE }]);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [currency, setCurrency] = useState('INR');
   const [paymentTerms, setPaymentTerms] = useState('');
   const [billingCycle, setBillingCycle] = useState('');
   const [termsAndConditions, setTermsAndConditions] = useState('');
@@ -82,6 +79,7 @@ export default function ContractsTab({ clientId }: Props) {
     setTitle('');
     setContractNumber('');
     setServices([{ ...EMPTY_SERVICE }]);
+    setCurrency('INR');
     setStartDate('');
     setEndDate('');
     setPaymentTerms('');
@@ -96,6 +94,7 @@ export default function ContractsTab({ clientId }: Props) {
     setTitle(c.title);
     setContractNumber(c.contractNumber || '');
     setServices(c.services.length > 0 ? c.services : [{ ...EMPTY_SERVICE }]);
+    setCurrency(c.currency || 'INR');
     setStartDate(c.startDate || '');
     setEndDate(c.endDate || '');
     setPaymentTerms(c.paymentTerms || '');
@@ -141,6 +140,7 @@ export default function ContractsTab({ clientId }: Props) {
             contractNumber: contractNumber || undefined,
             services,
             totalValue,
+            currency,
             startDate: startDate || undefined,
             endDate: endDate || undefined,
             paymentTerms: paymentTerms || undefined,
@@ -304,7 +304,7 @@ export default function ContractsTab({ clientId }: Props) {
                     />
                   </div>
                   <div className="col-span-1 text-right text-sm font-medium text-fm-neutral-900 pb-2">
-                    {INR.format(svc.total)}
+                    {formatContractCurrency(svc.total, currency)}
                   </div>
                   <div className="col-span-1 pb-2">
                     <DashboardButton
@@ -329,12 +329,12 @@ export default function ContractsTab({ clientId }: Props) {
               </DashboardButton>
               <div className="mt-3 text-right">
                 <span className="text-sm text-fm-neutral-600 mr-2">Total:</span>
-                <span className="text-lg font-bold text-fm-neutral-900">{INR.format(totalValue)}</span>
+                <span className="text-lg font-bold text-fm-neutral-900">{formatContractCurrency(totalValue, currency)}</span>
               </div>
             </div>
 
             {/* Duration & Payment */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
               <Input
                 label="Start Date"
                 type="date"
@@ -347,6 +347,20 @@ export default function ContractsTab({ clientId }: Props) {
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
               />
+              <Select
+                label="Currency"
+                value={currency}
+                onChange={(e) => setCurrency(e.target.value)}
+              >
+                <option value="INR">INR (₹)</option>
+                <option value="GBP">GBP (£)</option>
+                <option value="USD">USD ($)</option>
+                <option value="EUR">EUR (€)</option>
+                <option value="AED">AED (د.إ)</option>
+                <option value="AUD">AUD (A$)</option>
+                <option value="CAD">CAD (C$)</option>
+                <option value="SGD">SGD (S$)</option>
+              </Select>
               <Input
                 label="Payment Terms"
                 value={paymentTerms}
@@ -466,7 +480,7 @@ export default function ContractsTab({ clientId }: Props) {
                     <div className="flex items-center gap-4 text-sm text-fm-neutral-500 flex-wrap">
                       <span className="flex items-center">
                         <DollarSign className="h-4 w-4 mr-1" />
-                        {INR.format(contract.totalValue)}
+                        {formatContractCurrency(contract.totalValue, contract.currency)}
                       </span>
                       {contract.startDate && (
                         <span>

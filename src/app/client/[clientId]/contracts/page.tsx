@@ -1,11 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   MetricCard,
   DashboardCard as Card,
   CardContent,
-  CardHeader,
   DashboardButton as Button,
 } from '@/design-system';
 import { Badge } from '@/components/ui/Badge';
@@ -13,20 +12,18 @@ import {
   FileText,
   CheckCircle2,
   Clock,
-  DollarSign,
   AlertCircle,
   XCircle,
   Edit3,
+  Download,
+  Send,
+  FileCheck,
+  Briefcase,
 } from 'lucide-react';
 import { useClientPortal } from '@/lib/client-portal/context';
-import type { Contract } from '@/lib/admin/contract-types';
+import { formatContractCurrency, type Contract } from '@/lib/admin/contract-types';
 
-const INR = new Intl.NumberFormat('en-IN', {
-  style: 'currency',
-  currency: 'INR',
-  minimumFractionDigits: 0,
-});
-
+/* ───────── Status helpers ───────── */
 const statusColor = (status: string) => {
   switch (status) {
     case 'sent':           return 'bg-blue-100 text-blue-700';
@@ -47,6 +44,311 @@ const statusLabel = (status: string) => {
   }
 };
 
+/* ───────── Status timeline steps ───────── */
+const TIMELINE_STEPS = [
+  { key: 'sent', label: 'Sent', icon: Send },
+  { key: 'reviewed', label: 'Reviewed', icon: FileCheck },
+  { key: 'accepted', label: 'Accepted', icon: CheckCircle2 },
+];
+
+function ContractTimeline({ contract }: { contract: Contract }) {
+  const getStep = () => {
+    if (contract.status === 'accepted') return 3;
+    if (contract.status === 'rejected' || contract.status === 'edit_requested') return 2;
+    return 1; // sent
+  };
+  const currentStep = getStep();
+
+  return (
+    <div className="flex items-center gap-1 w-full">
+      {TIMELINE_STEPS.map((step, idx) => {
+        const StepIcon = step.icon;
+        const isComplete = idx < currentStep;
+        const isCurrent = idx === currentStep - 1;
+        const isRejected = isCurrent && (contract.status === 'rejected' || contract.status === 'edit_requested');
+
+        return (
+          <div key={step.key} className="flex items-center flex-1">
+            <div className="flex flex-col items-center flex-shrink-0">
+              <div
+                className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                  isRejected
+                    ? 'bg-orange-100 text-orange-600'
+                    : isComplete
+                    ? 'bg-green-100 text-green-600'
+                    : 'bg-fm-neutral-100 text-fm-neutral-400'
+                }`}
+              >
+                <StepIcon className="w-4 h-4" />
+              </div>
+              <span
+                className={`text-[10px] mt-1 font-medium ${
+                  isRejected
+                    ? 'text-orange-600'
+                    : isComplete
+                    ? 'text-green-600'
+                    : 'text-fm-neutral-400'
+                }`}
+              >
+                {isRejected ? (contract.status === 'rejected' ? 'Rejected' : 'Edits') : step.label}
+              </span>
+            </div>
+            {idx < TIMELINE_STEPS.length - 1 && (
+              <div
+                className={`flex-1 h-0.5 mx-2 mt-[-14px] ${
+                  idx < currentStep - 1 ? 'bg-green-300' : 'bg-fm-neutral-200'
+                }`}
+              />
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ───────── Numbered T&C renderer ───────── */
+function NumberedTerms({ text }: { text: string }) {
+  const lines = text.split('\n').filter((l) => l.trim());
+  let clauseNum = 0;
+
+  return (
+    <div className="space-y-2">
+      {lines.map((line, idx) => {
+        const trimmed = line.trim();
+        // Detect section headers (lines ending with :) vs bullet points
+        const isBullet = trimmed.startsWith('•') || trimmed.startsWith('-');
+        const isHeader = trimmed.endsWith(':') && !isBullet;
+
+        if (isHeader) {
+          clauseNum++;
+          return (
+            <div key={idx} className="mt-3 first:mt-0">
+              <span className="text-sm font-semibold text-fm-neutral-800">
+                {clauseNum}. {trimmed}
+              </span>
+            </div>
+          );
+        }
+
+        return (
+          <p
+            key={idx}
+            className={`text-sm text-fm-neutral-600 ${isBullet ? 'pl-6' : 'pl-4'}`}
+          >
+            {trimmed}
+          </p>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ───────── PDF download ───────── */
+async function downloadContractPDF(contract: Contract) {
+  const { default: jsPDF } = await import('jspdf');
+
+  const doc = new jsPDF('portrait', 'mm', 'a4');
+  const W = doc.internal.pageSize.getWidth();
+  const M = 20; // margin
+  const fmt = (n: number) => formatContractCurrency(n, contract.currency);
+  let y = 0;
+
+  // ── Brand bar
+  doc.setFillColor(199, 50, 118);
+  doc.rect(0, 0, W, 5, 'F');
+
+  // ── Company header
+  y = 16;
+  doc.setFillColor(199, 50, 118);
+  doc.rect(M, 10, 22, 22, 'F');
+  doc.setFontSize(12);
+  doc.setTextColor(255, 255, 255);
+  doc.text('FM', M + 7, 23);
+
+  doc.setFontSize(24);
+  doc.setTextColor(26, 26, 26);
+  doc.text('FREAKING MINDS', M + 27, y + 3);
+  doc.setFontSize(10);
+  doc.setTextColor(199, 50, 118);
+  doc.text('CREATIVE DIGITAL AGENCY', M + 27, y + 10);
+  doc.setFontSize(8);
+  doc.setTextColor(100, 100, 100);
+  doc.text('www.freakingminds.in  |  hello@freakingminds.in', M + 27, y + 16);
+
+  // ── Separator
+  y = 42;
+  doc.setDrawColor(199, 50, 118);
+  doc.setLineWidth(1.5);
+  doc.line(M, y, W - M, y);
+
+  // ── CONTRACT title box
+  y = 50;
+  doc.setFillColor(26, 26, 26);
+  doc.rect(W - M - 65, y, 65, 20, 'F');
+  doc.setDrawColor(199, 50, 118);
+  doc.setLineWidth(1);
+  doc.rect(W - M - 65, y, 65, 20);
+  doc.setFontSize(16);
+  doc.setTextColor(255, 255, 255);
+  doc.text('SERVICE CONTRACT', W - M - 32.5, y + 9, { align: 'center' });
+  doc.setFontSize(10);
+  doc.setTextColor(199, 50, 118);
+  doc.text(contract.contractNumber ? `#${contract.contractNumber}` : '', W - M - 32.5, y + 16, {
+    align: 'center',
+  });
+
+  // ── Contract title
+  doc.setFontSize(14);
+  doc.setTextColor(26, 26, 26);
+  doc.text(contract.title, M, y + 10);
+
+  // ── Contract meta
+  y = 78;
+  doc.setFillColor(249, 250, 251);
+  doc.rect(M, y, W - 2 * M, 20, 'F');
+  doc.setDrawColor(229, 229, 229);
+  doc.setLineWidth(0.5);
+  doc.rect(M, y, W - 2 * M, 20);
+
+  doc.setFontSize(8);
+  doc.setTextColor(120, 120, 120);
+  doc.text('Start Date', M + 4, y + 6);
+  doc.text('End Date', M + 44, y + 6);
+  doc.text('Billing Cycle', M + 84, y + 6);
+  doc.text('Payment Terms', M + 124, y + 6);
+
+  doc.setFontSize(10);
+  doc.setTextColor(26, 26, 26);
+  doc.text(
+    contract.startDate ? new Date(contract.startDate).toLocaleDateString('en-GB') : '—',
+    M + 4,
+    y + 14
+  );
+  doc.text(
+    contract.endDate ? new Date(contract.endDate).toLocaleDateString('en-GB') : 'Ongoing',
+    M + 44,
+    y + 14
+  );
+  doc.text(contract.billingCycle || '—', M + 84, y + 14);
+  doc.text(contract.paymentTerms || '—', M + 124, y + 14);
+
+  // ── Services table
+  y = 106;
+  doc.setFontSize(12);
+  doc.setTextColor(26, 26, 26);
+  doc.text('Scope of Services', M, y);
+  y += 6;
+
+  // Table header
+  doc.setFillColor(26, 26, 26);
+  doc.rect(M, y, W - 2 * M, 8, 'F');
+  doc.setFontSize(8);
+  doc.setTextColor(255, 255, 255);
+  doc.text('Service', M + 3, y + 5.5);
+  doc.text('Qty', M + 100, y + 5.5);
+  doc.text('Unit Price', M + 115, y + 5.5);
+  doc.text('Total', W - M - 3, y + 5.5, { align: 'right' });
+  y += 8;
+
+  // Table rows
+  contract.services.forEach((svc, idx) => {
+    const rowH = svc.description ? 14 : 8;
+    if (idx % 2 === 0) {
+      doc.setFillColor(249, 250, 251);
+      doc.rect(M, y, W - 2 * M, rowH, 'F');
+    }
+    doc.setFontSize(9);
+    doc.setTextColor(26, 26, 26);
+    doc.text(svc.name, M + 3, y + 5.5);
+    doc.text(String(svc.quantity), M + 100, y + 5.5);
+    doc.text(fmt(svc.unitPrice), M + 115, y + 5.5);
+    doc.text(fmt(svc.total), W - M - 3, y + 5.5, { align: 'right' });
+
+    if (svc.description) {
+      doc.setFontSize(7);
+      doc.setTextColor(120, 120, 120);
+      const descLines = doc.splitTextToSize(svc.description, 90);
+      doc.text(descLines[0] || '', M + 3, y + 11);
+    }
+    y += rowH;
+  });
+
+  // Total row
+  doc.setDrawColor(199, 50, 118);
+  doc.setLineWidth(1);
+  doc.line(M + 100, y, W - M, y);
+  y += 6;
+  doc.setFontSize(11);
+  doc.setTextColor(26, 26, 26);
+  doc.text('Total Contract Value', M + 100, y);
+  doc.setTextColor(199, 50, 118);
+  doc.text(fmt(contract.totalValue), W - M - 3, y, { align: 'right' });
+
+  // ── Terms & Conditions
+  if (contract.termsAndConditions) {
+    y += 14;
+    doc.setFontSize(12);
+    doc.setTextColor(26, 26, 26);
+    doc.text('Terms & Conditions', M, y);
+    y += 6;
+    doc.setFontSize(8);
+    doc.setTextColor(80, 80, 80);
+    const termLines = doc.splitTextToSize(contract.termsAndConditions, W - 2 * M);
+    termLines.forEach((line: string) => {
+      if (y > 270) {
+        doc.addPage();
+        y = 20;
+      }
+      doc.text(line, M, y);
+      y += 4;
+    });
+  }
+
+  // ── Acceptance record
+  if (contract.status === 'accepted' && contract.acceptedAt) {
+    y += 10;
+    if (y > 250) {
+      doc.addPage();
+      y = 20;
+    }
+    doc.setFillColor(240, 253, 244);
+    doc.rect(M, y, W - 2 * M, 20, 'F');
+    doc.setDrawColor(34, 197, 94);
+    doc.setLineWidth(0.8);
+    doc.rect(M, y, W - 2 * M, 20);
+    doc.setFontSize(10);
+    doc.setTextColor(22, 101, 52);
+    doc.text('DIGITALLY ACCEPTED', M + 4, y + 8);
+    doc.setFontSize(8);
+    doc.setTextColor(80, 80, 80);
+    doc.text(
+      `Accepted on ${new Date(contract.acceptedAt).toLocaleDateString('en-GB')} at ${new Date(contract.acceptedAt).toLocaleTimeString('en-GB')}`,
+      M + 4,
+      y + 14
+    );
+    if (contract.clientFeedback) {
+      doc.text(`Client notes: ${contract.clientFeedback}`, M + 4, y + 18);
+    }
+  }
+
+  // ── Footer
+  const footY = doc.internal.pageSize.getHeight() - 10;
+  doc.setDrawColor(229, 229, 229);
+  doc.setLineWidth(0.3);
+  doc.line(M, footY - 4, W - M, footY - 4);
+  doc.setFontSize(7);
+  doc.setTextColor(160, 160, 160);
+  doc.text('Freaking Minds Digital Agency  |  www.freakingminds.in', W / 2, footY, {
+    align: 'center',
+  });
+
+  doc.save(`Contract-${contract.contractNumber || contract.id}.pdf`);
+}
+
+/* ═══════════════════════════════════════════════════
+   Main Page Component
+   ═══════════════════════════════════════════════════ */
 export default function ClientContractsPage() {
   const { clientId } = useClientPortal();
 
@@ -95,7 +397,6 @@ export default function ClientContractsPage() {
         const json = await res.json();
         const newStatus = json.data.status;
 
-        // Optimistic update
         setContracts((prev) =>
           prev.map((c) =>
             c.id === contractId
@@ -123,8 +424,11 @@ export default function ClientContractsPage() {
     }
   };
 
+  /* ── Metrics ── */
   const pendingCount = contracts.filter((c) => c.status === 'sent').length;
   const acceptedCount = contracts.filter((c) => c.status === 'accepted').length;
+  // For total value display, use first contract's currency or default
+  const primaryCurrency = contracts[0]?.currency || 'INR';
   const totalContractValue = contracts
     .filter((c) => c.status === 'accepted')
     .reduce((sum, c) => sum + c.totalValue, 0);
@@ -167,9 +471,9 @@ export default function ClientContractsPage() {
         />
         <MetricCard
           title="Total Value"
-          value={INR.format(totalContractValue)}
+          value={formatContractCurrency(totalContractValue, primaryCurrency)}
           subtitle="Active contract value"
-          icon={<DollarSign className="w-6 h-6" />}
+          icon={<Briefcase className="w-6 h-6" />}
           variant="client"
         />
       </div>
@@ -186,145 +490,229 @@ export default function ClientContractsPage() {
           </p>
         </Card>
       ) : (
-        <div className="space-y-6">
-          {contracts.map((contract) => (
-            <Card key={contract.id} variant="client" hover glow>
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h3 className="font-semibold text-fm-neutral-900 text-lg">
-                      {contract.title}
-                    </h3>
-                    {contract.contractNumber && (
-                      <span className="text-xs text-fm-neutral-500">
-                        #{contract.contractNumber}
-                      </span>
-                    )}
-                  </div>
-                  <Badge className={statusColor(contract.status)} variant="secondary">
-                    {statusLabel(contract.status)}
-                  </Badge>
-                </div>
-              </CardHeader>
+        <div className="space-y-8">
+          {contracts.map((contract) => {
+            const fmt = (n: number) => formatContractCurrency(n, contract.currency);
 
-              <CardContent className="space-y-4">
-                {/* Services List */}
-                <div>
-                  <h4 className="text-sm font-medium text-fm-neutral-700 mb-2">Services</h4>
-                  <div className="space-y-2">
-                    {contract.services.map((svc, idx) => (
-                      <div
-                        key={idx}
-                        className="flex items-center justify-between py-2 px-3 bg-fm-neutral-50 rounded-lg"
-                      >
-                        <div>
-                          <span className="text-sm font-medium text-fm-neutral-900">
-                            {svc.name}
-                          </span>
-                          {svc.description && (
-                            <p className="text-xs text-fm-neutral-500">{svc.description}</p>
-                          )}
+            return (
+              <Card key={contract.id} variant="client" hover glow className="overflow-hidden">
+                {/* ── Branded header bar ── */}
+                <div className="bg-gradient-to-r from-fm-neutral-900 to-fm-neutral-800 px-6 py-4">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className="w-7 h-7 rounded bg-fm-magenta-600 flex items-center justify-center">
+                          <span className="text-white text-xs font-bold">FM</span>
                         </div>
-                        <div className="text-sm text-fm-neutral-700">
-                          {svc.quantity > 1 && (
-                            <span className="text-fm-neutral-500 mr-1">
-                              {svc.quantity} x {INR.format(svc.unitPrice)}
+                        <span className="text-fm-neutral-400 text-xs tracking-wide uppercase">
+                          Freaking Minds
+                        </span>
+                      </div>
+                      <h3 className="font-semibold text-white text-lg">
+                        {contract.title}
+                      </h3>
+                      {contract.contractNumber && (
+                        <span className="text-fm-neutral-400 text-xs">
+                          Contract #{contract.contractNumber}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge className={statusColor(contract.status)} variant="secondary">
+                        {statusLabel(contract.status)}
+                      </Badge>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-fm-neutral-400 hover:text-white hover:bg-white/10"
+                        onClick={() => downloadContractPDF(contract)}
+                      >
+                        <Download className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                <CardContent className="p-6 space-y-5">
+                  {/* ── Status timeline ── */}
+                  <div className="px-4">
+                    <ContractTimeline contract={contract} />
+                  </div>
+
+                  {/* ── Scope of services table ── */}
+                  <div>
+                    <h4 className="text-sm font-semibold text-fm-neutral-800 mb-3 uppercase tracking-wide">
+                      Scope of Services
+                    </h4>
+                    <div className="border border-fm-neutral-200 rounded-lg overflow-hidden">
+                      {/* Table header */}
+                      <div className="grid grid-cols-12 gap-2 bg-fm-neutral-100 px-4 py-2 text-xs font-semibold text-fm-neutral-600 uppercase tracking-wide">
+                        <div className="col-span-6">Service</div>
+                        <div className="col-span-1" style={{ textAlign: 'center' }}>Qty</div>
+                        <div className="col-span-2" style={{ textAlign: 'right' }}>Unit Price</div>
+                        <div className="col-span-3" style={{ textAlign: 'right' }}>Total</div>
+                      </div>
+                      {/* Table rows */}
+                      {contract.services.map((svc, idx) => (
+                        <div
+                          key={idx}
+                          className={`grid grid-cols-12 gap-2 px-4 py-3 items-start ${
+                            idx % 2 === 0 ? 'bg-white' : 'bg-fm-neutral-50'
+                          } ${idx < contract.services.length - 1 ? 'border-b border-fm-neutral-100' : ''}`}
+                        >
+                          <div className="col-span-6">
+                            <span className="text-sm font-medium text-fm-neutral-900">
+                              {svc.name}
                             </span>
-                          )}
-                          <span className="font-medium">{INR.format(svc.total)}</span>
+                            {svc.description && (
+                              <p className="text-xs text-fm-neutral-500 mt-0.5 line-clamp-2">
+                                {svc.description}
+                              </p>
+                            )}
+                          </div>
+                          <div className="col-span-1 text-sm text-fm-neutral-700" style={{ textAlign: 'center' }}>
+                            {svc.quantity}
+                          </div>
+                          <div className="col-span-2 text-sm text-fm-neutral-700" style={{ textAlign: 'right' }}>
+                            {fmt(svc.unitPrice)}
+                          </div>
+                          <div className="col-span-3 text-sm font-medium text-fm-neutral-900" style={{ textAlign: 'right' }}>
+                            {fmt(svc.total)}
+                          </div>
+                        </div>
+                      ))}
+                      {/* Total row */}
+                      <div className="grid grid-cols-12 gap-2 px-4 py-3 bg-fm-neutral-900">
+                        <div className="col-span-9 text-sm font-semibold text-white">
+                          Total Contract Value
+                        </div>
+                        <div className="col-span-3 text-lg font-bold text-fm-magenta-400" style={{ textAlign: 'right' }}>
+                          {fmt(contract.totalValue)}
                         </div>
                       </div>
-                    ))}
+                    </div>
                   </div>
-                  <div className="mt-2 text-right">
-                    <span className="text-sm text-fm-neutral-600 mr-2">Total:</span>
-                    <span className="text-lg font-bold text-fm-neutral-900">
-                      {INR.format(contract.totalValue)}
-                    </span>
-                  </div>
-                </div>
 
-                {/* Contract Details */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
-                  {contract.startDate && (
-                    <div>
-                      <span className="text-fm-neutral-500 block">Start Date</span>
-                      <span className="text-fm-neutral-900 font-medium">
-                        {new Date(contract.startDate).toLocaleDateString()}
-                      </span>
+                  {/* ── Contract details grid ── */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {contract.startDate && (
+                      <div className="bg-fm-neutral-50 rounded-lg p-3">
+                        <span className="text-xs text-fm-neutral-500 block mb-1">Start Date</span>
+                        <span className="text-sm text-fm-neutral-900 font-medium">
+                          {new Date(contract.startDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        </span>
+                      </div>
+                    )}
+                    {contract.endDate && (
+                      <div className="bg-fm-neutral-50 rounded-lg p-3">
+                        <span className="text-xs text-fm-neutral-500 block mb-1">End Date</span>
+                        <span className="text-sm text-fm-neutral-900 font-medium">
+                          {new Date(contract.endDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        </span>
+                      </div>
+                    )}
+                    {contract.billingCycle && (
+                      <div className="bg-fm-neutral-50 rounded-lg p-3">
+                        <span className="text-xs text-fm-neutral-500 block mb-1">Billing Cycle</span>
+                        <span className="text-sm text-fm-neutral-900 font-medium capitalize">
+                          {contract.billingCycle}
+                        </span>
+                      </div>
+                    )}
+                    {contract.paymentTerms && (
+                      <div className="bg-fm-neutral-50 rounded-lg p-3">
+                        <span className="text-xs text-fm-neutral-500 block mb-1">Payment Terms</span>
+                        <span className="text-sm text-fm-neutral-900 font-medium">
+                          {contract.paymentTerms}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* ── Terms & Conditions (numbered) ── */}
+                  {contract.termsAndConditions && (
+                    <div className="pt-4 border-t border-fm-neutral-100">
+                      <h4 className="text-sm font-semibold text-fm-neutral-800 mb-3 uppercase tracking-wide">
+                        Terms & Conditions
+                      </h4>
+                      <div className="bg-fm-neutral-50 rounded-lg p-4">
+                        <NumberedTerms text={contract.termsAndConditions} />
+                      </div>
                     </div>
                   )}
-                  {contract.endDate && (
-                    <div>
-                      <span className="text-fm-neutral-500 block">End Date</span>
-                      <span className="text-fm-neutral-900 font-medium">
-                        {new Date(contract.endDate).toLocaleDateString()}
-                      </span>
+
+                  {/* ── Previous feedback ── */}
+                  {contract.clientFeedback && contract.status !== 'sent' && (
+                    <div className="pt-3 border-t border-fm-neutral-100">
+                      <p className="text-xs text-fm-neutral-500 mb-1">Your Feedback</p>
+                      <p className="text-sm text-fm-neutral-700 bg-fm-neutral-50 rounded-md p-3">
+                        {contract.clientFeedback}
+                      </p>
                     </div>
                   )}
-                  {contract.billingCycle && (
-                    <div>
-                      <span className="text-fm-neutral-500 block">Billing</span>
-                      <span className="text-fm-neutral-900 font-medium capitalize">
-                        {contract.billingCycle}
-                      </span>
-                    </div>
-                  )}
-                  {contract.paymentTerms && (
-                    <div>
-                      <span className="text-fm-neutral-500 block">Payment Terms</span>
-                      <span className="text-fm-neutral-900 font-medium">
-                        {contract.paymentTerms}
-                      </span>
-                    </div>
-                  )}
-                </div>
 
-                {/* Terms & Conditions */}
-                {contract.termsAndConditions && (
-                  <div className="pt-3 border-t border-fm-neutral-100">
-                    <h4 className="text-sm font-medium text-fm-neutral-700 mb-1">
-                      Terms & Conditions
-                    </h4>
-                    <p className="text-sm text-fm-neutral-600 whitespace-pre-line">
-                      {contract.termsAndConditions}
-                    </p>
-                  </div>
-                )}
-
-                {/* Previous feedback */}
-                {contract.clientFeedback && contract.status !== 'sent' && (
-                  <div className="pt-2 border-t border-fm-neutral-100">
-                    <p className="text-xs text-fm-neutral-500 mb-1">Your Feedback</p>
-                    <p className="text-sm text-fm-neutral-700 bg-fm-neutral-50 rounded-md p-2">
-                      {contract.clientFeedback}
-                    </p>
-                  </div>
-                )}
-
-                {/* Action Buttons — only for "sent" status */}
-                {contract.status === 'sent' && (
-                  <div className="pt-3 border-t border-fm-neutral-100 space-y-2">
-                    {expandedId === contract.id ? (
-                      <>
-                        <textarea
-                          value={feedbackMap[contract.id] || ''}
-                          onChange={(e) =>
-                            setFeedbackMap((prev) => ({
-                              ...prev,
-                              [contract.id]: e.target.value,
-                            }))
-                          }
-                          placeholder="Add feedback or comments (optional)..."
-                          rows={3}
-                          className="w-full rounded-md border border-fm-neutral-300 bg-fm-neutral-50 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-fm-magenta-500"
-                        />
-                        <div className="flex items-center gap-2 flex-wrap">
+                  {/* ── Action Buttons — only for "sent" status ── */}
+                  {contract.status === 'sent' && (
+                    <div className="pt-4 border-t border-fm-neutral-100 space-y-3">
+                      {expandedId === contract.id ? (
+                        <>
+                          <textarea
+                            value={feedbackMap[contract.id] || ''}
+                            onChange={(e) =>
+                              setFeedbackMap((prev) => ({
+                                ...prev,
+                                [contract.id]: e.target.value,
+                              }))
+                            }
+                            placeholder="Add feedback or comments (optional)..."
+                            rows={3}
+                            className="w-full rounded-md border border-fm-neutral-300 bg-fm-neutral-50 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-fm-magenta-500"
+                          />
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <Button
+                              variant="client"
+                              size="sm"
+                              disabled={actioningId === contract.id}
+                              onClick={() => handleAction(contract.id, 'accept')}
+                            >
+                              <CheckCircle2 className="w-4 h-4 mr-1" />
+                              Accept Contract
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-red-600 hover:bg-red-50"
+                              disabled={actioningId === contract.id}
+                              onClick={() => handleAction(contract.id, 'reject')}
+                            >
+                              <XCircle className="w-4 h-4 mr-1" />
+                              Reject
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-orange-600 hover:bg-orange-50"
+                              disabled={actioningId === contract.id}
+                              onClick={() => handleAction(contract.id, 'request_edit')}
+                            >
+                              <Edit3 className="w-4 h-4 mr-1" />
+                              Request Edits
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setExpandedId(null)}
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="flex items-center gap-2">
                           <Button
                             variant="client"
                             size="sm"
-                            disabled={actioningId === contract.id}
-                            onClick={() => handleAction(contract.id, 'accept')}
+                            onClick={() => setExpandedId(contract.id)}
                           >
                             <CheckCircle2 className="w-4 h-4 mr-1" />
                             Accept Contract
@@ -333,8 +721,7 @@ export default function ClientContractsPage() {
                             variant="ghost"
                             size="sm"
                             className="text-red-600 hover:bg-red-50"
-                            disabled={actioningId === contract.id}
-                            onClick={() => handleAction(contract.id, 'reject')}
+                            onClick={() => setExpandedId(contract.id)}
                           >
                             <XCircle className="w-4 h-4 mr-1" />
                             Reject
@@ -343,76 +730,65 @@ export default function ClientContractsPage() {
                             variant="ghost"
                             size="sm"
                             className="text-orange-600 hover:bg-orange-50"
-                            disabled={actioningId === contract.id}
-                            onClick={() => handleAction(contract.id, 'request_edit')}
+                            onClick={() => setExpandedId(contract.id)}
                           >
                             <Edit3 className="w-4 h-4 mr-1" />
                             Request Edits
                           </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setExpandedId(null)}
-                          >
-                            Cancel
-                          </Button>
                         </div>
-                      </>
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="client"
-                          size="sm"
-                          onClick={() => setExpandedId(contract.id)}
-                        >
-                          <CheckCircle2 className="w-4 h-4 mr-1" />
-                          Accept Contract
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-red-600 hover:bg-red-50"
-                          onClick={() => setExpandedId(contract.id)}
-                        >
-                          <XCircle className="w-4 h-4 mr-1" />
-                          Reject
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-orange-600 hover:bg-orange-50"
-                          onClick={() => setExpandedId(contract.id)}
-                        >
-                          <Edit3 className="w-4 h-4 mr-1" />
-                          Request Edits
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                )}
+                      )}
+                    </div>
+                  )}
 
-                {/* Status-specific info */}
-                {contract.status === 'accepted' && contract.acceptedAt && (
-                  <div className="pt-2 border-t border-fm-neutral-100 flex items-center text-sm text-green-700">
-                    <CheckCircle2 className="w-4 h-4 mr-1" />
-                    Accepted on {new Date(contract.acceptedAt).toLocaleDateString()}
-                  </div>
-                )}
-                {contract.status === 'rejected' && contract.rejectedAt && (
-                  <div className="pt-2 border-t border-fm-neutral-100 flex items-center text-sm text-red-700">
-                    <XCircle className="w-4 h-4 mr-1" />
-                    Rejected on {new Date(contract.rejectedAt).toLocaleDateString()}
-                  </div>
-                )}
-                {contract.status === 'edit_requested' && (
-                  <div className="pt-2 border-t border-fm-neutral-100 flex items-center text-sm text-orange-700">
-                    <AlertCircle className="w-4 h-4 mr-1" />
-                    Edit requested — waiting for updated contract
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          ))}
+                  {/* ── Digital acceptance record ── */}
+                  {contract.status === 'accepted' && contract.acceptedAt && (
+                    <div className="pt-4 border-t border-fm-neutral-100">
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <CheckCircle2 className="w-5 h-5 text-green-600" />
+                          <span className="text-sm font-semibold text-green-800">
+                            Digitally Accepted
+                          </span>
+                        </div>
+                        <p className="text-sm text-green-700">
+                          Accepted on{' '}
+                          {new Date(contract.acceptedAt).toLocaleDateString('en-GB', {
+                            day: 'numeric',
+                            month: 'long',
+                            year: 'numeric',
+                          })}{' '}
+                          at {new Date(contract.acceptedAt).toLocaleTimeString('en-GB')}
+                        </p>
+                        {contract.clientFeedback && (
+                          <p className="text-xs text-green-600 mt-1">
+                            Notes: {contract.clientFeedback}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {contract.status === 'rejected' && contract.rejectedAt && (
+                    <div className="pt-3 border-t border-fm-neutral-100">
+                      <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center text-sm text-red-700">
+                        <XCircle className="w-4 h-4 mr-2 flex-shrink-0" />
+                        Rejected on {new Date(contract.rejectedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+                      </div>
+                    </div>
+                  )}
+
+                  {contract.status === 'edit_requested' && (
+                    <div className="pt-3 border-t border-fm-neutral-100">
+                      <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 flex items-center text-sm text-orange-700">
+                        <AlertCircle className="w-4 h-4 mr-2 flex-shrink-0" />
+                        Edit requested — waiting for updated contract from Freaking Minds
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       )}
     </>
