@@ -57,6 +57,22 @@ export async function POST(request: NextRequest) {
       path: '/',
       maxAge: 24 * 60 * 60,
     });
+
+    // Set signed user identity cookie for RBAC enforcement (system-admin = super_admin)
+    const userPayload = Buffer.from(
+      JSON.stringify({ userId: 'system-admin', role: 'super_admin', name: 'System Admin' })
+    ).toString('base64');
+    const userSignature = createHmac('sha256', adminPassword)
+      .update(userPayload)
+      .digest('hex');
+    response.cookies.set('fm-admin-user', `${userPayload}.${userSignature}`, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 24 * 60 * 60,
+    });
+
     return response;
   } catch (error) {
     console.error('Password authentication error:', error);

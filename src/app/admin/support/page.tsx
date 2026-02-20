@@ -26,6 +26,7 @@ import {
   MetricCard,
 } from '@/design-system';
 import { Badge } from '@/components/ui/Badge';
+import { adminToast } from '@/lib/admin/toast';
 
 interface AdminTicket {
   id: string;
@@ -98,6 +99,7 @@ export default function AdminSupportPage() {
       }
     } catch (err) {
       console.error('Error fetching tickets:', err);
+      adminToast.error('Failed to load support tickets');
     } finally {
       setLoading(false);
     }
@@ -131,6 +133,7 @@ export default function AdminSupportPage() {
       }
     } catch (err) {
       console.error('Error updating ticket:', err);
+      adminToast.error('Failed to update ticket');
     } finally {
       setUpdatingId(null);
     }

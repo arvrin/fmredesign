@@ -1,14 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/design-system/components/primitives/Card';
 import { Button } from '@/design-system/components/primitives/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ClientPortalLink from '@/components/admin/ClientPortalLink';
-import { TeamService } from '@/lib/admin/team-service';
 import { TEAM_ROLES, type TeamRole } from '@/lib/admin/types';
+import { adminToast } from '@/lib/admin/toast';
 import { 
   ArrowLeft,
   Building,
@@ -81,6 +82,10 @@ export default function AdminClientDetail() {
     hoursAllocated: 10,
     isLead: false
   });
+  const [clientProjects, setClientProjects] = useState<any[]>([]);
+  const [projectsLoading, setProjectsLoading] = useState(false);
+  const [activityFeed, setActivityFeed] = useState<any[]>([]);
+  const [activityLoading, setActivityLoading] = useState(false);
 
   useEffect(() => {
     if (!clientId) return;
@@ -101,18 +106,9 @@ export default function AdminClientDetail() {
         
         const data = await response.json();
         setClientProfile(data.data);
-        
-        // Load team assignments for this client
-        const assignedMembers = TeamService.getTeamMembersForClient(clientId);
-        setAssignedTeamMembers(assignedMembers);
 
-        // Load available team members (not assigned to this client)
-        const allTeamMembers = TeamService.getAllTeamMembers();
-        const assignedMemberIds = assignedMembers.map((m: any) => m.id);
-        const available = allTeamMembers.filter(member => 
-          member.status === 'active' && !assignedMemberIds.includes(member.id)
-        );
-        setAvailableTeamMembers(available);
+        // Load team assignments for this client via API
+        await loadTeamData();
 
       } catch (err) {
         console.error('Error fetching client data:', err);
@@ -124,6 +120,126 @@ export default function AdminClientDetail() {
 
     fetchClientData();
   }, [clientId]);
+
+  const loadTeamData = async () => {
+    try {
+      // Fetch assignments for this client
+      const assignmentsRes = await fetch(`/api/team/assignments?clientId=${clientId}`);
+      const assignmentsResult = await assignmentsRes.json();
+      const assignments = assignmentsResult.success ? assignmentsResult.data : [];
+
+      // Fetch all team members
+      const teamRes = await fetch('/api/team');
+      const teamResult = await teamRes.json();
+      const allTeamMembers = teamResult.success ? teamResult.data : [];
+
+      // Build assigned team members list with assignment data
+      const assigned: any[] = [];
+      for (const assignment of assignments) {
+        const member = allTeamMembers.find((m: any) => m.id === assignment.teamMemberId);
+        if (member) {
+          assigned.push({
+            id: member.id,
+            name: member.name,
+            role: member.role,
+            status: member.status,
+            hoursAllocated: assignment.hoursAllocated,
+            isLead: assignment.isLead,
+            assignmentId: assignment.id,
+          });
+        }
+      }
+      setAssignedTeamMembers(assigned);
+
+      // Filter available team members (active, not already assigned)
+      const assignedMemberIds = assigned.map((m: any) => m.id);
+      const available = allTeamMembers.filter((member: any) =>
+        member.status === 'active' && !assignedMemberIds.includes(member.id)
+      );
+      setAvailableTeamMembers(available);
+    } catch (err) {
+      console.error('Error loading team data:', err);
+    }
+  };
+
+  // Fetch projects for this client
+  const fetchClientProjects = useCallback(async () => {
+    if (!clientId) return;
+    setProjectsLoading(true);
+    try {
+      const res = await fetch(`/api/projects?clientId=${clientId}`);
+      const result = await res.json();
+      if (result.success) {
+        setClientProjects(result.data || []);
+      }
+    } catch (err) {
+      console.error('Error fetching projects:', err);
+    } finally {
+      setProjectsLoading(false);
+    }
+  }, [clientId]);
+
+  // Fetch activity feed (tickets + content) for this client
+  const fetchActivityFeed = useCallback(async () => {
+    if (!clientId) return;
+    setActivityLoading(true);
+    try {
+      const [ticketsRes, contentRes] = await Promise.all([
+        fetch(`/api/admin/support?clientId=${clientId}`).catch(() => null),
+        fetch(`/api/content?clientId=${clientId}`).catch(() => null),
+      ]);
+
+      const items: any[] = [];
+
+      if (ticketsRes) {
+        const ticketsResult = await ticketsRes.json();
+        if (ticketsResult.success && ticketsResult.data) {
+          ticketsResult.data.forEach((t: any) => {
+            items.push({
+              id: t.id,
+              type: 'ticket',
+              title: t.title,
+              status: t.status,
+              priority: t.priority,
+              date: t.createdAt || t.created_at,
+            });
+          });
+        }
+      }
+
+      if (contentRes) {
+        const contentResult = await contentRes.json();
+        if (contentResult.success && contentResult.data) {
+          contentResult.data.forEach((c: any) => {
+            items.push({
+              id: c.id,
+              type: 'content',
+              title: c.title,
+              status: c.status,
+              platform: c.platform,
+              date: c.scheduledDate || c.createdAt || c.created_at,
+            });
+          });
+        }
+      }
+
+      // Sort by date descending
+      items.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      setActivityFeed(items);
+    } catch (err) {
+      console.error('Error fetching activity feed:', err);
+    } finally {
+      setActivityLoading(false);
+    }
+  }, [clientId]);
+
+  // Eagerly load projects & activity data when the client profile loads
+  useEffect(() => {
+    if (clientProfile) {
+      fetchClientProjects();
+      fetchActivityFeed();
+    }
+  }, [clientProfile, fetchClientProjects, fetchActivityFeed]);
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
@@ -147,26 +263,28 @@ export default function AdminClientDetail() {
 
   const handleAddTeamMember = async () => {
     if (!newTeamAssignment.teamMemberId || !clientProfile) return;
-    
+
     try {
-      TeamService.assignTeamMemberToClient(
-        newTeamAssignment.teamMemberId,
-        clientId,
-        newTeamAssignment.hoursAllocated,
-        newTeamAssignment.isLead
-      );
-      
+      const res = await fetch('/api/team/assignments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          teamMemberId: newTeamAssignment.teamMemberId,
+          clientId,
+          hoursAllocated: newTeamAssignment.hoursAllocated,
+          isLead: newTeamAssignment.isLead,
+        }),
+      });
+      const result = await res.json();
+
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to assign team member');
+      }
+
+      adminToast.success('Team member assigned successfully');
+
       // Reload team data
-      const assignedMembers = TeamService.getTeamMembersForClient(clientId);
-      setAssignedTeamMembers(assignedMembers);
-
-      const allTeamMembers = TeamService.getAllTeamMembers();
-      const assignedMemberIds = assignedMembers.map((m: any) => m.id);
-      const available = allTeamMembers.filter(member =>
-        member.status === 'active' && !assignedMemberIds.includes(member.id)
-      );
-      setAvailableTeamMembers(available);
-
+      await loadTeamData();
       setShowAddTeamForm(false);
       setNewTeamAssignment({
         teamMemberId: '',
@@ -175,27 +293,36 @@ export default function AdminClientDetail() {
       });
     } catch (error) {
       console.error('Error adding team member:', error);
+      adminToast.error('Failed to assign team member');
     }
   };
 
-  const handleRemoveTeamMember = async (teamMemberId: string) => {
+  const handleRemoveTeamMember = async (member: any) => {
     if (!clientProfile) return;
-    
+
     try {
-      TeamService.removeTeamMemberFromClient(teamMemberId, clientId);
+      const assignmentId = member.assignmentId;
+      if (!assignmentId) {
+        console.error('No assignment ID found for member:', member.id);
+        return;
+      }
+
+      const res = await fetch(`/api/team/assignments?id=${assignmentId}`, {
+        method: 'DELETE',
+      });
+      const result = await res.json();
+
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to remove team member');
+      }
+
+      adminToast.success('Team member removed from client');
 
       // Reload team data
-      const assignedMembers = TeamService.getTeamMembersForClient(clientId);
-      setAssignedTeamMembers(assignedMembers);
-
-      const allTeamMembers = TeamService.getAllTeamMembers();
-      const assignedMemberIds = assignedMembers.map((m: any) => m.id);
-      const available = allTeamMembers.filter(member => 
-        member.status === 'active' && !assignedMemberIds.includes(member.id)
-      );
-      setAvailableTeamMembers(available);
+      await loadTeamData();
     } catch (error) {
       console.error('Error removing team member:', error);
+      adminToast.error('Failed to remove team member');
     }
   };
 
@@ -426,12 +553,83 @@ export default function AdminClientDetail() {
             />
           </TabsContent>
 
-          <TabsContent value="projects" className="space-y-6">
-            <Card>
-              <CardContent className="p-6 text-center">
-                <p className="text-fm-neutral-600">Projects integration coming soon</p>
-              </CardContent>
-            </Card>
+          <TabsContent value="projects" className="space-y-6" onFocusCapture={() => { if (clientProjects.length === 0 && !projectsLoading) fetchClientProjects(); }}>
+            {projectsLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-fm-magenta-600"></div>
+              </div>
+            ) : clientProjects.length === 0 ? (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <Briefcase className="h-12 w-12 text-fm-neutral-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-fm-neutral-900 mb-2">No Projects Yet</h3>
+                  <p className="text-fm-neutral-500 mb-4">This client does not have any projects.</p>
+                  <Button onClick={() => router.push('/admin/projects/new')}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create Project
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-4">
+                {clientProjects.map((project: any) => {
+                  const statusColors: Record<string, string> = {
+                    planning: 'bg-fm-neutral-100 text-fm-neutral-800',
+                    active: 'bg-blue-100 text-blue-800',
+                    review: 'bg-yellow-100 text-yellow-800',
+                    completed: 'bg-green-100 text-green-800',
+                    paused: 'bg-orange-100 text-orange-800',
+                    cancelled: 'bg-red-100 text-red-800',
+                  };
+                  return (
+                    <Card key={project.id}>
+                      <CardContent className="p-6">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-2">
+                              <h3 className="text-lg font-semibold text-fm-neutral-900">{project.name}</h3>
+                              <span className={`px-2 py-1 text-xs font-medium rounded-full ${statusColors[project.status] || 'bg-fm-neutral-100 text-fm-neutral-800'}`}>
+                                {project.status}
+                              </span>
+                            </div>
+                            {project.description && (
+                              <p className="text-sm text-fm-neutral-600 mb-3">{project.description}</p>
+                            )}
+                            {typeof project.progress === 'number' && (
+                              <div className="mb-3">
+                                <div className="flex items-center justify-between mb-1">
+                                  <span className="text-xs text-fm-neutral-500">Progress</span>
+                                  <span className="text-xs font-medium text-fm-neutral-700">{project.progress}%</span>
+                                </div>
+                                <div className="w-full bg-fm-neutral-200 rounded-full h-1.5">
+                                  <div
+                                    className="bg-fm-magenta-600 h-1.5 rounded-full transition-all duration-300"
+                                    style={{ width: `${project.progress}%` }}
+                                  />
+                                </div>
+                              </div>
+                            )}
+                            <div className="flex items-center gap-4 text-sm text-fm-neutral-500">
+                              {project.type && (
+                                <span className="capitalize">{project.type.replace(/_/g, ' ')}</span>
+                              )}
+                              {project.startDate && (
+                                <span>{new Date(project.startDate).toLocaleDateString()} - {project.endDate ? new Date(project.endDate).toLocaleDateString() : 'Ongoing'}</span>
+                              )}
+                            </div>
+                          </div>
+                          <Link href={`/admin/projects/${project.id}`}>
+                            <Button variant="outline" size="sm">
+                              View Project
+                            </Button>
+                          </Link>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="team" className="space-y-6">
@@ -574,7 +772,7 @@ export default function AdminClientDetail() {
                             {member.status}
                           </Badge>
                           <Button
-                            onClick={() => handleRemoveTeamMember(member.id)}
+                            onClick={() => handleRemoveTeamMember(member)}
                             variant="ghost"
                             size="sm"
                             className="text-red-600 hover:text-red-700 hover:bg-red-50"
@@ -606,11 +804,76 @@ export default function AdminClientDetail() {
           </TabsContent>
 
           <TabsContent value="communication" className="space-y-6">
-            <Card>
-              <CardContent className="p-6 text-center">
-                <p className="text-fm-neutral-600">Communication history coming soon</p>
-              </CardContent>
-            </Card>
+            {activityLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-fm-magenta-600"></div>
+              </div>
+            ) : activityFeed.length === 0 ? (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <Clock className="h-12 w-12 text-fm-neutral-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-fm-neutral-900 mb-2">No Activity Yet</h3>
+                  <p className="text-fm-neutral-500">Support tickets and content items will appear here.</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Clock className="h-5 w-5 mr-2" />
+                    Activity Timeline
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {activityFeed.map((item) => (
+                      <div
+                        key={`${item.type}-${item.id}`}
+                        className="flex items-start gap-4 p-3 rounded-lg border border-fm-neutral-200 hover:bg-fm-neutral-50 transition-colors"
+                      >
+                        <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
+                          item.type === 'ticket' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'
+                        }`}>
+                          {item.type === 'ticket' ? (
+                            <AlertCircle className="h-4 w-4" />
+                          ) : (
+                            <Calendar className="h-4 w-4" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-sm font-medium text-fm-neutral-900 truncate">
+                              {item.title}
+                            </span>
+                            <Badge className={`text-xs ${
+                              item.type === 'ticket' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'
+                            }`}>
+                              {item.type === 'ticket' ? 'Support Ticket' : 'Content'}
+                            </Badge>
+                            {item.status && (
+                              <Badge variant="outline" className="text-xs">
+                                {item.status.replace(/_/g, ' ')}
+                              </Badge>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-3 mt-1 text-xs text-fm-neutral-500">
+                            {item.date && (
+                              <span>{new Date(item.date).toLocaleDateString()}</span>
+                            )}
+                            {item.platform && (
+                              <span className="capitalize">{item.platform}</span>
+                            )}
+                            {item.priority && (
+                              <span className="capitalize">{item.priority}</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
         </Tabs>
       </div>

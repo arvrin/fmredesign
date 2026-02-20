@@ -6,9 +6,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { ProjectUtils } from '@/lib/admin/project-types';
-import { requireAdminAuth } from '@/lib/admin-auth-middleware';
+import { requireAdminAuth, requirePermission } from '@/lib/admin-auth-middleware';
 import { createContentSchema, updateContentSchema, validateBody } from '@/lib/validations/schemas';
-import { logAuditEvent, getAuditUser, getClientIP } from '@/lib/admin/audit-log';
+import { logAuditEvent, getClientIP } from '@/lib/admin/audit-log';
 
 // GET /api/content
 export async function GET(request: NextRequest) {
@@ -95,8 +95,8 @@ export async function GET(request: NextRequest) {
 
 // POST /api/content
 export async function POST(request: NextRequest) {
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+  const auth = await requirePermission(request, 'content.write');
+  if ('error' in auth) return auth.error;
 
   try {
     const rawBody = await request.json();
@@ -153,7 +153,8 @@ export async function POST(request: NextRequest) {
 
     // Fire-and-forget audit log
     logAuditEvent({
-      ...getAuditUser(request),
+      user_id: auth.user.id,
+      user_name: auth.user.name,
       action: 'create',
       resource_type: 'content',
       resource_id: data.id,
@@ -176,8 +177,8 @@ export async function POST(request: NextRequest) {
 
 // PUT /api/content
 export async function PUT(request: NextRequest) {
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+  const auth = await requirePermission(request, 'content.write');
+  if ('error' in auth) return auth.error;
 
   try {
     const rawBody = await request.json();
@@ -252,7 +253,8 @@ export async function PUT(request: NextRequest) {
 
     // Fire-and-forget audit log
     logAuditEvent({
-      ...getAuditUser(request),
+      user_id: auth.user.id,
+      user_name: auth.user.name,
       action: body.status === 'approved' ? 'approve' : 'update',
       resource_type: 'content',
       resource_id: data.id,
@@ -276,8 +278,8 @@ export async function PUT(request: NextRequest) {
 
 // DELETE /api/content
 export async function DELETE(request: NextRequest) {
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+  const auth = await requirePermission(request, 'content.delete');
+  if ('error' in auth) return auth.error;
 
   try {
     const searchParams = request.nextUrl.searchParams;
@@ -297,7 +299,8 @@ export async function DELETE(request: NextRequest) {
 
     // Fire-and-forget audit log
     logAuditEvent({
-      ...getAuditUser(request),
+      user_id: auth.user.id,
+      user_name: auth.user.name,
       action: 'delete',
       resource_type: 'content',
       resource_id: contentId,

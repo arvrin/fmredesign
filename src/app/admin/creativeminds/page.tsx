@@ -5,9 +5,10 @@
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { TalentApplication, TalentProfile, TALENT_CATEGORIES, CURRENCIES } from '@/lib/admin/talent-types';
 import { Button } from '@/design-system/components/primitives/Button';
+import { adminToast } from '@/lib/admin/toast';
 import {
   Users,
   Search,
@@ -26,12 +27,6 @@ import {
 
 type Tab = 'applications' | 'talents' | 'analytics';
 
-interface Toast {
-  id: number;
-  message: string;
-  type: 'success' | 'error';
-}
-
 export default function CreativeMindsAdminPage() {
   const [activeTab, setActiveTab] = useState<Tab>('applications');
   const [applications, setApplications] = useState<TalentApplication[]>([]);
@@ -39,16 +34,6 @@ export default function CreativeMindsAdminPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [toasts, setToasts] = useState<Toast[]>([]);
-
-  const showToast = useCallback((message: string, type: 'success' | 'error' = 'success') => {
-    const id = Date.now();
-    setToasts((prev) => [...prev, { id, message, type }]);
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 5000);
-  }, []);
-
   useEffect(() => {
     loadData();
   }, [activeTab]);
@@ -71,6 +56,7 @@ export default function CreativeMindsAdminPage() {
       }
     } catch (error) {
       console.error('Error loading data:', error);
+      adminToast.error('Failed to load talent data');
     } finally {
       setIsLoading(false);
     }
@@ -91,9 +77,9 @@ export default function CreativeMindsAdminPage() {
         const result = await response.json();
         if (result.success) {
           loadData();
-          showToast('Application approved and talent added to network!', 'success');
+          adminToast.success('Application approved and talent added to network!');
         } else {
-          showToast('Failed to approve application', 'error');
+          adminToast.error('Failed to approve application');
         }
       } else {
         const response = await fetch('/api/talent', {
@@ -113,14 +99,14 @@ export default function CreativeMindsAdminPage() {
         const result = await response.json();
         if (result.success) {
           loadData();
-          showToast('Application rejected.', 'success');
+          adminToast.success('Application rejected.');
         } else {
-          showToast('Failed to reject application', 'error');
+          adminToast.error('Failed to reject application');
         }
       }
     } catch (error) {
       console.error('Error updating application:', error);
-      showToast('Failed to update application', 'error');
+      adminToast.error('Failed to update application');
     }
   };
 
@@ -141,22 +127,6 @@ export default function CreativeMindsAdminPage() {
 
   return (
     <div className="min-h-screen bg-fm-neutral-50">
-      {/* Toast Notifications */}
-      <div className="fixed top-4 right-4 z-50 space-y-2">
-        {toasts.map((toast) => (
-          <div
-            key={toast.id}
-            className={`px-4 py-3 rounded-lg shadow-lg text-sm font-medium transition-all animate-in slide-in-from-right ${
-              toast.type === 'success'
-                ? 'bg-green-600 text-white'
-                : 'bg-red-600 text-white'
-            }`}
-          >
-            {toast.message}
-          </div>
-        ))}
-      </div>
-
       {/* Header */}
       <div className="bg-white border-b border-fm-neutral-200">
         <div className="max-w-7xl mx-auto px-6 py-6">
@@ -735,6 +705,12 @@ function TalentsList({ talents, isLoading }: { talents: TalentProfile[]; isLoadi
 }
 
 function TalentCard({ talent }: { talent: TalentProfile }) {
+  const slug = talent.personalInfo.fullName
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-');
+
   return (
     <div className="bg-white rounded-xl border border-fm-neutral-200 shadow-sm p-6">
       <div className="flex items-start justify-between mb-4">
@@ -810,9 +786,11 @@ function TalentCard({ talent }: { talent: TalentProfile }) {
           {getCurrencySymbol(talent.preferences?.currency)}
           {talent.preferences.minimumProjectValue.toLocaleString()}+
         </span>
-        <Button size="sm" variant="secondary">
-          View Profile
-        </Button>
+        <a href={`/talent/${slug}`} target="_blank" rel="noopener noreferrer">
+          <Button size="sm" variant="secondary">
+            View Profile
+          </Button>
+        </a>
       </div>
     </div>
   );

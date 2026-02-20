@@ -10,7 +10,7 @@ vi.mock('@/lib/supabase', () => ({
   })),
 }));
 
-describe('getAuditUser', () => {
+describe('getAuditUser (deprecated — reads forgeable headers)', () => {
   it('extracts user info from headers', () => {
     const request = new Request('http://localhost', {
       headers: {
@@ -57,7 +57,7 @@ describe('logAuditEvent', () => {
     vi.clearAllMocks();
   });
 
-  it('calls supabase insert and does not throw', async () => {
+  it('calls supabase insert with user data passed directly', async () => {
     const { logAuditEvent } = await import('../audit-log');
     await expect(
       logAuditEvent({

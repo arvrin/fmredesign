@@ -112,6 +112,21 @@ export async function POST(request: NextRequest) {
         path: '/',
         maxAge: 24 * 60 * 60,
       });
+
+      // Set signed user identity cookie for RBAC enforcement
+      const userPayload = Buffer.from(
+        JSON.stringify({ userId: user.id, role: user.role, name: user.name })
+      ).toString('base64');
+      const userSignature = createHmac('sha256', adminPassword)
+        .update(userPayload)
+        .digest('hex');
+      response.cookies.set('fm-admin-user', `${userPayload}.${userSignature}`, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 24 * 60 * 60,
+      });
     }
     return response;
   } catch (error) {

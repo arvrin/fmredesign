@@ -24,6 +24,7 @@ import {
   Circle
 } from 'lucide-react';
 import { adminToast } from '@/lib/admin/toast';
+import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
 import { 
   DashboardButton, 
   DashboardCard, 
@@ -46,6 +47,7 @@ export default function ProjectsPage() {
   const [sortBy, setSortBy] = useState<'name' | 'startDate' | 'endDate' | 'status' | 'budget'>('startDate');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [showFilters, setShowFilters] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
   // Load projects
   useEffect(() => {
@@ -60,6 +62,7 @@ export default function ProjectsPage() {
         }
       } catch (error) {
         console.error('Error loading projects:', error);
+        adminToast.error('Failed to load projects');
       } finally {
         setLoading(false);
       }
@@ -166,8 +169,6 @@ export default function ProjectsPage() {
   };
 
   const handleDeleteProject = async (projectId: string) => {
-    if (!confirm('Are you sure you want to delete this project?')) return;
-
     try {
       const response = await fetch(`/api/projects?id=${projectId}`, {
         method: 'DELETE'
@@ -175,6 +176,7 @@ export default function ProjectsPage() {
 
       if (response.ok) {
         setProjects(projects.filter(p => p.id !== projectId));
+        adminToast.success('Project deleted');
       } else {
         adminToast.error('Failed to delete project');
       }
@@ -421,7 +423,7 @@ export default function ProjectsPage() {
                     <DashboardButton
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleDeleteProject(project.id)}
+                      onClick={() => setDeleteConfirm(project.id)}
                       className="text-red-600 hover:text-red-700 hover:bg-red-50"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -433,6 +435,19 @@ export default function ProjectsPage() {
           )}
         </div>
       </div>
+
+      <ConfirmDialog
+        open={!!deleteConfirm}
+        title="Delete Project"
+        description="Are you sure you want to delete this project? This action cannot be undone."
+        confirmLabel="Delete"
+        variant="destructive"
+        onConfirm={() => {
+          if (deleteConfirm) handleDeleteProject(deleteConfirm);
+          setDeleteConfirm(null);
+        }}
+        onCancel={() => setDeleteConfirm(null)}
+      />
     </div>
   );
 }

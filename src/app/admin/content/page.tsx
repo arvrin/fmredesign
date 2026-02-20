@@ -30,6 +30,7 @@ import {
   AtSign
 } from 'lucide-react';
 import { adminToast } from '@/lib/admin/toast';
+import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
 import { 
   DashboardButton, 
   DashboardCard, 
@@ -55,6 +56,7 @@ export default function ContentCalendarPage() {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
   const [projects, setProjects] = useState<any[]>([]);
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
   // Load content and projects
   useEffect(() => {
@@ -78,6 +80,7 @@ export default function ContentCalendarPage() {
         }
       } catch (error) {
         console.error('Error loading data:', error);
+        adminToast.error('Failed to load content data');
       } finally {
         setLoading(false);
       }
@@ -214,8 +217,6 @@ export default function ContentCalendarPage() {
   };
 
   const handleDeleteContent = async (contentId: string) => {
-    if (!confirm('Are you sure you want to delete this content?')) return;
-
     try {
       const response = await fetch(`/api/content?id=${contentId}`, {
         method: 'DELETE'
@@ -223,6 +224,7 @@ export default function ContentCalendarPage() {
 
       if (response.ok) {
         setContentItems(contentItems.filter(c => c.id !== contentId));
+        adminToast.success('Content deleted');
       } else {
         adminToast.error('Failed to delete content');
       }
@@ -534,7 +536,7 @@ export default function ContentCalendarPage() {
                       <DashboardButton
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleDeleteContent(content.id)}
+                        onClick={() => setDeleteConfirm(content.id)}
                         className="text-red-600 hover:text-red-700 hover:bg-red-50"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -547,6 +549,19 @@ export default function ContentCalendarPage() {
           )}
         </div>
       </div>
+
+      <ConfirmDialog
+        open={!!deleteConfirm}
+        title="Delete Content"
+        description="Are you sure you want to delete this content item? This action cannot be undone."
+        confirmLabel="Delete"
+        variant="destructive"
+        onConfirm={() => {
+          if (deleteConfirm) handleDeleteContent(deleteConfirm);
+          setDeleteConfirm(null);
+        }}
+        onCancel={() => setDeleteConfirm(null)}
+      />
     </div>
   );
 }

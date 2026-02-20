@@ -7,7 +7,7 @@
 
 import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
-import { 
+import {
   ArrowLeft,
   Save,
   User,
@@ -18,22 +18,22 @@ import {
   Trash2,
   AlertTriangle
 } from 'lucide-react';
-import { 
+import {
   DashboardCard as Card,
   CardContent,
   CardHeader,
   CardTitle,
   DashboardButton as Button
 } from '@/design-system';
-import { TeamService } from '@/lib/admin/team-service';
-import { 
-  TeamMember, 
-  TeamRole, 
-  TeamDepartment, 
-  TEAM_ROLES, 
+import {
+  TeamMember,
+  TeamRole,
+  TeamDepartment,
+  TEAM_ROLES,
   TEAM_DEPARTMENTS,
   COMMON_SKILLS
 } from '@/lib/admin/types';
+import { adminToast } from '@/lib/admin/toast';
 
 interface EditTeamMemberProps {
   params: Promise<{
@@ -58,13 +58,15 @@ export default function EditTeamMemberPage({ params }: EditTeamMemberProps) {
     loadMemberData();
   }, [memberId]);
 
-  const loadMemberData = () => {
+  const loadMemberData = async () => {
     try {
-      const member = TeamService.getTeamMemberById(memberId);
-      if (member) {
-        setOriginalMember(member);
-        setFormData(member);
-        setSelectedSkills(member.skills || []);
+      const res = await fetch(`/api/team?id=${memberId}`);
+      const result = await res.json();
+
+      if (result.success && result.data) {
+        setOriginalMember(result.data);
+        setFormData(result.data);
+        setSelectedSkills(result.data.skills || []);
       }
     } catch (error) {
       console.error('Error loading member data:', error);
@@ -94,7 +96,7 @@ export default function EditTeamMemberPage({ params }: EditTeamMemberProps) {
     const newSkills = selectedSkills.includes(skill)
       ? selectedSkills.filter(s => s !== skill)
       : [...selectedSkills, skill];
-    
+
     setSelectedSkills(newSkills);
     setFormData(prev => ({ ...prev, skills: newSkills }));
   };
@@ -105,28 +107,26 @@ export default function EditTeamMemberPage({ params }: EditTeamMemberProps) {
     setErrors([]);
 
     try {
-      // Validate form data
-      const validationErrors = TeamService.validateTeamMemberData(formData);
-      if (validationErrors.length > 0) {
-        setErrors(validationErrors);
+      const res = await fetch('/api/team', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: memberId, ...formData }),
+      });
+      const result = await res.json();
+
+      if (!result.success) {
+        const errorMsg = result.error || 'Failed to update team member';
+        setErrors(Array.isArray(errorMsg) ? errorMsg : [errorMsg]);
         setIsSubmitting(false);
         return;
       }
 
-      // Update team member
-      const updatedMember: TeamMember = {
-        ...originalMember!,
-        ...formData,
-        updatedAt: new Date().toISOString()
-      } as TeamMember;
-
-      TeamService.saveTeamMember(updatedMember);
-
-      // Redirect back to profile
+      adminToast.success('Team member updated successfully');
       router.push(`/admin/team/${memberId}`);
     } catch (error) {
       console.error('Error updating team member:', error);
       setErrors(['Failed to update team member. Please try again.']);
+      adminToast.error('Failed to update team member');
     } finally {
       setIsSubmitting(false);
     }
@@ -134,13 +134,23 @@ export default function EditTeamMemberPage({ params }: EditTeamMemberProps) {
 
   const handleDelete = async () => {
     setIsDeleting(true);
-    
+
     try {
-      TeamService.deleteTeamMember(memberId);
+      const res = await fetch(`/api/team?id=${memberId}`, {
+        method: 'DELETE',
+      });
+      const result = await res.json();
+
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to delete team member');
+      }
+
+      adminToast.success('Team member deleted successfully');
       router.push('/admin/team');
     } catch (error) {
       console.error('Error deleting team member:', error);
       setErrors(['Failed to delete team member. Please try again.']);
+      adminToast.error('Failed to delete team member');
     } finally {
       setIsDeleting(false);
       setShowDeleteConfirm(false);
@@ -175,9 +185,9 @@ export default function EditTeamMemberPage({ params }: EditTeamMemberProps) {
       <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Button 
-              variant="ghost" 
-              size="sm" 
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => router.push(`/admin/team/${memberId}`)}
               className="flex items-center gap-2"
             >
@@ -282,7 +292,7 @@ export default function EditTeamMemberPage({ params }: EditTeamMemberProps) {
                   required
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
                   Email Address *
@@ -295,7 +305,7 @@ export default function EditTeamMemberPage({ params }: EditTeamMemberProps) {
                   required
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
                   Phone Number *
@@ -308,7 +318,7 @@ export default function EditTeamMemberPage({ params }: EditTeamMemberProps) {
                   required
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
                   Status *
@@ -354,7 +364,7 @@ export default function EditTeamMemberPage({ params }: EditTeamMemberProps) {
                   <option value="contractor">Contractor</option>
                 </select>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
                   Department *
@@ -370,7 +380,7 @@ export default function EditTeamMemberPage({ params }: EditTeamMemberProps) {
                   ))}
                 </select>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
                   Seniority Level *
@@ -389,7 +399,7 @@ export default function EditTeamMemberPage({ params }: EditTeamMemberProps) {
                 </select>
               </div>
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
                 Job Role *
@@ -434,7 +444,7 @@ export default function EditTeamMemberPage({ params }: EditTeamMemberProps) {
                   <option value="freelance">Freelance</option>
                 </select>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
                   Location *
@@ -450,7 +460,7 @@ export default function EditTeamMemberPage({ params }: EditTeamMemberProps) {
                   <option value="hybrid">Hybrid</option>
                 </select>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
                   Weekly Capacity (Hours) *
@@ -494,10 +504,10 @@ export default function EditTeamMemberPage({ params }: EditTeamMemberProps) {
                   <option value="project-based">Project-based</option>
                 </select>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
-                  Amount (₹) *
+                  Amount (INR) *
                 </label>
                 <input
                   type="number"
@@ -508,10 +518,10 @@ export default function EditTeamMemberPage({ params }: EditTeamMemberProps) {
                   required
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
-                  Client Billing Rate (₹/hour)
+                  Client Billing Rate (INR/hour)
                 </label>
                 <input
                   type="number"
@@ -583,17 +593,17 @@ export default function EditTeamMemberPage({ params }: EditTeamMemberProps) {
 
         {/* Submit Buttons */}
         <div className="flex items-center justify-end gap-4 pt-6 border-t border-fm-neutral-200">
-          <Button 
-            type="button" 
-            variant="ghost" 
+          <Button
+            type="button"
+            variant="ghost"
             onClick={() => router.push(`/admin/team/${memberId}`)}
             disabled={isSubmitting}
           >
             Cancel
           </Button>
-          <Button 
-            type="submit" 
-            variant="admin" 
+          <Button
+            type="submit"
+            variant="admin"
             disabled={isSubmitting}
             className="flex items-center gap-2"
           >

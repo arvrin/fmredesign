@@ -5,17 +5,78 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
-import { requireAdminAuth } from '@/lib/admin-auth-middleware';
+import { requireAdminAuth, requirePermission } from '@/lib/admin-auth-middleware';
 import { createTeamMemberSchema, updateTeamMemberSchema, validateBody } from '@/lib/validations/schemas';
 
-// GET /api/team - Fetch all team members
+/** Transform a Supabase row (snake_case) to camelCase for the frontend */
+function transformMember(row: any) {
+  return {
+    id: row.id,
+    name: row.name,
+    email: row.email,
+    phone: row.phone,
+    avatar: row.avatar_url,
+    type: row.type,
+    status: row.status,
+    startDate: row.start_date,
+    endDate: row.end_date,
+    role: row.role,
+    department: row.department,
+    seniority: row.seniority,
+    skills: row.skills || [],
+    certifications: row.certifications || [],
+    compensation: row.compensation || {},
+    workType: row.work_type,
+    location: row.location,
+    capacity: row.capacity_hours,
+    assignedClients: row.assigned_client_ids || [],
+    currentProjects: row.current_project_ids || [],
+    workload: row.workload || 0,
+    clientRatings: parseFloat(row.client_ratings) || 0,
+    tasksCompleted: row.tasks_completed || 0,
+    efficiency: row.efficiency || 0,
+    documents: row.documents || [],
+    notes: row.notes || '',
+    emergencyContact: row.emergency_contact,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+// GET /api/team - Fetch all team members, or a single member via ?id=
 export async function GET(request: NextRequest) {
   const authError = await requireAdminAuth(request);
   if (authError) return authError;
 
   try {
     const supabase = getSupabaseAdmin();
+    const { searchParams } = new URL(request.url);
+    const memberId = searchParams.get('id');
 
+    // Single member fetch
+    if (memberId) {
+      const { data, error } = await supabase
+        .from('team_members')
+        .select('*')
+        .eq('id', memberId)
+        .single();
+
+      if (error || !data) {
+        return NextResponse.json(
+          { success: false, error: 'Team member not found' },
+          { status: 404 }
+        );
+      }
+
+      const response = NextResponse.json({
+        success: true,
+        data: transformMember(data),
+      });
+      response.headers.set('Cache-Control', 'no-store');
+      return response;
+    }
+
+    // All members fetch
     const { data, error } = await supabase
       .from('team_members')
       .select('*')
@@ -23,38 +84,7 @@ export async function GET(request: NextRequest) {
 
     if (error) throw error;
 
-    // Transform snake_case to camelCase
-    const members = (data || []).map((row) => ({
-      id: row.id,
-      name: row.name,
-      email: row.email,
-      phone: row.phone,
-      avatar: row.avatar_url,
-      type: row.type,
-      status: row.status,
-      startDate: row.start_date,
-      endDate: row.end_date,
-      role: row.role,
-      department: row.department,
-      seniority: row.seniority,
-      skills: row.skills || [],
-      certifications: row.certifications || [],
-      compensation: row.compensation || {},
-      workType: row.work_type,
-      location: row.location,
-      capacity: row.capacity_hours,
-      assignedClients: row.assigned_client_ids || [],
-      currentProjects: row.current_project_ids || [],
-      workload: row.workload || 0,
-      clientRatings: parseFloat(row.client_ratings) || 0,
-      tasksCompleted: row.tasks_completed || 0,
-      efficiency: row.efficiency || 0,
-      documents: row.documents || [],
-      notes: row.notes || '',
-      emergencyContact: row.emergency_contact,
-      createdAt: row.created_at,
-      updatedAt: row.updated_at,
-    }));
+    const members = (data || []).map(transformMember);
 
     // Calculate metrics
     const activeMembers = members.filter(m => m.status === 'active');
@@ -88,8 +118,8 @@ export async function GET(request: NextRequest) {
 
 // POST /api/team - Create or update a team member
 export async function POST(request: NextRequest) {
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+  const auth = await requirePermission(request, 'users.write');
+  if ('error' in auth) return auth.error;
 
   try {
     const rawBody = await request.json();
@@ -151,8 +181,8 @@ export async function POST(request: NextRequest) {
 
 // PUT /api/team - Update a team member
 export async function PUT(request: NextRequest) {
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+  const auth = await requirePermission(request, 'users.write');
+  if ('error' in auth) return auth.error;
 
   try {
     const rawBody = await request.json();
@@ -207,8 +237,8 @@ export async function PUT(request: NextRequest) {
 
 // DELETE /api/team - Delete a team member
 export async function DELETE(request: NextRequest) {
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+  const auth = await requirePermission(request, 'users.delete');
+  if ('error' in auth) return auth.error;
 
   try {
     const { searchParams } = new URL(request.url);

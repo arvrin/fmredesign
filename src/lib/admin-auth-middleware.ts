@@ -2,14 +2,33 @@
  * Server-side admin authentication middleware.
  * Validates admin session token from cookies before allowing access to admin API routes.
  * Token format: timestamp.hmac_signature (password never stored in token)
+ *
+ * Also provides requirePermission() for RBAC enforcement on write operations.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createHmac, timingSafeEqual } from 'crypto';
 import { getSupabaseAdmin } from '@/lib/supabase';
+import { PermissionService } from '@/lib/admin/permissions';
 
 const ADMIN_SESSION_COOKIE = 'fm-admin-session';
+const ADMIN_USER_COOKIE = 'fm-admin-user';
 const MAX_SESSION_AGE_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+// -----------------------------------------------------------------------
+// Types
+// -----------------------------------------------------------------------
+
+export interface AuthenticatedUser {
+  id: string;
+  name: string;
+  role: string;
+  permissions: string[];
+}
+
+// -----------------------------------------------------------------------
+// requireAdminAuth — session-only check (read access)
+// -----------------------------------------------------------------------
 
 /**
  * Validate that the request has a valid admin session.
@@ -78,6 +97,165 @@ export async function requireAdminAuth(request: NextRequest): Promise<NextRespon
     );
   }
 }
+
+// -----------------------------------------------------------------------
+// requirePermission — session + RBAC check (write access)
+// -----------------------------------------------------------------------
+
+/**
+ * Verify HMAC signature on the fm-admin-user cookie payload.
+ * Returns the parsed user data if valid, or null if verification fails.
+ */
+function verifyUserCookie(cookieValue: string, secret: string): { userId: string; role: string; name: string } | null {
+  const dotIndex = cookieValue.lastIndexOf('.');
+  if (dotIndex === -1) return null;
+
+  const payload = cookieValue.slice(0, dotIndex);
+  const signature = cookieValue.slice(dotIndex + 1);
+
+  if (!payload || !signature) return null;
+
+  try {
+    const expectedSignature = createHmac('sha256', secret)
+      .update(payload)
+      .digest('hex');
+
+    const sigBuffer = Buffer.from(signature, 'hex');
+    const expectedBuffer = Buffer.from(expectedSignature, 'hex');
+
+    if (sigBuffer.length !== expectedBuffer.length || !timingSafeEqual(sigBuffer, expectedBuffer)) {
+      return null;
+    }
+
+    const decoded = JSON.parse(Buffer.from(payload, 'base64').toString('utf-8'));
+    if (!decoded.userId || !decoded.role || !decoded.name) return null;
+
+    return decoded;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Validate admin session AND check that the authenticated user has the
+ * required permission. Returns the authenticated user on success.
+ *
+ * Usage:
+ * ```ts
+ * const auth = await requirePermission(request, 'clients.write');
+ * if ('error' in auth) return auth.error;
+ * // auth.user.id, auth.user.name, auth.user.role, auth.user.permissions
+ * ```
+ */
+export async function requirePermission(
+  request: NextRequest,
+  permission: string
+): Promise<{ error: NextResponse } | { user: AuthenticatedUser }> {
+  // 1. Validate HMAC session cookie (reuse existing requireAdminAuth logic)
+  const authError = await requireAdminAuth(request);
+  if (authError) return { error: authError };
+
+  const adminPassword = process.env.ADMIN_PASSWORD || '';
+
+  // 2. Read fm-admin-user cookie and verify its HMAC signature
+  const userCookie = request.cookies.get(ADMIN_USER_COOKIE)?.value;
+  if (!userCookie) {
+    return {
+      error: NextResponse.json(
+        { success: false, error: 'User identity not found. Please log in again.' },
+        { status: 401 }
+      ),
+    };
+  }
+
+  const userData = verifyUserCookie(userCookie, adminPassword);
+  if (!userData) {
+    return {
+      error: NextResponse.json(
+        { success: false, error: 'Invalid user identity. Please log in again.' },
+        { status: 401 }
+      ),
+    };
+  }
+
+  // 3. System admin (password auth) — gets full access, no DB lookup needed
+  if (userData.userId === 'system-admin') {
+    return {
+      user: {
+        id: 'system-admin',
+        name: 'System Admin',
+        role: 'super_admin',
+        permissions: ['system.full_access'],
+      },
+    };
+  }
+
+  // 4. Mobile users — look up current permissions from DB (in case they changed)
+  try {
+    const supabase = getSupabaseAdmin();
+    const { data: dbUser, error } = await supabase
+      .from('authorized_users')
+      .select('id, name, role, permissions, status')
+      .eq('id', userData.userId)
+      .single();
+
+    if (error || !dbUser) {
+      return {
+        error: NextResponse.json(
+          { success: false, error: 'User account not found' },
+          { status: 403 }
+        ),
+      };
+    }
+
+    if (dbUser.status !== 'active') {
+      return {
+        error: NextResponse.json(
+          { success: false, error: 'User account disabled' },
+          { status: 403 }
+        ),
+      };
+    }
+
+    // Parse permissions: stored as comma-separated string in DB
+    const userPermissions: string[] = dbUser.permissions
+      ? dbUser.permissions.split(',').map((p: string) => p.trim()).filter((p: string) => p.length > 0)
+      : [];
+
+    // 5. Check permission using PermissionService
+    if (!PermissionService.hasPermission(userPermissions, permission)) {
+      return {
+        error: NextResponse.json(
+          {
+            success: false,
+            error: `Insufficient permissions. Required: ${permission}`,
+          },
+          { status: 403 }
+        ),
+      };
+    }
+
+    return {
+      user: {
+        id: dbUser.id,
+        name: dbUser.name,
+        role: dbUser.role,
+        permissions: userPermissions,
+      },
+    };
+  } catch {
+    return {
+      error: NextResponse.json(
+        { success: false, error: 'Permission check failed' },
+        { status: 500 }
+      ),
+    };
+  }
+}
+
+// -----------------------------------------------------------------------
+// requireAuth — legacy fallback (admin session OR mobile token)
+// -----------------------------------------------------------------------
 
 /**
  * Check if a request is from an authorized mobile user.

@@ -9,6 +9,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import {
   Plus,
   Trash2,
@@ -127,6 +128,9 @@ const grouped = AGENCY_SERVICES.reduce<Record<string, typeof AGENCY_SERVICES>>(
 // ---------------------------------------------------------------------------
 
 export function InvoiceFormNew() {
+  const searchParams = useSearchParams();
+  const duplicateId = searchParams.get('duplicate');
+
   const [invoice, setInvoice] = useState<Invoice>(() => {
     const invoiceDate = new Date();
     return {
@@ -190,6 +194,47 @@ export function InvoiceFormNew() {
   useEffect(() => {
     loadClients();
   }, []);
+
+  // ---- Pre-populate from duplicate invoice ----
+  useEffect(() => {
+    if (!duplicateId) return;
+    const loadDuplicate = async () => {
+      try {
+        const res = await fetch(`/api/invoices?id=${duplicateId}`);
+        const result = await res.json();
+        if (result.success && result.data) {
+          const src = result.data;
+          const invoiceDate = new Date();
+          setInvoice(prev => ({
+            ...prev,
+            id: `inv-${Date.now()}`,
+            invoiceNumber: InvoiceNumbering.getInvoiceNumberForDate(invoiceDate),
+            date: invoiceDate.toISOString().split('T')[0],
+            dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+            client: src.client || prev.client,
+            lineItems: (src.lineItems || []).map((item: any, idx: number) => ({
+              id: `item-dup-${Date.now()}-${idx}`,
+              serviceId: item.serviceId || '',
+              description: item.description || '',
+              quantity: item.quantity || 1,
+              rate: item.rate || 0,
+              amount: item.amount || 0,
+            })),
+            taxRate: src.taxRate ?? prev.taxRate,
+            notes: src.notes ?? prev.notes,
+            terms: src.terms ?? prev.terms,
+            status: 'draft',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          }));
+          adminToast.success('Invoice data loaded from duplicate');
+        }
+      } catch {
+        adminToast.error('Failed to load invoice for duplication');
+      }
+    };
+    loadDuplicate();
+  }, [duplicateId]);
 
   // ---- Recalculate totals ----
   useEffect(() => {

@@ -21,6 +21,10 @@ export interface AuditEntry {
 /**
  * Log an admin action to the audit trail.
  * Fires and forgets — never blocks the main response.
+ *
+ * Callers must supply user_id and user_name directly from the
+ * authenticated user object returned by requirePermission().
+ * Do NOT derive user identity from request headers — those are forgeable.
  */
 export async function logAuditEvent(entry: Omit<AuditEntry, 'id' | 'created_at'>): Promise<void> {
   try {
@@ -41,7 +45,10 @@ export async function logAuditEvent(entry: Omit<AuditEntry, 'id' | 'created_at'>
 }
 
 /**
- * Helper to extract user info from request headers (set by middleware)
+ * @deprecated Use auth.user from requirePermission() instead.
+ * This function reads forgeable request headers and should not be trusted
+ * for audit integrity. Kept temporarily for backward compatibility during
+ * migration; will be removed once all callers pass user data directly.
  */
 export function getAuditUser(request: Request): { user_id: string; user_name: string } {
   return {

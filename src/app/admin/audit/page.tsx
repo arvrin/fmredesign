@@ -30,6 +30,7 @@ import {
 } from '@/design-system';
 import { Badge } from '@/components/ui/Badge';
 import { Input } from '@/components/ui/Input';
+import { adminToast } from '@/lib/admin/toast';
 import type { AuditAction, AuditEntry } from '@/lib/admin/audit-log';
 
 const ACTION_ICONS: Record<AuditAction, React.ReactNode> = {
@@ -108,6 +109,7 @@ export default function AuditLogPage() {
       setEntries(data.entries || []);
     } catch (err) {
       console.error('Failed to load audit log:', err);
+      adminToast.error('Failed to load audit log');
       setEntries([]);
     } finally {
       setLoading(false);

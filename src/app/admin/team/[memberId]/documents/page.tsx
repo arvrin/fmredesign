@@ -7,18 +7,15 @@
 
 import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
-import { 
+import {
   ArrowLeft,
   FileText,
   Upload,
-  Download,
-  Trash2,
-  Eye,
   Plus,
   User,
   FolderOpen
 } from 'lucide-react';
-import { 
+import {
   DashboardCard as Card,
   CardContent,
   CardDescription,
@@ -26,7 +23,6 @@ import {
   CardTitle,
   DashboardButton as Button
 } from '@/design-system';
-import { TeamService } from '@/lib/admin/team-service';
 import { TeamMember } from '@/lib/admin/types';
 
 interface TeamMemberDocumentsProps {
@@ -47,8 +43,12 @@ export default function TeamMemberDocumentsPage({ params }: TeamMemberDocumentsP
 
   const loadMemberData = async () => {
     try {
-      const memberData = TeamService.getTeamMemberById(memberId);
-      setMember(memberData);
+      const res = await fetch(`/api/team?id=${memberId}`);
+      const result = await res.json();
+
+      if (result.success && result.data) {
+        setMember(result.data);
+      }
     } catch (error) {
       console.error('Error loading member data:', error);
     } finally {
@@ -84,16 +84,16 @@ export default function TeamMemberDocumentsPage({ params }: TeamMemberDocumentsP
       <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-6">
-            <Button 
-              variant="ghost" 
-              size="sm" 
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => router.push(`/admin/team/${memberId}`)}
               className="flex items-center gap-2"
             >
               <ArrowLeft className="w-4 h-4" />
               Back to Profile
             </Button>
-            
+
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-full bg-fm-magenta-100 flex items-center justify-center text-fm-magenta-600 font-bold">
                 {member.name.split(' ').map(n => n[0]).join('').toUpperCase()}
@@ -104,8 +104,8 @@ export default function TeamMemberDocumentsPage({ params }: TeamMemberDocumentsP
               </div>
             </div>
           </div>
-          
-          <Button 
+
+          <Button
             variant="admin"
             className="flex items-center gap-2"
           >
@@ -166,11 +166,11 @@ export default function TeamMemberDocumentsPage({ params }: TeamMemberDocumentsP
           <FileText className="w-16 h-16 text-fm-neutral-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-fm-neutral-900 mb-2">Document Management Coming Soon</h3>
           <p className="text-fm-neutral-500 mb-6">
-            File upload, document organization, version control, and secure document 
+            File upload, document organization, version control, and secure document
             sharing will be available here.
           </p>
           <div className="flex items-center justify-center gap-4">
-            <Button 
+            <Button
               variant="outline"
               onClick={() => router.push(`/admin/team/${memberId}`)}
             >

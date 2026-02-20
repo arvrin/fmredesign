@@ -21,6 +21,7 @@ import {
   Search,
 } from 'lucide-react';
 import { adminToast } from '@/lib/admin/toast';
+import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
 import { createUserSchema } from '@/lib/validations/schemas';
 
 type UserFormData = z.infer<typeof createUserSchema>;
@@ -48,6 +49,7 @@ export default function UsersManagementPage() {
   const [editingUser, setEditingUser] = useState<AuthorizedUser | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive' | 'suspended'>('all');
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [roleFilter, setRoleFilter] = useState<string>('all');
 
   // Check permissions
@@ -96,10 +98,6 @@ export default function UsersManagementPage() {
 
   const handleDeleteUser = async (userId: string) => {
     if (!canDeleteUsers) return;
-    
-    if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
-      return;
-    }
 
     try {
       const response = await fetch(`/api/admin/users?id=${userId}`, {
@@ -339,7 +337,7 @@ export default function UsersManagementPage() {
                         
                         {canDeleteUsers && (
                           <button
-                            onClick={() => handleDeleteUser(user.id)}
+                            onClick={() => setDeleteConfirm(user.id)}
                             className="p-1.5 text-fm-neutral-400 hover:text-red-600 hover:bg-red-50 rounded"
                             title="Delete user"
                           >
@@ -383,6 +381,19 @@ export default function UsersManagementPage() {
           canManagePermissions={canManagePermissions}
         />
       )}
+
+      <ConfirmDialog
+        open={!!deleteConfirm}
+        title="Delete User"
+        description="Are you sure you want to delete this user? This action cannot be undone."
+        confirmLabel="Delete"
+        variant="destructive"
+        onConfirm={() => {
+          if (deleteConfirm) handleDeleteUser(deleteConfirm);
+          setDeleteConfirm(null);
+        }}
+        onCancel={() => setDeleteConfirm(null)}
+      />
     </div>
   );
 }

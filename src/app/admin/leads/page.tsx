@@ -107,6 +107,7 @@ export default function LeadDashboard() {
 
     } catch (error) {
       console.error('Error loading dashboard data:', error);
+      adminToast.error('Failed to load lead data');
     } finally {
       setLoading(false);
     }
@@ -130,6 +131,7 @@ export default function LeadDashboard() {
       }
     } catch (error) {
       console.error('Error updating lead status:', error);
+      adminToast.error('Failed to update lead status');
     }
   };
 

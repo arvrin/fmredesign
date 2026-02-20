@@ -7,33 +7,31 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { 
+import {
   ArrowLeft,
   Save,
   User,
   Briefcase,
   DollarSign,
   Settings,
-  Users,
   Award,
-  MapPin
 } from 'lucide-react';
-import { 
+import {
   DashboardCard as Card,
   CardContent,
   CardHeader,
   CardTitle,
   DashboardButton as Button
 } from '@/design-system';
-import { TeamService } from '@/lib/admin/team-service';
-import { 
-  TeamMember, 
-  TeamRole, 
-  TeamDepartment, 
-  TEAM_ROLES, 
+import {
+  TeamMember,
+  TeamRole,
+  TeamDepartment,
+  TEAM_ROLES,
   TEAM_DEPARTMENTS,
   COMMON_SKILLS
 } from '@/lib/admin/types';
+import { adminToast } from '@/lib/admin/toast';
 
 export default function NewTeamMemberPage() {
   const router = useRouter();
@@ -93,7 +91,7 @@ export default function NewTeamMemberPage() {
     const newSkills = selectedSkills.includes(skill)
       ? selectedSkills.filter(s => s !== skill)
       : [...selectedSkills, skill];
-    
+
     setSelectedSkills(newSkills);
     setFormData(prev => ({ ...prev, skills: newSkills }));
   };
@@ -104,30 +102,26 @@ export default function NewTeamMemberPage() {
     setErrors([]);
 
     try {
-      // Validate form data
-      const validationErrors = TeamService.validateTeamMemberData(formData);
-      if (validationErrors.length > 0) {
-        setErrors(validationErrors);
+      const res = await fetch('/api/team', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+      const result = await res.json();
+
+      if (!result.success) {
+        const errorMsg = result.error || 'Failed to create team member';
+        setErrors(Array.isArray(errorMsg) ? errorMsg : [errorMsg]);
         setIsSubmitting(false);
         return;
       }
 
-      // Create new team member
-      const newMember: TeamMember = {
-        ...formData,
-        id: TeamService.generateTeamMemberId(),
-        startDate: formData.startDate || new Date().toISOString().split('T')[0],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      } as TeamMember;
-
-      TeamService.saveTeamMember(newMember);
-
-      // Redirect to team dashboard
+      adminToast.success('Team member created successfully');
       router.push('/admin/team');
     } catch (error) {
       console.error('Error creating team member:', error);
       setErrors(['Failed to create team member. Please try again.']);
+      adminToast.error('Failed to create team member');
     } finally {
       setIsSubmitting(false);
     }
@@ -139,9 +133,9 @@ export default function NewTeamMemberPage() {
       <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Button 
-              variant="ghost" 
-              size="sm" 
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => router.back()}
               className="flex items-center gap-2"
             >
@@ -205,7 +199,7 @@ export default function NewTeamMemberPage() {
                   required
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
                   Email Address *
@@ -219,7 +213,7 @@ export default function NewTeamMemberPage() {
                   required
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
                   Phone Number *
@@ -233,7 +227,7 @@ export default function NewTeamMemberPage() {
                   required
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
                   Start Date *
@@ -275,7 +269,7 @@ export default function NewTeamMemberPage() {
                   <option value="contractor">Contractor</option>
                 </select>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
                   Department *
@@ -291,7 +285,7 @@ export default function NewTeamMemberPage() {
                   ))}
                 </select>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
                   Seniority Level *
@@ -310,7 +304,7 @@ export default function NewTeamMemberPage() {
                 </select>
               </div>
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
                 Job Role *
@@ -355,7 +349,7 @@ export default function NewTeamMemberPage() {
                   <option value="freelance">Freelance</option>
                 </select>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
                   Location *
@@ -371,7 +365,7 @@ export default function NewTeamMemberPage() {
                   <option value="hybrid">Hybrid</option>
                 </select>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
                   Weekly Capacity (Hours) *
@@ -415,10 +409,10 @@ export default function NewTeamMemberPage() {
                   <option value="project-based">Project-based</option>
                 </select>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
-                  Amount (₹) *
+                  Amount (INR) *
                 </label>
                 <input
                   type="number"
@@ -430,10 +424,10 @@ export default function NewTeamMemberPage() {
                   required
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
-                  Client Billing Rate (₹/hour)
+                  Client Billing Rate (INR/hour)
                 </label>
                 <input
                   type="number"
@@ -506,17 +500,17 @@ export default function NewTeamMemberPage() {
 
         {/* Submit Buttons */}
         <div className="flex items-center justify-end gap-4 pt-6 border-t border-fm-neutral-200">
-          <Button 
-            type="button" 
-            variant="ghost" 
+          <Button
+            type="button"
+            variant="ghost"
             onClick={() => router.back()}
             disabled={isSubmitting}
           >
             Cancel
           </Button>
-          <Button 
-            type="submit" 
-            variant="admin" 
+          <Button
+            type="submit"
+            variant="admin"
             disabled={isSubmitting}
             className="flex items-center gap-2"
           >

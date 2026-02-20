@@ -15,8 +15,6 @@ import {
   Deliverable,
   CampaignType,
 } from './client-types';
-import { TeamService } from './team-service';
-
 /** Helper: build fetch base URL (empty on client, env var on server) */
 function apiBase(): string {
   return typeof window !== 'undefined' ? '' : (process.env.NEXT_PUBLIC_BASE_URL || '');
@@ -144,19 +142,8 @@ export class ClientService {
     }
   }
 
-  // ===== TEAM MANAGEMENT (delegates to TeamService) =====
-
-  static getClientTeamMembers(clientId: string) {
-    return TeamService.getTeamMembersForClient(clientId);
-  }
-
-  static assignTeamMemberToClient(clientId: string, teamMemberId: string, hoursAllocated: number, isLead = false) {
-    return TeamService.assignTeamMemberToClient(teamMemberId, clientId, hoursAllocated, isLead);
-  }
-
-  static removeTeamMemberFromClient(clientId: string, teamMemberId: string) {
-    return TeamService.removeTeamMemberFromClient(teamMemberId, clientId);
-  }
+  // ===== TEAM MANAGEMENT (migrated to /api/team/assignments — use API directly) =====
+  // Team assignment methods have been removed. Use fetch('/api/team/assignments', ...) directly.
 
   // ===== CAMPAIGN MANAGEMENT (localStorage — no backend table) =====
 

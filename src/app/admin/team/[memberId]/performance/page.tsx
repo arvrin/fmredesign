@@ -7,7 +7,7 @@
 
 import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
-import { 
+import {
   ArrowLeft,
   TrendingUp,
   Target,
@@ -16,7 +16,7 @@ import {
   BarChart3,
   User
 } from 'lucide-react';
-import { 
+import {
   DashboardCard as Card,
   CardContent,
   CardDescription,
@@ -25,7 +25,6 @@ import {
   DashboardButton as Button,
   MetricCard
 } from '@/design-system';
-import { TeamService } from '@/lib/admin/team-service';
 import { TeamMember } from '@/lib/admin/types';
 
 interface TeamMemberPerformanceProps {
@@ -46,8 +45,12 @@ export default function TeamMemberPerformancePage({ params }: TeamMemberPerforma
 
   const loadMemberData = async () => {
     try {
-      const memberData = TeamService.getTeamMemberById(memberId);
-      setMember(memberData);
+      const res = await fetch(`/api/team?id=${memberId}`);
+      const result = await res.json();
+
+      if (result.success && result.data) {
+        setMember(result.data);
+      }
     } catch (error) {
       console.error('Error loading member data:', error);
     } finally {
@@ -82,16 +85,16 @@ export default function TeamMemberPerformancePage({ params }: TeamMemberPerforma
       {/* Header */}
       <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-6">
         <div className="flex items-center gap-6">
-          <Button 
-            variant="ghost" 
-            size="sm" 
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => router.push(`/admin/team/${memberId}`)}
             className="flex items-center gap-2"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to Profile
           </Button>
-          
+
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-full bg-fm-magenta-100 flex items-center justify-center text-fm-magenta-600 font-bold">
               {member.name.split(' ').map(n => n[0]).join('').toUpperCase()}
@@ -161,10 +164,10 @@ export default function TeamMemberPerformancePage({ params }: TeamMemberPerforma
           <BarChart3 className="w-16 h-16 text-fm-neutral-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-fm-neutral-900 mb-2">Performance Analytics Coming Soon</h3>
           <p className="text-fm-neutral-500 mb-6">
-            Advanced performance tracking, detailed analytics, time tracking integration, 
+            Advanced performance tracking, detailed analytics, time tracking integration,
             and productivity metrics will be available here.
           </p>
-          <Button 
+          <Button
             variant="outline"
             onClick={() => router.push(`/admin/team/${memberId}`)}
           >

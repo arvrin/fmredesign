@@ -5,9 +5,9 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
-import { requireAdminAuth } from '@/lib/admin-auth-middleware';
+import { requireAdminAuth, requirePermission } from '@/lib/admin-auth-middleware';
 import { createClientSchema, updateClientSchema, validateBody } from '@/lib/validations/schemas';
-import { logAuditEvent, getAuditUser, getClientIP } from '@/lib/admin/audit-log';
+import { logAuditEvent, getClientIP } from '@/lib/admin/audit-log';
 import bcrypt from 'bcryptjs';
 
 /** Generate a URL-safe slug from a company name */
@@ -41,7 +41,56 @@ export async function GET(request: NextRequest) {
   if (authError) return authError;
 
   try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+
     const supabase = getSupabaseAdmin();
+
+    // Single resource fetch by ID
+    if (id) {
+      const { data, error } = await supabase
+        .from('clients')
+        .select('id, name, email, phone, address, city, state, zip_code, country, gst_number, industry, company_size, website, status, health, account_manager, contract_type, contract_value, contract_start_date, contract_end_date, billing_cycle, services, created_at, updated_at, total_value, tags, notes')
+        .eq('id', id)
+        .single();
+
+      if (error || !data) {
+        return NextResponse.json({ success: false, error: 'Client not found' }, { status: 404 });
+      }
+
+      const formatted = {
+        id: data.id,
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        address: data.address,
+        city: data.city,
+        state: data.state,
+        zipCode: data.zip_code,
+        country: data.country,
+        gstNumber: data.gst_number,
+        industry: data.industry,
+        companySize: data.company_size,
+        website: data.website,
+        status: data.status,
+        health: data.health,
+        accountManager: data.account_manager,
+        contractType: data.contract_type,
+        contractValue: data.contract_value,
+        contractStartDate: data.contract_start_date,
+        contractEndDate: data.contract_end_date,
+        billingCycle: data.billing_cycle,
+        services: data.services,
+        createdAt: data.created_at,
+        updatedAt: data.updated_at,
+        totalValue: data.total_value,
+        tags: data.tags,
+        notes: data.notes,
+      };
+
+      return NextResponse.json({ success: true, data: formatted });
+    }
+
     const { data: clients, error } = await supabase
       .from('clients')
       .select('id, name, email, phone, address, city, state, zip_code, country, gst_number, industry, company_size, website, status, health, account_manager, contract_type, contract_value, contract_start_date, contract_end_date, billing_cycle, services, created_at, updated_at, total_value, tags, notes')
@@ -100,8 +149,8 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+  const auth = await requirePermission(request, 'clients.write');
+  if ('error' in auth) return auth.error;
 
   try {
     const rawBody = await request.json();
@@ -206,7 +255,8 @@ export async function POST(request: NextRequest) {
 
     // Fire-and-forget audit log
     logAuditEvent({
-      ...getAuditUser(request),
+      user_id: auth.user.id,
+      user_name: auth.user.name,
       action: 'create',
       resource_type: 'client',
       resource_id: clientData.id,
@@ -229,8 +279,8 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+  const auth = await requirePermission(request, 'clients.write');
+  if ('error' in auth) return auth.error;
 
   try {
     const rawBody = await request.json();
@@ -332,7 +382,8 @@ export async function PUT(request: NextRequest) {
 
     // Fire-and-forget audit log
     logAuditEvent({
-      ...getAuditUser(request),
+      user_id: auth.user.id,
+      user_name: auth.user.name,
       action: 'update',
       resource_type: 'client',
       resource_id: id,
@@ -355,8 +406,8 @@ export async function PUT(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+  const auth = await requirePermission(request, 'clients.delete');
+  if ('error' in auth) return auth.error;
 
   try {
     const { searchParams } = new URL(request.url);
@@ -376,7 +427,8 @@ export async function DELETE(request: NextRequest) {
 
     // Fire-and-forget audit log
     logAuditEvent({
-      ...getAuditUser(request),
+      user_id: auth.user.id,
+      user_name: auth.user.name,
       action: 'delete',
       resource_type: 'client',
       resource_id: clientId,

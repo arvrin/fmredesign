@@ -7,6 +7,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   FileText,
   Plus,
@@ -35,6 +36,7 @@ import {
 import { Badge } from '@/components/ui/Badge';
 import { PageHeader } from '@/components/ui/page-header';
 import { adminToast } from '@/lib/admin/toast';
+import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
 import { SimplePDFGenerator } from '@/lib/admin/pdf-simple';
 
 // ---------------------------------------------------------------------------
@@ -138,6 +140,7 @@ const fmtDate = (d: string) =>
 // ---------------------------------------------------------------------------
 
 export default function InvoicesPage() {
+  const router = useRouter();
   const [invoices, setInvoices] = useState<InvoiceListItem[]>([]);
   const [stats, setStats] = useState<InvoiceStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -145,6 +148,7 @@ export default function InvoicesPage() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [pdfGenerator] = useState(() => new SimplePDFGenerator());
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
   // ---- Fetch invoices ----
   const fetchInvoices = useCallback(async () => {
@@ -196,7 +200,6 @@ export default function InvoicesPage() {
   };
 
   const deleteInvoice = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this invoice?')) return;
     try {
       const res = await fetch(`/api/invoices?id=${id}`, { method: 'DELETE' });
       const result = await res.json();
@@ -506,12 +509,8 @@ export default function InvoicesPage() {
                                       icon={<Copy className="w-4 h-4" />}
                                       label="Duplicate"
                                       onClick={() => {
-                                        // Copy to clipboard as JSON for now
-                                        // TODO: navigate to /admin/invoice?duplicate=id
-                                        adminToast.success(
-                                          'Invoice data copied — paste into new invoice',
-                                        );
                                         setOpenMenu(null);
+                                        router.push(`/admin/invoice?duplicate=${inv.id}`);
                                       }}
                                     />
                                     <div className="border-t border-fm-neutral-100 my-1" />
@@ -520,7 +519,10 @@ export default function InvoicesPage() {
                                         <Trash2 className="w-4 h-4 text-red-500" />
                                       }
                                       label="Delete"
-                                      onClick={() => deleteInvoice(inv.id)}
+                                      onClick={() => {
+                                        setOpenMenu(null);
+                                        setDeleteConfirm(inv.id);
+                                      }}
                                       danger
                                     />
                                   </div>
@@ -538,6 +540,19 @@ export default function InvoicesPage() {
           )}
         </CardContent>
       </Card>
+
+      <ConfirmDialog
+        open={!!deleteConfirm}
+        title="Delete Invoice"
+        description="Are you sure you want to delete this invoice? This action cannot be undone."
+        confirmLabel="Delete"
+        variant="destructive"
+        onConfirm={() => {
+          if (deleteConfirm) deleteInvoice(deleteConfirm);
+          setDeleteConfirm(null);
+        }}
+        onCancel={() => setDeleteConfirm(null)}
+      />
     </div>
   );
 }

@@ -7,7 +7,7 @@
 
 import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
-import { 
+import {
   ArrowLeft,
   Plus,
   Users,
@@ -20,7 +20,7 @@ import {
   User,
   Building
 } from 'lucide-react';
-import { 
+import {
   DashboardCard as Card,
   CardContent,
   CardDescription,
@@ -30,9 +30,8 @@ import {
   MetricCard
 } from '@/design-system';
 import { Badge } from '@/components/ui/Badge';
-import { TeamService } from '@/lib/admin/team-service';
-import { ClientService } from '@/lib/admin/client-service';
 import { TeamMember, TeamAssignment, TEAM_ROLES } from '@/lib/admin/types';
+import { adminToast } from '@/lib/admin/toast';
 
 interface TeamAssignmentManagementProps {
   params: Promise<{
@@ -62,25 +61,32 @@ export default function TeamAssignmentManagementPage({ params }: TeamAssignmentM
 
   const loadAssignmentData = async () => {
     try {
-      // Load team member
-      const memberData = TeamService.getTeamMemberById(memberId);
-      if (!memberData) return;
-      setMember(memberData);
+      // Load team member from API
+      const memberRes = await fetch(`/api/team?id=${memberId}`);
+      const memberResult = await memberRes.json();
+      if (!memberResult.success || !memberResult.data) return;
+      setMember(memberResult.data);
 
-      // Load current assignments
-      const memberAssignments = TeamService.getAssignmentsByTeamMember(memberId);
+      // Load current assignments from API
+      const assignmentsRes = await fetch(`/api/team/assignments?teamMemberId=${memberId}`);
+      const assignmentsResult = await assignmentsRes.json();
+      const memberAssignments = assignmentsResult.success ? assignmentsResult.data : [];
       setAssignments(memberAssignments);
 
-      // Load available clients (not currently assigned to this member)
-      const allClients = await ClientService.getAllClients();
-      const assignedClientIds = memberAssignments.map(a => a.clientId);
-      const available = allClients.filter(client => !assignedClientIds.includes(client.id));
-      setAvailableClients(available);
+      // Load all clients from API
+      const clientsRes = await fetch('/api/clients');
+      const clientsResult = await clientsRes.json();
+      const allClients = clientsResult.success ? clientsResult.data : [];
 
-      // Build a lookup map for all clients (for use in render)
+      // Build client lookup map
       const map: Record<string, any> = {};
-      allClients.forEach(client => { map[client.id] = client; });
+      allClients.forEach((client: any) => { map[client.id] = client; });
       setClientMap(map);
+
+      // Filter available clients (not currently assigned)
+      const assignedClientIds = memberAssignments.map((a: any) => a.clientId);
+      const available = allClients.filter((client: any) => !assignedClientIds.includes(client.id));
+      setAvailableClients(available);
     } catch (error) {
       console.error('Error loading assignment data:', error);
     } finally {
@@ -92,12 +98,24 @@ export default function TeamAssignmentManagementPage({ params }: TeamAssignmentM
     if (!newAssignment.clientId || !member) return;
 
     try {
-      TeamService.assignTeamMemberToClient(
-        memberId,
-        newAssignment.clientId,
-        newAssignment.hoursAllocated,
-        newAssignment.isLead
-      );
+      const res = await fetch('/api/team/assignments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          teamMemberId: memberId,
+          clientId: newAssignment.clientId,
+          hoursAllocated: newAssignment.hoursAllocated,
+          isLead: newAssignment.isLead,
+          role: newAssignment.role,
+        }),
+      });
+      const result = await res.json();
+
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to create assignment');
+      }
+
+      adminToast.success('Assignment added successfully');
 
       // Reload data
       await loadAssignmentData();
@@ -110,21 +128,27 @@ export default function TeamAssignmentManagementPage({ params }: TeamAssignmentM
       });
     } catch (error) {
       console.error('Error adding assignment:', error);
+      adminToast.error('Failed to add assignment');
     }
   };
 
   const handleRemoveAssignment = async (assignmentId: string) => {
     try {
-      TeamService.removeAssignment(assignmentId);
+      const res = await fetch(`/api/team/assignments?id=${assignmentId}`, {
+        method: 'DELETE',
+      });
+      const result = await res.json();
+
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to remove assignment');
+      }
+
+      adminToast.success('Assignment removed successfully');
       await loadAssignmentData();
     } catch (error) {
       console.error('Error removing assignment:', error);
+      adminToast.error('Failed to remove assignment');
     }
-  };
-
-  const getClientById = (clientId: string) => {
-    return availableClients.find(c => c.id === clientId) || 
-           assignments.find(a => a.clientId === clientId);
   };
 
   const getWorkloadColor = (workload: number) => {
@@ -165,16 +189,16 @@ export default function TeamAssignmentManagementPage({ params }: TeamAssignmentM
       <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-6">
-            <Button 
-              variant="ghost" 
-              size="sm" 
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => router.push(`/admin/team/${memberId}`)}
               className="flex items-center gap-2"
             >
               <ArrowLeft className="w-4 h-4" />
               Back to Profile
             </Button>
-            
+
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-full bg-fm-magenta-100 flex items-center justify-center text-fm-magenta-600 font-bold">
                 {member.name.split(' ').map(n => n[0]).join('').toUpperCase()}
@@ -187,9 +211,9 @@ export default function TeamAssignmentManagementPage({ params }: TeamAssignmentM
               </div>
             </div>
           </div>
-          
-          <Button 
-            variant="admin" 
+
+          <Button
+            variant="admin"
             onClick={() => setShowAddForm(true)}
             className="flex items-center gap-2"
           >
@@ -280,7 +304,7 @@ export default function TeamAssignmentManagementPage({ params }: TeamAssignmentM
                   ))}
                 </select>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
                   Weekly Hours *
@@ -295,7 +319,7 @@ export default function TeamAssignmentManagementPage({ params }: TeamAssignmentM
                   required
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
                   Role
@@ -313,7 +337,7 @@ export default function TeamAssignmentManagementPage({ params }: TeamAssignmentM
                 </div>
               </div>
             </div>
-            
+
             <div className="flex items-center justify-end gap-3 pt-4 border-t border-fm-neutral-200">
               <Button
                 variant="ghost"
@@ -356,7 +380,7 @@ export default function TeamAssignmentManagementPage({ params }: TeamAssignmentM
               {assignments.map((assignment) => {
                 const client = clientMap[assignment.clientId];
                 if (!client) return null;
-                
+
                 return (
                   <div
                     key={assignment.id}
@@ -384,9 +408,9 @@ export default function TeamAssignmentManagementPage({ params }: TeamAssignmentM
                         </div>
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center gap-2">
-                      <Badge 
+                      <Badge
                         variant="outline"
                         className={assignment.status === 'active' ? 'border-green-300 text-green-700' : ''}
                       >
@@ -412,8 +436,8 @@ export default function TeamAssignmentManagementPage({ params }: TeamAssignmentM
               <p className="text-fm-neutral-500 mb-4">
                 This team member hasn't been assigned to any clients yet.
               </p>
-              <Button 
-                variant="admin" 
+              <Button
+                variant="admin"
                 onClick={() => setShowAddForm(true)}
                 className="flex items-center gap-2"
               >

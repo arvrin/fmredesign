@@ -285,6 +285,34 @@ export async function POST(request: NextRequest) {
   }
 }
 
+// DELETE /api/leads - Delete lead
+export async function DELETE(request: NextRequest) {
+  const authError = await requireAdminAuth(request);
+  if (authError) return authError;
+
+  try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+    if (!id) {
+      return NextResponse.json({ success: false, error: 'Lead ID required' }, { status: 400 });
+    }
+
+    const supabase = getSupabaseAdmin();
+    const { error } = await supabase.from('leads').delete().eq('id', id);
+    if (error) {
+      return NextResponse.json({ success: false, error: 'Failed to delete lead' }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true, message: 'Lead deleted' });
+  } catch (error) {
+    console.error('Error deleting lead:', error);
+    return NextResponse.json(
+      { success: false, error: 'Failed to delete lead' },
+      { status: 500 }
+    );
+  }
+}
+
 // PUT /api/leads - Update lead
 export async function PUT(request: NextRequest) {
   const authError = await requireAdminAuth(request);

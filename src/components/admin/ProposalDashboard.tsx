@@ -36,6 +36,7 @@ import {
 import { Badge } from '@/components/ui/Badge';
 import { Proposal } from '@/lib/admin/proposal-types';
 import { adminToast } from '@/lib/admin/toast';
+import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
 import { ProposalPDFGenerator } from '@/lib/admin/proposal-pdf-generator';
 
 interface ProposalStats {
@@ -59,6 +60,7 @@ export function ProposalDashboard({ onCreateNew, onEditProposal }: ProposalDashb
   const [totalValue, setTotalValue] = useState(0);
   const [convertedValue, setConvertedValue] = useState(0);
   const [pdfGenerator] = useState(() => new ProposalPDFGenerator());
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
   // Load proposals
   useEffect(() => {
@@ -105,17 +107,18 @@ export function ProposalDashboard({ onCreateNew, onEditProposal }: ProposalDashb
       }
     } catch (error) {
       console.error('Error loading proposals:', error);
+      adminToast.error('Failed to load proposals');
     }
   };
 
   const handleDeleteProposal = async (proposalId: string) => {
-    if (confirm('Are you sure you want to delete this proposal?')) {
-      try {
-        await fetch(`/api/proposals?id=${proposalId}`, { method: 'DELETE' });
-        loadProposals();
-      } catch (error) {
-        console.error('Error deleting proposal:', error);
-      }
+    try {
+      await fetch(`/api/proposals?id=${proposalId}`, { method: 'DELETE' });
+      loadProposals();
+      adminToast.success('Proposal deleted');
+    } catch (error) {
+      console.error('Error deleting proposal:', error);
+      adminToast.error('Failed to delete proposal');
     }
   };
 
@@ -458,7 +461,7 @@ export function ProposalDashboard({ onCreateNew, onEditProposal }: ProposalDashb
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleDeleteProposal(proposal.id)}
+                      onClick={() => setDeleteConfirm(proposal.id)}
                       title="Delete Proposal"
                       className="text-red-600 hover:text-red-700"
                     >
@@ -471,6 +474,19 @@ export function ProposalDashboard({ onCreateNew, onEditProposal }: ProposalDashb
           ))
         )}
       </div>
+
+      <ConfirmDialog
+        open={!!deleteConfirm}
+        title="Delete Proposal"
+        description="Are you sure you want to delete this proposal? This action cannot be undone."
+        confirmLabel="Delete"
+        variant="destructive"
+        onConfirm={() => {
+          if (deleteConfirm) handleDeleteProposal(deleteConfirm);
+          setDeleteConfirm(null);
+        }}
+        onCancel={() => setDeleteConfirm(null)}
+      />
     </div>
   );
 }

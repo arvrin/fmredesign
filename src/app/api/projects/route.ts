@@ -7,9 +7,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import type { ProjectInput, Project } from '@/lib/admin/project-types';
 import { ProjectUtils } from '@/lib/admin/project-types';
-import { requireAdminAuth } from '@/lib/admin-auth-middleware';
+import { requireAdminAuth, requirePermission } from '@/lib/admin-auth-middleware';
 import { createProjectSchema, updateProjectSchema, validateBody } from '@/lib/validations/schemas';
-import { logAuditEvent, getAuditUser, getClientIP } from '@/lib/admin/audit-log';
+import { logAuditEvent, getClientIP } from '@/lib/admin/audit-log';
 
 // GET /api/projects
 export async function GET(request: NextRequest) {
@@ -18,6 +18,45 @@ export async function GET(request: NextRequest) {
 
   try {
     const searchParams = request.nextUrl.searchParams;
+
+    // Single resource fetch by ID
+    const id = searchParams.get('id');
+    if (id) {
+      const supabase = getSupabaseAdmin();
+      const { data, error } = await supabase.from('projects').select('*').eq('id', id).single();
+      if (error || !data) {
+        return NextResponse.json({ success: false, error: 'Project not found' }, { status: 404 });
+      }
+      const project = {
+        id: data.id,
+        clientId: data.client_id,
+        discoveryId: data.discovery_id,
+        name: data.name,
+        description: data.description,
+        type: data.type,
+        status: data.status,
+        priority: data.priority,
+        startDate: data.start_date,
+        endDate: data.end_date,
+        estimatedHours: data.estimated_hours,
+        projectManager: data.project_manager,
+        assignedTalent: data.assigned_talent || [],
+        budget: data.budget,
+        spent: data.spent,
+        hourlyRate: data.hourly_rate,
+        progress: data.progress,
+        milestones: data.milestones || [],
+        deliverables: data.deliverables || [],
+        contentRequirements: data.content_requirements || {},
+        tags: data.tags || [],
+        invoiceIds: data.invoice_ids || [],
+        notes: data.notes,
+        createdAt: data.created_at,
+        updatedAt: data.updated_at,
+      };
+      return NextResponse.json({ success: true, data: project });
+    }
+
     const clientId = searchParams.get('clientId');
     const status = searchParams.get('status');
     const type = searchParams.get('type');
@@ -89,8 +128,8 @@ export async function GET(request: NextRequest) {
 
 // POST /api/projects
 export async function POST(request: NextRequest) {
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+  const auth = await requirePermission(request, 'projects.write');
+  if ('error' in auth) return auth.error;
 
   try {
     const rawBody = await request.json();
@@ -157,7 +196,8 @@ export async function POST(request: NextRequest) {
 
     // Fire-and-forget audit log
     logAuditEvent({
-      ...getAuditUser(request),
+      user_id: auth.user.id,
+      user_name: auth.user.name,
       action: 'create',
       resource_type: 'project',
       resource_id: data.id,
@@ -180,8 +220,8 @@ export async function POST(request: NextRequest) {
 
 // PUT /api/projects
 export async function PUT(request: NextRequest) {
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+  const auth = await requirePermission(request, 'projects.write');
+  if ('error' in auth) return auth.error;
 
   try {
     const rawBody = await request.json();
@@ -259,7 +299,8 @@ export async function PUT(request: NextRequest) {
 
     // Fire-and-forget audit log
     logAuditEvent({
-      ...getAuditUser(request),
+      user_id: auth.user.id,
+      user_name: auth.user.name,
       action: 'update',
       resource_type: 'project',
       resource_id: data.id,
@@ -283,8 +324,8 @@ export async function PUT(request: NextRequest) {
 
 // DELETE /api/projects
 export async function DELETE(request: NextRequest) {
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+  const auth = await requirePermission(request, 'projects.delete');
+  if ('error' in auth) return auth.error;
 
   try {
     const searchParams = request.nextUrl.searchParams;
@@ -304,7 +345,8 @@ export async function DELETE(request: NextRequest) {
 
     // Fire-and-forget audit log
     logAuditEvent({
-      ...getAuditUser(request),
+      user_id: auth.user.id,
+      user_name: auth.user.name,
       action: 'delete',
       resource_type: 'project',
       resource_id: projectId,

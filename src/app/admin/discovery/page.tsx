@@ -17,19 +17,20 @@ import {
   CardTitle, 
   MetricCard 
 } from '@/design-system';
-import { 
-  Search, 
-  Filter, 
-  Plus, 
-  FileText, 
-  Clock, 
-  CheckCircle, 
+import {
+  Search,
+  Filter,
+  Plus,
+  FileText,
+  Clock,
+  CheckCircle,
   AlertCircle,
   Eye,
   BarChart3,
   Users,
   Calendar
 } from 'lucide-react';
+import { adminToast } from '@/lib/admin/toast';
 
 export default function DiscoveryDashboardPage() {
   const router = useRouter();
@@ -53,6 +54,7 @@ export default function DiscoveryDashboardPage() {
       }
     } catch (error) {
       console.error('Error loading discovery sessions:', error);
+      adminToast.error('Failed to load discovery sessions');
     } finally {
       setIsLoading(false);
     }

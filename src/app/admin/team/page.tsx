@@ -33,6 +33,7 @@ import {
   MetricCard
 } from '@/design-system';
 import { Badge } from '@/components/ui/Badge';
+import { adminToast } from '@/lib/admin/toast';
 import { TeamMember, TeamMetrics, TEAM_ROLES, TEAM_DEPARTMENTS } from '@/lib/admin/types';
 
 export default function TeamDashboardPage() {
@@ -58,6 +59,7 @@ export default function TeamDashboardPage() {
       }
     } catch (error) {
       console.error('Error loading team data:', error);
+      adminToast.error('Failed to load team data');
     } finally {
       setIsLoading(false);
     }

@@ -25,6 +25,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
+import { adminToast } from '@/lib/admin/toast';
 
 /* ── Types ── */
 interface DashboardInvoice {
@@ -203,6 +204,7 @@ export default function AdminDashboard() {
       );
     } catch (error) {
       console.error('Error loading dashboard data:', error);
+      adminToast.error('Failed to load dashboard data');
     } finally {
       setIsLoading(false);
     }
@@ -232,7 +234,11 @@ export default function AdminDashboard() {
           value={stats.totalClients}
           subtitle="Active relationships"
           icon={<Users className="w-6 h-6" />}
-          change={{ value: 8, type: 'increase', period: 'this month' }}
+          change={{
+            value: stats.totalClients,
+            type: stats.totalClients > 0 ? 'increase' : 'neutral',
+            period: 'total',
+          }}
           variant="admin"
         />
         <MetricCard
@@ -241,7 +247,11 @@ export default function AdminDashboard() {
           subtitle="Total collected"
           icon={<DollarSign className="w-6 h-6" />}
           formatter={(val) => InvoiceUtils.formatCurrency(Number(val))}
-          change={{ value: 23, type: 'increase', period: 'vs last month' }}
+          change={{
+            value: stats.pendingInvoices,
+            type: stats.pendingInvoices > 0 ? 'decrease' : 'neutral',
+            period: stats.pendingInvoices > 0 ? `${stats.pendingInvoices} pending` : 'all collected',
+          }}
           variant="admin"
         />
         <MetricCard
@@ -249,18 +259,22 @@ export default function AdminDashboard() {
           value={stats.totalProjects}
           subtitle={`${stats.activeProjects} active`}
           icon={<Briefcase className="w-6 h-6" />}
-          change={{ value: stats.activeProjects, type: stats.activeProjects > 0 ? 'increase' : 'neutral', period: 'active now' }}
+          change={{
+            value: stats.activeProjects,
+            type: stats.activeProjects > 0 ? 'increase' : 'neutral',
+            period: 'active now',
+          }}
           variant="admin"
         />
         <MetricCard
-          title="Pending Actions"
-          value={stats.pendingInvoices}
-          subtitle="Require attention"
-          icon={<AlertCircle className="w-6 h-6" />}
+          title="Upcoming Content"
+          value={stats.scheduledContent}
+          subtitle="Next 7 days"
+          icon={<Calendar className="w-6 h-6" />}
           change={{
-            value: stats.pendingInvoices > 0 ? -15 : 0,
-            type: stats.pendingInvoices > 0 ? 'decrease' : 'neutral',
-            period: stats.pendingInvoices > 0 ? 'needs review' : 'all clear',
+            value: stats.totalContent,
+            type: stats.scheduledContent > 0 ? 'increase' : 'neutral',
+            period: `${stats.totalContent} total items`,
           }}
           variant="admin"
         />

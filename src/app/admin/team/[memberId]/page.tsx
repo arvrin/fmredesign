@@ -7,7 +7,7 @@
 
 import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
-import { 
+import {
   ArrowLeft,
   Edit3,
   Mail,
@@ -24,11 +24,10 @@ import {
   DollarSign,
   Settings,
   User,
-  Building,
   Target,
   Activity
 } from 'lucide-react';
-import { 
+import {
   DashboardCard as Card,
   CardContent,
   CardDescription,
@@ -38,8 +37,6 @@ import {
   MetricCard
 } from '@/design-system';
 import { Badge } from '@/components/ui/Badge';
-import { TeamService } from '@/lib/admin/team-service';
-import { ClientService } from '@/lib/admin/client-service';
 import { TeamMember, TEAM_ROLES, TEAM_DEPARTMENTS } from '@/lib/admin/types';
 
 interface TeamMemberProfileProps {
@@ -61,16 +58,29 @@ export default function TeamMemberProfilePage({ params }: TeamMemberProfileProps
 
   const loadMemberData = async () => {
     try {
-      const memberData = TeamService.getTeamMemberById(memberId);
-      if (memberData) {
-        setMember(memberData);
-        
-        // Load assigned clients
-        const clientPromises = memberData.assignedClients.map(clientId => 
-          ClientService.getClientById(clientId)
-        );
-        const clients = (await Promise.all(clientPromises)).filter(Boolean);
-        setAssignedClients(clients);
+      // Fetch team member from API
+      const res = await fetch(`/api/team?id=${memberId}`);
+      const result = await res.json();
+
+      if (result.success && result.data) {
+        setMember(result.data);
+
+        // Load assigned clients via assignments API
+        if (result.data.assignedClients && result.data.assignedClients.length > 0) {
+          try {
+            const clientsRes = await fetch('/api/clients');
+            const clientsResult = await clientsRes.json();
+            if (clientsResult.success && clientsResult.data) {
+              const assignedClientIds = result.data.assignedClients;
+              const clients = clientsResult.data.filter((c: any) =>
+                assignedClientIds.includes(c.id)
+              );
+              setAssignedClients(clients);
+            }
+          } catch {
+            // Clients fetch failed, not critical
+          }
+        }
       }
     } catch (error) {
       console.error('Error loading member data:', error);
@@ -133,16 +143,16 @@ export default function TeamMemberProfilePage({ params }: TeamMemberProfileProps
       <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-6">
-            <Button 
-              variant="ghost" 
-              size="sm" 
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => router.push('/admin/team')}
               className="flex items-center gap-2"
             >
               <ArrowLeft className="w-4 h-4" />
               Back to Team
             </Button>
-            
+
             {/* Member Avatar and Basic Info */}
             <div className="flex items-center gap-4">
               <div className="w-16 h-16 rounded-full bg-fm-magenta-100 flex items-center justify-center text-fm-magenta-600 font-bold text-xl">
@@ -159,15 +169,15 @@ export default function TeamMemberProfilePage({ params }: TeamMemberProfileProps
                   </Badge>
                 </div>
                 <p className="text-lg text-fm-magenta-600 font-medium">
-                  {TEAM_ROLES[member.role]} • {TEAM_DEPARTMENTS[member.department]}
+                  {TEAM_ROLES[member.role]} - {TEAM_DEPARTMENTS[member.department]}
                 </p>
               </div>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-2">
-            <Button 
-              variant="admin" 
+            <Button
+              variant="admin"
               size="sm"
               onClick={() => router.push(`/admin/team/${memberId}/edit`)}
               className="flex items-center gap-2"
@@ -404,7 +414,7 @@ export default function TeamMemberProfilePage({ params }: TeamMemberProfileProps
               <div>
                 <p className="text-sm font-medium text-fm-neutral-700">Amount</p>
                 <p className="text-fm-neutral-900">
-                  ₹{member.compensation.amount.toLocaleString('en-IN')}
+                  INR {member.compensation.amount.toLocaleString('en-IN')}
                   <span className="text-sm text-fm-neutral-500 ml-1">
                     /{member.compensation.type === 'salary' ? 'month' : member.compensation.type === 'hourly' ? 'hour' : 'project'}
                   </span>
@@ -413,7 +423,7 @@ export default function TeamMemberProfilePage({ params }: TeamMemberProfileProps
               {member.compensation.billingRate && (
                 <div>
                   <p className="text-sm font-medium text-fm-neutral-700">Client Billing Rate</p>
-                  <p className="text-fm-neutral-900">₹{member.compensation.billingRate.toLocaleString('en-IN')}/hour</p>
+                  <p className="text-fm-neutral-900">INR {member.compensation.billingRate.toLocaleString('en-IN')}/hour</p>
                 </div>
               )}
             </CardContent>
@@ -428,24 +438,24 @@ export default function TeamMemberProfilePage({ params }: TeamMemberProfileProps
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className="w-full justify-start"
                 onClick={() => router.push(`/admin/team/${memberId}/assignments`)}
               >
                 <Users className="w-4 h-4 mr-2" />
                 Manage Assignments
               </Button>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className="w-full justify-start"
                 onClick={() => router.push(`/admin/team/${memberId}/performance`)}
               >
                 <TrendingUp className="w-4 h-4 mr-2" />
                 View Performance
               </Button>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className="w-full justify-start"
                 onClick={() => router.push(`/admin/team/${memberId}/documents`)}
               >
