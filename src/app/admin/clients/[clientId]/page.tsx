@@ -548,11 +548,11 @@ export default function AdminClientDetail() {
                 {clientProjects.map((project: any) => {
                   return (
                     <Card key={project.id}>
-                      <CardContent className="p-6">
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-2">
-                              <h3 className="text-lg font-semibold text-fm-neutral-900">{project.name}</h3>
+                      <CardContent className="p-4 sm:p-6">
+                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap mb-2">
+                              <h3 className="text-base sm:text-lg font-semibold text-fm-neutral-900">{project.name}</h3>
                               <StatusBadge status={project.status} />
                             </div>
                             {project.description && (
@@ -572,7 +572,7 @@ export default function AdminClientDetail() {
                                 </div>
                               </div>
                             )}
-                            <div className="flex items-center gap-4 text-sm text-fm-neutral-500">
+                            <div className="flex items-center gap-2 sm:gap-4 text-sm text-fm-neutral-500 flex-wrap">
                               {project.type && (
                                 <span className="capitalize">{project.type.replace(/_/g, ' ')}</span>
                               )}
@@ -581,7 +581,7 @@ export default function AdminClientDetail() {
                               )}
                             </div>
                           </div>
-                          <Link href={`/admin/projects/${project.id}`}>
+                          <Link href={`/admin/projects/${project.id}`} className="self-start">
                             <DashboardButton variant="outline" size="sm">
                               View Project
                             </DashboardButton>
@@ -657,7 +657,7 @@ export default function AdminClientDetail() {
                     </div>
                   </div>
                   
-                  <div className="flex items-center justify-end space-x-4 pt-4 border-t border-fm-neutral-200">
+                  <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2 sm:gap-4 pt-4 border-t border-fm-neutral-200">
                     <DashboardButton
                       onClick={() => setShowAddTeamForm(false)}
                       variant="outline"
@@ -680,7 +680,7 @@ export default function AdminClientDetail() {
             {/* Assigned Team Members */}
             <Card>
               <CardHeader>
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <CardTitle className="flex items-center">
                     <Users className="h-5 w-5 mr-2" />
                     Assigned Team Members ({assignedTeamMembers.length})
@@ -688,6 +688,7 @@ export default function AdminClientDetail() {
                   <DashboardButton
                     onClick={() => setShowAddTeamForm(true)}
                     className="flex items-center"
+                    size="sm"
                   >
                     <Plus className="h-4 w-4 mr-2" />
                     Assign Member
@@ -700,35 +701,35 @@ export default function AdminClientDetail() {
                     {assignedTeamMembers.map((member) => (
                       <div
                         key={member.id}
-                        className="flex items-center justify-between p-4 bg-fm-neutral-50 rounded-lg border border-fm-neutral-200"
+                        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 bg-fm-neutral-50 rounded-lg border border-fm-neutral-200"
                       >
-                        <div className="flex items-center space-x-4">
-                          <div className="h-10 w-10 rounded-full bg-fm-magenta-100 flex items-center justify-center text-fm-magenta-600 font-medium">
+                        <div className="flex items-center space-x-3 sm:space-x-4 min-w-0">
+                          <div className="h-10 w-10 flex-shrink-0 rounded-full bg-fm-magenta-100 flex items-center justify-center text-fm-magenta-600 font-medium text-sm">
                             {member.name.split(' ').map((n: any) => n[0]).join('').toUpperCase()}
                           </div>
-                          <div>
-                            <div className="flex items-center space-x-2">
-                              <h4 className="font-medium text-fm-neutral-900">{member.name}</h4>
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h4 className="font-medium text-fm-neutral-900 truncate">{member.name}</h4>
                               {member.isLead && (
                                 <Badge className="bg-fm-magenta-100 text-fm-magenta-800">
-                                  Account Lead
+                                  Lead
                                 </Badge>
                               )}
                             </div>
-                            <div className="flex items-center space-x-4 text-sm text-fm-neutral-600">
+                            <div className="flex items-center gap-3 text-sm text-fm-neutral-600 flex-wrap">
                               <span className="flex items-center">
-                                <Briefcase className="h-4 w-4 mr-1" />
+                                <Briefcase className="h-3.5 w-3.5 mr-1 flex-shrink-0" />
                                 {TEAM_ROLES[member.role as TeamRole]}
                               </span>
                               <span className="flex items-center">
-                                <Clock className="h-4 w-4 mr-1" />
+                                <Clock className="h-3.5 w-3.5 mr-1 flex-shrink-0" />
                                 {member.hoursAllocated}h/week
                               </span>
                             </div>
                           </div>
                         </div>
-                        
-                        <div className="flex items-center space-x-2">
+
+                        <div className="flex items-center gap-2 pl-13 sm:pl-0">
                           <StatusBadge status={member.status} />
                           <DashboardButton
                             onClick={() => handleRemoveTeamMember(member)}
