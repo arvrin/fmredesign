@@ -282,7 +282,7 @@ export default function ContentDetailPage({
             </DashboardCard>
 
             {/* Hashtags and Mentions */}
-            {(content.hashtags.length > 0 || content.mentions.length > 0) && (
+            {((content.hashtags || []).length > 0 || (content.mentions || []).length > 0) && (
               <DashboardCard variant="admin" padding="none">
                 <CardHeader className="px-6 pt-6">
                   <CardTitle className="flex items-center gap-2">
@@ -291,13 +291,13 @@ export default function ContentDetailPage({
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="px-6 pb-6 space-y-4">
-                  {content.hashtags.length > 0 && (
+                  {(content.hashtags || []).length > 0 && (
                     <div>
                       <p className="text-sm font-medium text-fm-neutral-700 mb-2">
                         Hashtags
                       </p>
                       <div className="flex flex-wrap gap-2">
-                        {content.hashtags.map((tag, index) => (
+                        {(content.hashtags || []).map((tag, index) => (
                           <span
                             key={index}
                             className="inline-flex items-center gap-1 px-2.5 py-1 text-sm bg-blue-50 text-blue-700 rounded-full border border-blue-200"
@@ -310,13 +310,13 @@ export default function ContentDetailPage({
                     </div>
                   )}
 
-                  {content.mentions.length > 0 && (
+                  {(content.mentions || []).length > 0 && (
                     <div>
                       <p className="text-sm font-medium text-fm-neutral-700 mb-2">
                         Mentions
                       </p>
                       <div className="flex flex-wrap gap-2">
-                        {content.mentions.map((mention, index) => (
+                        {(content.mentions || []).map((mention, index) => (
                           <span
                             key={index}
                             className="inline-flex items-center gap-1 px-2.5 py-1 text-sm bg-green-50 text-green-700 rounded-full border border-green-200"

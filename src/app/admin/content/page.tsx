@@ -489,21 +489,21 @@ export default function ContentCalendarPage() {
 
                     {/* Hashtags and Mentions */}
                     <div className="flex flex-wrap gap-2">
-                      {content.hashtags.slice(0, 3).map((tag, index) => (
+                      {(content.hashtags || []).slice(0, 3).map((tag, index) => (
                         <span key={index} className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-blue-50 text-blue-600 rounded-full">
                           <Hash className="h-3 w-3" />
                           {tag}
                         </span>
                       ))}
-                      {content.mentions.slice(0, 2).map((mention, index) => (
+                      {(content.mentions || []).slice(0, 2).map((mention, index) => (
                         <span key={index} className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-green-50 text-green-600 rounded-full">
                           <AtSign className="h-3 w-3" />
                           {mention}
                         </span>
                       ))}
-                      {(content.hashtags.length > 3 || content.mentions.length > 2) && (
+                      {((content.hashtags || []).length > 3 || (content.mentions || []).length > 2) && (
                         <span className="px-2 py-1 text-xs bg-fm-neutral-100 text-fm-neutral-600 rounded-full">
-                          +{(content.hashtags.length - 3) + (content.mentions.length - 2)} more
+                          +{((content.hashtags || []).length - 3) + ((content.mentions || []).length - 2)} more
                         </span>
                       )}
                     </div>

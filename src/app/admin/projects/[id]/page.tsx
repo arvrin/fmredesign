@@ -218,8 +218,8 @@ export default function ProjectDetailPage({
   // ------ Computed values ------ //
   const daysRemaining = ProjectUtils.getDaysRemaining(project.endDate);
   const isOverdue = ProjectUtils.isProjectOverdue(project.endDate) && project.status !== 'completed' && project.status !== 'cancelled';
-  const completedMilestones = project.milestones.filter((m) => m.isCompleted).length;
-  const completedDeliverables = project.deliverables.filter((d) => d.status === 'completed').length;
+  const completedMilestones = (project.milestones || []).filter((m) => m.isCompleted).length;
+  const completedDeliverables = (project.deliverables || []).filter((d) => d.status === 'completed').length;
   // The API may return a `spent` field that is not in the strict TypeScript interface
   const spentAmount = (project as Project & { spent?: number }).spent;
   const budgetUtilization = spentAmount != null ? Math.round((spentAmount / project.budget) * 100) : null;

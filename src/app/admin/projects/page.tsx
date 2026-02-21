@@ -360,7 +360,7 @@ export default function ProjectsPage() {
                     </div>
                     <div>
                       <span className="text-fm-neutral-500">Team:</span>
-                      <span className="ml-2 font-medium">{project.assignedTalent.length} members</span>
+                      <span className="ml-2 font-medium">{(project.assignedTalent || []).length} members</span>
                     </div>
                   </div>
 
@@ -379,16 +379,16 @@ export default function ProjectsPage() {
                   </div>
 
                   {/* Tags */}
-                  {project.tags.length > 0 && (
+                  {(project.tags || []).length > 0 && (
                     <div className="flex flex-wrap gap-2 mt-4">
-                      {project.tags.slice(0, 3).map((tag, index) => (
+                      {(project.tags || []).slice(0, 3).map((tag, index) => (
                         <span key={index} className="px-2 py-1 text-xs bg-fm-neutral-100 text-fm-neutral-600 rounded-full">
                           {tag}
                         </span>
                       ))}
-                      {project.tags.length > 3 && (
+                      {(project.tags || []).length > 3 && (
                         <span className="px-2 py-1 text-xs bg-fm-neutral-100 text-fm-neutral-600 rounded-full">
-                          +{project.tags.length - 3} more
+                          +{(project.tags || []).length - 3} more
                         </span>
                       )}
                     </div>

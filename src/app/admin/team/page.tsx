@@ -288,10 +288,10 @@ export default function TeamDashboardPage() {
                       </div>
 
                       {/* Skills */}
-                      {member.skills.length > 0 && (
+                      {(member.skills || []).length > 0 && (
                         <div className="mt-3">
                           <div className="flex flex-wrap gap-2">
-                            {member.skills.slice(0, 6).map((skill, index) => (
+                            {(member.skills || []).slice(0, 6).map((skill, index) => (
                               <span
                                 key={index}
                                 className="px-2 py-1 text-xs bg-fm-neutral-100 text-fm-neutral-700 rounded-full"
@@ -299,9 +299,9 @@ export default function TeamDashboardPage() {
                                 {skill}
                               </span>
                             ))}
-                            {member.skills.length > 6 && (
+                            {(member.skills || []).length > 6 && (
                               <span className="px-2 py-1 text-xs bg-fm-neutral-100 text-fm-neutral-700 rounded-full">
-                                +{member.skills.length - 6} more
+                                +{(member.skills || []).length - 6} more
                               </span>
                             )}
                           </div>
