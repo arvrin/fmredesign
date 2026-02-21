@@ -16,6 +16,7 @@ import {
   AlertCircle,
   FolderOpen,
   FileText,
+  ScrollText,
   Settings,
 } from 'lucide-react';
 import {
@@ -153,6 +154,7 @@ export default function ClientDashboardLayout({
         { label: 'Content', href: `${basePath}/content`, icon: <Calendar className="w-5 h-5" /> },
         { label: 'Reports', href: `${basePath}/reports`, icon: <PieChart className="w-5 h-5" /> },
         { label: 'Documents', href: `${basePath}/documents`, icon: <FolderOpen className="w-5 h-5" /> },
+        { label: 'Proposals', href: `${basePath}/proposals`, icon: <ScrollText className="w-5 h-5" /> },
         { label: 'Support', href: `${basePath}/support`, icon: <MessageSquare className="w-5 h-5" /> },
         { label: 'Contracts', href: `${basePath}/contracts`, icon: <FileText className="w-5 h-5" /> },
         { label: 'Settings', href: `${basePath}/settings`, icon: <Settings className="w-5 h-5" /> },

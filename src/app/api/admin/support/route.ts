@@ -1,7 +1,8 @@
 /**
  * Admin Support Tickets API
- * GET  — list all tickets across all clients (with client name)
+ * GET  — list all tickets across all clients (with client name); fetch replies with ?ticketId=X&replies=true
  * PUT  — update ticket status / assigned_to
+ * POST — send an admin reply to a ticket
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -30,6 +31,34 @@ export async function GET(request: NextRequest) {
     }
     if (clientId) {
       query = query.eq('client_id', clientId);
+    }
+
+    // If requesting replies for a specific ticket
+    const ticketId = searchParams.get('ticketId');
+    const includeReplies = searchParams.get('replies');
+
+    if (ticketId && includeReplies === 'true') {
+      const { data: replies, error: repliesErr } = await supabaseAdmin
+        .from('ticket_replies')
+        .select('*')
+        .eq('ticket_id', ticketId)
+        .order('created_at', { ascending: true });
+
+      if (repliesErr) {
+        console.error('Replies query error:', repliesErr);
+        return NextResponse.json({ success: true, data: [] });
+      }
+
+      const transformed = (replies || []).map((r: Record<string, unknown>) => ({
+        id: r.id,
+        ticketId: r.ticket_id,
+        senderType: r.sender_type,
+        senderName: r.sender_name,
+        message: r.message,
+        createdAt: r.created_at,
+      }));
+
+      return NextResponse.json({ success: true, data: transformed });
     }
 
     const { data: tickets, error } = await query;
@@ -177,6 +206,102 @@ export async function PUT(request: NextRequest) {
     console.error('Error updating support ticket:', error);
     return NextResponse.json(
       { success: false, error: 'Failed to update ticket' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(request: NextRequest) {
+  const auth = await requirePermission(request, 'clients.write');
+  if ('error' in auth) return auth.error;
+
+  try {
+    const body = await request.json();
+    const { ticketId, message } = body;
+
+    if (!ticketId || !message?.trim()) {
+      return NextResponse.json(
+        { success: false, error: 'Ticket ID and message are required' },
+        { status: 400 }
+      );
+    }
+
+    // Get the ticket to find client_id
+    const { data: ticket, error: ticketErr } = await supabaseAdmin
+      .from('support_tickets')
+      .select('id, client_id, title')
+      .eq('id', ticketId)
+      .single();
+
+    if (ticketErr || !ticket) {
+      return NextResponse.json(
+        { success: false, error: 'Ticket not found' },
+        { status: 404 }
+      );
+    }
+
+    // Insert reply
+    const { data: reply, error: replyErr } = await supabaseAdmin
+      .from('ticket_replies')
+      .insert({
+        ticket_id: ticketId,
+        sender_type: 'admin',
+        sender_name: auth.user.name,
+        message: message.trim(),
+      })
+      .select()
+      .single();
+
+    if (replyErr) {
+      console.error('Insert reply error:', replyErr);
+      return NextResponse.json(
+        { success: false, error: 'Failed to send reply' },
+        { status: 500 }
+      );
+    }
+
+    // Update ticket's updated_at
+    await supabaseAdmin
+      .from('support_tickets')
+      .update({ updated_at: new Date().toISOString() })
+      .eq('id', ticketId);
+
+    // Fire-and-forget: notify client
+    if (ticket.client_id) {
+      notifyClient(ticket.client_id, {
+        type: 'ticket_reply',
+        title: 'New reply on your support ticket',
+        message: ticket.title,
+        actionUrl: `/client/${ticket.client_id}/support`,
+      });
+    }
+
+    // Audit log
+    await logAuditEvent({
+      user_id: auth.user.id,
+      user_name: auth.user.name,
+      action: 'create',
+      resource_type: 'ticket_reply',
+      resource_id: reply.id,
+      details: { ticketId, ticketTitle: ticket.title },
+      ip_address: getClientIP(request),
+    });
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        id: reply.id,
+        ticketId: reply.ticket_id,
+        senderType: reply.sender_type,
+        senderName: reply.sender_name,
+        message: reply.message,
+        createdAt: reply.created_at,
+      },
+    });
+  } catch (error) {
+    console.error('Error sending reply:', error);
+    return NextResponse.json(
+      { success: false, error: 'Failed to send reply' },
       { status: 500 }
     );
   }

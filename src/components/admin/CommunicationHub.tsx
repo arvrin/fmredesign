@@ -12,7 +12,6 @@ import {
   Phone,
   Video,
   Calendar,
-  Users,
   FileText,
   Paperclip,
   Search,
@@ -61,47 +60,88 @@ export function CommunicationHub({ clientId, onScheduleMeeting }: CommunicationH
   }, [clientId]);
 
   const loadData = async () => {
-    if (clientId) {
-      const clientData = await ClientService.getClientById(clientId);
-      setClient(clientData);
-      
-      const messageData = ClientService.getClientMessages(clientId);
-      setMessages(messageData);
-      
-      const meetingData = ClientService.getClientMeetings(clientId);
-      setMeetings(meetingData);
+    if (!clientId) return;
+
+    // Load client data (keep existing call)
+    const clientData = await ClientService.getClientById(clientId);
+    setClient(clientData);
+
+    // Load messages from API instead of localStorage
+    try {
+      const res = await fetch(`/api/admin/messages?clientId=${clientId}`);
+      if (res.ok) {
+        const data = await res.json();
+        // Transform API response to match ClientMessage interface
+        const apiMessages: ClientMessage[] = (data.data || []).map((m: Record<string, unknown>) => ({
+          id: m.id as string,
+          clientId: m.clientId as string,
+          from: (m.senderType as string) === 'admin'
+            ? { id: 'current-user', name: m.senderName as string, email: 'team@freakingminds.in', role: 'team_member' as const }
+            : { id: m.clientId as string, name: m.senderName as string, email: '', role: 'client' as const },
+          to: [],
+          content: m.message as string,
+          subject: m.subject as string | undefined,
+          attachments: [],
+          isRead: m.isRead as boolean,
+          isInternal: false,
+          priority: 'normal' as const,
+          createdAt: m.createdAt as string,
+        }));
+        setMessages(apiMessages);
+      }
+    } catch (err) {
+      console.error('Error loading messages:', err);
     }
+
+    // Keep meetings in localStorage for now
+    const meetingData = ClientService.getClientMeetings(clientId);
+    setMeetings(meetingData);
   };
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!newMessage.trim() || !clientId) return;
-    
-    const message: ClientMessage = {
-      id: `msg-${Date.now()}`,
-      clientId,
-      from: {
-        id: 'current-user',
-        name: 'Agency Team',
-        email: 'team@freakingminds.in',
-        role: 'team_member'
-      },
-      to: [{
-        id: client?.primaryContact.id || '',
-        name: client?.primaryContact.name || '',
-        email: client?.primaryContact.email || '',
-        role: 'client'
-      }],
-      content: newMessage,
-      attachments: [],
-      isRead: false,
-      isInternal: false,
-      priority: 'normal',
-      createdAt: new Date().toISOString()
-    };
 
-    ClientService.saveMessage(message);
-    setMessages([message, ...messages]);
-    setNewMessage('');
+    try {
+      const res = await fetch('/api/admin/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          clientId,
+          message: newMessage,
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const apiMsg = data.data;
+        const message: ClientMessage = {
+          id: apiMsg.id,
+          clientId,
+          from: {
+            id: 'current-user',
+            name: apiMsg.senderName || 'Agency Team',
+            email: 'team@freakingminds.in',
+            role: 'team_member'
+          },
+          to: [{
+            id: client?.primaryContact.id || '',
+            name: client?.primaryContact.name || '',
+            email: client?.primaryContact.email || '',
+            role: 'client'
+          }],
+          content: apiMsg.message,
+          attachments: [],
+          isRead: false,
+          isInternal: false,
+          priority: 'normal',
+          createdAt: apiMsg.createdAt,
+        };
+        setMessages([message, ...messages]);
+        setNewMessage('');
+      }
+    } catch (err) {
+      console.error('Error sending message:', err);
+    }
   };
 
   const formatMessageTime = (timestamp: string) => {

@@ -196,6 +196,53 @@ export async function PUT(request: NextRequest) {
   }
 }
 
+export async function DELETE(request: NextRequest) {
+  const authError = await requireAdminAuth(request);
+  if (authError) return authError;
+
+  try {
+    const { searchParams } = new URL(request.url);
+    const sessionId = searchParams.get('sessionId');
+
+    if (!sessionId) {
+      return NextResponse.json(
+        { success: false, error: 'Session ID is required' },
+        { status: 400 }
+      );
+    }
+
+    const supabase = getSupabaseAdmin();
+    const { error } = await supabase
+      .from('discovery_sessions')
+      .delete()
+      .eq('id', sessionId);
+
+    if (error) throw error;
+
+    // Fire-and-forget audit log
+    const auditUser = getAuditUser(request);
+    await logAuditEvent({
+      ...auditUser,
+      action: 'delete',
+      resource_type: 'discovery_session',
+      resource_id: sessionId,
+      details: {},
+      ip_address: getClientIP(request),
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: 'Discovery session deleted',
+    });
+  } catch (error) {
+    console.error('Error deleting discovery session:', error);
+    return NextResponse.json(
+      { success: false, error: 'Failed to delete discovery session' },
+      { status: 500 }
+    );
+  }
+}
+
 /** Transform Supabase row to API response shape */
 function transformSession(row: any) {
   return {

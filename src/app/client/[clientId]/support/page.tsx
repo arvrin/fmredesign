@@ -86,6 +86,11 @@ export default function ClientSupportPage() {
   });
   const [showNewTicketForm, setShowNewTicketForm] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [expandedTicket, setExpandedTicket] = useState<string | null>(null);
+  const [replies, setReplies] = useState<Record<string, Array<{ id: string; senderType: string; senderName: string; message: string; createdAt: string }>>>({});
+  const [replyText, setReplyText] = useState<Record<string, string>>({});
+  const [loadingReplies, setLoadingReplies] = useState<Record<string, boolean>>({});
+  const [sendingReply, setSendingReply] = useState<string | null>(null);
 
   useEffect(() => {
     if (!clientId) return;
@@ -127,6 +132,46 @@ export default function ClientSupportPage() {
       console.error('Error creating ticket:', err);
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const fetchReplies = async (ticketId: string) => {
+    try {
+      setLoadingReplies((prev) => ({ ...prev, [ticketId]: true }));
+      const res = await fetch(`/api/client-portal/${clientId}/support/tickets?ticketId=${ticketId}&replies=true`);
+      if (res.ok) {
+        const data = await res.json();
+        setReplies((prev) => ({ ...prev, [ticketId]: data.data || [] }));
+      }
+    } catch (err) {
+      console.error('Error fetching replies:', err);
+    } finally {
+      setLoadingReplies((prev) => ({ ...prev, [ticketId]: false }));
+    }
+  };
+
+  const sendReply = async (ticketId: string) => {
+    const text = replyText[ticketId]?.trim();
+    if (!text) return;
+    try {
+      setSendingReply(ticketId);
+      const res = await fetch(`/api/client-portal/${clientId}/support/tickets`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ticketId, message: text }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setReplies((prev) => ({
+          ...prev,
+          [ticketId]: [...(prev[ticketId] || []), data.data],
+        }));
+        setReplyText((prev) => ({ ...prev, [ticketId]: '' }));
+      }
+    } catch (err) {
+      console.error('Error sending reply:', err);
+    } finally {
+      setSendingReply(null);
     }
   };
 
@@ -335,11 +380,80 @@ export default function ClientSupportPage() {
                         {new Date(ticket.lastUpdate).toLocaleDateString()}
                       </div>
                     </div>
-                    <Button variant="ghost" size="sm" className="text-fm-magenta-600">
-                      View Details
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-fm-magenta-600"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const newId = expandedTicket === ticket.id ? null : ticket.id;
+                        setExpandedTicket(newId);
+                        if (newId && !replies[newId]) fetchReplies(newId);
+                      }}
+                    >
+                      {expandedTicket === ticket.id ? 'Hide' : 'View Details'}
                       <ChevronRight className="w-4 h-4" />
                     </Button>
                   </div>
+
+                  {/* Reply thread */}
+                  {expandedTicket === ticket.id && (
+                    <div className="mt-3 pt-3 border-t border-fm-neutral-100">
+                      <h4 className="text-sm font-semibold text-fm-neutral-700 mb-2">Conversation</h4>
+                      {loadingReplies[ticket.id] ? (
+                        <div className="text-sm text-fm-neutral-500 py-2">Loading...</div>
+                      ) : (replies[ticket.id] || []).length === 0 ? (
+                        <div className="text-sm text-fm-neutral-400 py-2">No replies yet</div>
+                      ) : (
+                        <div className="space-y-2 max-h-60 overflow-y-auto">
+                          {(replies[ticket.id] || []).map((reply) => (
+                            <div
+                              key={reply.id}
+                              className={`p-2 rounded-lg text-sm ${
+                                reply.senderType === 'client'
+                                  ? 'bg-fm-magenta-50 border border-fm-magenta-100 ml-4'
+                                  : 'bg-fm-neutral-50 border border-fm-neutral-200 mr-4'
+                              }`}
+                            >
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="font-medium text-fm-neutral-800 text-xs">
+                                  {reply.senderName}
+                                </span>
+                                <span className="text-xs text-fm-neutral-400">
+                                  {new Date(reply.createdAt).toLocaleString()}
+                                </span>
+                              </div>
+                              <p className="text-fm-neutral-700">{reply.message}</p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      <div className="flex items-start gap-2 mt-2">
+                        <textarea
+                          value={replyText[ticket.id] || ''}
+                          onChange={(e) =>
+                            setReplyText((prev) => ({
+                              ...prev,
+                              [ticket.id]: e.target.value,
+                            }))
+                          }
+                          placeholder="Type your reply..."
+                          rows={2}
+                          className="flex-1 p-2 text-sm border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500 resize-none"
+                        />
+                        <Button
+                          variant="client"
+                          size="sm"
+                          onClick={() => sendReply(ticket.id)}
+                          disabled={sendingReply === ticket.id || !replyText[ticket.id]?.trim()}
+                        >
+                          <Send className="w-4 h-4" />
+                          {sendingReply === ticket.id ? '...' : 'Reply'}
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             ))}

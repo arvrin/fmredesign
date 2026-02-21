@@ -9,6 +9,7 @@ import { requireAdminAuth, requirePermission } from '@/lib/admin-auth-middleware
 import { createProposalSchema, updateProposalSchema, validateBody } from '@/lib/validations/schemas';
 import { notifyTeam, proposalCreatedEmail } from '@/lib/email/send';
 import { logAuditEvent, getClientIP } from '@/lib/admin/audit-log';
+import { notifyClient } from '@/lib/notifications';
 
 // GET /api/proposals - Fetch all proposals
 export async function GET(request: NextRequest) {
@@ -171,6 +172,16 @@ export async function POST(request: NextRequest) {
 
     const { error } = await supabase.from('proposals').upsert(record);
     if (error) throw error;
+
+    // Fire-and-forget: notify client if this is for an existing client
+    if (body.client?.isExisting && body.client?.clientId) {
+      notifyClient(body.client.clientId, {
+        type: 'proposal_sent',
+        title: 'New proposal received',
+        message: record.title,
+        actionUrl: `/client/${body.client.clientId}/proposals`,
+      });
+    }
 
     // Fire-and-forget email notification
     const prospectInfo = body.client?.prospectInfo as Record<string, string> | undefined;

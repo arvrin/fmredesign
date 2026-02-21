@@ -5,13 +5,14 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
-import { calculateLeadScore, determineLeadPriority, toCamelCaseKeys } from '@/lib/supabase-utils';
+import { calculateLeadScore, determineLeadPriority } from '@/lib/supabase-utils';
 import type { LeadInput, LeadUpdate } from '@/lib/admin/lead-types';
 import { rateLimit, getClientIp } from '@/lib/rate-limiter';
 import { requireAdminAuth, requirePermission } from '@/lib/admin-auth-middleware';
 import { createLeadSchema, validateBody } from '@/lib/validations/schemas';
 import { notifyTeam, newLeadEmail } from '@/lib/email/send';
 import { logAuditEvent, getAuditUser, getClientIP } from '@/lib/admin/audit-log';
+import { notifyAdmins } from '@/lib/notifications';
 
 // GET /api/leads - Fetch leads with optional filtering and sorting
 export async function GET(request: NextRequest) {
@@ -251,6 +252,15 @@ export async function POST(request: NextRequest) {
     const { data, error } = await supabase.from('leads').insert(record).select().single();
 
     if (error) throw error;
+
+    // Fire-and-forget: notify admins about new lead
+    notifyAdmins({
+      type: 'general',
+      title: 'New lead received',
+      message: `${record.name} — ${record.company || 'No company'}`,
+      priority: 'high',
+      actionUrl: '/admin/leads',
+    });
 
     // Fire-and-forget email notification
     const emailData = newLeadEmail({

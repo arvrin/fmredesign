@@ -59,6 +59,10 @@ export default function AdminSupportPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedTicket, setExpandedTicket] = useState<string | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [replies, setReplies] = useState<Record<string, Array<{ id: string; senderType: string; senderName: string; message: string; createdAt: string }>>>({});
+  const [replyText, setReplyText] = useState<Record<string, string>>({});
+  const [loadingReplies, setLoadingReplies] = useState<Record<string, boolean>>({});
+  const [sendingReply, setSendingReply] = useState<string | null>(null);
 
   useEffect(() => {
     fetchTickets();
@@ -114,6 +118,47 @@ export default function AdminSupportPage() {
       adminToast.error('Failed to update ticket');
     } finally {
       setUpdatingId(null);
+    }
+  };
+
+  const fetchReplies = async (ticketId: string) => {
+    try {
+      setLoadingReplies((prev) => ({ ...prev, [ticketId]: true }));
+      const res = await fetch(`/api/admin/support?ticketId=${ticketId}&replies=true`);
+      if (res.ok) {
+        const data = await res.json();
+        setReplies((prev) => ({ ...prev, [ticketId]: data.data || [] }));
+      }
+    } catch (err) {
+      console.error('Error fetching replies:', err);
+    } finally {
+      setLoadingReplies((prev) => ({ ...prev, [ticketId]: false }));
+    }
+  };
+
+  const sendReply = async (ticketId: string) => {
+    const text = replyText[ticketId]?.trim();
+    if (!text) return;
+    try {
+      setSendingReply(ticketId);
+      const res = await fetch('/api/admin/support', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ticketId, message: text }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setReplies((prev) => ({
+          ...prev,
+          [ticketId]: [...(prev[ticketId] || []), data.data],
+        }));
+        setReplyText((prev) => ({ ...prev, [ticketId]: '' }));
+      }
+    } catch (err) {
+      console.error('Error sending reply:', err);
+      adminToast.error('Failed to send reply');
+    } finally {
+      setSendingReply(null);
     }
   };
 
@@ -250,9 +295,11 @@ export default function AdminSupportPage() {
                   {/* Summary row */}
                   <div
                     className="flex items-start sm:items-center justify-between cursor-pointer gap-2"
-                    onClick={() =>
-                      setExpandedTicket(isExpanded ? null : ticket.id)
-                    }
+                    onClick={() => {
+                      const newId = isExpanded ? null : ticket.id;
+                      setExpandedTicket(newId);
+                      if (newId && !replies[newId]) fetchReplies(newId);
+                    }}
                   >
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
@@ -290,6 +337,69 @@ export default function AdminSupportPage() {
                       <p className="text-sm text-fm-neutral-700 mb-3 sm:mb-4">
                         {ticket.description}
                       </p>
+
+                      {/* Reply Thread */}
+                      <div className="mb-3 sm:mb-4">
+                        <h4 className="text-sm font-semibold text-fm-neutral-700 mb-2">
+                          Conversation
+                        </h4>
+                        {loadingReplies[ticket.id] ? (
+                          <div className="text-sm text-fm-neutral-500 py-2">Loading replies...</div>
+                        ) : (replies[ticket.id] || []).length === 0 ? (
+                          <div className="text-sm text-fm-neutral-400 py-2">No replies yet</div>
+                        ) : (
+                          <div className="space-y-2 max-h-60 overflow-y-auto">
+                            {(replies[ticket.id] || []).map((reply) => (
+                              <div
+                                key={reply.id}
+                                className={`p-2 rounded-lg text-sm ${
+                                  reply.senderType === 'admin'
+                                    ? 'bg-fm-magenta-50 border border-fm-magenta-100 ml-4'
+                                    : 'bg-fm-neutral-50 border border-fm-neutral-200 mr-4'
+                                }`}
+                              >
+                                <div className="flex items-center justify-between mb-1">
+                                  <span className="font-medium text-fm-neutral-800 text-xs">
+                                    {reply.senderName}
+                                    <span className="text-fm-neutral-400 ml-1">
+                                      ({reply.senderType})
+                                    </span>
+                                  </span>
+                                  <span className="text-xs text-fm-neutral-400">
+                                    {new Date(reply.createdAt).toLocaleString()}
+                                  </span>
+                                </div>
+                                <p className="text-fm-neutral-700">{reply.message}</p>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Reply input */}
+                        <div className="flex items-start gap-2 mt-2">
+                          <textarea
+                            value={replyText[ticket.id] || ''}
+                            onChange={(e) =>
+                              setReplyText((prev) => ({
+                                ...prev,
+                                [ticket.id]: e.target.value,
+                              }))
+                            }
+                            placeholder="Type your reply..."
+                            rows={2}
+                            className="flex-1 p-2 text-sm border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500 resize-none"
+                          />
+                          <DashboardButton
+                            variant="primary"
+                            size="sm"
+                            onClick={() => sendReply(ticket.id)}
+                            disabled={sendingReply === ticket.id || !replyText[ticket.id]?.trim()}
+                          >
+                            {sendingReply === ticket.id ? '...' : 'Send'}
+                          </DashboardButton>
+                        </div>
+                      </div>
+
                       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
                         <label className="text-sm text-fm-neutral-600">
                           Status:
