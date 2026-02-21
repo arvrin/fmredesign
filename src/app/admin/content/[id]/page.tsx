@@ -32,6 +32,7 @@ import {
   CardTitle,
 } from '@/design-system';
 import { Badge } from '@/components/ui/Badge';
+import { PublishButton } from '@/components/admin/social/PublishButton';
 import type {
   ContentItem,
   ContentStatus,
@@ -128,23 +129,21 @@ export default function ContentDetailPage({
     const fetchContent = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/content');
+        const response = await fetch(`/api/content?id=${id}`);
 
         if (!response.ok) {
-          throw new Error('Failed to fetch content');
+          if (response.status === 404) {
+            setError('Content item not found');
+          } else {
+            setError('Failed to load content');
+          }
+          return;
         }
 
         const result = await response.json();
 
-        if (result.success && Array.isArray(result.data)) {
-          const found = result.data.find(
-            (item: ContentItem) => item.id === id
-          );
-          if (found) {
-            setContent(found);
-          } else {
-            setError('Content item not found');
-          }
+        if (result.success && result.data) {
+          setContent(result.data);
         } else {
           setError('Failed to load content data');
         }
@@ -579,6 +578,28 @@ export default function ContentDetailPage({
               </CardContent>
             </DashboardCard>
 
+            {/* Social Publishing */}
+            {(content.platform === 'instagram' || content.platform === 'facebook') && (
+              <DashboardCard variant="admin" padding="none">
+                <CardHeader className="px-6 pt-6">
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    Social Publishing
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="px-6 pb-6">
+                  <PublishButton
+                    contentId={content.id}
+                    contentStatus={content.status}
+                    platform={content.platform}
+                    clientId={content.clientId}
+                    metaPostId={content.metaPostId}
+                    publishError={content.lastPublishError}
+                    onPublished={() => window.location.reload()}
+                  />
+                </CardContent>
+              </DashboardCard>
+            )}
+
             {/* Assignment Info */}
             <DashboardCard variant="admin" padding="none">
               <CardHeader className="px-6 pt-6">
@@ -616,21 +637,6 @@ export default function ContentDetailPage({
                   </div>
                 </div>
 
-                {content.assignedTo && (
-                  <div>
-                    <p className="text-xs font-medium text-fm-neutral-500 uppercase tracking-wider mb-1">
-                      Assigned To
-                    </p>
-                    <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-full bg-green-100 flex items-center justify-center">
-                        <User className="h-3.5 w-3.5 text-green-600" />
-                      </div>
-                      <p className="text-sm font-medium text-fm-neutral-900">
-                        {content.assignedTo}
-                      </p>
-                    </div>
-                  </div>
-                )}
               </CardContent>
             </DashboardCard>
 

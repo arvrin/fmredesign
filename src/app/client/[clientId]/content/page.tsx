@@ -14,7 +14,6 @@ import {
   FileText,
   Video,
   Image,
-  Mic,
   PenTool,
   Clock,
   CheckCircle2,
@@ -38,17 +37,18 @@ interface ContentItem {
   id: string;
   title: string;
   description: string;
-  type: 'blog' | 'social' | 'video' | 'infographic' | 'podcast' | 'email';
+  type: 'post' | 'story' | 'reel' | 'carousel' | 'video' | 'article' | 'ad' | 'email';
   platform: string;
   status: 'draft' | 'scheduled' | 'published' | 'review' | 'approved' | 'revision_needed';
   scheduledDate: string;
   publishedDate?: string;
   author: string;
-  performance?: {
-    views: number;
-    engagement: number;
+  engagement?: {
+    likes: number;
+    comments: number;
     shares: number;
-    conversions: number;
+    reach: number;
+    impressions: number;
   };
   thumbnail?: string;
   tags: string[];
@@ -88,11 +88,12 @@ export default function ClientContentPage() {
             scheduledDate: c.scheduledDate || '',
             publishedDate: c.publishedDate,
             author: c.author || '',
-            performance: c.engagement ? {
-              views: c.engagement.views || 0,
-              engagement: c.engagement.engagement || 0,
+            engagement: c.engagement ? {
+              likes: c.engagement.likes || 0,
+              comments: c.engagement.comments || 0,
               shares: c.engagement.shares || 0,
-              conversions: c.engagement.conversions || 0
+              reach: c.engagement.reach || 0,
+              impressions: c.engagement.impressions || 0,
             } : undefined,
             tags: Array.isArray(c.tags) ? c.tags : [],
             clientFeedback: c.clientFeedback,
@@ -113,11 +114,13 @@ export default function ClientContentPage() {
 
   const getTypeIcon = (type: string) => {
     switch (type) {
-      case 'blog': return <PenTool className="w-4 h-4" />;
-      case 'social': return <Share2 className="w-4 h-4" />;
+      case 'post': return <Image className="w-4 h-4" />;
+      case 'story': return <Clock className="w-4 h-4" />;
+      case 'reel': return <Video className="w-4 h-4" />;
+      case 'carousel': return <Image className="w-4 h-4" />;
       case 'video': return <Video className="w-4 h-4" />;
-      case 'infographic': return <Image className="w-4 h-4" />;
-      case 'podcast': return <Mic className="w-4 h-4" />;
+      case 'article': return <PenTool className="w-4 h-4" />;
+      case 'ad': return <TrendingUp className="w-4 h-4" />;
       case 'email': return <FileText className="w-4 h-4" />;
       default: return <FileText className="w-4 h-4" />;
     }
@@ -181,10 +184,11 @@ export default function ClientContentPage() {
 
   const publishedContent = contentItems.filter(item => item.status === 'published');
   const scheduledContent = contentItems.filter(item => item.status === 'scheduled');
-  const totalEngagement = publishedContent.reduce((sum, item) =>
-    sum + (item.performance?.engagement || 0), 0) / publishedContent.length || 0;
-  const totalViews = publishedContent.reduce((sum, item) =>
-    sum + (item.performance?.views || 0), 0);
+  const avgLikes = publishedContent.length > 0
+    ? publishedContent.reduce((sum, item) => sum + (item.engagement?.likes || 0), 0) / publishedContent.length
+    : 0;
+  const totalReach = publishedContent.reduce((sum, item) =>
+    sum + (item.engagement?.reach || 0), 0);
 
   if (loading) {
     return (
@@ -244,8 +248,8 @@ export default function ClientContentPage() {
         />
 
         <MetricCard
-          title="Total Views"
-          value={totalViews}
+          title="Total Reach"
+          value={totalReach}
           subtitle="Across all content"
           icon={<Eye className="w-6 h-6" />}
           variant="client"
@@ -255,11 +259,14 @@ export default function ClientContentPage() {
         />
 
         <MetricCard
-          title="Avg Engagement"
-          value={`${totalEngagement.toFixed(1)}%`}
-          subtitle="Engagement rate"
-          icon={<TrendingUp className="w-6 h-6" />}
+          title="Avg Likes"
+          value={Math.round(avgLikes)}
+          subtitle="Per published post"
+          icon={<Heart className="w-6 h-6" />}
           variant="client"
+          formatter={(val) => new Intl.NumberFormat('en-US', {
+            notation: 'compact'
+          }).format(Number(val))}
         />
       </div>
 
@@ -354,40 +361,40 @@ export default function ClientContentPage() {
                 <span className="text-xs">{item.author}</span>
               </div>
 
-              {/* Performance Metrics (for published content) */}
-              {item.status === 'published' && item.performance && (
+              {/* Engagement Metrics (for published content) */}
+              {item.status === 'published' && item.engagement && (
                 <div className="pt-3 border-t border-fm-neutral-100">
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <div className="text-xs text-fm-neutral-500 mb-1">Views</div>
+                      <div className="text-xs text-fm-neutral-500 mb-1">Reach</div>
                       <div className="flex items-center">
                         <Eye className="w-4 h-4 mr-1 text-fm-neutral-400" />
                         <span className="text-sm font-medium">
                           {new Intl.NumberFormat('en-US', {
                             notation: 'compact'
-                          }).format(item.performance.views)}
+                          }).format(item.engagement.reach)}
                         </span>
                       </div>
                     </div>
                     <div>
-                      <div className="text-xs text-fm-neutral-500 mb-1">Engagement</div>
+                      <div className="text-xs text-fm-neutral-500 mb-1">Likes</div>
                       <div className="flex items-center">
                         <Heart className="w-4 h-4 mr-1 text-fm-neutral-400" />
-                        <span className="text-sm font-medium">{item.performance.engagement}%</span>
+                        <span className="text-sm font-medium">{item.engagement.likes.toLocaleString()}</span>
                       </div>
                     </div>
                     <div>
                       <div className="text-xs text-fm-neutral-500 mb-1">Shares</div>
                       <div className="flex items-center">
                         <Share2 className="w-4 h-4 mr-1 text-fm-neutral-400" />
-                        <span className="text-sm font-medium">{item.performance.shares}</span>
+                        <span className="text-sm font-medium">{item.engagement.shares.toLocaleString()}</span>
                       </div>
                     </div>
                     <div>
-                      <div className="text-xs text-fm-neutral-500 mb-1">Conversions</div>
+                      <div className="text-xs text-fm-neutral-500 mb-1">Comments</div>
                       <div className="flex items-center">
                         <TrendingUp className="w-4 h-4 mr-1 text-fm-neutral-400" />
-                        <span className="text-sm font-medium">{item.performance.conversions}</span>
+                        <span className="text-sm font-medium">{item.engagement.comments.toLocaleString()}</span>
                       </div>
                     </div>
                   </div>

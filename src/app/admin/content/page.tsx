@@ -5,17 +5,13 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Plus,
   Search,
-  Filter,
   Calendar,
-  Users,
-  BarChart3,
   Clock,
-  MoreVertical,
   Edit,
   Eye,
   Trash2,
@@ -27,7 +23,9 @@ import {
   Video,
   Repeat,
   Hash,
-  AtSign
+  AtSign,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { adminToast } from '@/lib/admin/toast';
 import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
@@ -46,109 +44,83 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/select-native';
+import { SocialPublishStatus } from '@/components/admin/social/SocialPublishStatus';
 import type { ContentItem, ContentStatus, ContentType, Platform } from '@/lib/admin/project-types';
-import { ProjectUtils } from '@/lib/admin/project-types';
+
+const PAGE_SIZE = 25;
 
 export default function ContentCalendarPage() {
   const router = useRouter();
   const [contentItems, setContentItems] = useState<ContentItem[]>([]);
-  const [filteredContent, setFilteredContent] = useState<ContentItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<ContentStatus | 'all'>('all');
   const [typeFilter, setTypeFilter] = useState<ContentType | 'all'>('all');
   const [platformFilter, setPlatformFilter] = useState<Platform | 'all'>('all');
   const [projectFilter, setProjectFilter] = useState<string | 'all'>('all');
-  const [sortBy, setSortBy] = useState<'scheduledDate' | 'createdAt' | 'title' | 'status'>('scheduledDate');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
-  const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
+  const [page, setPage] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
   const [projects, setProjects] = useState<any[]>([]);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
-  // Load content and projects
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const [contentResponse, projectsResponse] = await Promise.all([
-          fetch('/api/content?sortBy=scheduledDate&sortDirection=asc'),
-          fetch('/api/projects')
-        ]);
+  // Build API URL from filter state and fetch content
+  const fetchContent = useCallback(async () => {
+    try {
+      setLoading(true);
+      const params = new URLSearchParams();
+      params.set('page', String(page));
+      params.set('pageSize', String(PAGE_SIZE));
+      params.set('sortBy', 'scheduledDate');
+      params.set('sortDirection', 'asc');
+      if (statusFilter !== 'all') params.set('status', statusFilter);
+      if (typeFilter !== 'all') params.set('type', typeFilter);
+      if (platformFilter !== 'all') params.set('platform', platformFilter);
 
-        const contentResult = await contentResponse.json();
-        const projectsResult = await projectsResponse.json();
+      const response = await fetch(`/api/content?${params}`);
+      const result = await response.json();
 
-        if (contentResult.success) {
-          setContentItems(contentResult.data);
-          setFilteredContent(contentResult.data);
-        }
-
-        if (projectsResult.success) {
-          setProjects(projectsResult.data);
-        }
-      } catch (error) {
-        console.error('Error loading data:', error);
-        adminToast.error('Failed to load content data');
-      } finally {
-        setLoading(false);
+      if (result.success) {
+        setContentItems(result.data);
+        setTotalItems(result.pagination?.totalItems ?? result.total ?? 0);
+        setTotalPages(result.pagination?.totalPages ?? 1);
       }
-    };
+    } catch (error) {
+      console.error('Error loading content:', error);
+      adminToast.error('Failed to load content data');
+    } finally {
+      setLoading(false);
+    }
+  }, [page, statusFilter, typeFilter, platformFilter]);
 
-    loadData();
+  // Fetch content when filters or page change
+  useEffect(() => { fetchContent(); }, [fetchContent]);
+
+  // Load projects once for the project name lookup + filter dropdown
+  useEffect(() => {
+    fetch('/api/projects')
+      .then(r => r.json())
+      .then(result => { if (result.success) setProjects(result.data); })
+      .catch(() => {});
   }, []);
 
-  // Apply filters and search
-  useEffect(() => {
-    let filtered = contentItems;
+  // Client-side search + project filter on the current page's items
+  const filteredContent = contentItems.filter(item => {
+    if (projectFilter !== 'all' && item.projectId !== projectFilter) return false;
+    if (!searchQuery) return true;
+    const q = searchQuery.toLowerCase();
+    return (
+      item.title.toLowerCase().includes(q) ||
+      item.description.toLowerCase().includes(q) ||
+      item.content.toLowerCase().includes(q) ||
+      (item.hashtags || []).some(tag => tag.toLowerCase().includes(q))
+    );
+  });
 
-    // Search filter
-    if (searchQuery) {
-      filtered = filtered.filter(item =>
-        item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (item.hashtags || []).some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
-      );
-    }
-
-    // Status filter
-    if (statusFilter !== 'all') {
-      filtered = filtered.filter(item => item.status === statusFilter);
-    }
-
-    // Type filter
-    if (typeFilter !== 'all') {
-      filtered = filtered.filter(item => item.type === typeFilter);
-    }
-
-    // Platform filter
-    if (platformFilter !== 'all') {
-      filtered = filtered.filter(item => item.platform === platformFilter);
-    }
-
-    // Project filter
-    if (projectFilter !== 'all') {
-      filtered = filtered.filter(item => item.projectId === projectFilter);
-    }
-
-    // Sort
-    filtered.sort((a, b) => {
-      let aValue: any = a[sortBy];
-      let bValue: any = b[sortBy];
-
-      if (sortBy === 'scheduledDate' || sortBy === 'createdAt') {
-        aValue = new Date(aValue);
-        bValue = new Date(bValue);
-      }
-
-      if (sortDirection === 'desc') {
-        return bValue > aValue ? 1 : -1;
-      } else {
-        return aValue > bValue ? 1 : -1;
-      }
-    });
-
-    setFilteredContent(filtered);
-  }, [contentItems, searchQuery, statusFilter, typeFilter, platformFilter, projectFilter, sortBy, sortDirection]);
+  // Reset to page 1 when server-side filters change
+  const handleStatusFilter = (v: ContentStatus | 'all') => { setStatusFilter(v); setPage(1); };
+  const handleTypeFilter = (v: ContentType | 'all') => { setTypeFilter(v); setPage(1); };
+  const handlePlatformFilter = (v: Platform | 'all') => { setPlatformFilter(v); setPage(1); };
 
   const getStatusIcon = (status: ContentStatus) => {
     switch (status) {
@@ -211,8 +183,8 @@ export default function ContentCalendarPage() {
       });
 
       if (response.ok) {
-        setContentItems(contentItems.filter(c => c.id !== contentId));
         adminToast.success('Content deleted');
+        fetchContent(); // Re-fetch current page
       } else {
         adminToast.error('Failed to delete content');
       }
@@ -220,22 +192,6 @@ export default function ContentCalendarPage() {
       console.error('Error deleting content:', error);
       adminToast.error('Error deleting content');
     }
-  };
-
-  const getUpcomingContent = () => {
-    const now = new Date();
-    const sevenDaysFromNow = new Date();
-    sevenDaysFromNow.setDate(now.getDate() + 7);
-
-    return contentItems.filter(item => {
-      const scheduleDate = new Date(item.scheduledDate);
-      return scheduleDate >= now && scheduleDate <= sevenDaysFromNow &&
-             ['approved', 'scheduled'].includes(item.status);
-    });
-  };
-
-  const getContentByStatus = (status: ContentStatus) => {
-    return contentItems.filter(item => item.status === status).length;
   };
 
   if (loading) {
@@ -270,77 +226,39 @@ export default function ContentCalendarPage() {
         title="Content Calendar"
         description="Plan, create, and schedule your content across all platforms"
         actions={
-          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-            <div className="flex items-center gap-1 bg-white border border-fm-neutral-200 rounded-lg p-1">
-              <DashboardButton
-                variant={viewMode === 'list' ? 'primary' : 'ghost'}
-                size="sm"
-                onClick={() => setViewMode('list')}
-                className="text-xs"
-              >
-                List
-              </DashboardButton>
-              <DashboardButton
-                variant={viewMode === 'calendar' ? 'primary' : 'ghost'}
-                size="sm"
-                onClick={() => setViewMode('calendar')}
-                className="text-xs"
-              >
-                Calendar
-              </DashboardButton>
-            </div>
-            <DashboardButton
-              variant="primary"
-              size="sm"
-              onClick={() => router.push('/admin/content/new')}
-            >
-              <Plus className="h-4 w-4" />
-              New Content
-            </DashboardButton>
-          </div>
+          <DashboardButton
+            variant="primary"
+            size="sm"
+            onClick={() => router.push('/admin/content/new')}
+          >
+            <Plus className="h-4 w-4" />
+            New Content
+          </DashboardButton>
         }
       />
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
         <MetricCard
-          title="Total Content"
-          value={contentItems.length}
-          subtitle="All content pieces"
+          title="Total Results"
+          value={totalItems}
+          subtitle={statusFilter !== 'all' || typeFilter !== 'all' || platformFilter !== 'all' ? 'Matching filters' : 'All content pieces'}
           icon={<FileText className="w-6 h-6" />}
           variant="admin"
         />
 
         <MetricCard
-          title="Scheduled"
-          value={getContentByStatus('scheduled')}
-          subtitle="Ready to publish"
+          title="On This Page"
+          value={filteredContent.length}
+          subtitle={`Page ${page} of ${totalPages}`}
           icon={<Clock className="w-6 h-6" />}
           variant="admin"
-          change={{
-            value: Math.round((getContentByStatus('scheduled') / (contentItems.length || 1)) * 100),
-            type: 'neutral',
-            period: 'of total'
-          }}
         />
 
         <MetricCard
-          title="Published"
-          value={getContentByStatus('published')}
-          subtitle="Live content"
-          icon={<CheckCircle className="w-6 h-6" />}
-          variant="admin"
-          change={{
-            value: Math.round((getContentByStatus('published') / (contentItems.length || 1)) * 100),
-            type: 'increase',
-            period: 'success rate'
-          }}
-        />
-
-        <MetricCard
-          title="This Week"
-          value={getUpcomingContent().length}
-          subtitle="Upcoming posts"
+          title="Page Size"
+          value={PAGE_SIZE}
+          subtitle="Items per page"
           icon={<Calendar className="w-6 h-6" />}
           variant="admin"
         />
@@ -363,7 +281,7 @@ export default function ContentCalendarPage() {
           <div className="flex flex-wrap gap-2">
             <Select
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as ContentStatus | 'all')}
+              onChange={(e) => handleStatusFilter(e.target.value as ContentStatus | 'all')}
             >
               <option value="all">All Status</option>
               <option value="draft">Draft</option>
@@ -376,7 +294,7 @@ export default function ContentCalendarPage() {
 
             <Select
               value={typeFilter}
-              onChange={(e) => setTypeFilter(e.target.value as ContentType | 'all')}
+              onChange={(e) => handleTypeFilter(e.target.value as ContentType | 'all')}
             >
               <option value="all">All Types</option>
               <option value="post">Post</option>
@@ -391,7 +309,7 @@ export default function ContentCalendarPage() {
 
             <Select
               value={platformFilter}
-              onChange={(e) => setPlatformFilter(e.target.value as Platform | 'all')}
+              onChange={(e) => handlePlatformFilter(e.target.value as Platform | 'all')}
             >
               <option value="all">All Platforms</option>
               <option value="instagram">Instagram</option>
@@ -424,12 +342,12 @@ export default function ContentCalendarPage() {
             icon={<Calendar className="w-6 h-6" />}
             title="No content found"
             description={
-              contentItems.length === 0
+              totalItems === 0 && statusFilter === 'all' && typeFilter === 'all' && platformFilter === 'all'
                 ? "Get started by creating your first content piece"
                 : "Try adjusting your search or filter criteria"
             }
             action={
-              contentItems.length === 0 ? (
+              totalItems === 0 && statusFilter === 'all' ? (
                 <DashboardButton variant="primary" size="sm" onClick={() => router.push('/admin/content/new')}>
                   Create First Content
                 </DashboardButton>
@@ -455,6 +373,11 @@ export default function ContentCalendarPage() {
                       <span className={`px-2 py-1 text-xs font-medium rounded-full ${getPlatformColor(content.platform)}`}>
                         {content.platform}
                       </span>
+                      <SocialPublishStatus
+                        platform={content.platform}
+                        metaPostId={content.metaPostId}
+                        publishError={content.lastPublishError}
+                      />
                     </div>
 
                     <p className="text-fm-neutral-600 mb-4 line-clamp-2">{content.description}</p>
@@ -539,6 +462,38 @@ export default function ContentCalendarPage() {
           })
         )}
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between bg-white rounded-xl border border-fm-neutral-200 px-4 sm:px-6 py-3">
+          <p className="text-sm text-fm-neutral-600">
+            Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, totalItems)} of {totalItems}
+          </p>
+          <div className="flex items-center gap-2">
+            <DashboardButton
+              variant="ghost"
+              size="sm"
+              disabled={page <= 1}
+              onClick={() => setPage(p => p - 1)}
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Previous
+            </DashboardButton>
+            <span className="text-sm font-medium text-fm-neutral-700 px-2">
+              {page} / {totalPages}
+            </span>
+            <DashboardButton
+              variant="ghost"
+              size="sm"
+              disabled={page >= totalPages}
+              onClick={() => setPage(p => p + 1)}
+            >
+              Next
+              <ChevronRight className="h-4 w-4" />
+            </DashboardButton>
+          </div>
+        </div>
+      )}
 
       <ConfirmDialog
         open={!!deleteConfirm}

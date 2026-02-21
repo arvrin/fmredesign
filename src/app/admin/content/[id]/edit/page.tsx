@@ -23,12 +23,14 @@ export default function EditContentPage({ params }: { params: Promise<{ id: stri
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    fetch('/api/content')
-      .then(res => res.json())
+    fetch(`/api/content?id=${id}`)
+      .then(res => {
+        if (!res.ok) throw new Error('Not found');
+        return res.json();
+      })
       .then(result => {
-        if (result.success) {
-          const found = result.data.find((c: ContentItem) => c.id === id);
-          setItem(found || null);
+        if (result.success && result.data) {
+          setItem(result.data);
         }
       })
       .catch(err => console.error('Error loading content:', err))

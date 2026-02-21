@@ -18,6 +18,48 @@ export async function GET(request: NextRequest) {
 
   try {
     const searchParams = request.nextUrl.searchParams;
+
+    // Single resource fetch by ID
+    const id = searchParams.get('id');
+    if (id) {
+      const supabase = getSupabaseAdmin();
+      const { data, error } = await supabase.from('content_calendar').select('*').eq('id', id).single();
+      if (error || !data) {
+        return NextResponse.json({ success: false, error: 'Content not found' }, { status: 404 });
+      }
+      const item = {
+        id: data.id,
+        projectId: data.project_id,
+        clientId: data.client_id,
+        title: data.title,
+        description: data.description,
+        content: data.content,
+        type: data.type,
+        platform: data.platform,
+        scheduledDate: data.scheduled_date,
+        publishedDate: data.published_date,
+        status: data.status,
+        author: data.author,
+        assignedDesigner: data.assigned_designer,
+        assignedWriter: data.assigned_writer,
+        imageUrl: data.image_url,
+        videoUrl: data.video_url,
+        clientFeedback: data.client_feedback,
+        revisionNotes: data.revision_notes,
+        approvedAt: data.approved_at,
+        hashtags: data.hashtags || [],
+        mentions: data.mentions || [],
+        tags: data.tags || [],
+        files: data.files || [],
+        metaPostId: data.meta_post_id || null,
+        lastPublishError: data.last_publish_error || null,
+        engagement: data.engagement || null,
+        createdAt: data.created_at,
+        updatedAt: data.updated_at,
+      };
+      return NextResponse.json({ success: true, data: item });
+    }
+
     const projectId = searchParams.get('projectId');
     const clientId = searchParams.get('clientId');
     const status = searchParams.get('status');
@@ -109,6 +151,8 @@ export async function GET(request: NextRequest) {
       mentions: item.mentions || [],
       tags: item.tags || [],
       files: item.files || [],
+      metaPostId: item.meta_post_id || null,
+      lastPublishError: item.last_publish_error || null,
       engagement: item.engagement || null,
       createdAt: item.created_at,
       updatedAt: item.updated_at,
