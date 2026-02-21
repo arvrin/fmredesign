@@ -188,10 +188,10 @@ export function ClientDashboard({ onClientSelect }: ClientDashboardProps) {
   };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
+    <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
       {/* Dashboard Header */}
-      <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-4 sm:p-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-xl sm:text-3xl font-bold bg-gradient-to-r from-fm-magenta-600 to-fm-magenta-700 bg-clip-text text-transparent">Client Management</h1>
             <p className="text-fm-neutral-600 mt-1 font-medium text-sm sm:text-base">
@@ -209,7 +209,7 @@ export function ClientDashboard({ onClientSelect }: ClientDashboardProps) {
 
       {/* Dashboard Stats */}
       {dashboardStats && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
           <MetricCard
             title="Total Clients"
             value={dashboardStats.totalClients}
@@ -250,7 +250,7 @@ export function ClientDashboard({ onClientSelect }: ClientDashboardProps) {
       )}
 
       {/* Filters and Search */}
-      <DashboardCard variant="admin" className="p-6">
+      <DashboardCard variant="admin" className="p-4 sm:p-6">
         <div className="flex flex-col lg:flex-row gap-4">
           {/* Search */}
           <div className="flex-1 relative">
@@ -312,14 +312,14 @@ export function ClientDashboard({ onClientSelect }: ClientDashboardProps) {
 
       {/* Client Grid/List */}
       <div className={viewMode === 'grid' 
-        ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'
+        ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6'
         : 'space-y-4'
       }>
         {filteredClients.map((client) => (
           <div
             key={client.id}
             className={`bg-white rounded-xl shadow-sm border border-fm-neutral-200 hover:shadow-md transition-shadow cursor-pointer ${
-              viewMode === 'list' ? 'p-4' : 'p-6'
+              viewMode === 'list' ? 'p-3 sm:p-4' : 'p-4 sm:p-6'
             }`}
             onClick={() => handleClientClick(client)}
           >
@@ -395,8 +395,8 @@ export function ClientDashboard({ onClientSelect }: ClientDashboardProps) {
               </div>
             ) : (
               // List View
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4 flex-1">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center space-x-4 flex-1 min-w-0">
                   <div className="w-10 h-10 bg-fm-magenta-100 rounded-lg flex items-center justify-center">
                     <span className="text-fm-magenta-700 font-bold">
                       {client.name?.charAt(0) || 'C'}
@@ -432,7 +432,7 @@ export function ClientDashboard({ onClientSelect }: ClientDashboardProps) {
                   </div>
                 </div>
                 
-                <div className="flex items-center space-x-2 ml-4">
+                <div className="flex items-center space-x-2 sm:ml-4">
                   <DashboardButton size="sm" variant="secondary">
                     <Eye className="h-4 w-4" />
                   </DashboardButton>
@@ -451,7 +451,7 @@ export function ClientDashboard({ onClientSelect }: ClientDashboardProps) {
 
       {/* Empty State */}
       {filteredClients.length === 0 && (
-        <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-12 text-center">
+        <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-6 sm:p-12 text-center">
           <Users className="h-12 w-12 text-fm-neutral-400 mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-fm-neutral-900 mb-2">
             No clients found

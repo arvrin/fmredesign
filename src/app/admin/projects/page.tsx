@@ -176,12 +176,12 @@ export default function ProjectsPage() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
+      <div className="space-y-4 sm:space-y-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <Skeleton className="h-8 w-48" />
           <Skeleton className="h-10 w-32" />
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
           {[...Array(4)].map((_, i) => (
             <MetricCardSkeleton key={i} />
           ))}
@@ -197,7 +197,7 @@ export default function ProjectsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
       <PageHeader
         title="Projects"
@@ -215,7 +215,7 @@ export default function ProjectsPage() {
       />
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
         <MetricCard
           title="Total Projects"
           value={projects.length}
@@ -255,8 +255,8 @@ export default function ProjectsPage() {
       </div>
 
       {/* Filters and Search */}
-      <DashboardCard variant="admin" className="p-6">
-        <div className="flex flex-col lg:flex-row gap-4">
+      <DashboardCard variant="admin" className="p-4 sm:p-6">
+        <div className="flex flex-col lg:flex-row gap-3 sm:gap-4">
           {/* Search */}
           <div className="flex-1">
             <Input
@@ -309,7 +309,7 @@ export default function ProjectsPage() {
       </DashboardCard>
 
       {/* Projects List */}
-      <div className="space-y-4">
+      <div className="space-y-3 sm:space-y-4">
         {filteredProjects.length === 0 ? (
           <EmptyState
             icon={<Calendar className="w-6 h-6" />}
@@ -329,7 +329,7 @@ export default function ProjectsPage() {
           />
         ) : (
           filteredProjects.map((project) => (
-            <div key={project.id} className="bg-white rounded-xl border border-fm-neutral-200 p-6 hover:shadow-lg transition-shadow">
+            <div key={project.id} className="bg-white rounded-xl border border-fm-neutral-200 p-4 sm:p-6 hover:shadow-lg transition-shadow">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2">
@@ -343,7 +343,7 @@ export default function ProjectsPage() {
 
                   <p className="text-fm-neutral-600 mb-4">{project.description}</p>
 
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 text-sm">
                     <div>
                       <span className="text-fm-neutral-500">Type:</span>
                       <span className="ml-2 font-medium">{project.type.replace('_', ' ')}</span>

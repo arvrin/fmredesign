@@ -224,7 +224,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <PageHeader
         title="Settings"
         description="Manage your admin panel preferences and account settings"
@@ -256,7 +256,7 @@ export default function SettingsPage() {
       )}
 
       <Tabs defaultValue="profile" orientation="vertical">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6">
           {/* Sidebar */}
           <div className="lg:col-span-1">
             <DashboardCard variant="admin">
@@ -300,7 +300,7 @@ export default function SettingsPage() {
           </div>
 
           {/* Content */}
-          <div className="lg:col-span-3 space-y-6">
+          <div className="lg:col-span-3 space-y-4 sm:space-y-6">
             <TabsContent value="profile">
               <DashboardCard variant="admin">
                 <CardHeader>
@@ -309,9 +309,9 @@ export default function SettingsPage() {
                     Update your personal information and profile details
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-6">
+                <CardContent className="space-y-4 sm:space-y-6">
                   {/* Avatar Section */}
-                  <div className="flex items-center space-x-4">
+                  <div className="flex flex-col sm:flex-row items-center gap-4 sm:space-x-4">
                     <div className="h-20 w-20 bg-fm-magenta-700 rounded-full flex items-center justify-center">
                       {settings.profile.avatar_url ? (
                         <img
@@ -338,7 +338,7 @@ export default function SettingsPage() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <Input
                       label="Full Name"
                       value={settings.profile.name}
@@ -403,7 +403,7 @@ export default function SettingsPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <Select
                       label="Timezone"
                       value={settings.general.timezone}
@@ -506,10 +506,10 @@ export default function SettingsPage() {
                     Manage your account security and authentication
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-6">
+                <CardContent className="space-y-4 sm:space-y-6">
                   {/* Password Section */}
-                  <div className="p-4 bg-fm-neutral-50 rounded-lg">
-                    <div className="flex items-center justify-between mb-3">
+                  <div className="p-3 sm:p-4 bg-fm-neutral-50 rounded-lg">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-3">
                       <div className="flex items-center space-x-3">
                         <Key className="h-5 w-5 text-fm-neutral-600" />
                         <div>
@@ -603,7 +603,7 @@ export default function SettingsPage() {
                     Customize the look and feel of your admin dashboard
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-6">
+                <CardContent className="space-y-4 sm:space-y-6">
                   <Select
                     label="Theme"
                     value={settings.appearance.theme}
@@ -651,7 +651,7 @@ export default function SettingsPage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {Object.entries(settings.integrations).map(([key, connected]) => (
-                    <div key={key} className="flex items-center justify-between p-4 border border-fm-neutral-200 rounded-lg">
+                    <div key={key} className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between p-3 sm:p-4 border border-fm-neutral-200 rounded-lg">
                       <div className="flex items-center space-x-3">
                         <div className={cn(
                           "w-10 h-10 rounded-lg flex items-center justify-center",
@@ -686,7 +686,7 @@ export default function SettingsPage() {
             </TabsContent>
 
             <TabsContent value="billing">
-              <div className="space-y-6">
+              <div className="space-y-4 sm:space-y-6">
                 <DashboardCard variant="admin">
                   <CardHeader>
                     <CardTitle>Current Plan</CardTitle>
@@ -695,14 +695,14 @@ export default function SettingsPage() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="p-6 bg-gradient-to-r from-fm-magenta-700 to-fm-magenta-500 rounded-lg text-white">
-                      <div className="flex items-center justify-between">
+                    <div className="p-4 sm:p-6 bg-gradient-to-r from-fm-magenta-700 to-fm-magenta-500 rounded-lg text-white">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <div>
                           <h3 className="text-lg font-semibold">{settings.billing.plan} Plan</h3>
                           <p className="text-white/80">Full access to all admin features</p>
                         </div>
                         <div className="text-right">
-                          <p className="text-2xl font-bold">₹4,999</p>
+                          <p className="text-xl sm:text-2xl font-bold">₹4,999</p>
                           <p className="text-white/80">per month</p>
                         </div>
                       </div>
@@ -718,25 +718,25 @@ export default function SettingsPage() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="text-center p-4 border border-fm-neutral-200 rounded-lg">
-                        <p className="text-2xl font-bold text-fm-magenta-700">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+                      <div className="text-center p-3 sm:p-4 border border-fm-neutral-200 rounded-lg">
+                        <p className="text-xl sm:text-2xl font-bold text-fm-magenta-700">
                           {settings.billing.usage.leads}
                         </p>
                         <p className="text-sm text-fm-neutral-600">
                           Leads ({settings.billing.limits.max_leads} limit)
                         </p>
                       </div>
-                      <div className="text-center p-4 border border-fm-neutral-200 rounded-lg">
-                        <p className="text-2xl font-bold text-fm-magenta-700">
+                      <div className="text-center p-3 sm:p-4 border border-fm-neutral-200 rounded-lg">
+                        <p className="text-xl sm:text-2xl font-bold text-fm-magenta-700">
                           {settings.billing.usage.clients}
                         </p>
                         <p className="text-sm text-fm-neutral-600">
                           Clients ({settings.billing.limits.max_clients} limit)
                         </p>
                       </div>
-                      <div className="text-center p-4 border border-fm-neutral-200 rounded-lg">
-                        <p className="text-2xl font-bold text-fm-magenta-700">
+                      <div className="text-center p-3 sm:p-4 border border-fm-neutral-200 rounded-lg">
+                        <p className="text-xl sm:text-2xl font-bold text-fm-magenta-700">
                           {settings.billing.usage.storage} GB
                         </p>
                         <p className="text-sm text-fm-neutral-600">

@@ -406,7 +406,7 @@ export function InvoiceFormNew() {
   return (
     <div className="max-w-[1440px] mx-auto">
       {/* ---- Step indicator ---- */}
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex flex-wrap items-center gap-3 mb-4 sm:mb-6">
         {STEPS.map((step, idx) => (
           <div key={step.id} className="flex items-center gap-2">
             {idx > 0 && (
@@ -433,9 +433,9 @@ export function InvoiceFormNew() {
       </div>
 
       {/* ---- Main grid: 60/40 ---- */}
-      <div className="grid grid-cols-1 xl:grid-cols-5 gap-8">
+      <div className="grid grid-cols-1 xl:grid-cols-5 gap-4 sm:gap-8">
         {/* ===== LEFT COLUMN (3/5 = 60%) ===== */}
-        <div className="xl:col-span-3 space-y-6">
+        <div className="xl:col-span-3 space-y-4 sm:space-y-6">
           {/* Header actions card */}
           <Card variant="admin">
             <CardContent className="p-4">
@@ -475,14 +475,14 @@ export function InvoiceFormNew() {
                   </Badge>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <Button variant="ghost" size="sm" onClick={handlePreview}>
                     <Eye className="w-4 h-4" />
-                    Preview
+                    <span className="hidden sm:inline">Preview</span>
                   </Button>
                   <Button variant="secondary" size="sm" onClick={handleDownload}>
                     <Download className="w-4 h-4" />
-                    Download
+                    <span className="hidden sm:inline">Download</span>
                   </Button>
                   <Button variant="primary" size="sm" onClick={handleSave}>
                     <Save className="w-4 h-4" />
@@ -535,7 +535,7 @@ export function InvoiceFormNew() {
               </div>
 
               {invoice.client.name && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-fm-neutral-200">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-fm-neutral-200">
                   <InfoField label="Name" value={invoice.client.name} />
                   <InfoField label="Email" value={invoice.client.email} />
                   <InfoField label="Phone" value={invoice.client.phone} />
@@ -544,7 +544,7 @@ export function InvoiceFormNew() {
                     value={invoice.client.gstNumber}
                     fallback="Not provided"
                   />
-                  <div className="md:col-span-2">
+                  <div className="sm:col-span-2">
                     <InfoField
                       label="Address"
                       value={formatAddress(invoice.client)}
@@ -567,7 +567,7 @@ export function InvoiceFormNew() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">
                     Invoice Date
@@ -601,14 +601,14 @@ export function InvoiceFormNew() {
           {/* Line items */}
           <Card variant="admin">
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 rounded-full bg-fm-magenta-100 flex items-center justify-center">
                     <FileText className="w-4 h-4 text-fm-magenta-600" />
                   </div>
                   <CardTitle>Services &amp; Items</CardTitle>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <Button
                     variant="ghost"
                     size="sm"
@@ -616,7 +616,7 @@ export function InvoiceFormNew() {
                     title="Duplicate last item"
                   >
                     <Copy className="w-4 h-4" />
-                    Duplicate
+                    <span className="hidden sm:inline">Duplicate</span>
                   </Button>
                   <Button variant="ghost" size="sm" onClick={addLineItem}>
                     <Plus className="w-4 h-4" />
@@ -746,7 +746,7 @@ export function InvoiceFormNew() {
             <CardHeader>
               <CardTitle>Additional Information</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 p-4 sm:p-6">
               <div>
                 <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">
                   Notes
@@ -780,7 +780,7 @@ export function InvoiceFormNew() {
         </div>
 
         {/* ===== RIGHT COLUMN (2/5 = 40%) — Sticky ===== */}
-        <div className="xl:col-span-2 space-y-6">
+        <div className="hidden xl:block xl:col-span-2 space-y-4 sm:space-y-6">
           {/* Summary metrics */}
           <div className="grid grid-cols-2 gap-4">
             <MetricCard

@@ -316,18 +316,18 @@ export function GrowthEngine({ clientId }: GrowthEngineProps) {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-6">
-        <div className="flex items-center justify-between">
+      <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-4 sm:p-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-fm-neutral-900">Growth & Opportunities Engine</h2>
+            <h2 className="text-xl sm:text-2xl font-bold text-fm-neutral-900">Growth & Opportunities Engine</h2>
             <p className="text-fm-neutral-600 mt-1">
               {client ? `AI-powered growth insights for ${client.name}` : 'Intelligent business growth recommendations'}
             </p>
           </div>
-          
-          <div className="flex items-center space-x-3">
+
+          <div className="flex items-center space-x-3 flex-wrap gap-y-2">
             <select
               value={selectedTimeframe}
               onChange={(e) => setSelectedTimeframe(e.target.value)}
@@ -338,7 +338,7 @@ export function GrowthEngine({ clientId }: GrowthEngineProps) {
               <option value="90d">Last 3 months</option>
               <option value="1y">Last year</option>
             </select>
-            
+
             <Button
               variant="secondary"
               size="sm"
@@ -346,24 +346,26 @@ export function GrowthEngine({ clientId }: GrowthEngineProps) {
               disabled={isGeneratingInsights}
             >
               {isGeneratingInsights ? (
-                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                <RefreshCw className="h-4 w-4 sm:mr-2 animate-spin" />
               ) : (
-                <Zap className="h-4 w-4 mr-2" />
+                <Zap className="h-4 w-4 sm:mr-2" />
               )}
-              {isGeneratingInsights ? 'Generating...' : 'Generate Insights'}
+              <span className="hidden sm:inline">{isGeneratingInsights ? 'Generating...' : 'Generate Insights'}</span>
+              <span className="sm:hidden">{isGeneratingInsights ? '...' : 'Insights'}</span>
             </Button>
-            
+
             <Button size="sm" icon={<Download className="h-4 w-4" />}>
-              Export Report
+              <span className="hidden sm:inline">Export Report</span>
+              <span className="sm:hidden">Export</span>
             </Button>
           </div>
         </div>
       </div>
 
       {/* Growth Metrics Overview */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
         {metrics.map((metric) => (
-          <div key={metric.id} className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-6">
+          <div key={metric.id} className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-4 sm:p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-semibold text-fm-neutral-900">{metric.name}</h3>
               <Activity className="h-5 w-5 text-fm-neutral-400" />
@@ -371,9 +373,9 @@ export function GrowthEngine({ clientId }: GrowthEngineProps) {
             
             <div className="space-y-2">
               <div className="flex items-baseline space-x-2">
-                <span className="text-2xl font-bold text-fm-neutral-900">
-                  {metric.unit === '₹' ? `₹${metric.value.toLocaleString()}` : 
-                   metric.unit === '%' ? `${metric.value}%` : 
+                <span className="text-xl sm:text-2xl font-bold text-fm-neutral-900">
+                  {metric.unit === '₹' ? `₹${metric.value.toLocaleString()}` :
+                   metric.unit === '%' ? `${metric.value}%` :
                    `${metric.value}${metric.unit}`}
                 </span>
                 {metric.target && (
@@ -416,10 +418,10 @@ export function GrowthEngine({ clientId }: GrowthEngineProps) {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Growth Opportunities */}
-        <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-6">
-          <div className="flex items-center justify-between mb-6">
+        <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-4 sm:p-6">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6">
             <h3 className="text-lg font-semibold text-fm-neutral-900">Growth Opportunities</h3>
             
             <div className="flex items-center space-x-2">
@@ -442,7 +444,7 @@ export function GrowthEngine({ clientId }: GrowthEngineProps) {
             {filteredOpportunities.map((opportunity) => (
               <div
                 key={opportunity.id}
-                className="border border-fm-neutral-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+                className="border border-fm-neutral-200 rounded-lg p-3 sm:p-4 hover:shadow-md transition-shadow"
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
@@ -453,7 +455,7 @@ export function GrowthEngine({ clientId }: GrowthEngineProps) {
                       
                       <div>
                         <h4 className="font-semibold text-fm-neutral-900">{opportunity.title}</h4>
-                        <div className="flex items-center space-x-3 mt-1">
+                        <div className="flex flex-wrap items-center gap-2 sm:space-x-3 mt-1">
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(opportunity.priority)}`}>
                             {opportunity.priority} priority
                           </span>
@@ -471,7 +473,7 @@ export function GrowthEngine({ clientId }: GrowthEngineProps) {
                       {opportunity.description}
                     </p>
                     
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                       <div className="flex items-center space-x-4 text-sm text-fm-neutral-500">
                         <span className="flex items-center space-x-1">
                           <Clock className="h-4 w-4" />
@@ -482,7 +484,7 @@ export function GrowthEngine({ clientId }: GrowthEngineProps) {
                           <span>{opportunity.effort} effort</span>
                         </span>
                       </div>
-                      
+
                       <div className="flex items-center space-x-2">
                         {opportunity.status === 'in_progress' && (
                           <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
@@ -525,14 +527,14 @@ export function GrowthEngine({ clientId }: GrowthEngineProps) {
         </div>
 
         {/* AI Insights */}
-        <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-6">
-          <h3 className="text-lg font-semibold text-fm-neutral-900 mb-6">AI Insights</h3>
+        <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-4 sm:p-6">
+          <h3 className="text-lg font-semibold text-fm-neutral-900 mb-4 sm:mb-6">AI Insights</h3>
           
           <div className="space-y-4">
             {insights.slice(0, 5).map((insight) => (
               <div
                 key={insight.id}
-                className="border border-fm-neutral-200 rounded-lg p-4"
+                className="border border-fm-neutral-200 rounded-lg p-3 sm:p-4"
               >
                 <div className="flex items-start space-x-3">
                   {getInsightIcon(insight.type)}
@@ -545,7 +547,7 @@ export function GrowthEngine({ clientId }: GrowthEngineProps) {
                       {insight.description}
                     </p>
                     
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
                       <div className="flex items-center space-x-2">
                         <span className="px-2 py-1 bg-fm-neutral-100 text-fm-neutral-700 text-xs rounded">
                           {insight.category}
@@ -558,7 +560,7 @@ export function GrowthEngine({ clientId }: GrowthEngineProps) {
                           {insight.impact} impact
                         </span>
                       </div>
-                      
+
                       {insight.actionable && (
                         <Button size="sm" variant="secondary">
                           Action
@@ -588,15 +590,16 @@ export function GrowthEngine({ clientId }: GrowthEngineProps) {
       </div>
 
       {/* Growth Action Plan */}
-      <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-6">
-        <div className="flex items-center justify-between mb-6">
+      <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-4 sm:p-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6">
           <h3 className="text-lg font-semibold text-fm-neutral-900">Recommended Action Plan</h3>
           <Button size="sm" icon={<Share2 className="h-4 w-4" />}>
-            Share Plan
+            <span className="hidden sm:inline">Share Plan</span>
+            <span className="sm:hidden">Share</span>
           </Button>
         </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
           <div className="space-y-4">
             <h4 className="font-medium text-fm-neutral-900 flex items-center space-x-2">
               <Trophy className="h-5 w-5 text-yellow-600" />

@@ -137,15 +137,15 @@ export default function AdminSupportPage() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
+      <div className="space-y-4 sm:space-y-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <Skeleton className="h-8 w-48" />
         </div>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
           {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-28 rounded-xl" />)}
         </div>
         <Skeleton className="h-16 rounded-xl" />
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-24 rounded-xl" />)}
         </div>
       </div>
@@ -153,7 +153,7 @@ export default function AdminSupportPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
       <PageHeader
         title="Support Tickets"
@@ -162,7 +162,7 @@ export default function AdminSupportPage() {
       />
 
       {/* Metrics */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
         <MetricCard
           title="Open Tickets"
           value={openCount}
@@ -194,9 +194,9 @@ export default function AdminSupportPage() {
       </div>
 
       {/* Filters */}
-      <DashboardCard className="mb-6">
-        <CardContent className="p-4">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+      <DashboardCard className="mb-4 sm:mb-6">
+        <CardContent className="p-3 sm:p-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
             <div className="relative flex-1 w-full">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-fm-neutral-400" />
               <Input
@@ -238,15 +238,15 @@ export default function AdminSupportPage() {
           />
         </DashboardCard>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           {filteredTickets.map((ticket) => {
             const isExpanded = expandedTicket === ticket.id;
             return (
               <DashboardCard key={ticket.id}>
-                <CardContent className="p-4">
+                <CardContent className="p-3 sm:p-4">
                   {/* Summary row */}
                   <div
-                    className="flex items-center justify-between cursor-pointer"
+                    className="flex items-start sm:items-center justify-between cursor-pointer gap-2"
                     onClick={() =>
                       setExpandedTicket(isExpanded ? null : ticket.id)
                     }
@@ -283,8 +283,8 @@ export default function AdminSupportPage() {
 
                   {/* Expanded details */}
                   {isExpanded && (
-                    <div className="mt-4 pt-4 border-t border-fm-neutral-100">
-                      <p className="text-sm text-fm-neutral-700 mb-4">
+                    <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-fm-neutral-100">
+                      <p className="text-sm text-fm-neutral-700 mb-3 sm:mb-4">
                         {ticket.description}
                       </p>
                       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">

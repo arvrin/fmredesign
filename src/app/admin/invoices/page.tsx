@@ -208,7 +208,7 @@ export default function InvoicesPage() {
 
   // ---- Render ----
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <PageHeader
         title="Invoices"
         description="Manage and track all your invoices."
@@ -224,7 +224,7 @@ export default function InvoicesPage() {
 
       {/* Summary cards */}
       {stats && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
           <MetricCard
             title="Total Invoices"
             value={String(stats.total)}
@@ -299,7 +299,7 @@ export default function InvoicesPage() {
       <Card variant="admin">
         <CardContent className="p-0">
           {loading ? (
-            <div className="p-6 space-y-4">
+            <div className="p-4 sm:p-6 space-y-4">
               {[1, 2, 3, 4].map((i) => (
                 <div key={i} className="flex items-center gap-4">
                   <Skeleton className="h-5 w-24" />
@@ -367,17 +367,17 @@ export default function InvoicesPage() {
                       >
                         {/* Invoice # */}
                         <td className="py-3 px-4">
-                          <span className="font-semibold text-fm-magenta-600">
+                          <span className="font-semibold text-fm-magenta-600 truncate max-w-[120px] inline-block">
                             #{inv.invoiceNumber}
                           </span>
                         </td>
 
                         {/* Client */}
-                        <td className="py-3 px-4">
-                          <p className="font-medium text-fm-neutral-900">
+                        <td className="py-3 px-4 max-w-[180px]">
+                          <p className="font-medium text-fm-neutral-900 truncate">
                             {inv.client?.name || '—'}
                           </p>
-                          <p className="text-xs text-fm-neutral-500">
+                          <p className="text-xs text-fm-neutral-500 truncate">
                             {inv.client?.email || ''}
                           </p>
                         </td>

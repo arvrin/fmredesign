@@ -316,13 +316,13 @@ export function LeadTable({
 
       {/* Cards View */}
       {viewMode === 'cards' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {leads.map((lead) => (
             <div
               key={lead.id}
               className="bg-white rounded-xl border border-fm-neutral-200 hover:shadow-lg transition-shadow"
             >
-              <div className="p-6">
+              <div className="p-4 sm:p-6">
                 <div className="flex items-start justify-between mb-4">
                   <div>
                     <h3 className="text-lg font-semibold text-fm-neutral-900">{lead.name}</h3>
@@ -405,14 +405,14 @@ export function LeadTable({
         <>
           <div className="fixed inset-0 bg-black/30 z-40" onClick={() => onSelectLead(null)} />
           <div className="fixed right-0 top-0 bottom-0 w-full max-w-lg bg-white shadow-2xl z-50 overflow-y-auto">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold text-fm-neutral-900">Lead Details</h2>
+            <div className="p-4 sm:p-6">
+              <div className="flex items-center justify-between mb-4 sm:mb-6">
+                <h2 className="text-lg sm:text-xl font-bold text-fm-neutral-900">Lead Details</h2>
                 <DashboardButton variant="ghost" size="sm" onClick={() => onSelectLead(null)}>
                   &times;
                 </DashboardButton>
               </div>
-              <div className="space-y-5">
+              <div className="space-y-4 sm:space-y-5">
                 <div>
                   <h3 className="text-lg font-semibold text-fm-neutral-900">
                     {selectedLead.name}
@@ -494,7 +494,7 @@ export function LeadTable({
                   </div>
                 </div>
                 <hr className="border-fm-neutral-200" />
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 text-sm">
                   <div>
                     <span className="text-fm-neutral-500 block">Status</span>
                     <StatusBadge status={selectedLead.status}>

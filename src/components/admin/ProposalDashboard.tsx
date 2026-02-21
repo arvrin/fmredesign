@@ -185,7 +185,7 @@ export function ProposalDashboard({ onCreateNew, onEditProposal }: ProposalDashb
   const formatCurrency = (amount: number) => `₹${amount.toLocaleString('en-IN')}`;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <PageHeader
         title="Proposal Dashboard"
         description="Manage and track your client proposals"
@@ -198,7 +198,7 @@ export function ProposalDashboard({ onCreateNew, onEditProposal }: ProposalDashb
       />
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
         <MetricCard
           title="Total Proposals"
           value={stats.total.toString()}
@@ -303,10 +303,10 @@ export function ProposalDashboard({ onCreateNew, onEditProposal }: ProposalDashb
         ) : (
           filteredProposals.map((proposal) => (
             <Card key={proposal.id} variant="admin" className="hover:shadow-lg transition-shadow">
-              <CardContent className="p-6">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
+              <CardContent className="p-4 sm:p-6">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2">
                       <h3 className="text-lg font-semibold text-fm-neutral-900">
                         {proposal.title}
                       </h3>
@@ -316,7 +316,7 @@ export function ProposalDashboard({ onCreateNew, onEditProposal }: ProposalDashb
                       </Badge>
                     </div>
 
-                    <div className="flex items-center gap-4 text-sm text-fm-neutral-600 mb-3">
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-sm text-fm-neutral-600 mb-3">
                       <span className="flex items-center gap-1">
                         <FileText className="w-4 h-4" />
                         {proposal.proposalNumber}
@@ -362,7 +362,7 @@ export function ProposalDashboard({ onCreateNew, onEditProposal }: ProposalDashb
                     )}
                   </div>
 
-                  <div className="flex items-center gap-2 ml-4">
+                  <div className="flex flex-wrap items-center gap-2 sm:ml-4">
                     <Button
                       variant="ghost"
                       size="sm"

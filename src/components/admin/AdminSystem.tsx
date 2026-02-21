@@ -382,9 +382,9 @@ export function AdminSystem() {
   });
 
   const renderUsersTab = () => (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Users Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h3 className="text-lg font-semibold text-fm-neutral-900">User Management</h3>
           <p className="text-fm-neutral-600 mt-1">Manage team members and their access levels</p>
@@ -502,23 +502,23 @@ export function AdminSystem() {
   );
 
   const renderSystemTab = () => (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <div>
         <h3 className="text-lg font-semibold text-fm-neutral-900">System Status</h3>
         <p className="text-fm-neutral-600 mt-1">Monitor system health and performance metrics</p>
       </div>
 
       {/* System Metrics Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {systemMetrics.map((metric) => (
-          <div key={metric.id} className="bg-white rounded-lg border border-fm-neutral-200 p-6">
+          <div key={metric.id} className="bg-white rounded-lg border border-fm-neutral-200 p-4 sm:p-6">
             <div className="flex items-center justify-between mb-4">
               <h4 className="font-semibold text-fm-neutral-900">{metric.name}</h4>
               {getMetricStatusIcon(metric.status)}
             </div>
             
             <div className="space-y-2">
-              <div className="text-2xl font-bold text-fm-neutral-900">
+              <div className="text-xl sm:text-2xl font-bold text-fm-neutral-900">
                 {metric.value}
               </div>
               <div className="text-sm text-fm-neutral-500">
@@ -543,9 +543,9 @@ export function AdminSystem() {
       </div>
 
       {/* System Actions */}
-      <div className="bg-white rounded-lg border border-fm-neutral-200 p-6">
+      <div className="bg-white rounded-lg border border-fm-neutral-200 p-4 sm:p-6">
         <h4 className="font-semibold text-fm-neutral-900 mb-4">System Actions</h4>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <Button variant="secondary" className="justify-start">
             <RefreshCw className="h-4 w-4 mr-2" />
             Restart Services
@@ -568,7 +568,7 @@ export function AdminSystem() {
   );
 
   const renderAuditTab = () => (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <div>
         <h3 className="text-lg font-semibold text-fm-neutral-900">Audit Logs</h3>
         <p className="text-fm-neutral-600 mt-1">Track user activities and system events</p>
@@ -635,13 +635,13 @@ export function AdminSystem() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-6">
-        <div className="flex items-center justify-between">
+      <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-4 sm:p-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-fm-neutral-900">Admin & Permissions System</h2>
-            <p className="text-fm-neutral-600 mt-1">Comprehensive system administration and access control</p>
+            <h2 className="text-xl sm:text-2xl font-bold text-fm-neutral-900">Admin & Permissions System</h2>
+            <p className="text-fm-neutral-600 mt-1 text-sm sm:text-base">Comprehensive system administration and access control</p>
           </div>
           <div className="flex items-center space-x-3">
             <Button size="sm" variant="secondary" icon={<Download className="h-4 w-4" />}>
@@ -654,7 +654,7 @@ export function AdminSystem() {
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex space-x-8 mt-6 border-b border-fm-neutral-200">
+        <div className="flex overflow-x-auto scrollbar-none space-x-6 sm:space-x-8 mt-6 border-b border-fm-neutral-200">
           {[
             { id: 'users', label: 'Users', icon: Users },
             { id: 'permissions', label: 'Permissions', icon: Shield },
@@ -666,7 +666,7 @@ export function AdminSystem() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`flex items-center space-x-2 pb-4 border-b-2 transition-colors ${
+                className={`flex items-center space-x-2 pb-4 border-b-2 transition-colors whitespace-nowrap shrink-0 ${
                   activeTab === tab.id
                     ? 'border-fm-magenta-500 text-fm-magenta-600'
                     : 'border-transparent text-fm-neutral-600 hover:text-fm-neutral-900'
@@ -681,7 +681,7 @@ export function AdminSystem() {
       </div>
 
       {/* Tab Content */}
-      <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-6">
+      <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-4 sm:p-6">
         {activeTab === 'users' && renderUsersTab()}
         {activeTab === 'system' && renderSystemTab()}
         {activeTab === 'audit' && renderAuditTab()}

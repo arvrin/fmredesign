@@ -31,7 +31,7 @@ export function LeadFilters({
 }: LeadFiltersProps) {
   return (
     <DashboardCard variant="admin" className="p-4">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-3 sm:space-y-4 md:space-y-0">
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
           <div className="w-full sm:w-64">
             <Input

@@ -240,15 +240,15 @@ export default function ContentCalendarPage() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
+      <div className="space-y-4 sm:space-y-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <Skeleton className="h-8 w-56" />
           <div className="flex gap-3">
             <Skeleton className="h-10 w-24" />
             <Skeleton className="h-10 w-32" />
           </div>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
           {[...Array(4)].map((_, i) => (
             <MetricCardSkeleton key={i} />
           ))}
@@ -264,13 +264,13 @@ export default function ContentCalendarPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
       <PageHeader
         title="Content Calendar"
         description="Plan, create, and schedule your content across all platforms"
         actions={
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
             <div className="flex items-center gap-1 bg-white border border-fm-neutral-200 rounded-lg p-1">
               <DashboardButton
                 variant={viewMode === 'list' ? 'primary' : 'ghost'}
@@ -302,7 +302,7 @@ export default function ContentCalendarPage() {
       />
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
         <MetricCard
           title="Total Content"
           value={contentItems.length}
@@ -347,8 +347,8 @@ export default function ContentCalendarPage() {
       </div>
 
       {/* Filters and Search */}
-      <DashboardCard variant="admin" className="p-6">
-        <div className="flex flex-col lg:flex-row gap-4">
+      <DashboardCard variant="admin" className="p-4 sm:p-6">
+        <div className="flex flex-col lg:flex-row gap-3 sm:gap-4">
           {/* Search */}
           <div className="flex-1">
             <Input
@@ -418,7 +418,7 @@ export default function ContentCalendarPage() {
       </DashboardCard>
 
       {/* Content List */}
-      <div className="space-y-4">
+      <div className="space-y-3 sm:space-y-4">
         {filteredContent.length === 0 ? (
           <EmptyState
             icon={<Calendar className="w-6 h-6" />}
@@ -440,7 +440,7 @@ export default function ContentCalendarPage() {
           filteredContent.map((content) => {
             const project = projects.find(p => p.id === content.projectId);
             return (
-              <div key={content.id} className="bg-white rounded-xl border border-fm-neutral-200 p-6 hover:shadow-lg transition-shadow">
+              <div key={content.id} className="bg-white rounded-xl border border-fm-neutral-200 p-4 sm:p-6 hover:shadow-lg transition-shadow">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2">
@@ -459,7 +459,7 @@ export default function ContentCalendarPage() {
 
                     <p className="text-fm-neutral-600 mb-4 line-clamp-2">{content.description}</p>
 
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 text-sm mb-4">
                       <div>
                         <span className="text-fm-neutral-500">Project:</span>
                         <span className="ml-2 font-medium">{project?.name || 'N/A'}</span>

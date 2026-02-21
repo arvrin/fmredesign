@@ -240,12 +240,12 @@ export default function ContractsTab({ clientId, clientName }: Props) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* ── Template Picker ── */}
       {showTemplatePicker && !showForm && (
         <Card>
           <CardHeader>
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-2">
               <CardTitle className="flex items-center">
                 <Sparkles className="h-5 w-5 mr-2 text-fm-magenta-600" />
                 Choose a Template
@@ -262,11 +262,11 @@ export default function ContractsTab({ clientId, clientName }: Props) {
                 <span className="font-medium text-fm-neutral-800"> Creating for: {clientName}</span>
               )}
             </p>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               {/* Indian template */}
               <button
                 onClick={() => applyTemplate(CONTRACT_TEMPLATES[0])}
-                className="group border-2 border-fm-neutral-200 rounded-xl p-5 hover:border-fm-magenta-500 hover:bg-fm-magenta-50/30 transition-all text-left"
+                className="group border-2 border-fm-neutral-200 rounded-xl p-4 sm:p-5 hover:border-fm-magenta-500 hover:bg-fm-magenta-50/30 transition-all text-left"
               >
                 <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center mb-3 group-hover:bg-orange-200 transition-colors">
                   <MapPin className="h-5 w-5 text-orange-600" />
@@ -290,7 +290,7 @@ export default function ContractsTab({ clientId, clientName }: Props) {
               {/* International template */}
               <button
                 onClick={() => applyTemplate(CONTRACT_TEMPLATES[1])}
-                className="group border-2 border-fm-neutral-200 rounded-xl p-5 hover:border-fm-magenta-500 hover:bg-fm-magenta-50/30 transition-all text-left"
+                className="group border-2 border-fm-neutral-200 rounded-xl p-4 sm:p-5 hover:border-fm-magenta-500 hover:bg-fm-magenta-50/30 transition-all text-left"
               >
                 <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center mb-3 group-hover:bg-blue-200 transition-colors">
                   <Globe className="h-5 w-5 text-blue-600" />
@@ -314,7 +314,7 @@ export default function ContractsTab({ clientId, clientName }: Props) {
               {/* Blank */}
               <button
                 onClick={startBlankContract}
-                className="group border-2 border-dashed border-fm-neutral-300 rounded-xl p-5 hover:border-fm-neutral-400 hover:bg-fm-neutral-50 transition-all text-left"
+                className="group border-2 border-dashed border-fm-neutral-300 rounded-xl p-4 sm:p-5 hover:border-fm-neutral-400 hover:bg-fm-neutral-50 transition-all text-left"
               >
                 <div className="w-10 h-10 rounded-lg bg-fm-neutral-100 flex items-center justify-center mb-3 group-hover:bg-fm-neutral-200 transition-colors">
                   <FileText className="h-5 w-5 text-fm-neutral-500" />
@@ -340,7 +340,7 @@ export default function ContractsTab({ clientId, clientName }: Props) {
       {showForm && (
         <Card>
           <CardHeader>
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-2">
               <CardTitle className="flex items-center">
                 <FileText className="h-5 w-5 mr-2" />
                 {editingId ? 'Edit Contract' : 'New Contract'}
@@ -350,9 +350,9 @@ export default function ContractsTab({ clientId, clientName }: Props) {
               </DashboardButton>
             </div>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-4 sm:space-y-6 p-4 sm:p-6">
             {/* Basic Info */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input
                 label="Contract Title *"
                 value={title}
@@ -373,7 +373,7 @@ export default function ContractsTab({ clientId, clientName }: Props) {
                 Services *
               </label>
               {services.map((svc, idx) => (
-                <div key={idx} className="grid grid-cols-6 sm:grid-cols-12 gap-2 items-end mb-3 pb-3 border-b sm:border-0 border-fm-neutral-100 last:border-0">
+                <div key={idx} className="grid grid-cols-6 sm:grid-cols-12 gap-2 items-end mb-3 pb-3 border-b border-fm-neutral-100 last:border-0 sm:border-0">
                   <div className="col-span-6 sm:col-span-4">
                     <Select
                       label={idx === 0 ? 'Service' : undefined}
@@ -404,7 +404,7 @@ export default function ContractsTab({ clientId, clientName }: Props) {
                       placeholder="Service name"
                     />
                   </div>
-                  <div className="col-span-1">
+                  <div className="col-span-2 sm:col-span-1">
                     <Input
                       label={idx === 0 ? 'Qty' : undefined}
                       type="number"
@@ -416,7 +416,7 @@ export default function ContractsTab({ clientId, clientName }: Props) {
                       }}
                     />
                   </div>
-                  <div className="col-span-2">
+                  <div className="col-span-2 sm:col-span-2">
                     <Input
                       label={idx === 0 ? 'Unit Price' : undefined}
                       type="number"
@@ -471,7 +471,7 @@ export default function ContractsTab({ clientId, clientName }: Props) {
             </div>
 
             {/* Duration & Payment */}
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
               <Input
                 label="Start Date"
                 type="date"
@@ -554,7 +554,7 @@ export default function ContractsTab({ clientId, clientName }: Props) {
             )}
 
             {/* Actions */}
-            <div className="flex items-center justify-end space-x-4 pt-4 border-t border-fm-neutral-200">
+            <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-end sm:space-x-4 pt-4 border-t border-fm-neutral-200">
               <DashboardButton variant="secondary" onClick={resetForm}>
                 Cancel
               </DashboardButton>
@@ -569,7 +569,7 @@ export default function ContractsTab({ clientId, clientName }: Props) {
 
       {/* ── Header + Create button ── */}
       {!showForm && !showTemplatePicker && (
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <h3 className="text-lg font-semibold text-fm-neutral-900 flex items-center">
             <FileText className="h-5 w-5 mr-2" />
             Contracts ({contracts.length})
@@ -595,14 +595,14 @@ export default function ContractsTab({ clientId, clientName }: Props) {
           }
         />
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           {contracts.map((contract) => (
             <Card key={contract.id}>
-              <CardContent className="p-6">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h4 className="text-lg font-semibold text-fm-neutral-900">
+              <CardContent className="p-4 sm:p-6">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2">
+                      <h4 className="text-base sm:text-lg font-semibold text-fm-neutral-900">
                         {contract.title}
                       </h4>
                       <StatusBadge status={contract.status} />
@@ -650,7 +650,7 @@ export default function ContractsTab({ clientId, clientName }: Props) {
                   </div>
 
                   {/* Actions */}
-                  <div className="flex items-center gap-2 ml-4">
+                  <div className="flex flex-wrap items-center gap-2 sm:ml-4">
                     {contract.status === 'draft' && (
                       <>
                         <DashboardButton

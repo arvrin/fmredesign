@@ -373,9 +373,9 @@ export function ProposalFormNew({ initialProposal, onSaveSuccess }: ProposalForm
 
   return (
     <div className="max-w-7xl mx-auto">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8">
         {/* Left Column - Proposal Form */}
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {/* Header */}
           <Card variant="admin">
             <CardContent className="p-4">
@@ -406,14 +406,15 @@ export function ProposalFormNew({ initialProposal, onSaveSuccess }: ProposalForm
                     {proposal.proposalType}
                   </Badge>
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center flex-wrap gap-2">
                   <Button variant="ghost" size="sm" onClick={handlePreview}>
                     <Eye className="w-4 h-4" />
-                    Preview
+                    <span className="hidden sm:inline">Preview</span>
                   </Button>
                   <Button variant="secondary" size="sm" onClick={handleDownload}>
                     <Download className="w-4 h-4" />
-                    Export PDF
+                    <span className="hidden sm:inline">Export PDF</span>
+                    <span className="sm:hidden">PDF</span>
                   </Button>
                   <Button variant="primary" size="sm" onClick={handleSave}>
                     <Save className="w-4 h-4" />
@@ -432,7 +433,7 @@ export function ProposalFormNew({ initialProposal, onSaveSuccess }: ProposalForm
                 <CardTitle>Proposal Details</CardTitle>
               </div>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="p-4 sm:p-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">
                   Proposal Title
@@ -491,7 +492,7 @@ export function ProposalFormNew({ initialProposal, onSaveSuccess }: ProposalForm
                 </Button>
               </div>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="p-4 sm:p-6 space-y-4">
               {proposal.client.isExisting ? (
                 <div>
                   <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">
@@ -560,7 +561,7 @@ export function ProposalFormNew({ initialProposal, onSaveSuccess }: ProposalForm
           {/* Service Packages */}
           <Card variant="admin">
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center space-x-2">
                   <Target className="w-5 h-5 text-fm-magenta-600" />
                   <CardTitle>Service Packages</CardTitle>
@@ -586,9 +587,9 @@ export function ProposalFormNew({ initialProposal, onSaveSuccess }: ProposalForm
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="p-4 sm:p-6 space-y-4">
               {selectedPackages.map((selected, index) => (
-                <div key={index} className="p-4 border border-fm-neutral-200 rounded-lg bg-fm-neutral-50">
+                <div key={index} className="p-3 sm:p-4 border border-fm-neutral-200 rounded-lg bg-fm-neutral-50">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
                       <h4 className="font-semibold text-fm-neutral-900">{selected.package.name}</h4>
@@ -685,7 +686,7 @@ export function ProposalFormNew({ initialProposal, onSaveSuccess }: ProposalForm
           {selectedPackages.length > 0 && (
             <Card variant="admin">
               <CardHeader>
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-center space-x-2">
                     <Calculator className="w-5 h-5 text-fm-magenta-600" />
                     <CardTitle>Pricing Configuration</CardTitle>
@@ -699,7 +700,7 @@ export function ProposalFormNew({ initialProposal, onSaveSuccess }: ProposalForm
                   </Button>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="p-4 sm:p-6 space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Client Size</label>
@@ -767,7 +768,7 @@ export function ProposalFormNew({ initialProposal, onSaveSuccess }: ProposalForm
         </div>
 
         {/* Right Column - Proposal Summary & Pricing */}
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {/* Pricing Summary */}
           <div className="grid grid-cols-1 gap-4">
             <MetricCard
@@ -797,13 +798,13 @@ export function ProposalFormNew({ initialProposal, onSaveSuccess }: ProposalForm
           </div>
 
           {/* Proposal Preview */}
-          <Card variant="glass">
+          <Card variant="glass" className="hidden lg:block">
             <CardHeader>
               <CardTitle>Proposal Preview</CardTitle>
               <CardDescription>Live preview of your proposal</CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="bg-white border-2 border-fm-neutral-200 rounded-lg p-6 text-sm max-h-96 overflow-y-auto">
+            <CardContent className="p-4 sm:p-6">
+              <div className="bg-white border-2 border-fm-neutral-200 rounded-lg p-4 sm:p-6 text-sm max-h-96 overflow-y-auto">
                 {/* Header */}
                 <div className="border-b pb-4 mb-4">
                   <div className="flex justify-between items-start">
@@ -826,7 +827,7 @@ export function ProposalFormNew({ initialProposal, onSaveSuccess }: ProposalForm
                 </div>
 
                 {/* Title */}
-                <h2 className="text-xl font-bold text-fm-neutral-900 mb-4">{proposal.title}</h2>
+                <h2 className="text-lg sm:text-xl font-bold text-fm-neutral-900 mb-4">{proposal.title}</h2>
 
                 {/* Client Info */}
                 {(proposal.client.clientId || proposal.client.prospectInfo?.company) && (
@@ -894,7 +895,7 @@ export function ProposalFormNew({ initialProposal, onSaveSuccess }: ProposalForm
                         <span>-₹{proposal.investment.discount.toLocaleString('en-IN')}</span>
                       </div>
                     )}
-                    <div className="flex justify-between font-bold text-lg border-t pt-2">
+                    <div className="flex justify-between font-bold text-base sm:text-lg border-t pt-2">
                       <span>Total Investment:</span>
                       <span className="text-fm-magenta-600">₹{proposal.investment.total.toLocaleString('en-IN')}</span>
                     </div>

@@ -232,30 +232,32 @@ export function DocumentManager({ clientId, campaignId }: DocumentManagerProps) 
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-6">
-        <div className="flex items-center justify-between">
+      <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-4 sm:p-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-fm-neutral-900">Document & Asset Manager</h2>
+            <h2 className="text-xl sm:text-2xl font-bold text-fm-neutral-900">Document & Asset Manager</h2>
             <p className="text-fm-neutral-600 mt-1">
               {client ? `Manage files and assets for ${client.name}` : 'Centralized file management system'}
             </p>
           </div>
-          
-          <div className="flex items-center space-x-3">
+
+          <div className="flex items-center flex-wrap gap-2">
             <Button variant="secondary" size="sm">
               <FolderPlus className="h-4 w-4 mr-2" />
-              New Folder
+              <span className="hidden sm:inline">New Folder</span>
+              <span className="sm:hidden">Folder</span>
             </Button>
             <Button size="sm" icon={<Upload className="h-4 w-4" />} onClick={() => setShowUploadModal(true)}>
-              Upload Files
+              <span className="hidden sm:inline">Upload Files</span>
+              <span className="sm:hidden">Upload</span>
             </Button>
           </div>
         </div>
 
         {/* Search and Filters */}
-        <div className="flex flex-col lg:flex-row gap-4 mt-6">
+        <div className="flex flex-col lg:flex-row gap-3 sm:gap-4 mt-4 sm:mt-6">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-fm-neutral-400" />
             <input
@@ -309,17 +311,17 @@ export function DocumentManager({ clientId, campaignId }: DocumentManagerProps) 
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6">
         {/* Sidebar - Folders */}
-        <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-4">
-          <h3 className="font-semibold text-fm-neutral-900 mb-4">Folders</h3>
-          
-          <div className="space-y-2">
+        <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-3 sm:p-4">
+          <h3 className="font-semibold text-fm-neutral-900 mb-3 sm:mb-4">Folders</h3>
+
+          <div className="flex lg:flex-col gap-2 overflow-x-auto lg:overflow-x-visible scrollbar-none pb-2 lg:pb-0">
             <button
               onClick={() => setSelectedFolder('All Files')}
-              className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-left transition-colors ${
-                selectedFolder === 'All Files' 
-                  ? 'bg-fm-magenta-50 text-fm-magenta-700' 
+              className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-left transition-colors whitespace-nowrap shrink-0 ${
+                selectedFolder === 'All Files'
+                  ? 'bg-fm-magenta-50 text-fm-magenta-700'
                   : 'text-fm-neutral-700 hover:bg-fm-neutral-50'
               }`}
             >
@@ -334,9 +336,9 @@ export function DocumentManager({ clientId, campaignId }: DocumentManagerProps) 
                 <button
                   key={folder}
                   onClick={() => setSelectedFolder(folder)}
-                  className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-left transition-colors ${
-                    selectedFolder === folder 
-                      ? 'bg-fm-magenta-50 text-fm-magenta-700' 
+                  className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-left transition-colors whitespace-nowrap shrink-0 ${
+                    selectedFolder === folder
+                      ? 'bg-fm-magenta-50 text-fm-magenta-700'
                       : 'text-fm-neutral-700 hover:bg-fm-neutral-50'
                   }`}
                 >
@@ -349,7 +351,7 @@ export function DocumentManager({ clientId, campaignId }: DocumentManagerProps) 
           </div>
 
           {/* Quick Actions */}
-          <div className="mt-6 pt-4 border-t border-fm-neutral-200">
+          <div className="hidden lg:block mt-6 pt-4 border-t border-fm-neutral-200">
             <h4 className="font-medium text-fm-neutral-900 mb-3">Quick Actions</h4>
             <div className="space-y-2">
               <button className="w-full flex items-center space-x-3 px-3 py-2 text-left text-fm-neutral-700 hover:bg-fm-neutral-50 rounded-lg">
@@ -369,30 +371,30 @@ export function DocumentManager({ clientId, campaignId }: DocumentManagerProps) 
         </div>
 
         {/* Main Content Area */}
-        <div className="lg:col-span-3 space-y-4">
+        <div className="lg:col-span-3 space-y-3 sm:space-y-4">
           {/* Action Bar */}
           {selectedFiles.length > 0 && (
-            <div className="bg-fm-magenta-50 border border-fm-magenta-200 rounded-lg p-4">
-              <div className="flex items-center justify-between">
+            <div className="bg-fm-magenta-50 border border-fm-magenta-200 rounded-lg p-3 sm:p-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <span className="text-fm-magenta-800 font-medium">
                   {selectedFiles.length} file(s) selected
                 </span>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center flex-wrap gap-2">
                   <Button size="sm" variant="secondary">
                     <Download className="h-4 w-4 mr-2" />
-                    Download
+                    <span className="hidden sm:inline">Download</span>
                   </Button>
                   <Button size="sm" variant="secondary">
                     <Share2 className="h-4 w-4 mr-2" />
-                    Share
+                    <span className="hidden sm:inline">Share</span>
                   </Button>
                   <Button size="sm" variant="secondary">
                     <Move className="h-4 w-4 mr-2" />
-                    Move
+                    <span className="hidden sm:inline">Move</span>
                   </Button>
                   <Button size="sm" variant="secondary">
                     <Trash2 className="h-4 w-4 mr-2" />
-                    Delete
+                    <span className="hidden sm:inline">Delete</span>
                   </Button>
                 </div>
               </div>
@@ -400,15 +402,15 @@ export function DocumentManager({ clientId, campaignId }: DocumentManagerProps) 
           )}
 
           {/* File Grid/List */}
-          <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-6">
+          <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-4 sm:p-6">
             {viewMode === 'grid' ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
                 {filteredFiles.map((file) => (
                   <div
                     key={file.id}
-                    className={`p-4 border rounded-lg cursor-pointer transition-colors hover:shadow-md ${
-                      selectedFiles.includes(file.id) 
-                        ? 'border-fm-magenta-300 bg-fm-magenta-50' 
+                    className={`p-3 sm:p-4 border rounded-lg cursor-pointer transition-colors hover:shadow-md ${
+                      selectedFiles.includes(file.id)
+                        ? 'border-fm-magenta-300 bg-fm-magenta-50'
                         : 'border-fm-neutral-200 hover:border-fm-magenta-200'
                     }`}
                     onClick={() => toggleFileSelection(file.id)}
@@ -462,40 +464,41 @@ export function DocumentManager({ clientId, campaignId }: DocumentManagerProps) 
                 ))}
               </div>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-2 overflow-x-auto">
                 {filteredFiles.map((file) => (
                   <div
                     key={file.id}
-                    className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors ${
-                      selectedFiles.includes(file.id) 
-                        ? 'bg-fm-magenta-50 border border-fm-magenta-200' 
+                    className={`flex items-center justify-between p-2 sm:p-3 rounded-lg cursor-pointer transition-colors ${
+                      selectedFiles.includes(file.id)
+                        ? 'bg-fm-magenta-50 border border-fm-magenta-200'
                         : 'hover:bg-fm-neutral-50'
                     }`}
                     onClick={() => toggleFileSelection(file.id)}
                   >
-                    <div className="flex items-center space-x-4 flex-1">
+                    <div className="flex items-center space-x-3 sm:space-x-4 flex-1 min-w-0">
                       {getFileIcon(file.type)}
-                      
+
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center space-x-2">
-                          <h4 className="font-medium text-fm-neutral-900 truncate">
+                          <h4 className="font-medium text-fm-neutral-900 truncate text-sm sm:text-base">
                             {file.name}
                           </h4>
                           {file.isStarred && (
                             <Star className="h-4 w-4 text-yellow-500 fill-current flex-shrink-0" />
                           )}
-                          {file.status && getStatusBadge(file.status)}
+                          {file.status && <span className="hidden sm:inline-flex">{getStatusBadge(file.status)}</span>}
                         </div>
-                        
-                        <div className="flex items-center space-x-4 text-sm text-fm-neutral-500">
+
+                        <div className="flex items-center flex-wrap gap-x-3 gap-y-1 text-xs sm:text-sm text-fm-neutral-500">
                           <span>{formatFileSize(file.size)}</span>
-                          <span>Modified {new Date(file.uploadedAt).toLocaleDateString()}</span>
-                          <span>by {file.uploadedBy}</span>
-                          {file.folder && <span>in {file.folder}</span>}
+                          <span className="hidden sm:inline">Modified {new Date(file.uploadedAt).toLocaleDateString()}</span>
+                          <span className="sm:hidden">{new Date(file.uploadedAt).toLocaleDateString()}</span>
+                          <span className="hidden md:inline">by {file.uploadedBy}</span>
+                          {file.folder && <span className="hidden lg:inline">in {file.folder}</span>}
                         </div>
-                        
+
                         {file.tags && file.tags.length > 0 && (
-                          <div className="flex flex-wrap gap-1 mt-1">
+                          <div className="hidden sm:flex flex-wrap gap-1 mt-1">
                             {file.tags.map((tag) => (
                               <span
                                 key={tag}
@@ -508,17 +511,19 @@ export function DocumentManager({ clientId, campaignId }: DocumentManagerProps) 
                         )}
                       </div>
                     </div>
-                    
-                    <div className="flex items-center space-x-2 ml-4">
+
+                    <div className="flex items-center flex-wrap gap-1 sm:gap-2 ml-2 sm:ml-4 shrink-0">
                       <Button size="sm" variant="secondary">
                         <Eye className="h-4 w-4" />
                       </Button>
                       <Button size="sm" variant="secondary">
                         <Download className="h-4 w-4" />
                       </Button>
-                      <Button size="sm" variant="secondary">
-                        <Share2 className="h-4 w-4" />
-                      </Button>
+                      <span className="hidden sm:inline-flex">
+                        <Button size="sm" variant="secondary">
+                          <Share2 className="h-4 w-4" />
+                        </Button>
+                      </span>
                       <button className="p-2 hover:bg-fm-neutral-100 rounded">
                         <MoreVertical className="h-4 w-4 text-fm-neutral-400" />
                       </button>

@@ -84,22 +84,22 @@ export default function DiscoveryDashboardPage() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         <PageHeader
           title="Discovery Sessions"
           description="Comprehensive client analysis and requirement gathering"
         />
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="bg-white rounded-xl border border-fm-neutral-200 p-6">
+            <div key={i} className="bg-white rounded-xl border border-fm-neutral-200 p-4 sm:p-6">
               <Skeleton className="h-4 w-24 mb-2" />
               <Skeleton className="h-8 w-16" />
             </div>
           ))}
         </div>
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="bg-white rounded-xl border border-fm-neutral-200 p-6">
+            <div key={i} className="bg-white rounded-xl border border-fm-neutral-200 p-4 sm:p-6">
               <div className="flex items-start gap-4">
                 <Skeleton className="h-5 w-5 rounded" />
                 <div className="flex-1 space-y-3">
@@ -116,7 +116,7 @@ export default function DiscoveryDashboardPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <PageHeader
         title="Discovery Sessions"
         description="Comprehensive client analysis and requirement gathering"
@@ -133,7 +133,7 @@ export default function DiscoveryDashboardPage() {
       />
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         <MetricCard
           title="Total Sessions"
           value={sessions.length}
@@ -181,7 +181,7 @@ export default function DiscoveryDashboardPage() {
 
       {/* Filters */}
       <DashboardCard variant="admin" className="p-4">
-        <div className="flex items-center gap-4">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-fm-neutral-400" />
             <Input
@@ -222,13 +222,13 @@ export default function DiscoveryDashboardPage() {
           ) : undefined}
         />
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           {filteredSessions.map((session) => (
             <div key={session.id} className="bg-white rounded-xl border border-fm-neutral-200 shadow-sm">
-              <div className="p-6">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-4 mb-3">
+              <div className="p-4 sm:p-6">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-4 mb-3">
                       {getStatusIcon(session.status)}
                       <div>
                         <h3 className="text-lg font-semibold text-fm-neutral-900">
@@ -243,7 +243,7 @@ export default function DiscoveryDashboardPage() {
                       <StatusBadge status={session.status} />
                     </div>
 
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4 text-sm mb-4">
                       <div>
                         <span className="text-fm-neutral-500">Progress:</span>
                         <p className="font-medium">
@@ -289,7 +289,7 @@ export default function DiscoveryDashboardPage() {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 ml-4">
+                  <div className="flex items-center gap-2 sm:ml-4 flex-wrap">
                     <DashboardButton
                       variant="secondary"
                       size="sm"

@@ -119,34 +119,35 @@ export function CommunicationHub({ clientId, onScheduleMeeting }: CommunicationH
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-6">
-        <div className="flex items-center justify-between">
+      <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-4 sm:p-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-fm-neutral-900">Communication Hub</h2>
+            <h2 className="text-xl sm:text-2xl font-bold text-fm-neutral-900">Communication Hub</h2>
             <p className="text-fm-neutral-600 mt-1">
               {client ? `Manage communication with ${client.name}` : 'Client communication center'}
             </p>
           </div>
-          
-          <div className="flex items-center space-x-3">
+
+          <div className="flex items-center space-x-3 flex-wrap">
             <Button variant="secondary" size="sm">
-              <Phone className="h-4 w-4 mr-2" />
-              Call
+              <Phone className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Call</span>
             </Button>
             <Button variant="secondary" size="sm">
-              <Video className="h-4 w-4 mr-2" />
-              Video Call
+              <Video className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Video Call</span>
             </Button>
             <Button size="sm" icon={<Calendar className="h-4 w-4" />}>
-              Schedule Meeting
+              <span className="hidden sm:inline">Schedule Meeting</span>
+              <span className="sm:hidden">Meet</span>
             </Button>
           </div>
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex space-x-1 mt-6 bg-fm-neutral-100 p-1 rounded-lg w-fit">
+        <div className="flex space-x-1 mt-6 bg-fm-neutral-100 p-1 rounded-lg w-fit max-w-full overflow-x-auto scrollbar-none">
           {[
             { id: 'messages', name: 'Messages', icon: MessageSquare, count: messages.length },
             { id: 'meetings', name: 'Meetings', icon: Calendar, count: meetings.length },
@@ -158,7 +159,7 @@ export function CommunicationHub({ clientId, onScheduleMeeting }: CommunicationH
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
+                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors whitespace-nowrap shrink-0 ${
                   activeTab === tab.id
                     ? 'bg-white text-fm-magenta-700 shadow-sm'
                     : 'text-fm-neutral-600 hover:text-fm-neutral-900'
@@ -179,7 +180,7 @@ export function CommunicationHub({ clientId, onScheduleMeeting }: CommunicationH
 
       {/* Messages Tab */}
       {activeTab === 'messages' && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-96">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 h-96">
           {/* Conversation List */}
           <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200">
             <div className="p-4 border-b border-fm-neutral-200">
@@ -340,21 +341,22 @@ export function CommunicationHub({ clientId, onScheduleMeeting }: CommunicationH
 
       {/* Meetings Tab */}
       {activeTab === 'meetings' && (
-        <div className="space-y-6">
-          <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-6">
-            <div className="flex items-center justify-between mb-6">
+        <div className="space-y-4 sm:space-y-6">
+          <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-4 sm:p-6">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6">
               <h3 className="text-lg font-semibold text-fm-neutral-900">Meetings & Calls</h3>
               <Button size="sm" icon={<Plus className="h-4 w-4" />}>
-                Schedule Meeting
+                <span className="hidden sm:inline">Schedule Meeting</span>
+                <span className="sm:hidden">Schedule</span>
               </Button>
             </div>
             
             <div className="space-y-4">
               {meetings.map((meeting) => (
-                <div key={meeting.id} className="border border-fm-neutral-200 rounded-lg p-4">
-                  <div className="flex items-start justify-between">
+                <div key={meeting.id} className="border border-fm-neutral-200 rounded-lg p-3 sm:p-4">
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                     <div className="flex-1">
-                      <div className="flex items-center space-x-3 mb-2">
+                      <div className="flex flex-wrap items-center gap-2 sm:space-x-3 mb-2">
                         <h4 className="font-semibold text-fm-neutral-900">{meeting.title}</h4>
                         <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 capitalize">
                           {meeting.type.replace('_', ' ')}
@@ -365,7 +367,7 @@ export function CommunicationHub({ clientId, onScheduleMeeting }: CommunicationH
                         <p className="text-sm text-fm-neutral-600 mb-3">{meeting.description}</p>
                       )}
                       
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 text-sm">
                         <div>
                           <p className="text-fm-neutral-500">Date & Time</p>
                           <p className="font-medium text-fm-neutral-900">
@@ -420,16 +422,16 @@ export function CommunicationHub({ clientId, onScheduleMeeting }: CommunicationH
                       )}
                     </div>
                     
-                    <div className="flex items-center space-x-2 ml-4">
+                    <div className="flex items-center space-x-2 sm:ml-4">
                       {meeting.meetingLink && (
                         <Button size="sm" variant="secondary">
-                          <Video className="h-4 w-4 mr-1" />
-                          Join
+                          <Video className="h-4 w-4 sm:mr-1" />
+                          <span className="hidden sm:inline">Join</span>
                         </Button>
                       )}
                       <Button size="sm" variant="secondary">
-                        <FileText className="h-4 w-4 mr-1" />
-                        Notes
+                        <FileText className="h-4 w-4 sm:mr-1" />
+                        <span className="hidden sm:inline">Notes</span>
                       </Button>
                     </div>
                   </div>
@@ -450,7 +452,7 @@ export function CommunicationHub({ clientId, onScheduleMeeting }: CommunicationH
 
       {/* Notes Tab */}
       {activeTab === 'notes' && (
-        <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-6">
+        <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-4 sm:p-6">
           <div className="text-center py-12">
             <FileText className="h-12 w-12 text-fm-neutral-400 mx-auto mb-4" />
             <h4 className="font-semibold text-fm-neutral-900 mb-2">Meeting Notes & Documentation</h4>
@@ -463,7 +465,7 @@ export function CommunicationHub({ clientId, onScheduleMeeting }: CommunicationH
 
       {/* Calls Tab */}
       {activeTab === 'calls' && (
-        <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-6">
+        <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-4 sm:p-6">
           <div className="text-center py-12">
             <Phone className="h-12 w-12 text-fm-neutral-400 mx-auto mb-4" />
             <h4 className="font-semibold text-fm-neutral-900 mb-2">Call History & Logs</h4>

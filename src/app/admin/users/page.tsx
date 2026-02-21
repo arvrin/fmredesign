@@ -170,9 +170,9 @@ export default function UsersManagementPage() {
   // Check permissions first
   if (!isAuthenticated || !hasPermission('users.read')) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         <DashboardCard>
-          <CardContent className="p-6">
+          <CardContent className="p-4 sm:p-6">
             <EmptyState
               icon={<AlertTriangle className="w-6 h-6" />}
               title="Access Denied"
@@ -186,8 +186,8 @@ export default function UsersManagementPage() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
+      <div className="space-y-4 sm:space-y-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <Skeleton className="h-8 w-48" />
           <Skeleton className="h-10 w-32" />
         </div>
@@ -202,7 +202,7 @@ export default function UsersManagementPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
       <PageHeader
         title="User Management"
@@ -308,7 +308,7 @@ export default function UsersManagementPage() {
                         </div>
                         <div>
                           <div className="text-sm font-medium text-fm-neutral-900">{user.name}</div>
-                          <div className="text-sm text-fm-neutral-500 flex items-center gap-4">
+                          <div className="text-sm text-fm-neutral-500 flex flex-wrap items-center gap-2 sm:gap-4">
                             <span className="flex items-center gap-1">
                               <Mail className="w-3 h-3" />
                               {user.email}
@@ -524,7 +524,7 @@ function UserFormModal({
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
-        <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="p-4 sm:p-6 space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold">{isEdit ? 'Edit User' : 'Add New User'}</h3>
             <button type="button" onClick={onClose} className="text-fm-neutral-400 hover:text-fm-neutral-600">

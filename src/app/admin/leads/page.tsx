@@ -47,15 +47,15 @@ export default function LeadDashboard() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
+      <div className="space-y-4 sm:space-y-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <Skeleton className="h-8 w-48" />
           <div className="flex gap-3">
             <Skeleton className="h-10 w-24" />
             <Skeleton className="h-10 w-28" />
           </div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
           {[...Array(4)].map((_, i) => (
             <MetricCardSkeleton key={i} />
           ))}
@@ -67,13 +67,13 @@ export default function LeadDashboard() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
       <PageHeader
         title="Lead Management"
         description="Track, qualify, and convert your leads"
         actions={
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
             <DashboardButton variant="secondary" size="sm" onClick={exportLeads}>
               <Download className="w-4 h-4" />
               Export

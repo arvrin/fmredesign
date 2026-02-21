@@ -135,7 +135,7 @@ export default function AuditLogPage() {
     : entries;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
       <PageHeader
         title="Audit Log"
@@ -210,7 +210,7 @@ export default function AuditLogPage() {
           {loading ? (
             <div className="space-y-3">
               {Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="flex items-center gap-4 py-3">
+                <div key={i} className="flex items-center gap-3 sm:gap-4 py-3">
                   <Skeleton className="w-8 h-8 rounded-full" />
                   <div className="flex-1 space-y-2">
                     <Skeleton className="h-4 w-3/4" />
@@ -233,7 +233,7 @@ export default function AuditLogPage() {
           ) : (
             <div className="divide-y divide-fm-neutral-100">
               {filteredEntries.map((entry) => (
-                <div key={entry.id} className="flex items-start gap-3 py-3 hover:bg-fm-neutral-50/50 -mx-2 px-2 rounded-lg transition-colors">
+                <div key={entry.id} className="flex items-start gap-2 sm:gap-3 py-3 hover:bg-fm-neutral-50/50 -mx-2 px-2 rounded-lg transition-colors">
                   {/* Action icon */}
                   <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${ACTION_COLORS[entry.action as AuditAction] || 'bg-gray-100 text-gray-600'}`}>
                     {ACTION_ICONS[entry.action as AuditAction] || <Globe className="w-3.5 h-3.5" />}

@@ -67,7 +67,7 @@ function getGreeting() {
 /* ── Skeleton cards ── */
 function DashboardSkeleton() {
   return (
-    <div className="space-y-8">
+    <div className="space-y-4 sm:space-y-8">
       {/* Header skeleton */}
       <div className="space-y-2">
         <Skeleton className="h-8 w-64" />
@@ -75,21 +75,21 @@ function DashboardSkeleton() {
       </div>
 
       {/* Metric skeletons */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
         {[...Array(4)].map((_, i) => (
           <MetricCardSkeleton key={i} />
         ))}
       </div>
 
       {/* Quick actions skeleton */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
         {[...Array(4)].map((_, i) => (
           <Skeleton key={i} className="h-24 rounded-xl" />
         ))}
       </div>
 
       {/* Activity skeleton */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         <div className="space-y-3">
           <Skeleton className="h-6 w-40" />
           {[...Array(3)].map((_, i) => (
@@ -229,8 +229,8 @@ export default function AdminDashboard() {
         description="Your business operations at a glance — real-time insights and control."
       />
 
-      {/* Key Metrics — 2×2 on mobile, 4-col on desktop */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
+      {/* Key Metrics — 2×2 on mobile, 3-col on tablet, 4-col on desktop */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
         <MetricCard
           title="Clients"
           value={stats.totalClients}
@@ -307,7 +307,7 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Recent Invoices */}
         <section className="rounded-xl border border-fm-neutral-200 bg-white">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-fm-neutral-100">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between px-4 sm:px-5 py-3 sm:py-4 border-b border-fm-neutral-100">
             <h2 className="text-sm font-semibold text-fm-neutral-900">Recent Invoices</h2>
             <Link href="/admin/invoice" className="text-xs font-medium text-fm-magenta-700 hover:text-fm-magenta-800 flex items-center gap-1">
               View all <ArrowRight className="w-3 h-3" />
@@ -329,9 +329,9 @@ export default function AdminDashboard() {
           ) : (
             <div className="divide-y divide-fm-neutral-100">
               {recentInvoices.map((invoice) => (
-                <div key={invoice.id} className="flex items-center justify-between px-5 py-3.5 hover:bg-fm-neutral-50/50 transition-colors">
+                <div key={invoice.id} className="flex items-center justify-between px-4 sm:px-5 py-3 sm:py-3.5 hover:bg-fm-neutral-50/50 transition-colors">
                   <div className="min-w-0">
-                    <div className="flex items-center gap-2.5">
+                    <div className="flex items-center gap-2.5 flex-wrap">
                       <span className="text-sm font-medium text-fm-neutral-900">{invoice.invoiceNumber}</span>
                       <StatusBadge status={invoice.status} />
                     </div>
@@ -350,7 +350,7 @@ export default function AdminDashboard() {
 
         {/* Active Projects */}
         <section className="rounded-xl border border-fm-neutral-200 bg-white">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-fm-neutral-100">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between px-4 sm:px-5 py-3 sm:py-4 border-b border-fm-neutral-100">
             <h2 className="text-sm font-semibold text-fm-neutral-900">Active Projects</h2>
             <Link href="/admin/projects" className="text-xs font-medium text-fm-magenta-700 hover:text-fm-magenta-800 flex items-center gap-1">
               View all <ArrowRight className="w-3 h-3" />
@@ -372,7 +372,7 @@ export default function AdminDashboard() {
           ) : (
             <div className="divide-y divide-fm-neutral-100">
               {recentProjects.map((project) => (
-                <div key={project.id} className="flex items-center justify-between px-5 py-3.5 hover:bg-fm-neutral-50/50 transition-colors">
+                <div key={project.id} className="flex items-center justify-between px-4 sm:px-5 py-3 sm:py-3.5 hover:bg-fm-neutral-50/50 transition-colors">
                   <div className="flex items-center gap-3 min-w-0">
                     <div
                       className={cn(
@@ -411,7 +411,7 @@ export default function AdminDashboard() {
       {/* Upcoming Content */}
       {upcomingContent.length > 0 && (
         <section className="rounded-xl border border-fm-neutral-200 bg-white">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-fm-neutral-100">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between px-4 sm:px-5 py-3 sm:py-4 border-b border-fm-neutral-100">
             <h2 className="text-sm font-semibold text-fm-neutral-900">Upcoming Content</h2>
             <Link href="/admin/content" className="text-xs font-medium text-fm-magenta-700 hover:text-fm-magenta-800 flex items-center gap-1">
               Calendar <ArrowRight className="w-3 h-3" />
@@ -419,7 +419,7 @@ export default function AdminDashboard() {
           </div>
           <div className="divide-y divide-fm-neutral-100">
             {upcomingContent.map((item) => (
-              <div key={item.id} className="flex items-center justify-between px-5 py-3.5 hover:bg-fm-neutral-50/50 transition-colors">
+              <div key={item.id} className="flex items-center justify-between px-4 sm:px-5 py-3 sm:py-3.5 hover:bg-fm-neutral-50/50 transition-colors">
                 <div className="min-w-0">
                   <p className="text-sm font-medium text-fm-neutral-900 truncate">{item.title}</p>
                   <div className="flex items-center gap-2 mt-0.5">
