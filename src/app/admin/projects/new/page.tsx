@@ -17,6 +17,8 @@ import { adminToast } from '@/lib/admin/toast';
 import type { ProjectType } from '@/lib/admin/project-types';
 import { PROJECT_TEMPLATES } from '@/lib/admin/project-types';
 import { createProjectSchema } from '@/lib/validations/schemas';
+import { useTeamMembers } from '@/hooks/admin/useTeamMembers';
+import { TEAM_ROLES } from '@/lib/admin/types';
 
 // Extend the base schema with the extra fields the form uses
 // that are not in the API schema (assignedTalent, contentRequirements nested)
@@ -83,6 +85,7 @@ export default function NewProjectPage() {
   const searchParams = useSearchParams();
   const discoveryId = searchParams.get('discoveryId');
 
+  const { teamMembers } = useTeamMembers();
   const [clients, setClients] = useState<Client[]>([]);
   const [talent, setTalent] = useState<TalentMember[]>([]);
   const [discovery, setDiscovery] = useState<Discovery | null>(null);
@@ -138,7 +141,7 @@ export default function NewProjectPage() {
 
         // Load talent (if talent API exists)
         try {
-          const talentResponse = await fetch('/api/talent?type=talents&status=approved');
+          const talentResponse = await fetch('/api/talent?type=assignable');
           const talentResult = await talentResponse.json();
           if (talentResult.success) {
             setTalent(talentResult.data || []);
@@ -483,12 +486,17 @@ export default function NewProjectPage() {
                 <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
                   Project Manager *
                 </label>
-                <input
-                  type="text"
+                <select
                   {...register('projectManager')}
-                  className={inputClass}
-                  placeholder="Enter project manager name"
-                />
+                  className={selectClass}
+                >
+                  <option value="">Select project manager</option>
+                  {teamMembers.map(member => (
+                    <option key={member.id} value={member.name}>
+                      {member.name} — {TEAM_ROLES[member.role]}
+                    </option>
+                  ))}
+                </select>
                 {errors.projectManager && <p className={errorClass}>{errors.projectManager.message}</p>}
               </div>
 

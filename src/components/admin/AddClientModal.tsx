@@ -12,6 +12,8 @@ import { X } from 'lucide-react';
 import { Button } from '@/design-system/components/primitives/Button';
 import { adminToast } from '@/lib/admin/toast';
 import { createClientSchema } from '@/lib/validations/schemas';
+import { useTeamMembers } from '@/hooks/admin/useTeamMembers';
+import { TEAM_ROLES } from '@/lib/admin/types';
 
 type ClientFormData = z.infer<typeof createClientSchema>;
 
@@ -42,6 +44,7 @@ const selectClass = 'w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border bor
 const errorClass = 'text-xs text-red-600 mt-1.5';
 
 export function AddClientModal({ isOpen, onClose, onClientAdded }: AddClientModalProps) {
+  const { teamMembers } = useTeamMembers();
   const {
     register,
     handleSubmit,
@@ -64,6 +67,7 @@ export function AddClientModal({ isOpen, onClose, onClientAdded }: AddClientModa
       health: 'good',
       totalValue: '0',
       gstNumber: '',
+      accountManager: '',
       portalPassword: '',
     },
   });
@@ -193,6 +197,18 @@ export function AddClientModal({ isOpen, onClose, onClientAdded }: AddClientModa
             <div>
               <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">GST Number</label>
               <input {...register('gstNumber')} className={inputClass} placeholder="22AAAAA0000A1Z5" />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Account Manager</label>
+              <select {...register('accountManager')} className={selectClass}>
+                <option value="">Select account manager</option>
+                {teamMembers.map((member) => (
+                  <option key={member.id} value={member.name}>
+                    {member.name} — {TEAM_ROLES[member.role]}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div>

@@ -34,6 +34,8 @@ import {
 } from '@/lib/admin/client-types';
 import { ClientService } from '@/lib/admin/client-service';
 import { adminToast } from '@/lib/admin/toast';
+import { useTeamMembers } from '@/hooks/admin/useTeamMembers';
+import { TEAM_ROLES } from '@/lib/admin/types';
 import ContractsTab from './ContractsTab';
 
 // Types for API responses
@@ -82,6 +84,7 @@ interface ClientProfileProps {
 }
 
 export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
+  const { teamMembers } = useTeamMembers();
   const [client, setClient] = useState<ClientProfileType | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'projects' | 'support' | 'content' | 'contracts'>('overview');
   const [projects, setProjects] = useState<ProjectItem[]>([]);
@@ -149,18 +152,19 @@ export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
         // Account Management
         status: clientData.status,
         health: clientData.health,
-        
+        accountManager: (clientData as any).accountManager || '',
+
         // Contract Details
         contractType: clientData.contractDetails?.type || 'project',
         contractValue: clientData.contractDetails?.value || 0,
         billingCycle: clientData.contractDetails?.billingCycle || 'monthly',
-        
+
         // Contact Details
         contactRole: clientData.primaryContact?.role || 'Primary Contact',
         linkedIn: clientData.primaryContact?.linkedInUrl || ''
       });
     }
-    
+
     setLoading(false);
   };
 
@@ -197,12 +201,13 @@ export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
         // Account Management
         status: client.status,
         health: client.health,
-        
+        accountManager: (client as any).accountManager || '',
+
         // Contract Details
         contractType: client.contractDetails?.type || 'project',
         contractValue: client.contractDetails?.value || 0,
         billingCycle: client.contractDetails?.billingCycle || 'monthly',
-        
+
         // Contact Details
         contactRole: client.primaryContact?.role || 'Primary Contact',
         linkedIn: client.primaryContact?.linkedInUrl || ''
@@ -301,7 +306,8 @@ export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
             // Account Management
             status: editData.status,
             health: editData.health,
-            
+            accountManager: editData.accountManager,
+
             // Contract Information
             contractType: editData.contractType,
             contractValue: editData.contractValue,
@@ -735,6 +741,21 @@ export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
                     <div>
                       <h4 className="text-sm font-semibold text-fm-neutral-900 mb-3 pb-2 border-b border-fm-neutral-200">Account Management</h4>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Account Manager</label>
+                          <select
+                            value={editData.accountManager || ''}
+                            onChange={(e) => setEditData({...editData, accountManager: e.target.value})}
+                            className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400 appearance-none"
+                          >
+                            <option value="">Not assigned</option>
+                            {teamMembers.map((member) => (
+                              <option key={member.id} value={member.name}>
+                                {member.name} — {TEAM_ROLES[member.role]}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
                         <div>
                           <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Status</label>
                           <select

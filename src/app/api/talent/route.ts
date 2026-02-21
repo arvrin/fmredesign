@@ -218,6 +218,39 @@ export async function GET(request: NextRequest) {
     }
 
     // ------------------------------------------------------------------
+    // type=assignable → return approved talent for project assignment
+    // Returns a flat shape matching TalentMember interface used by
+    // projects/new page: { id, name, category, skills, availability, hourlyRate }
+    // ------------------------------------------------------------------
+    if (type === 'assignable') {
+      const { data, error } = await supabase
+        .from('talent_profiles')
+        .select('*')
+        .eq('status', 'approved')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      const assignable = (data || []).map((row: Record<string, unknown>) => {
+        const personalInfo = (row.personal_info || {}) as Record<string, unknown>;
+        const professionalDetails = (row.professional_details || {}) as Record<string, unknown>;
+        const pricing = (row.pricing || {}) as Record<string, unknown>;
+        const availability = (row.availability || {}) as Record<string, unknown>;
+
+        return {
+          id: row.id as string,
+          name: (personalInfo.fullName as string) || (row.email as string) || 'Unknown',
+          category: (professionalDetails.primaryCategory as string) || 'other',
+          skills: (professionalDetails.skills as string[]) || [],
+          availability: (availability.status as string) || 'available',
+          hourlyRate: (pricing.hourlyRate as number) || 0,
+        };
+      });
+
+      return NextResponse.json({ success: true, data: assignable });
+    }
+
+    // ------------------------------------------------------------------
     // Default: return talent_applications
     // ------------------------------------------------------------------
     let query = supabase

@@ -92,6 +92,26 @@ export async function POST(request: NextRequest) {
 
     if (error) throw error;
 
+    // Sync is_lead → clients.account_manager
+    if (body.isLead) {
+      try {
+        const { data: memberData } = await supabase
+          .from('team_members')
+          .select('name')
+          .eq('id', body.teamMemberId)
+          .single();
+
+        if (memberData?.name) {
+          await supabase
+            .from('clients')
+            .update({ account_manager: memberData.name })
+            .eq('id', body.clientId);
+        }
+      } catch (syncErr) {
+        console.error('Error syncing is_lead to account_manager:', syncErr);
+      }
+    }
+
     // Fire-and-forget audit log
     await logAuditEvent({
       user_id: auth.user.id,
@@ -134,8 +154,49 @@ export async function DELETE(request: NextRequest) {
     }
 
     const supabase = getSupabaseAdmin();
+
+    // Fetch the assignment before deleting to check if it was a lead
+    const { data: assignment } = await supabase
+      .from('team_assignments')
+      .select('is_lead, client_id')
+      .eq('id', id)
+      .single();
+
     const { error } = await supabase.from('team_assignments').delete().eq('id', id);
     if (error) throw error;
+
+    // If deleted assignment was is_lead, find next lead or reset to 'admin'
+    if (assignment?.is_lead && assignment?.client_id) {
+      try {
+        const { data: nextLead } = await supabase
+          .from('team_assignments')
+          .select('team_member_id')
+          .eq('client_id', assignment.client_id)
+          .eq('is_lead', true)
+          .limit(1)
+          .single();
+
+        if (nextLead?.team_member_id) {
+          const { data: memberData } = await supabase
+            .from('team_members')
+            .select('name')
+            .eq('id', nextLead.team_member_id)
+            .single();
+
+          await supabase
+            .from('clients')
+            .update({ account_manager: memberData?.name || 'admin' })
+            .eq('id', assignment.client_id);
+        } else {
+          await supabase
+            .from('clients')
+            .update({ account_manager: 'admin' })
+            .eq('id', assignment.client_id);
+        }
+      } catch (syncErr) {
+        console.error('Error syncing is_lead removal to account_manager:', syncErr);
+      }
+    }
 
     // Fire-and-forget audit log
     await logAuditEvent({

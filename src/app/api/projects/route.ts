@@ -203,6 +203,7 @@ export async function POST(request: NextRequest) {
       milestones: [],
       deliverables: [],
       content_requirements: body.contentRequirements || { postsPerWeek: 0, platforms: [], contentTypes: [] },
+      assigned_talent: (rawBody as any).assignedTalent || [],
       tags: body.tags || [],
       notes: body.notes?.trim() || '',
     };

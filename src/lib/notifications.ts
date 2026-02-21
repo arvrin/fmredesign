@@ -28,6 +28,7 @@ export type NotificationType =
   | 'ticket_reply'
   | 'document_shared'
   | 'proposal_sent'
+  | 'team_member_assigned'
   | 'general';
 
 export interface NotificationRecord {

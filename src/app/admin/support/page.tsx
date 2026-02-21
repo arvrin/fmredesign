@@ -32,6 +32,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/select-native';
 import { adminToast } from '@/lib/admin/toast';
+import { useTeamMembers } from '@/hooks/admin/useTeamMembers';
+import { TEAM_ROLES } from '@/lib/admin/types';
 
 interface AdminTicket {
   id: string;
@@ -50,6 +52,7 @@ interface AdminTicket {
 const statusOptions = ['open', 'in-progress', 'resolved', 'closed'] as const;
 
 export default function AdminSupportPage() {
+  const { teamMembers } = useTeamMembers();
   const [tickets, setTickets] = useState<AdminTicket[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -310,19 +313,23 @@ export default function AdminSupportPage() {
                         <label className="text-sm text-fm-neutral-600">
                           Assigned to:
                         </label>
-                        <Input
-                          type="text"
-                          defaultValue={ticket.assignedTo}
-                          onBlur={(e) => {
-                            if (e.target.value !== ticket.assignedTo) {
-                              updateTicket(ticket.id, {
-                                assignedTo: e.target.value,
-                              });
-                            }
-                          }}
+                        <Select
+                          value={ticket.assignedTo || ''}
+                          onChange={(e) =>
+                            updateTicket(ticket.id, {
+                              assignedTo: e.target.value,
+                            })
+                          }
                           disabled={updatingId === ticket.id}
-                          className="w-full sm:w-48"
-                        />
+                        >
+                          <option value="">Unassigned</option>
+                          <option value="Support Team">Support Team</option>
+                          {teamMembers.map((member) => (
+                            <option key={member.id} value={member.name}>
+                              {member.name} — {TEAM_ROLES[member.role]}
+                            </option>
+                          ))}
+                        </Select>
 
                         {updatingId === ticket.id && (
                           <span className="text-xs text-fm-neutral-500">

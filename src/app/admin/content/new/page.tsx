@@ -22,6 +22,8 @@ import { Button } from '@/design-system/components/primitives/Button';
 import { adminToast } from '@/lib/admin/toast';
 import { createContentSchema } from '@/lib/validations/schemas';
 import type { Project } from '@/lib/admin/project-types';
+import { useTeamMembers } from '@/hooks/admin/useTeamMembers';
+import { TEAM_ROLES } from '@/lib/admin/types';
 
 // Extend the base schema to include the content body field and array fields
 const contentFormSchema = createContentSchema.extend({
@@ -44,7 +46,7 @@ export default function NewContentPage() {
 
   const [projects, setProjects] = useState<Project[]>([]);
   const [clients, setClients] = useState<any[]>([]);
-  const [talent, setTalent] = useState<any[]>([]);
+  const { getByRoles } = useTeamMembers();
   const [loading, setLoading] = useState(false);
 
   const [hashtagInput, setHashtagInput] = useState('');
@@ -85,19 +87,16 @@ export default function NewContentPage() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [projectsResponse, clientsResponse, talentResponse] = await Promise.all([
+        const [projectsResponse, clientsResponse] = await Promise.all([
           fetch('/api/projects'),
           fetch('/api/clients'),
-          fetch('/api/talent')
         ]);
 
         const projectsResult = await projectsResponse.json();
         const clientsResult = await clientsResponse.json();
-        const talentResult = await talentResponse.json();
 
         if (projectsResult.success) setProjects(projectsResult.data);
         if (clientsResult.success) setClients(clientsResult.data);
-        if (talentResult.success) setTalent(talentResult.data);
 
         // If projectId is provided, pre-select it
         if (projectId && projectsResult.success) {
@@ -407,9 +406,9 @@ export default function NewContentPage() {
                       className={inputClass}
                     >
                       <option value="">Select designer</option>
-                      {talent.filter(t => t.role === 'designer').map(person => (
-                        <option key={person.id} value={person.name}>
-                          {person.name}
+                      {getByRoles(['graphic-designer', 'ui-ux-designer', 'video-editor']).map(member => (
+                        <option key={member.id} value={member.name}>
+                          {member.name} — {TEAM_ROLES[member.role]}
                         </option>
                       ))}
                     </select>
@@ -424,9 +423,9 @@ export default function NewContentPage() {
                       className={inputClass}
                     >
                       <option value="">Select writer</option>
-                      {talent.filter(t => t.role === 'writer' || t.role === 'content_writer').map(person => (
-                        <option key={person.id} value={person.name}>
-                          {person.name}
+                      {getByRoles(['content-writer', 'copywriter']).map(member => (
+                        <option key={member.id} value={member.name}>
+                          {member.name} — {TEAM_ROLES[member.role]}
                         </option>
                       ))}
                     </select>

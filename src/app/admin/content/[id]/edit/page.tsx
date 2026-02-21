@@ -11,10 +11,13 @@ import Link from 'next/link';
 import { DashboardButton, DashboardCard, CardContent, CardHeader, CardTitle } from '@/design-system';
 import { adminToast } from '@/lib/admin/toast';
 import type { ContentItem, ContentStatus, ContentType, Platform } from '@/lib/admin/project-types';
+import { useTeamMembers } from '@/hooks/admin/useTeamMembers';
+import { TEAM_ROLES } from '@/lib/admin/types';
 
 export default function EditContentPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
+  const { getByRoles } = useTeamMembers();
   const [item, setItem] = useState<ContentItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -218,23 +221,33 @@ export default function EditContentPage({ params }: { params: Promise<{ id: stri
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Assigned Designer</label>
-              <input
-                type="text"
+              <select
                 value={item.assignedDesigner || ''}
                 onChange={(e) => updateField('assignedDesigner', e.target.value)}
-                className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
-                placeholder="Designer name"
-              />
+                className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400 appearance-none"
+              >
+                <option value="">Select designer</option>
+                {getByRoles(['graphic-designer', 'ui-ux-designer', 'video-editor']).map(member => (
+                  <option key={member.id} value={member.name}>
+                    {member.name} — {TEAM_ROLES[member.role]}
+                  </option>
+                ))}
+              </select>
             </div>
             <div>
               <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Assigned Writer</label>
-              <input
-                type="text"
+              <select
                 value={item.assignedWriter || ''}
                 onChange={(e) => updateField('assignedWriter', e.target.value)}
-                className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
-                placeholder="Writer name"
-              />
+                className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400 appearance-none"
+              >
+                <option value="">Select writer</option>
+                {getByRoles(['content-writer', 'copywriter']).map(member => (
+                  <option key={member.id} value={member.name}>
+                    {member.name} — {TEAM_ROLES[member.role]}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
         </CardContent>
