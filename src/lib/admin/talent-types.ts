@@ -5,12 +5,17 @@
 
 export interface TalentProfile {
   id: string;
+  profileSlug?: string;
+  applicationId?: string;
+  email?: string;
   personalInfo: PersonalInfo;
   professionalDetails: ProfessionalDetails;
   portfolio: PortfolioItem[];
+  portfolioLinks?: { websiteUrl?: string; workSampleUrls?: string[] };
   socialMedia: SocialMediaMetrics;
   availability: AvailabilityInfo;
   preferences: TalentPreferences;
+  pricing?: PricingInfo;
   status: TalentStatus;
   ratings: TalentRatings;
   createdAt: string;

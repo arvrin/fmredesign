@@ -48,13 +48,13 @@ export function useCreativeMinds(): UseCreativeMindsReturn {
     setIsLoading(true);
     try {
       if (activeTab === 'applications') {
-        const response = await fetch('/api/talent?type=applications');
+        const response = await fetch('/api/talent');
         const result = await response.json();
         if (result.success) {
           setApplications(result.data);
         }
       } else if (activeTab === 'talents') {
-        const response = await fetch('/api/talent?type=talents&status=approved');
+        const response = await fetch('/api/talent?type=profiles');
         const result = await response.json();
         if (result.success) {
           setTalents(result.data);
@@ -75,45 +75,28 @@ export function useCreativeMinds(): UseCreativeMindsReturn {
   const handleApplicationAction = useCallback(
     async (applicationId: string, action: 'approve' | 'reject') => {
       try {
-        if (action === 'approve') {
-          const response = await fetch('/api/talent', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              action: 'approve_application',
-              applicationId,
-            }),
-          });
+        const newStatus = action === 'approve' ? 'approved' : 'rejected';
 
-          const result = await response.json();
-          if (result.success) {
-            loadData();
-            adminToast.success('Application approved and talent added to network!');
-          } else {
-            adminToast.error('Failed to approve application');
-          }
+        const response = await fetch('/api/talent', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: applicationId,
+            status: newStatus,
+            reviewedBy: 'admin',
+          }),
+        });
+
+        const result = await response.json();
+        if (result.success) {
+          loadData();
+          adminToast.success(
+            action === 'approve'
+              ? 'Application approved and talent added to network!'
+              : 'Application rejected.'
+          );
         } else {
-          const response = await fetch('/api/talent', {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              type: 'application',
-              id: applicationId,
-              updates: {
-                status: 'rejected',
-                reviewedAt: new Date().toISOString(),
-                reviewedBy: 'admin',
-              },
-            }),
-          });
-
-          const result = await response.json();
-          if (result.success) {
-            loadData();
-            adminToast.success('Application rejected.');
-          } else {
-            adminToast.error('Failed to reject application');
-          }
+          adminToast.error(result.error || `Failed to ${action} application`);
         }
       } catch (error) {
         console.error('Error updating application:', error);

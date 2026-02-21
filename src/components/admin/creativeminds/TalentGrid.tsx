@@ -525,11 +525,7 @@ export function TalentsList({
 /* ------------------------------------------------------------------ */
 
 function TalentCard({ talent }: { talent: TalentProfile }) {
-  const slug = talent.personalInfo.fullName
-    .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-');
+  const slug = talent.profileSlug || talent.id;
 
   return (
     <div className="bg-white rounded-xl border border-fm-neutral-200 shadow-sm p-6">

@@ -168,13 +168,57 @@ export async function GET(request: NextRequest) {
 
   try {
     const { searchParams } = new URL(request.url);
+    const type = searchParams.get('type'); // 'profiles' to query talent_profiles
     const status = searchParams.get('status');
     const search = searchParams.get('search');
 
     const supabase = getSupabaseAdmin();
 
     // ------------------------------------------------------------------
-    // Build the filtered query
+    // type=profiles → return talent_profiles (approved network members)
+    // ------------------------------------------------------------------
+    if (type === 'profiles') {
+      let profileQuery = supabase
+        .from('talent_profiles')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (status) {
+        profileQuery = profileQuery.eq('status', status);
+      }
+
+      if (search) {
+        profileQuery = profileQuery.or(
+          `personal_info->>fullName.ilike.%${search}%,email.ilike.%${search}%`
+        );
+      }
+
+      const { data, error } = await profileQuery;
+      if (error) throw error;
+
+      const profiles = (data || []).map((row: Record<string, unknown>) => ({
+        id: row.id,
+        applicationId: row.application_id,
+        profileSlug: row.profile_slug,
+        email: row.email,
+        personalInfo: row.personal_info || {},
+        professionalDetails: row.professional_details || {},
+        portfolioLinks: row.portfolio_links || {},
+        socialMedia: row.social_media || {},
+        availability: row.availability || {},
+        preferences: row.preferences || {},
+        pricing: row.pricing || {},
+        ratings: row.ratings || { overallRating: 0, totalReviews: 0 },
+        status: row.status,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at,
+      }));
+
+      return NextResponse.json({ success: true, data: profiles });
+    }
+
+    // ------------------------------------------------------------------
+    // Default: return talent_applications
     // ------------------------------------------------------------------
     let query = supabase
       .from('talent_applications')
@@ -186,7 +230,6 @@ export async function GET(request: NextRequest) {
     }
 
     // Search across JSONB personal_info fields (fullName, email)
-    // Supabase supports ->> for text extraction from JSONB columns
     if (search) {
       query = query.or(
         `personal_info->>fullName.ilike.%${search}%,personal_info->>email.ilike.%${search}%`
@@ -229,9 +272,9 @@ export async function GET(request: NextRequest) {
       stats,
     });
   } catch (error) {
-    console.error('Error fetching talent applications:', error);
+    console.error('Error fetching talent data:', error);
     return NextResponse.json(
-      { success: false, error: 'Failed to fetch talent applications' },
+      { success: false, error: 'Failed to fetch talent data' },
       { status: 500 }
     );
   }
