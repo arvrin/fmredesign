@@ -156,9 +156,37 @@ function ApplicationCard({
   onAction: (id: string, action: 'approve' | 'reject') => void;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const pricing = (application as any).pricing;
-  const portfolioLinks = (application as any).portfolioLinks;
-  const sym = getCurrencySymbol(application.preferences?.currency);
+  const appAny = application as any;
+  const pricing = appAny.pricing as Record<string, any> | undefined;
+  const portfolioLinks = appAny.portfolioLinks as Record<string, any> | undefined;
+  const personalInfo = (application.personalInfo || {}) as Record<string, any>;
+  const profDetails = (application.professionalDetails || {}) as Record<string, any>;
+  const prefs = (application.preferences || {}) as Record<string, any>;
+  const avail = (application.availability || {}) as Record<string, any>;
+  const social = (application.socialMedia || {}) as Record<string, any>;
+  const sym = getCurrencySymbol(prefs?.currency);
+
+  // Skills can be Skill[] objects or plain string[]
+  const skills: string[] = Array.isArray(profDetails.skills)
+    ? profDetails.skills.map((s: any) => (typeof s === 'string' ? s : s?.name || ''))
+    : [];
+
+  const tools: string[] = Array.isArray(profDetails.tools) ? profDetails.tools : [];
+
+  // Determine pricing display
+  function getPricingDisplay(): string {
+    if (pricing?.hourlyRate) {
+      const hr = typeof pricing.hourlyRate === 'object' ? pricing.hourlyRate : { min: pricing.hourlyRate, max: 0 };
+      if (hr.max > 0) return `${sym}${hr.min}\u2013${hr.max}/hr`;
+      if (hr.min > 0) return `${sym}${hr.min}/hr`;
+    }
+    if (pricing?.projectRate) {
+      const pr = typeof pricing.projectRate === 'object' ? pricing.projectRate : { min: pricing.projectRate, max: 0 };
+      if (pr.max > 0) return `${sym}${pr.min}\u2013${pr.max}/proj`;
+    }
+    if (prefs?.minimumProjectValue) return `${sym}${Number(prefs.minimumProjectValue).toLocaleString()}+`;
+    return 'Not specified';
+  }
 
   return (
     <div className="bg-white rounded-xl border border-fm-neutral-200 shadow-sm">
@@ -168,10 +196,11 @@ function ApplicationCard({
             <div className="flex items-center gap-4 mb-3">
               <div>
                 <h3 className="text-lg font-semibold text-fm-neutral-900">
-                  {application.personalInfo.fullName}
+                  {personalInfo.fullName || 'Unknown'}
                 </h3>
                 <p className="text-fm-neutral-600 text-sm">
-                  {application.personalInfo.email} &bull; {application.personalInfo.location.city}
+                  {personalInfo.email || ''}
+                  {personalInfo.location?.city ? ` \u2022 ${personalInfo.location.city}` : ''}
                 </p>
               </div>
 
@@ -182,60 +211,60 @@ function ApplicationCard({
               <div>
                 <span className="text-fm-neutral-500">Category:</span>
                 <p className="font-medium">
-                  {TALENT_CATEGORIES[application.professionalDetails.category]?.label}
+                  {TALENT_CATEGORIES[profDetails.category as keyof typeof TALENT_CATEGORIES]?.label
+                    || TALENT_CATEGORIES[profDetails.primaryCategory as keyof typeof TALENT_CATEGORIES]?.label
+                    || profDetails.primaryCategory || profDetails.category || 'N/A'}
                 </p>
               </div>
               <div>
                 <span className="text-fm-neutral-500">Experience:</span>
-                <p className="font-medium">{application.professionalDetails.yearsOfExperience} years</p>
+                <p className="font-medium">
+                  {profDetails.yearsOfExperience ? `${profDetails.yearsOfExperience} years` : profDetails.experienceLevel || 'N/A'}
+                </p>
               </div>
               <div>
                 <span className="text-fm-neutral-500">Applied:</span>
                 <p className="font-medium">
-                  {new Date(application.applicationDate).toLocaleDateString()}
+                  {application.applicationDate
+                    ? new Date(application.applicationDate).toLocaleDateString()
+                    : 'N/A'}
                 </p>
               </div>
               <div>
                 <span className="text-fm-neutral-500">Pricing:</span>
-                <p className="font-medium">
-                  {pricing?.hourlyRate?.max > 0
-                    ? `${sym}${pricing.hourlyRate.min}\u2013${pricing.hourlyRate.max}/hr`
-                    : pricing?.projectRate?.max > 0
-                    ? `${sym}${pricing.projectRate.min}\u2013${pricing.projectRate.max}/proj`
-                    : `${sym}${application.preferences.minimumProjectValue.toLocaleString()}+`}
-                </p>
+                <p className="font-medium">{getPricingDisplay()}</p>
               </div>
             </div>
 
             {/* Compact social links */}
             <div className="flex items-center gap-3 text-sm flex-wrap">
-              {application.socialMedia.instagram && (
+              {social.instagram?.handle && (
                 <a
-                  href={`https://instagram.com/${application.socialMedia.instagram.handle}`}
+                  href={`https://instagram.com/${social.instagram.handle}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-1 hover:underline"
                 >
                   <Instagram className="h-4 w-4 text-pink-500" />
-                  <span>{application.socialMedia.instagram.followers.toLocaleString()}</span>
+                  <span>{social.instagram.followers ? Number(social.instagram.followers).toLocaleString() : 'IG'}</span>
                   <ExternalLink className="h-3 w-3 opacity-40" />
                 </a>
               )}
-              {application.socialMedia.youtube && (
+              {social.youtube?.channel && (
                 <a
-                  href={application.socialMedia.youtube.channel}
+                  href={social.youtube.channel}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-1 hover:underline"
                 >
                   <Youtube className="h-4 w-4 text-red-500" />
-                  <span>{application.socialMedia.youtube.subscribers.toLocaleString()}</span>
+                  <span>{social.youtube.subscribers ? Number(social.youtube.subscribers).toLocaleString() : 'YT'}</span>
                   <ExternalLink className="h-3 w-3 opacity-40" />
                 </a>
               )}
-              {application.socialMedia.linkedin && (
+              {social.linkedin?.profileUrl && (
                 <a
-                  href={application.socialMedia.linkedin.profileUrl}
+                  href={social.linkedin.profileUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-1 hover:underline"
@@ -287,82 +316,84 @@ function ApplicationCard({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Left column */}
               <div className="space-y-5">
-                <div>
-                  <h4 className="font-medium text-fm-neutral-900 mb-2">Bio</h4>
-                  <p className="text-sm text-fm-neutral-600">{application.personalInfo.bio}</p>
-                </div>
-
-                <div>
-                  <h4 className="font-medium text-fm-neutral-900 mb-2">Skills</h4>
-                  <div className="flex flex-wrap gap-1">
-                    {application.professionalDetails.skills.map((skill, index) => (
-                      <span
-                        key={index}
-                        className="px-2 py-1 bg-fm-magenta-50 text-fm-magenta-700 text-xs rounded"
-                      >
-                        {skill.name}
-                      </span>
-                    ))}
+                {personalInfo.bio && (
+                  <div>
+                    <h4 className="font-medium text-fm-neutral-900 mb-2">Bio</h4>
+                    <p className="text-sm text-fm-neutral-600">{personalInfo.bio}</p>
                   </div>
-                </div>
+                )}
 
-                {application.professionalDetails.tools &&
-                  application.professionalDetails.tools.length > 0 &&
-                  application.professionalDetails.tools[0] !== '' && (
-                    <div>
-                      <h4 className="font-medium text-fm-neutral-900 mb-2">Tools</h4>
-                      <div className="flex flex-wrap gap-1">
-                        {application.professionalDetails.tools.map((tool, index) => (
-                          <span
-                            key={index}
-                            className="px-2 py-1 bg-fm-neutral-100 text-fm-neutral-700 text-xs rounded"
-                          >
-                            {tool}
-                          </span>
-                        ))}
-                      </div>
+                {skills.length > 0 && (
+                  <div>
+                    <h4 className="font-medium text-fm-neutral-900 mb-2">Skills</h4>
+                    <div className="flex flex-wrap gap-1">
+                      {skills.filter(Boolean).map((skill, index) => (
+                        <span
+                          key={index}
+                          className="px-2 py-1 bg-fm-magenta-50 text-fm-magenta-700 text-xs rounded"
+                        >
+                          {skill}
+                        </span>
+                      ))}
                     </div>
-                  )}
+                  </div>
+                )}
+
+                {tools.length > 0 && tools[0] !== '' && (
+                  <div>
+                    <h4 className="font-medium text-fm-neutral-900 mb-2">Tools</h4>
+                    <div className="flex flex-wrap gap-1">
+                      {tools.filter(Boolean).map((tool, index) => (
+                        <span
+                          key={index}
+                          className="px-2 py-1 bg-fm-neutral-100 text-fm-neutral-700 text-xs rounded"
+                        >
+                          {tool}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* Social Links */}
                 <div>
                   <h4 className="font-medium text-fm-neutral-900 mb-2">Social Links</h4>
                   <div className="flex flex-wrap gap-2">
-                    {application.socialMedia.instagram && (
+                    {social.instagram?.handle && (
                       <SocialPill
-                        href={`https://instagram.com/${application.socialMedia.instagram.handle}`}
+                        href={`https://instagram.com/${social.instagram.handle}`}
                         icon={Instagram}
-                        label={`@${application.socialMedia.instagram.handle}`}
+                        label={`@${social.instagram.handle}`}
                         color="bg-pink-50 text-pink-700 border-pink-200"
                       />
                     )}
-                    {application.socialMedia.youtube && (
+                    {social.youtube?.channel && (
                       <SocialPill
-                        href={application.socialMedia.youtube.channel}
+                        href={social.youtube.channel}
                         icon={Youtube}
                         label="YouTube"
                         color="bg-red-50 text-red-700 border-red-200"
                       />
                     )}
-                    {application.socialMedia.linkedin && (
+                    {social.linkedin?.profileUrl && (
                       <SocialPill
-                        href={application.socialMedia.linkedin.profileUrl}
+                        href={social.linkedin.profileUrl}
                         icon={Linkedin}
                         label="LinkedIn"
                         color="bg-blue-50 text-blue-700 border-blue-200"
                       />
                     )}
-                    {application.socialMedia.behance && (
+                    {social.behance?.profileUrl && (
                       <SocialPill
-                        href={application.socialMedia.behance.profileUrl}
+                        href={social.behance.profileUrl}
                         icon={Globe}
                         label="Behance"
                         color="bg-fm-magenta-50 text-fm-magenta-800 border-fm-magenta-200"
                       />
                     )}
-                    {application.socialMedia.dribbble && (
+                    {social.dribbble?.profileUrl && (
                       <SocialPill
-                        href={application.socialMedia.dribbble.profileUrl}
+                        href={social.dribbble.profileUrl}
                         icon={Globe}
                         label="Dribbble"
                         color="bg-pink-50 text-pink-700 border-pink-200"
@@ -418,20 +449,20 @@ function ApplicationCard({
                     <div className="space-y-1.5 bg-fm-neutral-50 rounded-lg p-3">
                       <PriceRange
                         label="Hourly"
-                        min={pricing.hourlyRate?.min || 0}
-                        max={pricing.hourlyRate?.max || 0}
+                        min={pricing.hourlyRate?.min ?? pricing.hourlyRate ?? 0}
+                        max={pricing.hourlyRate?.max ?? 0}
                         symbol={sym}
                       />
                       <PriceRange
                         label="Per-project"
-                        min={pricing.projectRate?.min || 0}
-                        max={pricing.projectRate?.max || 0}
+                        min={pricing.projectRate?.min ?? 0}
+                        max={pricing.projectRate?.max ?? 0}
                         symbol={sym}
                       />
                       <PriceRange
                         label="Monthly retainer"
-                        min={pricing.retainerRate?.min || 0}
-                        max={pricing.retainerRate?.max || 0}
+                        min={pricing.retainerRate?.min ?? 0}
+                        max={pricing.retainerRate?.max ?? 0}
                         symbol={sym}
                       />
                       {pricing.openToNegotiation && (
@@ -444,33 +475,32 @@ function ApplicationCard({
                 <div>
                   <h4 className="font-medium text-fm-neutral-900 mb-2">Preferences</h4>
                   <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-fm-neutral-500">Min. Project Value:</span>
-                      <span>
-                        {sym}
-                        {application.preferences.minimumProjectValue.toLocaleString()}
-                      </span>
-                    </div>
+                    {prefs.minimumProjectValue != null && (
+                      <div className="flex justify-between">
+                        <span className="text-fm-neutral-500">Min. Project Value:</span>
+                        <span>{sym}{Number(prefs.minimumProjectValue).toLocaleString()}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between">
                       <span className="text-fm-neutral-500">Remote Work:</span>
-                      <span>{application.availability.remoteWork ? 'Yes' : 'No'}</span>
+                      <span>{avail.remoteWork ? 'Yes' : avail.remoteWork === false ? 'No' : 'N/A'}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-fm-neutral-500">Commitment:</span>
                       <span className="capitalize">
-                        {application.availability.projectCommitment?.replace('_', ' ') || 'Both'}
+                        {(avail.projectCommitment || 'both').replace('_', ' ')}
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-fm-neutral-500">Communication:</span>
-                      <span className="capitalize">
-                        {application.preferences.communicationStyle || 'Mixed'}
-                      </span>
+                      <span className="capitalize">{prefs.communicationStyle || 'Mixed'}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-fm-neutral-500">Languages:</span>
-                      <span>{application.personalInfo.languages.join(', ')}</span>
-                    </div>
+                    {Array.isArray(personalInfo.languages) && personalInfo.languages.length > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-fm-neutral-500">Languages:</span>
+                        <span>{personalInfo.languages.join(', ')}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -526,68 +556,82 @@ export function TalentsList({
 
 function TalentCard({ talent }: { talent: TalentProfile }) {
   const slug = talent.profileSlug || talent.id;
+  const personalInfo = (talent.personalInfo || {}) as Record<string, any>;
+  const profDetails = (talent.professionalDetails || {}) as Record<string, any>;
+  const prefs = (talent.preferences || {}) as Record<string, any>;
+  const avail = (talent.availability || {}) as Record<string, any>;
+  const social = (talent.socialMedia || {}) as Record<string, any>;
+  const ratings = talent.ratings || { overallRating: 0, totalReviews: 0 };
 
   return (
     <div className="bg-white rounded-xl border border-fm-neutral-200 shadow-sm p-6">
       <div className="flex items-start justify-between mb-4">
         <div>
           <h3 className="text-lg font-semibold text-fm-neutral-900">
-            {talent.personalInfo.fullName}
+            {personalInfo.fullName || talent.email || 'Unknown'}
           </h3>
           <p className="text-fm-neutral-600 text-sm">
-            {TALENT_CATEGORIES[talent.professionalDetails.category]?.label}
+            {TALENT_CATEGORIES[profDetails.category as keyof typeof TALENT_CATEGORIES]?.label
+              || TALENT_CATEGORIES[profDetails.primaryCategory as keyof typeof TALENT_CATEGORIES]?.label
+              || profDetails.primaryCategory || 'Creative'}
           </p>
         </div>
 
-        <div className="flex items-center gap-1">
-          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-          <span className="text-sm font-medium">{talent.ratings.overallRating.toFixed(1)}</span>
-          <span className="text-xs text-fm-neutral-500">({talent.ratings.totalReviews})</span>
-        </div>
+        {ratings.totalReviews > 0 && (
+          <div className="flex items-center gap-1">
+            <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+            <span className="text-sm font-medium">{(ratings.overallRating || 0).toFixed(1)}</span>
+            <span className="text-xs text-fm-neutral-500">({ratings.totalReviews})</span>
+          </div>
+        )}
       </div>
 
       <div className="space-y-3 text-sm mb-4">
-        <div className="flex justify-between">
-          <span className="text-fm-neutral-500">Experience:</span>
-          <span>{talent.professionalDetails.yearsOfExperience} years</span>
-        </div>
+        {(profDetails.yearsOfExperience || profDetails.experienceLevel) && (
+          <div className="flex justify-between">
+            <span className="text-fm-neutral-500">Experience:</span>
+            <span>{profDetails.yearsOfExperience ? `${profDetails.yearsOfExperience} years` : profDetails.experienceLevel}</span>
+          </div>
+        )}
         <div className="flex justify-between">
           <span className="text-fm-neutral-500">Availability:</span>
-          <span className="capitalize">{talent.availability.currentStatus.replace('_', ' ')}</span>
+          <span className="capitalize">{(avail.currentStatus || avail.status || 'available').replace('_', ' ')}</span>
         </div>
-        <div className="flex justify-between">
-          <span className="text-fm-neutral-500">Location:</span>
-          <span>{talent.personalInfo.location.city}</span>
-        </div>
+        {personalInfo.location?.city && (
+          <div className="flex justify-between">
+            <span className="text-fm-neutral-500">Location:</span>
+            <span>{personalInfo.location.city}</span>
+          </div>
+        )}
       </div>
 
       {/* Social Media */}
       <div className="flex items-center gap-3 mb-4">
-        {talent.socialMedia.instagram && (
+        {social.instagram?.handle && (
           <a
-            href={`https://instagram.com/${talent.socialMedia.instagram.handle}`}
+            href={`https://instagram.com/${social.instagram.handle}`}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-1 text-xs hover:underline"
           >
             <Instagram className="h-3 w-3 text-pink-500" />
-            <span>{talent.socialMedia.instagram.followers.toLocaleString()}</span>
+            <span>{social.instagram.followers ? Number(social.instagram.followers).toLocaleString() : 'IG'}</span>
           </a>
         )}
-        {talent.socialMedia.youtube && (
+        {social.youtube?.channel && (
           <a
-            href={talent.socialMedia.youtube.channel}
+            href={social.youtube.channel}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-1 text-xs hover:underline"
           >
             <Youtube className="h-3 w-3 text-red-500" />
-            <span>{talent.socialMedia.youtube.subscribers.toLocaleString()}</span>
+            <span>{social.youtube.subscribers ? Number(social.youtube.subscribers).toLocaleString() : 'YT'}</span>
           </a>
         )}
-        {talent.socialMedia.linkedin && (
+        {social.linkedin?.profileUrl && (
           <a
-            href={talent.socialMedia.linkedin.profileUrl}
+            href={social.linkedin.profileUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-1 text-xs hover:underline"
@@ -598,10 +642,14 @@ function TalentCard({ talent }: { talent: TalentProfile }) {
       </div>
 
       <div className="flex items-center justify-between">
-        <span className="text-lg font-semibold text-fm-neutral-900">
-          {getCurrencySymbol(talent.preferences?.currency)}
-          {talent.preferences.minimumProjectValue.toLocaleString()}+
-        </span>
+        {prefs.minimumProjectValue != null ? (
+          <span className="text-lg font-semibold text-fm-neutral-900">
+            {getCurrencySymbol(prefs.currency)}
+            {Number(prefs.minimumProjectValue).toLocaleString()}+
+          </span>
+        ) : (
+          <span className="text-sm text-fm-neutral-500">Pricing not set</span>
+        )}
         <a href={`/talent/${slug}`} target="_blank" rel="noopener noreferrer">
           <DashboardButton size="sm" variant="secondary">
             View Profile

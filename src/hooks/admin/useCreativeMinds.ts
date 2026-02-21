@@ -109,17 +109,17 @@ export function useCreativeMinds(): UseCreativeMindsReturn {
   const filteredApplications = applications.filter((app) => {
     const matchesStatus = selectedStatus === 'all' || app.status === selectedStatus;
     const lowerQuery = searchQuery.toLowerCase();
-    const matchesSearch =
-      app.personalInfo.fullName.toLowerCase().includes(lowerQuery) ||
-      app.personalInfo.email.toLowerCase().includes(lowerQuery);
+    const name = (app.personalInfo?.fullName || '').toLowerCase();
+    const email = (app.personalInfo?.email || '').toLowerCase();
+    const matchesSearch = name.includes(lowerQuery) || email.includes(lowerQuery);
     return matchesStatus && matchesSearch;
   });
 
   const filteredTalents = talents.filter((talent) => {
     const lowerQuery = searchQuery.toLowerCase();
-    const matchesSearch =
-      talent.personalInfo.fullName.toLowerCase().includes(lowerQuery) ||
-      talent.personalInfo.email.toLowerCase().includes(lowerQuery);
+    const name = (talent.personalInfo?.fullName || '').toLowerCase();
+    const email = (talent.personalInfo?.email || talent.email || '').toLowerCase();
+    const matchesSearch = name.includes(lowerQuery) || email.includes(lowerQuery);
     return matchesSearch;
   });
 
