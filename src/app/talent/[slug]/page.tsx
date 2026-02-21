@@ -10,14 +10,12 @@ import { useState, useEffect, use } from 'react';
 import Link from 'next/link';
 import { V2PageWrapper } from '@/components/layouts/V2PageWrapper';
 import {
-  User,
   Mail,
   Phone,
   MapPin,
   Briefcase,
   Globe,
   Clock,
-  DollarSign,
   Star,
   Save,
   Loader2,
@@ -27,6 +25,7 @@ import {
   ArrowRight,
   Edit3,
   X,
+  Image as ImageIcon,
 } from 'lucide-react';
 import {
   TALENT_CATEGORIES,
@@ -36,58 +35,73 @@ import {
   type TalentCategory,
 } from '@/lib/admin/talent-types';
 
-interface TalentProfile {
-  id: string;
-  profileSlug: string;
-  email: string;
-  personalInfo: {
-    fullName: string;
-    email: string;
-    phone: string;
-    location: { city: string; state: string; country: string };
-    bio: string;
-    languages: string[];
-  };
-  professionalDetails: {
-    category: TalentCategory;
-    subcategories: string[];
-    experienceLevel: string;
-    yearsOfExperience: number;
-    skills: { name: string; proficiency: string }[];
-    tools: string[];
-  };
-  portfolioLinks: {
-    websiteUrl: string;
-    workSampleUrls: string[];
-  };
-  socialMedia: Record<string, any>;
-  availability: {
-    currentStatus: string;
-    hoursPerWeek: number;
-    projectCommitment: string;
-    remoteWork: boolean;
-  };
-  preferences: {
-    communicationStyle: string;
-    minimumProjectValue: number;
-    currency: string;
-  };
-  pricing: {
-    hourlyRate: { min: number; max: number };
-    projectRate: { min: number; max: number };
-    retainerRate: { min: number; max: number };
-    openToNegotiation: boolean;
-  };
-  ratings: {
-    overallRating: number;
-    totalReviews: number;
-  };
-  status: string;
-  createdAt: string;
-  updatedAt: string;
-}
+/* ─── JSONB-honest type — no fake deep shapes ─── */
+type TalentProfile = Record<string, any>;
 
 type EditSection = 'contact' | 'availability' | 'portfolio' | 'pricing' | null;
+
+/* ─── Helpers ─── */
+
+function getInitials(name: string): string {
+  if (!name) return '?';
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+  return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+}
+
+/** Format a rate value that may be a flat number or {min, max} object */
+function formatRate(value: any, symbol: string): string | null {
+  if (value == null) return null;
+
+  if (typeof value === 'number') {
+    return value > 0 ? `${symbol}${value.toLocaleString('en-IN')}` : null;
+  }
+
+  if (typeof value === 'object') {
+    const min = Number(value.min) || 0;
+    const max = Number(value.max) || 0;
+    if (min > 0 && max > 0 && min !== max) {
+      return `${symbol}${min.toLocaleString('en-IN')}\u2013${symbol}${max.toLocaleString('en-IN')}`;
+    }
+    if (min > 0) return `${symbol}${min.toLocaleString('en-IN')}`;
+    if (max > 0) return `${symbol}${max.toLocaleString('en-IN')}`;
+    return null;
+  }
+
+  const num = Number(value);
+  return num > 0 ? `${symbol}${num.toLocaleString('en-IN')}` : null;
+}
+
+/* ─── ProfileAvatar ─── */
+
+function ProfileAvatar({ name, src }: { name: string; src?: string }) {
+  const [imgError, setImgError] = useState(false);
+  const initials = getInitials(name);
+
+  if (src && !imgError) {
+    return (
+      <div className="w-16 h-16 rounded-full overflow-hidden shrink-0 ring-2 ring-fm-magenta-600/30">
+        <img
+          src={src}
+          alt={name}
+          className="w-full h-full object-cover"
+          onError={() => setImgError(true)}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="w-16 h-16 rounded-full shrink-0 flex items-center justify-center text-white font-bold text-xl ring-2 ring-fm-magenta-600/30"
+      style={{ background: 'linear-gradient(135deg, #c9325d, #e8543e)' }}
+    >
+      {initials}
+    </div>
+  );
+}
+
+/* ─── Main Component ─── */
 
 export default function TalentProfilePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
@@ -98,7 +112,7 @@ export default function TalentProfilePage({ params }: { params: Promise<{ slug: 
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
-  // Editable drafts — use Record<string, any> because JSONB shape may differ from TS interface
+  // Editable drafts
   const [draftContact, setDraftContact] = useState<Record<string, any> | null>(null);
   const [draftAvailability, setDraftAvailability] = useState<Record<string, any> | null>(null);
   const [draftPortfolio, setDraftPortfolio] = useState<Record<string, any> | null>(null);
@@ -121,10 +135,34 @@ export default function TalentProfilePage({ params }: { params: Promise<{ slug: 
   const startEditing = (section: EditSection) => {
     if (!profile) return;
     const p = profile as Record<string, any>;
-    if (section === 'contact') setDraftContact({ ...(p.personalInfo || {}) });
-    if (section === 'availability') setDraftAvailability({ ...(p.availability || {}) });
-    if (section === 'portfolio') setDraftPortfolio({ ...(p.portfolioLinks || {}) });
-    if (section === 'pricing') setDraftPricing({ ...(p.pricing || {}) });
+
+    if (section === 'contact') {
+      setDraftContact({ ...(p.personalInfo || {}) });
+    }
+
+    if (section === 'availability') {
+      const raw = { ...(p.availability || {}) };
+      // Normalize status/currentStatus duality
+      const statusValue = raw.currentStatus || raw.status || 'available';
+      raw.currentStatus = statusValue;
+      raw.status = statusValue;
+      raw.remoteWork = raw.remoteWork ?? false;
+      setDraftAvailability(raw);
+    }
+
+    if (section === 'portfolio') {
+      setDraftPortfolio({ ...(p.portfolioLinks || {}) });
+    }
+
+    if (section === 'pricing') {
+      const raw = { ...(p.pricing || {}) };
+      // Copy currency from preferences if missing from pricing
+      if (!raw.currency) {
+        raw.currency = (p.preferences || {}).currency || 'INR';
+      }
+      setDraftPricing(raw);
+    }
+
     setEditing(section);
     setSaveSuccess(false);
   };
@@ -165,7 +203,7 @@ export default function TalentProfilePage({ params }: { params: Promise<{ slug: 
             ...(editing === 'availability' && draftAvailability ? { availability: draftAvailability } : {}),
             ...(editing === 'portfolio' && draftPortfolio ? { portfolioLinks: draftPortfolio } : {}),
             ...(editing === 'pricing' && draftPricing ? { pricing: draftPricing } : {}),
-          } as TalentProfile;
+          };
         });
         setSaveSuccess(true);
         setTimeout(() => {
@@ -229,7 +267,7 @@ export default function TalentProfilePage({ params }: { params: Promise<{ slug: 
   const categoryKey = pd.category || pd.primaryCategory || '';
   const categoryLabel = TALENT_CATEGORIES[categoryKey as TalentCategory]?.label || categoryKey || 'Creative';
   const experienceLabel = EXPERIENCE_LEVELS.find((e) => e.value === pd.experienceLevel)?.label || pd.experienceLevel || '';
-  const currencySymbol = CURRENCIES.find((c) => c.code === (prefs.currency || pr?.currency))?.symbol || '₹';
+  const currencySymbol = CURRENCIES.find((c) => c.code === (prefs.currency || pr?.currency))?.symbol || '\u20B9';
   const currentStatus = av.currentStatus || av.status || 'available';
   const commitmentLabel = PROJECT_COMMITMENT_OPTIONS.find((o) => o.value === av.projectCommitment)?.label || av.projectCommitment || 'Both';
   const subcategories: string[] = Array.isArray(pd.subcategories) ? pd.subcategories : [];
@@ -237,10 +275,13 @@ export default function TalentProfilePage({ params }: { params: Promise<{ slug: 
   const tools: string[] = Array.isArray(pd.tools) ? pd.tools : [];
   const languages: string[] = Array.isArray(pi.languages) ? pi.languages : [];
   const location = pi.location || {};
-  const hourlyRate = typeof pr.hourlyRate === 'object' ? pr.hourlyRate : { min: pr.hourlyRate || 0, max: 0 };
-  const projectRate = typeof pr.projectRate === 'object' ? pr.projectRate : { min: 0, max: 0 };
-  const retainerRate = typeof pr.retainerRate === 'object' ? pr.retainerRate : { min: 0, max: 0 };
   const workSampleUrls: string[] = Array.isArray(pl.workSampleUrls) ? pl.workSampleUrls : [];
+
+  // Pricing display values
+  const hourlyDisplay = formatRate(pr.hourlyRate, currencySymbol);
+  const projectDisplay = formatRate(pr.projectRate, currencySymbol);
+  const retainerDisplay = formatRate(pr.retainerRate, currencySymbol);
+  const hasAnyRate = hourlyDisplay || projectDisplay || retainerDisplay;
 
   const statusColors: Record<string, string> = {
     available: 'bg-green-100 text-green-800',
@@ -262,18 +303,28 @@ export default function TalentProfilePage({ params }: { params: Promise<{ slug: 
               <Sparkles className="w-4 h-4 v2-text-primary" />
               <span className="v2-text-primary">CreativeMinds Profile</span>
             </div>
-            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-              <div>
-                <h1 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold v2-text-primary leading-tight mb-2">
-                  {pi.fullName}
-                </h1>
-                <p className="text-lg v2-text-secondary">
-                  {categoryLabel} &middot; {experienceLabel}
-                </p>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <ProfileAvatar name={pi.fullName || ''} src={pi.profilePicture} />
+                <div>
+                  <h1 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold v2-text-primary leading-tight mb-1">
+                    {pi.fullName}
+                  </h1>
+                  <p className="text-lg v2-text-secondary">
+                    {categoryLabel} &middot; {experienceLabel}
+                  </p>
+                </div>
               </div>
-              <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium ${statusColors[currentStatus] || 'bg-gray-100 text-gray-600'}`}>
+              <div
+                className={`shrink-0 whitespace-nowrap self-start inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium ${statusColors[currentStatus] || 'bg-gray-100 text-gray-600'}`}
+              >
                 <div className={`w-2 h-2 rounded-full ${currentStatus === 'available' ? 'bg-green-500' : currentStatus === 'partially_available' ? 'bg-yellow-500' : 'bg-red-500'}`} />
-                {currentStatus === 'available' ? 'Available' : currentStatus === 'partially_available' ? 'Partially Available' : 'Busy'}
+                <span className="sm:hidden">
+                  {currentStatus === 'available' ? 'Available' : currentStatus === 'partially_available' ? 'Partial' : 'Busy'}
+                </span>
+                <span className="hidden sm:inline">
+                  {currentStatus === 'available' ? 'Available' : currentStatus === 'partially_available' ? 'Partially Available' : 'Busy'}
+                </span>
               </div>
             </div>
           </div>
@@ -409,7 +460,7 @@ export default function TalentProfilePage({ params }: { params: Promise<{ slug: 
                       <label className="block text-xs font-medium text-fm-neutral-600 mb-1">Email</label>
                       <input
                         type="email"
-                        value={draftContact.email}
+                        value={draftContact.email || ''}
                         onChange={(e) => setDraftContact({ ...draftContact, email: e.target.value })}
                         className={inputClass}
                       />
@@ -418,7 +469,7 @@ export default function TalentProfilePage({ params }: { params: Promise<{ slug: 
                       <label className="block text-xs font-medium text-fm-neutral-600 mb-1">Phone</label>
                       <input
                         type="tel"
-                        value={draftContact.phone}
+                        value={draftContact.phone || ''}
                         onChange={(e) => setDraftContact({ ...draftContact, phone: e.target.value })}
                         className={inputClass}
                       />
@@ -435,11 +486,25 @@ export default function TalentProfilePage({ params }: { params: Promise<{ slug: 
                     <div>
                       <label className="block text-xs font-medium text-fm-neutral-600 mb-1">Bio</label>
                       <textarea
-                        value={draftContact.bio}
+                        value={draftContact.bio || ''}
                         onChange={(e) => setDraftContact({ ...draftContact, bio: e.target.value })}
                         rows={3}
                         className={inputClass}
                       />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-fm-neutral-600 mb-1">Profile Picture URL</label>
+                      <div className="flex items-center gap-2">
+                        <ImageIcon className="w-4 h-4 text-fm-neutral-400 shrink-0" />
+                        <input
+                          type="url"
+                          value={draftContact.profilePicture || ''}
+                          onChange={(e) => setDraftContact({ ...draftContact, profilePicture: e.target.value })}
+                          className={inputClass}
+                          placeholder="https://example.com/photo.jpg"
+                        />
+                      </div>
+                      <p className="text-xs text-fm-neutral-400 mt-1">Paste a URL to your profile photo</p>
                     </div>
                     <EditActions saving={saving} saveSuccess={saveSuccess} onSave={handleSave} onCancel={cancelEditing} />
                   </div>
@@ -537,9 +602,24 @@ export default function TalentProfilePage({ params }: { params: Promise<{ slug: 
 
                 {editing === 'pricing' && draftPricing ? (
                   <div className="space-y-3">
-                    <RateInput label="Hourly" symbol={currencySymbol} rate={typeof draftPricing.hourlyRate === 'object' ? draftPricing.hourlyRate : { min: Number(draftPricing.hourlyRate) || 0, max: 0 }} onChange={(r) => setDraftPricing({ ...draftPricing, hourlyRate: r })} />
-                    <RateInput label="Per-project" symbol={currencySymbol} rate={typeof draftPricing.projectRate === 'object' ? draftPricing.projectRate : { min: 0, max: 0 }} onChange={(r) => setDraftPricing({ ...draftPricing, projectRate: r })} />
-                    <RateInput label="Monthly" symbol={currencySymbol} rate={typeof draftPricing.retainerRate === 'object' ? draftPricing.retainerRate : { min: 0, max: 0 }} onChange={(r) => setDraftPricing({ ...draftPricing, retainerRate: r })} />
+                    <SmartRateInput
+                      label="Hourly"
+                      symbol={currencySymbol}
+                      value={draftPricing.hourlyRate}
+                      onChange={(v) => setDraftPricing({ ...draftPricing, hourlyRate: v })}
+                    />
+                    <SmartRateInput
+                      label="Per-project"
+                      symbol={currencySymbol}
+                      value={draftPricing.projectRate}
+                      onChange={(v) => setDraftPricing({ ...draftPricing, projectRate: v })}
+                    />
+                    <SmartRateInput
+                      label="Monthly"
+                      symbol={currencySymbol}
+                      value={draftPricing.retainerRate}
+                      onChange={(v) => setDraftPricing({ ...draftPricing, retainerRate: v })}
+                    />
                     <div className="flex items-center gap-2">
                       <input
                         type="checkbox"
@@ -554,23 +634,26 @@ export default function TalentProfilePage({ params }: { params: Promise<{ slug: 
                   </div>
                 ) : (
                   <div className="space-y-2 text-sm">
-                    {Number(hourlyRate.max) > 0 && (
+                    {hourlyDisplay && (
                       <div className="flex justify-between text-fm-neutral-600">
                         <span>Hourly</span>
-                        <span className="font-medium text-fm-neutral-900">{currencySymbol}{Number(hourlyRate.min).toLocaleString()}–{Number(hourlyRate.max).toLocaleString()}</span>
+                        <span className="font-medium text-fm-neutral-900">{hourlyDisplay}</span>
                       </div>
                     )}
-                    {Number(projectRate.max) > 0 && (
+                    {projectDisplay && (
                       <div className="flex justify-between text-fm-neutral-600">
                         <span>Per-project</span>
-                        <span className="font-medium text-fm-neutral-900">{currencySymbol}{Number(projectRate.min).toLocaleString()}–{Number(projectRate.max).toLocaleString()}</span>
+                        <span className="font-medium text-fm-neutral-900">{projectDisplay}</span>
                       </div>
                     )}
-                    {Number(retainerRate.max) > 0 && (
+                    {retainerDisplay && (
                       <div className="flex justify-between text-fm-neutral-600">
                         <span>Monthly</span>
-                        <span className="font-medium text-fm-neutral-900">{currencySymbol}{Number(retainerRate.min).toLocaleString()}–{Number(retainerRate.max).toLocaleString()}</span>
+                        <span className="font-medium text-fm-neutral-900">{retainerDisplay}</span>
                       </div>
+                    )}
+                    {!hasAnyRate && (
+                      <p className="text-fm-neutral-400 text-sm">No rates set</p>
                     )}
                     {pr.openToNegotiation && (
                       <p className="text-xs text-fm-neutral-400 pt-1">Open to negotiation</p>
@@ -609,25 +692,84 @@ function InfoRow({ icon, label }: { icon: React.ReactNode; label: string }) {
   );
 }
 
-function RateInput({
+/** Smart rate input that handles flat numbers and {min, max} objects */
+function SmartRateInput({
   label,
   symbol,
-  rate,
+  value,
   onChange,
 }: {
   label: string;
   symbol: string;
-  rate: { min: number; max: number };
-  onChange: (r: { min: number; max: number }) => void;
+  value: any;
+  onChange: (v: any) => void;
 }) {
-  const inputClass = 'w-full px-2 py-1.5 border border-fm-neutral-300 rounded-lg text-sm focus:ring-2 focus:ring-fm-magenta-500';
+  const isRange = typeof value === 'object' && value !== null && ('min' in value || 'max' in value);
+  const [showRange, setShowRange] = useState(isRange && (Number(value?.max) > 0));
+
+  const inputCls = 'w-full px-2 py-1.5 border border-fm-neutral-300 rounded-lg text-sm focus:ring-2 focus:ring-fm-magenta-500';
+
+  if (showRange) {
+    const min = isRange ? (Number(value?.min) || 0) : (Number(value) || 0);
+    const max = isRange ? (Number(value?.max) || 0) : 0;
+    return (
+      <div>
+        <div className="flex items-center justify-between mb-1">
+          <label className="text-xs font-medium text-fm-neutral-600">{label} ({symbol})</label>
+          <button
+            type="button"
+            onClick={() => {
+              setShowRange(false);
+              onChange(min || max || 0);
+            }}
+            className="text-xs text-fm-magenta-600 hover:underline"
+          >
+            Single rate
+          </button>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <input
+            type="number"
+            value={min || ''}
+            onChange={(e) => onChange({ min: parseInt(e.target.value) || 0, max })}
+            className={inputCls}
+            placeholder="Min"
+          />
+          <input
+            type="number"
+            value={max || ''}
+            onChange={(e) => onChange({ min, max: parseInt(e.target.value) || 0 })}
+            className={inputCls}
+            placeholder="Max"
+          />
+        </div>
+      </div>
+    );
+  }
+
+  const flat = isRange ? (Number(value?.min) || Number(value?.max) || 0) : (Number(value) || 0);
   return (
     <div>
-      <label className="block text-xs font-medium text-fm-neutral-600 mb-1">{label} ({symbol})</label>
-      <div className="grid grid-cols-2 gap-2">
-        <input type="number" value={rate.min || ''} onChange={(e) => onChange({ ...rate, min: parseInt(e.target.value) || 0 })} className={inputClass} placeholder="Min" />
-        <input type="number" value={rate.max || ''} onChange={(e) => onChange({ ...rate, max: parseInt(e.target.value) || 0 })} className={inputClass} placeholder="Max" />
+      <div className="flex items-center justify-between mb-1">
+        <label className="text-xs font-medium text-fm-neutral-600">{label} ({symbol})</label>
+        <button
+          type="button"
+          onClick={() => {
+            setShowRange(true);
+            onChange({ min: flat, max: 0 });
+          }}
+          className="text-xs text-fm-magenta-600 hover:underline"
+        >
+          Add range
+        </button>
       </div>
+      <input
+        type="number"
+        value={flat || ''}
+        onChange={(e) => onChange(parseInt(e.target.value) || 0)}
+        className={inputCls}
+        placeholder="Rate"
+      />
     </div>
   );
 }
