@@ -19,6 +19,7 @@ import {
   XCircle,
   Globe,
   Search,
+  Send,
 } from 'lucide-react';
 import {
   DashboardButton,
@@ -47,6 +48,7 @@ const ACTION_ICONS: Record<AuditAction, React.ReactNode> = {
   import: <Upload className="w-3.5 h-3.5" />,
   approve: <CheckCircle className="w-3.5 h-3.5" />,
   reject: <XCircle className="w-3.5 h-3.5" />,
+  publish: <Send className="w-3.5 h-3.5" />,
 };
 
 const ACTION_COLORS: Record<AuditAction, string> = {
@@ -59,10 +61,11 @@ const ACTION_COLORS: Record<AuditAction, string> = {
   import: 'bg-indigo-100 text-indigo-700',
   approve: 'bg-green-100 text-green-700',
   reject: 'bg-red-100 text-red-700',
+  publish: 'bg-emerald-100 text-emerald-700',
 };
 
 const RESOURCE_TYPES = ['all', 'client', 'project', 'content', 'user', 'invoice', 'proposal'] as const;
-const ACTIONS: ('all' | AuditAction)[] = ['all', 'create', 'update', 'delete', 'login', 'logout', 'approve', 'reject'];
+const ACTIONS: ('all' | AuditAction)[] = ['all', 'create', 'update', 'delete', 'login', 'logout', 'approve', 'reject', 'publish'];
 
 function timeAgo(dateStr: string): string {
   const now = new Date();

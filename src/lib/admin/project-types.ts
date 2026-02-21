@@ -146,6 +146,10 @@ export interface ContentItem {
   revisionNotes?: string;
   approvedAt?: string;
   
+  // Social publishing
+  metaPostId?: string;
+  lastPublishError?: string;
+
   // Performance (post-publication)
   engagement?: {
     likes: number;
@@ -154,7 +158,7 @@ export interface ContentItem {
     reach: number;
     impressions: number;
   };
-  
+
   // Metadata
   hashtags: string[];
   mentions: string[];

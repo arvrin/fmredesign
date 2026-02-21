@@ -4,7 +4,8 @@ export type AuditAction =
   | 'create' | 'update' | 'delete'
   | 'login' | 'logout'
   | 'export' | 'import'
-  | 'approve' | 'reject';
+  | 'approve' | 'reject'
+  | 'publish';
 
 export interface AuditEntry {
   id?: string;

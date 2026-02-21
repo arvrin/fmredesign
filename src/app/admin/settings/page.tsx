@@ -28,7 +28,8 @@ import {
   Users,
   Database,
   Monitor,
-  Lock
+  Lock,
+  Share2
 } from 'lucide-react';
 import {
   DashboardButton,
@@ -44,6 +45,7 @@ import { Select } from '@/components/ui/select-native';
 import { Toggle } from '@/components/ui/Toggle';
 import { Badge } from '@/components/ui/Badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { SocialAccountsPanel } from '@/components/admin/social/SocialAccountsPanel';
 import { cn } from '@/lib/utils';
 
 interface AdminSettings {
@@ -117,6 +119,9 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error' | 'info', content: string } | null>(null);
 
+  const [clients, setClients] = useState<{ id: string; name: string }[]>([]);
+  const [selectedClientId, setSelectedClientId] = useState('');
+
   const [settings, setSettings] = useState<AdminSettings>({
     profile: {
       name: 'Admin User',
@@ -182,6 +187,17 @@ export default function SettingsPage() {
       }
     }
   });
+
+  useEffect(() => {
+    fetch('/api/clients')
+      .then(r => r.json())
+      .then(result => {
+        if (result.success && Array.isArray(result.data)) {
+          setClients(result.data.map((c: any) => ({ id: c.id, name: c.name })));
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     // Load settings from localStorage or API
@@ -289,6 +305,10 @@ export default function SettingsPage() {
                   <TabsTrigger value="integrations" className="justify-start gap-3">
                     <Zap className="h-4 w-4" />
                     Integrations
+                  </TabsTrigger>
+                  <TabsTrigger value="social" className="justify-start gap-3">
+                    <Share2 className="h-4 w-4" />
+                    Social Media
                   </TabsTrigger>
                   <TabsTrigger value="billing" className="justify-start gap-3">
                     <CreditCard className="h-4 w-4" />
@@ -681,6 +701,40 @@ export default function SettingsPage() {
                       </DashboardButton>
                     </div>
                   ))}
+                </CardContent>
+              </DashboardCard>
+            </TabsContent>
+
+            <TabsContent value="social">
+              <DashboardCard variant="admin">
+                <CardHeader>
+                  <CardTitle>Social Media Accounts</CardTitle>
+                  <CardDescription>
+                    Connect client Facebook and Instagram accounts for direct publishing
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <Select
+                    label="Select Client"
+                    value={selectedClientId}
+                    onChange={(e) => setSelectedClientId(e.target.value)}
+                  >
+                    <option value="">Choose a client...</option>
+                    {clients.map((c) => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </Select>
+
+                  {selectedClientId ? (
+                    <SocialAccountsPanel
+                      clientId={selectedClientId}
+                      clientName={clients.find(c => c.id === selectedClientId)?.name || ''}
+                    />
+                  ) : (
+                    <p className="text-sm text-fm-neutral-500 py-4" style={{ textAlign: 'center' }}>
+                      Select a client above to manage their social media accounts.
+                    </p>
+                  )}
                 </CardContent>
               </DashboardCard>
             </TabsContent>
