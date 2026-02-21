@@ -6,17 +6,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { 
+import {
   ArrowLeft,
   Edit,
   MoreVertical,
-  Users,
   Calendar,
   DollarSign,
-  TrendingUp,
   MessageSquare,
   FileText,
-  Target,
   AlertCircle,
   CheckCircle,
   Clock,
@@ -27,40 +24,60 @@ import {
   Building,
   User,
   Briefcase,
-  BarChart3,
-  PieChart,
-  Activity,
-  Upload,
-  Download,
-  Send,
-  Plus,
-  Filter,
-  Search,
   Eye,
-  ThumbsUp,
-  ThumbsDown,
-  Star,
-  Zap,
-  TrendingDown
+  FolderOpen,
+  Layers,
+  LifeBuoy,
 } from 'lucide-react';
 import { Button } from '@/design-system/components/primitives/Button';
-import { 
-  ClientProfile as ClientProfileType, 
-  Campaign, 
-  ClientAnalytics, 
-  Deliverable, 
-  GrowthOpportunity,
+import {
+  ClientProfile as ClientProfileType,
   ClientUtils,
-  INDUSTRIES,
-  CAMPAIGN_TYPES,
-  ClientHealth 
+  ClientHealth
 } from '@/lib/admin/client-types';
 import { ClientService } from '@/lib/admin/client-service';
 import { adminToast } from '@/lib/admin/toast';
-import { CommunicationHub } from './CommunicationHub';
-import { DocumentManager } from './DocumentManager';
-import { GrowthEngine } from './GrowthEngine';
 import ContractsTab from './ContractsTab';
+
+// Types for API responses
+interface ProjectItem {
+  id: string;
+  clientId: string;
+  name: string;
+  description?: string;
+  type?: string;
+  status: string;
+  priority?: string;
+  startDate?: string;
+  endDate?: string;
+  budget?: number;
+  spent?: number;
+  progress: number;
+  milestones?: any[];
+  deliverables?: any[];
+  createdAt: string;
+}
+
+interface ContentItem {
+  id: string;
+  title: string;
+  status: string;
+  platform?: string;
+  type?: string;
+  scheduledDate?: string;
+  createdAt: string;
+}
+
+interface TicketItem {
+  id: string;
+  title: string;
+  description?: string;
+  status: string;
+  priority: string;
+  category?: string;
+  assignedTo?: string;
+  createdAt: string;
+}
 
 interface ClientProfileProps {
   clientId: string;
@@ -69,11 +86,10 @@ interface ClientProfileProps {
 
 export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
   const [client, setClient] = useState<ClientProfileType | null>(null);
-  const [activeTab, setActiveTab] = useState<'overview' | 'campaigns' | 'analytics' | 'communication' | 'files' | 'contracts' | 'opportunities'>('overview');
-  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
-  const [analytics, setAnalytics] = useState<ClientAnalytics | null>(null);
-  const [deliverables, setDeliverables] = useState<Deliverable[]>([]);
-  const [opportunities, setOpportunities] = useState<GrowthOpportunity[]>([]);
+  const [activeTab, setActiveTab] = useState<'overview' | 'projects' | 'support' | 'content' | 'contracts'>('overview');
+  const [projects, setProjects] = useState<ProjectItem[]>([]);
+  const [tickets, setTickets] = useState<TicketItem[]>([]);
+  const [contentItems, setContentItems] = useState<ContentItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState<any>({});
@@ -90,19 +106,26 @@ export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
     setClient(clientData);
     
     if (clientData) {
-      // Load related data
-      const campaignData = ClientService.getCampaignsByClient(clientId);
-      setCampaigns(campaignData);
-      
-      const analyticsData = ClientService.getClientAnalytics(clientId);
-      setAnalytics(analyticsData);
-      
-      const deliverablesData = ClientService.getClientDeliverables(clientId);
-      setDeliverables(deliverablesData);
-      
-      const opportunityData = ClientService.getGrowthOpportunities(clientId);
-      setOpportunities(opportunityData);
-      
+      // Load related data from real APIs in parallel
+      const [projectsRes, ticketsRes, contentRes] = await Promise.allSettled([
+        fetch(`/api/projects?clientId=${clientId}`),
+        fetch(`/api/admin/support?clientId=${clientId}`),
+        fetch(`/api/content?clientId=${clientId}`),
+      ]);
+
+      if (projectsRes.status === 'fulfilled' && projectsRes.value.ok) {
+        const d = await projectsRes.value.json();
+        setProjects(d.data || []);
+      }
+      if (ticketsRes.status === 'fulfilled' && ticketsRes.value.ok) {
+        const d = await ticketsRes.value.json();
+        setTickets(d.data || []);
+      }
+      if (contentRes.status === 'fulfilled' && contentRes.value.ok) {
+        const d = await contentRes.value.json();
+        setContentItems(d.data || []);
+      }
+
       // Initialize edit data with comprehensive fields
       setEditData({
         // Basic Information
@@ -356,12 +379,10 @@ export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
 
   const tabs = [
     { id: 'overview', name: 'Overview', icon: User },
-    { id: 'campaigns', name: 'Campaigns', icon: Target },
-    { id: 'analytics', name: 'Analytics', icon: BarChart3 },
-    { id: 'communication', name: 'Communication', icon: MessageSquare },
+    { id: 'projects', name: 'Projects', icon: Layers },
+    { id: 'content', name: 'Content', icon: FolderOpen },
+    { id: 'support', name: 'Support', icon: LifeBuoy },
     { id: 'contracts', name: 'Contracts', icon: Briefcase },
-    { id: 'files', name: 'Files & Assets', icon: FileText },
-    { id: 'opportunities', name: 'Growth', icon: TrendingUp }
   ];
 
   return (
@@ -845,25 +866,23 @@ export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
                 <h3 className="text-sm font-semibold text-fm-neutral-500 uppercase tracking-wider pb-2 border-b border-fm-neutral-100">Quick Stats</h3>
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-fm-neutral-600">Active Campaigns</span>
+                    <span className="text-sm text-fm-neutral-600">Active Projects</span>
                     <span className="font-medium text-fm-neutral-900">
-                      {campaigns.filter(c => c.status === 'active').length}
+                      {projects.filter(p => p.status === 'active').length}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-fm-neutral-600">Total Campaigns</span>
-                    <span className="font-medium text-fm-neutral-900">{campaigns.length}</span>
+                    <span className="text-sm text-fm-neutral-600">Total Projects</span>
+                    <span className="font-medium text-fm-neutral-900">{projects.length}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-fm-neutral-600">Pending Deliverables</span>
-                    <span className="font-medium text-fm-neutral-900">
-                      {deliverables.filter(d => ['in_progress', 'review'].includes(d.status)).length}
-                    </span>
+                    <span className="text-sm text-fm-neutral-600">Content Items</span>
+                    <span className="font-medium text-fm-neutral-900">{contentItems.length}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-fm-neutral-600">Growth Opportunities</span>
+                    <span className="text-sm text-fm-neutral-600">Open Tickets</span>
                     <span className="font-medium text-fm-neutral-900">
-                      {opportunities.filter(o => ['identified', 'proposed'].includes(o.status)).length}
+                      {tickets.filter(t => t.status === 'open' || t.status === 'in-progress').length}
                     </span>
                   </div>
                 </div>
@@ -889,90 +908,99 @@ export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
           </div>
         )}
 
-        {/* Campaigns Tab */}
-        {activeTab === 'campaigns' && (
+        {/* Projects Tab */}
+        {activeTab === 'projects' && (
           <div className="space-y-4 sm:space-y-6">
             <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-4 sm:p-6">
               <div className="flex items-center justify-between mb-4 sm:mb-6">
-                <h3 className="text-sm font-semibold text-fm-neutral-500 uppercase tracking-wider pb-2 border-b border-fm-neutral-100">Campaigns & Projects</h3>
-                <Button size="sm" icon={<Plus className="h-4 w-4" />}>
-                  New Campaign
-                </Button>
+                <h3 className="text-sm font-semibold text-fm-neutral-500 uppercase tracking-wider pb-2 border-b border-fm-neutral-100">Projects</h3>
               </div>
-              
+
               <div className="space-y-4">
-                {campaigns.map((campaign) => (
-                  <div key={campaign.id} className="border border-fm-neutral-200 rounded-lg p-3 sm:p-4">
+                {projects.map((project) => (
+                  <div key={project.id} className="border border-fm-neutral-200 rounded-lg p-3 sm:p-4">
                     <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap mb-2">
-                          <h4 className="font-semibold text-fm-neutral-900 text-sm sm:text-base">{campaign.name}</h4>
+                          <h4 className="font-semibold text-fm-neutral-900 text-sm sm:text-base">{project.name}</h4>
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            campaign.status === 'active' ? 'bg-green-100 text-green-800' :
-                            campaign.status === 'completed' ? 'bg-blue-100 text-blue-800' :
-                            campaign.status === 'paused' ? 'bg-yellow-100 text-yellow-800' :
+                            project.status === 'active' ? 'bg-green-100 text-green-800' :
+                            project.status === 'completed' ? 'bg-blue-100 text-blue-800' :
+                            project.status === 'planning' ? 'bg-yellow-100 text-yellow-800' :
+                            project.status === 'on-hold' ? 'bg-orange-100 text-orange-800' :
                             'bg-fm-neutral-100 text-fm-neutral-800'
                           }`}>
-                            {campaign.status}
+                            {project.status}
                           </span>
-                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-fm-neutral-100 text-fm-neutral-700">
-                            {CAMPAIGN_TYPES[campaign.type]}
-                          </span>
+                          {project.priority && (
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              project.priority === 'high' ? 'bg-red-100 text-red-800' :
+                              project.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                              'bg-fm-neutral-100 text-fm-neutral-700'
+                            }`}>
+                              {project.priority}
+                            </span>
+                          )}
                         </div>
-                        <p className="text-sm text-fm-neutral-600 mb-3">{campaign.description}</p>
-                        
+                        {project.description && (
+                          <p className="text-sm text-fm-neutral-600 mb-3">{project.description}</p>
+                        )}
+
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                          <div>
-                            <p className="text-fm-neutral-500">Budget</p>
-                            <p className="font-medium text-fm-neutral-900">
-                              {ClientUtils.formatCurrency(campaign.budget)}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-fm-neutral-500">Spent</p>
-                            <p className="font-medium text-fm-neutral-900">
-                              {ClientUtils.formatCurrency(campaign.spentAmount)}
-                            </p>
-                          </div>
+                          {project.budget != null && (
+                            <div>
+                              <p className="text-fm-neutral-500">Budget</p>
+                              <p className="font-medium text-fm-neutral-900">
+                                {ClientUtils.formatCurrency(project.budget)}
+                              </p>
+                            </div>
+                          )}
+                          {project.spent != null && (
+                            <div>
+                              <p className="text-fm-neutral-500">Spent</p>
+                              <p className="font-medium text-fm-neutral-900">
+                                {ClientUtils.formatCurrency(project.spent)}
+                              </p>
+                            </div>
+                          )}
                           <div>
                             <p className="text-fm-neutral-500">Progress</p>
-                            <p className="font-medium text-fm-neutral-900">{campaign.progress}%</p>
+                            <p className="font-medium text-fm-neutral-900">{project.progress}%</p>
                           </div>
-                          <div>
-                            <p className="text-fm-neutral-500">End Date</p>
-                            <p className="font-medium text-fm-neutral-900">
-                              {new Date(campaign.endDate).toLocaleDateString()}
-                            </p>
-                          </div>
+                          {project.endDate && (
+                            <div>
+                              <p className="text-fm-neutral-500">End Date</p>
+                              <p className="font-medium text-fm-neutral-900">
+                                {new Date(project.endDate).toLocaleDateString()}
+                              </p>
+                            </div>
+                          )}
                         </div>
-                        
+
                         <div className="mt-3">
                           <div className="w-full bg-fm-neutral-200 rounded-full h-2">
-                            <div 
-                              className="bg-fm-magenta-600 h-2 rounded-full" 
-                              style={{ width: `${campaign.progress}%` }}
+                            <div
+                              className="bg-fm-magenta-600 h-2 rounded-full"
+                              style={{ width: `${project.progress}%` }}
                             ></div>
                           </div>
                         </div>
                       </div>
-                      
+
                       <div className="flex items-center gap-2 shrink-0">
-                        <Button size="sm" variant="secondary">
+                        <Button size="sm" variant="secondary" onClick={() => window.open(`/admin/projects/${project.id}`, '_blank')}>
                           <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button size="sm" variant="secondary">
-                          <Edit className="h-4 w-4" />
                         </Button>
                       </div>
                     </div>
                   </div>
                 ))}
-                
-                {campaigns.length === 0 && (
+
+                {projects.length === 0 && (
                   <div className="text-center py-8">
-                    <Target className="h-12 w-12 text-fm-neutral-400 mx-auto mb-4" />
-                    <h4 className="font-semibold text-fm-neutral-900 mb-2">No campaigns yet</h4>
-                    <p className="text-fm-neutral-600">Create the first campaign for this client</p>
+                    <Layers className="h-12 w-12 text-fm-neutral-400 mx-auto mb-4" />
+                    <h4 className="font-semibold text-fm-neutral-900 mb-2">No projects yet</h4>
+                    <p className="text-fm-neutral-600">Create a project for this client from the Projects page</p>
                   </div>
                 )}
               </div>
@@ -980,169 +1008,129 @@ export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
           </div>
         )}
 
-        {/* Analytics Tab */}
-        {activeTab === 'analytics' && analytics && (
-          <div className="space-y-4 sm:space-y-6">
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
-              {/* Social Media Metrics */}
-              <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-3 sm:p-6">
-                <div className="flex items-center justify-between mb-2 sm:mb-4">
-                  <h4 className="font-semibold text-fm-neutral-900 text-sm sm:text-base">Followers</h4>
-                  <TrendingUp className="h-5 w-5 text-green-600" />
-                </div>
-                <p className="text-2xl font-bold text-fm-neutral-900">
-                  {analytics.socialMedia.followers.current.toLocaleString()}
-                </p>
-                <p className="text-sm text-green-600">
-                  +{analytics.socialMedia.followers.changePercent}% from last period
-                </p>
-              </div>
-
-              <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-3 sm:p-6">
-                <div className="flex items-center justify-between mb-2 sm:mb-4">
-                  <h4 className="font-semibold text-fm-neutral-900 text-sm sm:text-base">Engagement</h4>
-                  <Activity className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
-                </div>
-                <p className="text-xl sm:text-2xl font-bold text-fm-neutral-900">
-                  {analytics.socialMedia.engagement.current}%
-                </p>
-                <p className="text-xs sm:text-sm text-green-600">
-                  +{analytics.socialMedia.engagement.changePercent}%
-                </p>
-              </div>
-
-              <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-3 sm:p-6">
-                <div className="flex items-center justify-between mb-2 sm:mb-4">
-                  <h4 className="font-semibold text-fm-neutral-900 text-sm sm:text-base">Traffic</h4>
-                  <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600" />
-                </div>
-                <p className="text-xl sm:text-2xl font-bold text-fm-neutral-900">
-                  {analytics.website.traffic.current.toLocaleString()}
-                </p>
-                <p className="text-xs sm:text-sm text-green-600">
-                  +{analytics.website.traffic.changePercent}%
-                </p>
-              </div>
-
-              <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-3 sm:p-6">
-                <div className="flex items-center justify-between mb-2 sm:mb-4">
-                  <h4 className="font-semibold text-fm-neutral-900 text-sm sm:text-base">ROAS</h4>
-                  <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
-                </div>
-                <p className="text-xl sm:text-2xl font-bold text-fm-neutral-900">
-                  {analytics.paidAds.roas.current}x
-                </p>
-                <p className="text-xs sm:text-sm text-green-600">
-                  +{analytics.paidAds.roas.changePercent}%
-                </p>
-              </div>
+        {/* Content Tab */}
+        {activeTab === 'content' && (
+          <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-4 sm:p-6">
+            <div className="flex items-center justify-between mb-4 sm:mb-6">
+              <h3 className="text-sm font-semibold text-fm-neutral-500 uppercase tracking-wider pb-2 border-b border-fm-neutral-100">Content Calendar</h3>
             </div>
 
-            {/* Detailed Analytics */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-              <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-4 sm:p-6">
-                <h4 className="font-semibold text-fm-neutral-900 mb-4">Social Media Performance</h4>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-fm-neutral-600">Reach</span>
-                    <span className="font-medium text-fm-neutral-900">
-                      {analytics.socialMedia.reach.current.toLocaleString()}
-                    </span>
+            {contentItems.length > 0 ? (
+              <div className="space-y-3">
+                {contentItems.map((item) => (
+                  <div key={item.id} className="border border-fm-neutral-200 rounded-lg p-3 sm:p-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap mb-1">
+                          <h4 className="font-medium text-fm-neutral-900 text-sm sm:text-base truncate">{item.title}</h4>
+                          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                            item.status === 'published' ? 'bg-green-100 text-green-800' :
+                            item.status === 'approved' ? 'bg-blue-100 text-blue-800' :
+                            item.status === 'in-review' ? 'bg-yellow-100 text-yellow-800' :
+                            item.status === 'draft' ? 'bg-fm-neutral-100 text-fm-neutral-700' :
+                            'bg-fm-neutral-100 text-fm-neutral-700'
+                          }`}>
+                            {item.status}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3 text-xs text-fm-neutral-500">
+                          {item.platform && <span className="capitalize">{item.platform}</span>}
+                          {item.type && <span className="capitalize">{item.type}</span>}
+                          {item.scheduledDate && (
+                            <span className="flex items-center gap-1">
+                              <Clock className="w-3 h-3" />
+                              {new Date(item.scheduledDate).toLocaleDateString()}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <Button size="sm" variant="secondary" onClick={() => window.open(`/admin/content/${item.id}`, '_blank')}>
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-fm-neutral-600">Impressions</span>
-                    <span className="font-medium text-fm-neutral-900">
-                      {analytics.socialMedia.impressions.current.toLocaleString()}
-                    </span>
-                  </div>
-                </div>
+                ))}
               </div>
-
-              <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-4 sm:p-6">
-                <h4 className="font-semibold text-fm-neutral-900 mb-4">Paid Advertising</h4>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-fm-neutral-600">Clicks</span>
-                    <span className="font-medium text-fm-neutral-900">
-                      {analytics.paidAds.clicks.current.toLocaleString()}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-fm-neutral-600">CTR</span>
-                    <span className="font-medium text-fm-neutral-900">
-                      {analytics.paidAds.ctr.current}%
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-fm-neutral-600">Conversions</span>
-                    <span className="font-medium text-fm-neutral-900">
-                      {analytics.paidAds.conversions.current.toLocaleString()}
-                    </span>
-                  </div>
-                </div>
+            ) : (
+              <div className="text-center py-8 sm:py-12">
+                <FolderOpen className="h-10 w-10 sm:h-12 sm:w-12 text-fm-neutral-400 mx-auto mb-4" />
+                <h4 className="font-semibold text-fm-neutral-900 mb-2">No content items</h4>
+                <p className="text-sm sm:text-base text-fm-neutral-600">
+                  Content calendar items for this client will appear here
+                </p>
               </div>
-            </div>
+            )}
           </div>
         )}
 
-        {/* Communication Tab */}
-        {activeTab === 'communication' && (
+        {/* Support Tab */}
+        {activeTab === 'support' && (
           <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-4 sm:p-6">
             <div className="flex items-center justify-between mb-4 sm:mb-6">
-              <h3 className="text-sm font-semibold text-fm-neutral-500 uppercase tracking-wider pb-2 border-b border-fm-neutral-100">Communication Hub</h3>
-              <Button size="sm" icon={<Plus className="h-4 w-4" />}>
-                <span className="hidden sm:inline">New Message</span>
-                <span className="sm:hidden">New</span>
-              </Button>
+              <h3 className="text-sm font-semibold text-fm-neutral-500 uppercase tracking-wider pb-2 border-b border-fm-neutral-100">Support Tickets</h3>
             </div>
 
-            <div className="text-center py-8 sm:py-12">
-              <MessageSquare className="h-10 w-10 sm:h-12 sm:w-12 text-fm-neutral-400 mx-auto mb-4" />
-              <h4 className="font-semibold text-fm-neutral-900 mb-2">Communication Center</h4>
-              <p className="text-sm sm:text-base text-fm-neutral-600">
-                Message center, meeting notes, and collaboration tools will be available here
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* Files Tab */}
-        {activeTab === 'files' && (
-          <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-4 sm:p-6">
-            <div className="flex items-center justify-between mb-4 sm:mb-6">
-              <h3 className="text-sm font-semibold text-fm-neutral-500 uppercase tracking-wider pb-2 border-b border-fm-neutral-100">Files & Assets</h3>
-              <Button size="sm" icon={<Upload className="h-4 w-4" />}>
-                <span className="hidden sm:inline">Upload Files</span>
-                <span className="sm:hidden">Upload</span>
-              </Button>
-            </div>
-
-            <div className="text-center py-8 sm:py-12">
-              <FileText className="h-10 w-10 sm:h-12 sm:w-12 text-fm-neutral-400 mx-auto mb-4" />
-              <h4 className="font-semibold text-fm-neutral-900 mb-2">Document Library</h4>
-              <p className="text-sm sm:text-base text-fm-neutral-600">
-                Shared files, creative assets, and project documents will be managed here
-              </p>
-            </div>
+            {tickets.length > 0 ? (
+              <div className="space-y-3">
+                {tickets.map((ticket) => (
+                  <div key={ticket.id} className="border border-fm-neutral-200 rounded-lg p-3 sm:p-4">
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap mb-1">
+                          <h4 className="font-medium text-fm-neutral-900 text-sm sm:text-base">{ticket.title}</h4>
+                          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                            ticket.status === 'open' ? 'bg-red-100 text-red-800' :
+                            ticket.status === 'in-progress' ? 'bg-yellow-100 text-yellow-800' :
+                            ticket.status === 'resolved' ? 'bg-green-100 text-green-800' :
+                            'bg-fm-neutral-100 text-fm-neutral-700'
+                          }`}>
+                            {ticket.status}
+                          </span>
+                          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                            ticket.priority === 'urgent' ? 'bg-red-100 text-red-800' :
+                            ticket.priority === 'high' ? 'bg-orange-100 text-orange-800' :
+                            ticket.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-fm-neutral-100 text-fm-neutral-700'
+                          }`}>
+                            {ticket.priority}
+                          </span>
+                        </div>
+                        {ticket.description && (
+                          <p className="text-sm text-fm-neutral-600 line-clamp-2 mb-1">{ticket.description}</p>
+                        )}
+                        <div className="flex items-center gap-3 text-xs text-fm-neutral-500">
+                          {ticket.category && <span className="capitalize">{ticket.category}</span>}
+                          {ticket.assignedTo && (
+                            <span className="flex items-center gap-1">
+                              <User className="w-3 h-3" />
+                              {ticket.assignedTo}
+                            </span>
+                          )}
+                          <span className="flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            {new Date(ticket.createdAt).toLocaleDateString()}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 sm:py-12">
+                <LifeBuoy className="h-10 w-10 sm:h-12 sm:w-12 text-fm-neutral-400 mx-auto mb-4" />
+                <h4 className="font-semibold text-fm-neutral-900 mb-2">No support tickets</h4>
+                <p className="text-sm sm:text-base text-fm-neutral-600">
+                  Support tickets from this client will appear here
+                </p>
+              </div>
+            )}
           </div>
         )}
 
         {/* Contracts Tab */}
         {activeTab === 'contracts' && (
           <ContractsTab clientId={clientId} clientName={client?.name} />
-        )}
-
-        {/* Opportunities Tab */}
-        {activeTab === 'opportunities' && (
-          <GrowthEngine clientId={clientId} />
-        )}
-        
-        {activeTab === 'communication' && (
-          <CommunicationHub clientId={clientId} />
-        )}
-        
-        {activeTab === 'files' && (
-          <DocumentManager clientId={clientId} />
         )}
       </div>
     </div>
