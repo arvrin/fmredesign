@@ -265,9 +265,9 @@ export default function TeamMemberProfilePage({ params }: TeamMemberProfileProps
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {member.skills.length > 0 ? (
+              {(member.skills || []).length > 0 ? (
                 <div className="flex flex-wrap gap-2">
-                  {member.skills.map((skill, index) => (
+                  {(member.skills || []).map((skill, index) => (
                     <span
                       key={index}
                       className="px-3 py-1 text-sm bg-fm-magenta-100 text-fm-magenta-700 rounded-full border border-fm-magenta-200"

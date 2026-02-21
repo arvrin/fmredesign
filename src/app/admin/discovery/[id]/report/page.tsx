@@ -85,13 +85,13 @@ export default function DiscoveryReportPage() {
       let yPos = 145 + (description.length * 5) + 20;
       doc.text(`Recommended Team (${analytics.recommendedTeamSize} members):`, 20, yPos);
       
-      analytics.talentRequirements.forEach((req, index) => {
+      (analytics.talentRequirements || []).forEach((req, index) => {
         yPos += 10;
         if (yPos > 270) {
           doc.addPage();
           yPos = 30;
         }
-        doc.text(`• ${req.role} (${req.experienceLevel}): ${req.skillsRequired.join(', ')} - ${req.hoursRequired}h`, 20, yPos);
+        doc.text(`• ${req.role} (${req.experienceLevel}): ${(req.skillsRequired || []).join(', ')} - ${req.hoursRequired}h`, 20, yPos);
       });
       
       // Footer
@@ -216,7 +216,7 @@ export default function DiscoveryReportPage() {
           <h2 className="text-xl font-semibold text-fm-neutral-900 mb-6">Recommended Team Structure</h2>
           
           <div className="space-y-4">
-            {analytics.talentRequirements.map((req, index) => (
+            {(analytics.talentRequirements || []).map((req, index) => (
               <div key={index} className="p-4 border border-fm-neutral-200 rounded-lg">
                 <div className="flex justify-between items-start mb-2">
                   <h3 className="font-semibold text-fm-neutral-900">{req.role}</h3>
@@ -236,7 +236,7 @@ export default function DiscoveryReportPage() {
                     <strong>Hours:</strong> {req.hoursRequired}h
                   </div>
                   <div>
-                    <strong>Skills:</strong> {req.skillsRequired.join(', ')}
+                    <strong>Skills:</strong> {(req.skillsRequired || []).join(', ')}
                   </div>
                 </div>
               </div>

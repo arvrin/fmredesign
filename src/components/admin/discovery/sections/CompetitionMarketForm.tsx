@@ -61,7 +61,7 @@ export function CompetitionMarketForm({ session, onUpdate }: CompetitionMarketFo
               Key Differentiators <span className="text-xs text-fm-neutral-500">(comma-separated)</span>
             </label>
             <textarea
-              value={formData.differentiators.join(', ')}
+              value={(formData.differentiators || []).join(', ')}
               onChange={(e) => handleArrayChange('differentiators', e.target.value)}
               rows={2}
               className="w-full px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
@@ -74,7 +74,7 @@ export function CompetitionMarketForm({ session, onUpdate }: CompetitionMarketFo
               Market Trends <span className="text-xs text-fm-neutral-500">(comma-separated)</span>
             </label>
             <textarea
-              value={formData.marketTrends.join(', ')}
+              value={(formData.marketTrends || []).join(', ')}
               onChange={(e) => handleArrayChange('marketTrends', e.target.value)}
               rows={2}
               className="w-full px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"

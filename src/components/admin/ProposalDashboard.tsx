@@ -349,13 +349,13 @@ export function ProposalDashboard({ onCreateNew, onEditProposal }: ProposalDashb
                       )}
                     </div>
 
-                    {proposal.servicePackages.length > 0 && (
+                    {(proposal.servicePackages || []).length > 0 && (
                       <div className="mt-2 text-sm text-fm-neutral-600">
                         <span className="font-medium">Services: </span>
-                        {proposal.servicePackages.slice(0, 2).map(pkg => pkg.name).join(', ')}
-                        {proposal.servicePackages.length > 2 && (
+                        {(proposal.servicePackages || []).slice(0, 2).map(pkg => pkg.name).join(', ')}
+                        {(proposal.servicePackages || []).length > 2 && (
                           <span className="text-fm-neutral-500">
-                            {' '}and {proposal.servicePackages.length - 2} more
+                            {' '}and {(proposal.servicePackages || []).length - 2} more
                           </span>
                         )}
                       </div>

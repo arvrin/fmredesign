@@ -497,9 +497,9 @@ export function GrowthEngine({ clientId }: GrowthEngineProps) {
                       </div>
                     </div>
                     
-                    {opportunity.tags.length > 0 && (
+                    {(opportunity.tags || []).length > 0 && (
                       <div className="flex flex-wrap gap-1 mt-3">
-                        {opportunity.tags.map((tag) => (
+                        {(opportunity.tags || []).map((tag) => (
                           <span
                             key={tag}
                             className="px-2 py-0.5 bg-fm-neutral-100 text-fm-neutral-600 text-xs rounded"

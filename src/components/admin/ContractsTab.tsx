@@ -118,7 +118,7 @@ export default function ContractsTab({ clientId, clientName }: Props) {
   const populateForm = (c: Contract) => {
     setTitle(c.title);
     setContractNumber(c.contractNumber || '');
-    setServices(c.services.length > 0 ? c.services : [{ ...EMPTY_SERVICE }]);
+    setServices((c.services || []).length > 0 ? c.services : [{ ...EMPTY_SERVICE }]);
     setCurrency(c.currency || 'INR');
     setStartDate(c.startDate || '');
     setEndDate(c.endDate || '');
@@ -615,7 +615,7 @@ export default function ContractsTab({ clientId, clientName }: Props) {
 
                     {/* Services summary */}
                     <div className="text-sm text-fm-neutral-600 mb-2">
-                      {contract.services.map((s) => s.name).join(', ')}
+                      {(contract.services || []).map((s) => s.name).join(', ')}
                     </div>
 
                     {/* Details row */}

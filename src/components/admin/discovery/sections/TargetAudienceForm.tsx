@@ -122,7 +122,7 @@ export function TargetAudienceForm({ session, onUpdate }: TargetAudienceFormProp
             </label>
             <input
               type="text"
-              value={formData.geographicTarget.join(', ')}
+              value={(formData.geographicTarget || []).join(', ')}
               onChange={(e) => handleArrayChange('geographicTarget', e.target.value)}
               className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
               placeholder="e.g., Mumbai, Delhi, Bangalore"
@@ -134,7 +134,7 @@ export function TargetAudienceForm({ session, onUpdate }: TargetAudienceFormProp
               Pain Points <span className="text-xs text-fm-neutral-500">(comma-separated)</span>
             </label>
             <textarea
-              value={formData.painPoints.join(', ')}
+              value={(formData.painPoints || []).join(', ')}
               onChange={(e) => handleArrayChange('painPoints', e.target.value)}
               rows={3}
               className="w-full px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"

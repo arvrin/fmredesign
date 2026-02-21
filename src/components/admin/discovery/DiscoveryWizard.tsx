@@ -169,7 +169,7 @@ export function DiscoveryWizard({ session, onUpdate, onComplete }: DiscoveryWiza
   };
 
   const getCompletionProgress = () => {
-    return (session.completedSections.length / 10) * 100;
+    return ((session.completedSections || []).length / 10) * 100;
   };
 
   return (
@@ -234,7 +234,7 @@ export function DiscoveryWizard({ session, onUpdate, onComplete }: DiscoveryWiza
           <div className="mt-4">
             <div className="flex justify-between items-center mb-2">
               <span className="text-sm text-fm-neutral-600">
-                Progress: {session.completedSections.length}/10 sections completed
+                Progress: {(session.completedSections || []).length}/10 sections completed
               </span>
               <span className="text-sm font-medium text-fm-magenta-600">
                 {getCompletionProgress().toFixed(0)}%
@@ -255,7 +255,7 @@ export function DiscoveryWizard({ session, onUpdate, onComplete }: DiscoveryWiza
         <div className="flex items-center gap-2 overflow-x-auto pb-1">
           {Object.entries(DISCOVERY_SECTIONS).map(([sectionNum, sectionName]) => {
             const num = parseInt(sectionNum);
-            const isCompleted = session.completedSections.includes(num);
+            const isCompleted = (session.completedSections || []).includes(num);
             const isCurrent = currentStep === num;
             return (
               <button
@@ -286,7 +286,7 @@ export function DiscoveryWizard({ session, onUpdate, onComplete }: DiscoveryWiza
             <div className="space-y-2">
               {Object.entries(DISCOVERY_SECTIONS).map(([sectionNum, sectionName]) => {
                 const sectionNumber = parseInt(sectionNum);
-                const isCompleted = session.completedSections.includes(sectionNumber);
+                const isCompleted = (session.completedSections || []).includes(sectionNumber);
                 const isCurrent = currentStep === sectionNumber;
                 
                 return (

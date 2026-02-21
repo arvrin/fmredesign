@@ -97,7 +97,7 @@ export function CurrentStateForm({ session, onUpdate }: CurrentStateFormProps) {
         <div className="bg-white rounded-xl border border-fm-neutral-200 p-6">
           <h3 className="text-lg font-semibold text-fm-neutral-900 mb-6">Current Challenges</h3>
           <textarea
-            value={formData.currentChallenges.join(', ')}
+            value={(formData.currentChallenges || []).join(', ')}
             onChange={(e) => handleArrayChange('currentChallenges', e.target.value)}
             rows={3}
             className="w-full px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
@@ -114,7 +114,7 @@ export function CurrentStateForm({ session, onUpdate }: CurrentStateFormProps) {
                 What's Working Well <span className="text-xs text-fm-neutral-500">(comma-separated)</span>
               </label>
               <textarea
-                value={formData.whatIsWorking.join(', ')}
+                value={(formData.whatIsWorking || []).join(', ')}
                 onChange={(e) => handleArrayChange('whatIsWorking', e.target.value)}
                 rows={3}
                 className="w-full px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
@@ -127,7 +127,7 @@ export function CurrentStateForm({ session, onUpdate }: CurrentStateFormProps) {
                 What's Not Working <span className="text-xs text-fm-neutral-500">(comma-separated)</span>
               </label>
               <textarea
-                value={formData.whatIsNotWorking.join(', ')}
+                value={(formData.whatIsNotWorking || []).join(', ')}
                 onChange={(e) => handleArrayChange('whatIsNotWorking', e.target.value)}
                 rows={3}
                 className="w-full px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"

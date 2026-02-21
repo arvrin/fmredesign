@@ -106,7 +106,7 @@ export default function ContentCalendarPage() {
         item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.hashtags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+        (item.hashtags || []).some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
       );
     }
 

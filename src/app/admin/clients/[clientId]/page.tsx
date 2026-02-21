@@ -95,7 +95,7 @@ export default function AdminClientDetail() {
     );
   }
 
-  const additionalEmails = clientProfile.additionalContacts.map((c) => c.email);
+  const additionalEmails = (clientProfile.additionalContacts || []).map((c) => c.email);
 
   return (
     <div className="space-y-4 sm:space-y-6">

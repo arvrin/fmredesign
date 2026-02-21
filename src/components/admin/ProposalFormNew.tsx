@@ -125,8 +125,8 @@ export function ProposalFormNew({ initialProposal, onSaveSuccess }: ProposalForm
 
   const [clients, setClients] = useState<InvoiceClient[]>([]);
   const [selectedPackages, setSelectedPackages] = useState<SelectedPackage[]>(() => {
-    if (initialProposal && initialProposal.servicePackages.length > 0) {
-      return initialProposal.servicePackages.map(pkg => ({
+    if (initialProposal && (initialProposal.servicePackages || []).length > 0) {
+      return (initialProposal.servicePackages || []).map(pkg => ({
         package: pkg,
         quantity: 1,
         variant: undefined
@@ -651,16 +651,16 @@ export function ProposalFormNew({ initialProposal, onSaveSuccess }: ProposalForm
                   <div className="mt-3">
                     <p className="text-sm font-medium text-fm-neutral-900 mb-1.5">Deliverables:</p>
                     <ul className="text-sm text-fm-neutral-600 space-y-1">
-                      {selected.package.deliverables.map((deliverable, i) => (
+                      {(selected.package.deliverables || []).map((deliverable, i) => (
                         <li key={i} className="flex items-center">
                           <CheckCircle className="w-3 h-3 text-green-500 mr-2 flex-shrink-0" />
                           {deliverable}
                         </li>
                       ))}
                       {selected.variant && selected.package.variants && (
-                        selected.package.variants
+                        (selected.package.variants || [])
                           .find(v => v.name === selected.variant)
-                          ?.additionalDeliverables.map((deliverable, i) => (
+                          ?.additionalDeliverables?.map((deliverable, i) => (
                             <li key={`variant-${i}`} className="flex items-center">
                               <CheckCircle className="w-3 h-3 text-blue-500 mr-2 flex-shrink-0" />
                               {deliverable}

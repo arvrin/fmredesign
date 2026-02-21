@@ -87,7 +87,7 @@ export default function ProjectsPage() {
       filtered = filtered.filter(project =>
         project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         project.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        project.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+        (project.tags || []).some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
       );
     }
 
@@ -247,7 +247,7 @@ export default function ProjectsPage() {
 
         <MetricCard
           title="Team Members"
-          value={new Set(projects.flatMap(p => p.assignedTalent)).size}
+          value={new Set(projects.flatMap(p => p.assignedTalent || [])).size}
           subtitle="Unique contributors"
           icon={<Users className="w-6 h-6" />}
           variant="admin"

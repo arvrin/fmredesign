@@ -383,7 +383,7 @@ export function CommunicationHub({ clientId, onScheduleMeeting }: CommunicationH
                         <div>
                           <p className="text-fm-neutral-500">Participants</p>
                           <p className="font-medium text-fm-neutral-900">
-                            {meeting.participants.length} people
+                            {(meeting.participants || []).length} people
                           </p>
                         </div>
                         <div>
@@ -394,11 +394,11 @@ export function CommunicationHub({ clientId, onScheduleMeeting }: CommunicationH
                         </div>
                       </div>
                       
-                      {meeting.actionItems.length > 0 && (
+                      {(meeting.actionItems || []).length > 0 && (
                         <div className="mt-3">
                           <p className="text-sm font-medium text-fm-neutral-700 mb-2">Action Items:</p>
                           <ul className="space-y-1">
-                            {meeting.actionItems.map((item) => (
+                            {(meeting.actionItems || []).map((item) => (
                               <li key={item.id} className="flex items-center space-x-2 text-sm">
                                 <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${
                                   item.isCompleted 

@@ -431,21 +431,21 @@ export default function ProjectDetailPage({
                   <Target className="h-5 w-5 text-fm-magenta-600" />
                   Milestones
                 </span>
-                {project.milestones.length > 0 && (
+                {(project.milestones || []).length > 0 && (
                   <span className="text-sm font-normal text-fm-neutral-500">
-                    {completedMilestones}/{project.milestones.length} completed
+                    {completedMilestones}/{(project.milestones || []).length} completed
                   </span>
                 )}
               </CardTitle>
             </CardHeader>
             <CardContent className="px-6 pb-6">
-              {project.milestones.length === 0 ? (
+              {(project.milestones || []).length === 0 ? (
                 <p className="text-fm-neutral-500 text-sm py-4" style={{ textAlign: 'center' }}>
                   No milestones defined for this project.
                 </p>
               ) : (
                 <div className="space-y-4">
-                  {project.milestones.map((milestone: ProjectMilestone) => (
+                  {(project.milestones || []).map((milestone: ProjectMilestone) => (
                     <div
                       key={milestone.id}
                       className={`flex items-start gap-3 p-4 rounded-lg border ${
@@ -509,21 +509,21 @@ export default function ProjectDetailPage({
                   <FileText className="h-5 w-5 text-fm-magenta-600" />
                   Deliverables
                 </span>
-                {project.deliverables.length > 0 && (
+                {(project.deliverables || []).length > 0 && (
                   <span className="text-sm font-normal text-fm-neutral-500">
-                    {completedDeliverables}/{project.deliverables.length} completed
+                    {completedDeliverables}/{(project.deliverables || []).length} completed
                   </span>
                 )}
               </CardTitle>
             </CardHeader>
             <CardContent className="px-6 pb-6">
-              {project.deliverables.length === 0 ? (
+              {(project.deliverables || []).length === 0 ? (
                 <p className="text-fm-neutral-500 text-sm py-4" style={{ textAlign: 'center' }}>
                   No deliverables defined for this project.
                 </p>
               ) : (
                 <div className="space-y-4">
-                  {project.deliverables.map((deliverable: ProjectDeliverable) => (
+                  {(project.deliverables || []).map((deliverable: ProjectDeliverable) => (
                     <div
                       key={deliverable.id}
                       className="p-4 rounded-lg border bg-fm-neutral-50 border-fm-neutral-200"
@@ -596,13 +596,13 @@ export default function ProjectDetailPage({
                 </div>
 
                 {/* Assigned Talent */}
-                {project.assignedTalent.length > 0 ? (
+                {(project.assignedTalent || []).length > 0 ? (
                   <div>
                     <p className="text-xs font-semibold text-fm-neutral-500 uppercase tracking-wider mb-3">
-                      Assigned Talent ({project.assignedTalent.length})
+                      Assigned Talent ({(project.assignedTalent || []).length})
                     </p>
                     <div className="space-y-2">
-                      {project.assignedTalent.map((member, index) => (
+                      {(project.assignedTalent || []).map((member, index) => (
                         <div
                           key={index}
                           className="flex items-center gap-3 p-3 bg-fm-neutral-50 rounded-lg border border-fm-neutral-200"
@@ -651,13 +651,13 @@ export default function ProjectDetailPage({
                   </div>
 
                   {/* Platforms */}
-                  {project.contentRequirements.platforms.length > 0 && (
+                  {(project.contentRequirements.platforms || []).length > 0 && (
                     <div>
                       <p className="text-xs font-semibold text-fm-neutral-500 uppercase tracking-wider mb-2">
                         Platforms
                       </p>
                       <div className="flex flex-wrap gap-2">
-                        {project.contentRequirements.platforms.map((platform, index) => (
+                        {(project.contentRequirements.platforms || []).map((platform, index) => (
                           <Badge key={index} variant="info">
                             {platform.charAt(0).toUpperCase() + platform.slice(1)}
                           </Badge>
@@ -667,13 +667,13 @@ export default function ProjectDetailPage({
                   )}
 
                   {/* Content Types */}
-                  {project.contentRequirements.contentTypes.length > 0 && (
+                  {(project.contentRequirements.contentTypes || []).length > 0 && (
                     <div>
                       <p className="text-xs font-semibold text-fm-neutral-500 uppercase tracking-wider mb-2">
                         Content Types
                       </p>
                       <div className="flex flex-wrap gap-2">
-                        {project.contentRequirements.contentTypes.map((type, index) => (
+                        {(project.contentRequirements.contentTypes || []).map((type, index) => (
                           <Badge key={index} variant="secondary">
                             {type.charAt(0).toUpperCase() + type.slice(1)}
                           </Badge>
@@ -706,7 +706,7 @@ export default function ProjectDetailPage({
         {/* ============================================================= */}
         {/* Tags                                                            */}
         {/* ============================================================= */}
-        {project.tags.length > 0 && (
+        {(project.tags || []).length > 0 && (
           <DashboardCard variant="default" padding="none">
             <CardHeader className="px-6 pt-6">
               <CardTitle className="flex items-center gap-2">
@@ -716,7 +716,7 @@ export default function ProjectDetailPage({
             </CardHeader>
             <CardContent className="px-6 pb-6">
               <div className="flex flex-wrap gap-2">
-                {project.tags.map((tag, index) => (
+                {(project.tags || []).map((tag, index) => (
                   <span
                     key={index}
                     className="px-3 py-1 text-sm bg-fm-neutral-100 text-fm-neutral-700 rounded-full border border-fm-neutral-200"

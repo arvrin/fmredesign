@@ -69,7 +69,7 @@ export function ContentCreativeForm({ session, onUpdate }: ContentCreativeFormPr
             </label>
             <input
               type="text"
-              value={formData.brandPersonality.join(', ')}
+              value={(formData.brandPersonality || []).join(', ')}
               onChange={(e) => handleArrayChange('brandPersonality', e.target.value)}
               className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
               placeholder="e.g., Professional, Friendly, Innovative, Trustworthy"
@@ -102,7 +102,7 @@ export function ContentCreativeForm({ session, onUpdate }: ContentCreativeFormPr
               </label>
               <input
                 type="text"
-                value={formData.visualStyle.colorPreferences.join(', ')}
+                value={(formData.visualStyle.colorPreferences || []).join(', ')}
                 onChange={(e) => handleVisualChange('colorPreferences', e.target.value)}
                 className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
                 placeholder="e.g., Blue, White, Modern, Minimalist"
@@ -115,7 +115,7 @@ export function ContentCreativeForm({ session, onUpdate }: ContentCreativeFormPr
               </label>
               <input
                 type="text"
-                value={formData.visualStyle.designInspiration.join(', ')}
+                value={(formData.visualStyle.designInspiration || []).join(', ')}
                 onChange={(e) => handleVisualChange('designInspiration', e.target.value)}
                 className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
                 placeholder="Inspiration sources or reference websites"
