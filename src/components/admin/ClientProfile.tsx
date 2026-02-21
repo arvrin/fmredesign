@@ -9,10 +9,7 @@ import { useState, useEffect } from 'react';
 import {
   ArrowLeft,
   Edit,
-  MoreVertical,
   Calendar,
-  DollarSign,
-  MessageSquare,
   FileText,
   AlertCircle,
   CheckCircle,
@@ -420,14 +417,6 @@ export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
           </div>
 
           <div className="flex items-center gap-2 flex-wrap shrink-0">
-            <Button variant="secondary" size="sm">
-              <MessageSquare className="h-4 w-4" />
-              <span className="hidden sm:inline ml-2">Message</span>
-            </Button>
-            <Button variant="secondary" size="sm">
-              <Calendar className="h-4 w-4" />
-              <span className="hidden sm:inline ml-2">Schedule</span>
-            </Button>
             {!isEditing ? (
               <Button variant="secondary" size="sm" onClick={handleEditStart}>
                 <Edit className="h-4 w-4" />
@@ -443,9 +432,6 @@ export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
                 </Button>
               </div>
             )}
-            <Button variant="secondary" size="sm">
-              <MoreVertical className="h-4 w-4" />
-            </Button>
           </div>
         </div>
       </div>
