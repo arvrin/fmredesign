@@ -248,6 +248,24 @@ export function talentApprovedEmail(data: TalentApprovedData): { subject: string
   };
 }
 
+interface TalentRejectedData {
+  fullName: string;
+}
+
+export function talentRejectedEmail(data: TalentRejectedData): { subject: string; html: string } {
+  const body = `
+    <p style="margin:0 0 16px;color:${HEADING_COLOR};font-size:16px;font-weight:700">Hi ${data.fullName},</p>
+    <p style="margin:0 0 16px;color:${TEXT_COLOR};font-size:14px">Thank you for your interest in joining CreativeMinds. After reviewing your application, we've decided not to move forward at this time.</p>
+    <p style="margin:0 0 16px;color:${TEXT_COLOR};font-size:14px">This doesn't reflect on your talent — we may have specific needs that didn't align with your profile right now. You're welcome to reapply in the future as our needs evolve.</p>
+    <p style="margin:0;color:${TEXT_COLOR};font-size:14px">Wishing you the best,<br>The FreakingMinds Team</p>
+  `;
+
+  return {
+    subject: 'Application Update — CreativeMinds by FreakingMinds',
+    html: emailWrapper('Application Update', body),
+  };
+}
+
 interface InvoiceEmailData {
   invoiceNumber: string;
   clientName: string;

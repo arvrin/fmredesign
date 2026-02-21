@@ -15,7 +15,7 @@ import { logAuditEvent, getAuditUser, getClientIP } from '@/lib/admin/audit-log'
 import { submitTalentApplicationSchema, validateBody } from '@/lib/validations/schemas';
 import {
   notifyTeam, notifyRecipient,
-  talentApplicationReceivedEmail, talentApplicationTeamEmail, talentApprovedEmail,
+  talentApplicationReceivedEmail, talentApplicationTeamEmail, talentApprovedEmail, talentRejectedEmail,
 } from '@/lib/email/send';
 
 // ---------------------------------------------------------------------------
@@ -379,6 +379,17 @@ export async function PUT(request: NextRequest) {
       if (approvedEmail && profileSlug) {
         const emailData = talentApprovedEmail({ fullName, profileSlug });
         notifyRecipient(approvedEmail, emailData.subject, emailData.html);
+      }
+    }
+
+    // Fire-and-forget: notify rejected applicant
+    if (status === 'rejected') {
+      const personalInfo = updatedApp.personal_info as Record<string, any> || {};
+      const fullName = (personalInfo.fullName as string) || '';
+      const rejectedEmail = personalInfo.email as string | undefined;
+      if (rejectedEmail) {
+        const emailData = talentRejectedEmail({ fullName });
+        notifyRecipient(rejectedEmail, emailData.subject, emailData.html);
       }
     }
 
