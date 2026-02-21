@@ -70,7 +70,9 @@ function emailWrapper(title: string, body: string): string {
 <table width="600" cellpadding="0" cellspacing="0">
   <tr><td align="center" style="padding:0 0 24px">
     <a href="${SITE_URL}" style="text-decoration:none">
-      <img src="${LOGO_URL}" alt="FreakingMinds" width="160" style="display:block;height:auto;border:0" />
+      <div style="display:inline-block;background:#ffffff;padding:12px 24px;border-radius:12px">
+        <img src="${LOGO_URL}" alt="FreakingMinds" width="140" style="display:block;height:auto;border:0" />
+      </div>
     </a>
   </td></tr>
 </table>
