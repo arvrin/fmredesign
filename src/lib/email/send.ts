@@ -48,28 +48,79 @@ export function notifyRecipient(to: string, subject: string, html: string): void
 // ---------------------------------------------------------------------------
 
 const BRAND_MAGENTA = '#c9325d';
+const BRAND_DARK = '#1a0a12';
 const HEADING_COLOR = '#0f0f0f';
 const TEXT_COLOR = '#404040';
-const LIGHT_BG = '#f9f9f9';
+const MUTED_COLOR = '#888888';
+const LIGHT_BG = '#f4f1f2';
+const CARD_BG = '#ffffff';
+const BORDER_COLOR = '#f0e8eb';
+const LOGO_URL = 'https://freakingminds.in/logo.png';
+const SITE_URL = 'https://freakingminds.in';
 
 function emailWrapper(title: string, body: string): string {
   return `<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:${LIGHT_BG};font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:${LIGHT_BG};padding:32px 16px">
+<body style="margin:0;padding:0;background:${LIGHT_BG};font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;-webkit-font-smoothing:antialiased">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:${LIGHT_BG};padding:40px 16px">
 <tr><td align="center">
-<table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.06)">
-  <tr><td style="background:${BRAND_MAGENTA};padding:24px 32px">
-    <h1 style="margin:0;color:#ffffff;font-size:20px;font-weight:700">${title}</h1>
-  </td></tr>
-  <tr><td style="padding:32px">
-    ${body}
-  </td></tr>
-  <tr><td style="padding:16px 32px 24px;border-top:1px solid #eee">
-    <p style="margin:0;color:#999;font-size:12px">FreakingMinds Digital &mdash; freakingminds.in</p>
+
+<!-- Logo -->
+<table width="600" cellpadding="0" cellspacing="0">
+  <tr><td align="center" style="padding:0 0 24px">
+    <a href="${SITE_URL}" style="text-decoration:none">
+      <img src="${LOGO_URL}" alt="FreakingMinds" width="160" style="display:block;height:auto;border:0" />
+    </a>
   </td></tr>
 </table>
+
+<!-- Main card -->
+<table width="600" cellpadding="0" cellspacing="0" style="background:${CARD_BG};border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(201,50,93,0.08),0 1px 4px rgba(0,0,0,0.04)">
+
+  <!-- Magenta accent bar -->
+  <tr><td style="background:linear-gradient(135deg,${BRAND_MAGENTA},#a82548);height:4px;font-size:0;line-height:0">&nbsp;</td></tr>
+
+  <!-- Title row -->
+  <tr><td style="padding:28px 36px 0">
+    <h1 style="margin:0;color:${HEADING_COLOR};font-size:20px;font-weight:700;letter-spacing:-0.3px">${title}</h1>
+  </td></tr>
+
+  <!-- Divider -->
+  <tr><td style="padding:16px 36px 0">
+    <div style="height:1px;background:${BORDER_COLOR}"></div>
+  </td></tr>
+
+  <!-- Body -->
+  <tr><td style="padding:24px 36px 32px">
+    ${body}
+  </td></tr>
+
+  <!-- Footer -->
+  <tr><td style="padding:20px 36px 24px;background:#faf8f9;border-top:1px solid ${BORDER_COLOR}">
+    <table width="100%" cellpadding="0" cellspacing="0">
+      <tr>
+        <td style="color:${MUTED_COLOR};font-size:12px;line-height:18px">
+          <strong style="color:${TEXT_COLOR}">FreakingMinds</strong> &mdash; Digital Marketing Agency<br>
+          <a href="${SITE_URL}" style="color:${BRAND_MAGENTA};text-decoration:none">freakingminds.in</a>
+        </td>
+        <td align="right" style="color:${MUTED_COLOR};font-size:11px;line-height:16px">
+          Mumbai, India<br>
+          <a href="mailto:hello@freakingminds.in" style="color:${MUTED_COLOR};text-decoration:none">hello@freakingminds.in</a>
+        </td>
+      </tr>
+    </table>
+  </td></tr>
+
+</table>
+
+<!-- Sub-footer -->
+<table width="600" cellpadding="0" cellspacing="0">
+  <tr><td align="center" style="padding:20px 0 0;color:#b0a0a6;font-size:11px">
+    &copy; ${new Date().getFullYear()} FreakingMinds Digital. All rights reserved.
+  </td></tr>
+</table>
+
 </td></tr>
 </table>
 </body>
@@ -78,17 +129,23 @@ function emailWrapper(title: string, body: string): string {
 
 function row(label: string, value: string): string {
   return `<tr>
-    <td style="padding:6px 12px 6px 0;color:${TEXT_COLOR};font-size:14px;font-weight:600;vertical-align:top;white-space:nowrap">${label}</td>
-    <td style="padding:6px 0;color:${TEXT_COLOR};font-size:14px">${value}</td>
+    <td style="padding:8px 16px 8px 0;color:${MUTED_COLOR};font-size:13px;font-weight:500;vertical-align:top;white-space:nowrap;text-transform:uppercase;letter-spacing:0.4px">${label}</td>
+    <td style="padding:8px 0;color:${HEADING_COLOR};font-size:14px;font-weight:500">${value}</td>
   </tr>`;
 }
 
 function dataTable(rows: string): string {
-  return `<table cellpadding="0" cellspacing="0" style="width:100%;margin:16px 0">${rows}</table>`;
+  return `<table cellpadding="0" cellspacing="0" style="width:100%;margin:16px 0;border-collapse:collapse">${rows}</table>`;
 }
 
 function badge(text: string, color: string = BRAND_MAGENTA): string {
-  return `<span style="display:inline-block;background:${color};color:#fff;padding:3px 10px;border-radius:4px;font-size:12px;font-weight:600">${text}</span>`;
+  return `<span style="display:inline-block;background:${color};color:#fff;padding:4px 12px;border-radius:6px;font-size:11px;font-weight:700;letter-spacing:0.3px;text-transform:uppercase">${text}</span>`;
+}
+
+function ctaButton(text: string, href: string, color: string = BRAND_MAGENTA): string {
+  return `<table cellpadding="0" cellspacing="0" style="margin:24px 0 8px"><tr><td>
+    <a href="${href}" style="display:inline-block;background:${color};color:#ffffff;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:600;text-decoration:none;letter-spacing:0.2px">${text}</a>
+  </td></tr></table>`;
 }
 
 // ---------------------------------------------------------------------------
@@ -111,19 +168,19 @@ export function newLeadEmail(data: LeadEmailData): { subject: string; html: stri
   const priorityColor = data.priority === 'high' ? '#dc2626' : data.priority === 'medium' ? '#f59e0b' : '#22c55e';
 
   const body = `
-    <p style="margin:0 0 16px;color:${HEADING_COLOR};font-size:16px;font-weight:700">New lead from the website!</p>
+    <p style="margin:0 0 20px;color:${TEXT_COLOR};font-size:15px;line-height:1.6">A new lead just came in from the website.</p>
     ${dataTable(
       row('Name', data.name) +
-      row('Email', `<a href="mailto:${data.email}" style="color:${BRAND_MAGENTA}">${data.email}</a>`) +
+      row('Email', `<a href="mailto:${data.email}" style="color:${BRAND_MAGENTA};text-decoration:none">${data.email}</a>`) +
       row('Company', data.company) +
-      (data.projectType ? row('Project Type', data.projectType) : '') +
+      (data.projectType ? row('Project', data.projectType) : '') +
       (data.budgetRange ? row('Budget', data.budgetRange) : '') +
       (data.timeline ? row('Timeline', data.timeline) : '') +
       (data.primaryChallenge ? row('Challenge', data.primaryChallenge) : '') +
-      (data.leadScore !== undefined ? row('Lead Score', `${data.leadScore}/100`) : '') +
+      (data.leadScore !== undefined ? row('Score', `<strong>${data.leadScore}</strong>/100`) : '') +
       (data.priority ? row('Priority', badge(data.priority.toUpperCase(), priorityColor)) : '')
     )}
-    <p style="margin:16px 0 0;color:${TEXT_COLOR};font-size:13px">View in the <a href="https://freakingminds.in/admin/leads" style="color:${BRAND_MAGENTA}">admin dashboard</a>.</p>
+    ${ctaButton('View in Dashboard', 'https://freakingminds.in/admin/leads')}
   `;
 
   return {
@@ -143,7 +200,7 @@ interface SupportTicketEmailData {
 
 export function newSupportTicketEmail(data: SupportTicketEmailData): { subject: string; html: string } {
   const body = `
-    <p style="margin:0 0 16px;color:${HEADING_COLOR};font-size:16px;font-weight:700">A client has submitted a support ticket.</p>
+    <p style="margin:0 0 20px;color:${TEXT_COLOR};font-size:15px;line-height:1.6">A client has submitted a new support ticket.</p>
     ${dataTable(
       row('Client', data.clientName) +
       row('Title', data.title) +
@@ -151,7 +208,7 @@ export function newSupportTicketEmail(data: SupportTicketEmailData): { subject: 
       row('Category', data.category) +
       row('Description', data.description)
     )}
-    <p style="margin:16px 0 0;color:${TEXT_COLOR};font-size:13px">Manage in the <a href="https://freakingminds.in/admin/support" style="color:${BRAND_MAGENTA}">admin dashboard</a>.</p>
+    ${ctaButton('Manage Ticket', 'https://freakingminds.in/admin/support')}
   `;
 
   return {
@@ -172,14 +229,14 @@ export function ticketStatusUpdateEmail(data: TicketStatusUpdateData): { subject
   const statusLabel = data.newStatus.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 
   const body = `
-    <p style="margin:0 0 16px;color:${HEADING_COLOR};font-size:16px;font-weight:700">Hi ${data.clientName},</p>
-    <p style="margin:0 0 16px;color:${TEXT_COLOR};font-size:14px">Your support ticket has been updated.</p>
+    <p style="margin:0 0 8px;color:${HEADING_COLOR};font-size:16px;font-weight:700">Hi ${data.clientName},</p>
+    <p style="margin:0 0 20px;color:${TEXT_COLOR};font-size:15px;line-height:1.6">Your support ticket has been updated.</p>
     ${dataTable(
       row('Ticket', data.title) +
       row('Status', badge(statusLabel)) +
       (data.assignedTo ? row('Assigned To', data.assignedTo) : '')
     )}
-    <p style="margin:16px 0 0;color:${TEXT_COLOR};font-size:13px">You can track your tickets in the <a href="https://freakingminds.in/client" style="color:${BRAND_MAGENTA}">client portal</a>.</p>
+    ${ctaButton('View in Client Portal', 'https://freakingminds.in/client')}
   `;
 
   return {
@@ -197,10 +254,13 @@ interface TalentApplicationData {
 
 export function talentApplicationReceivedEmail(data: TalentApplicationData): { subject: string; html: string } {
   const body = `
-    <p style="margin:0 0 16px;color:${HEADING_COLOR};font-size:16px;font-weight:700">Hi ${data.fullName},</p>
-    <p style="margin:0 0 16px;color:${TEXT_COLOR};font-size:14px">Thank you for applying to CreativeMinds! We've received your application and our team will review it shortly.</p>
-    <p style="margin:0 0 16px;color:${TEXT_COLOR};font-size:14px">We'll notify you once your application has been reviewed. In the meantime, feel free to explore our website at <a href="https://freakingminds.in" style="color:${BRAND_MAGENTA}">freakingminds.in</a>.</p>
-    <p style="margin:0;color:${TEXT_COLOR};font-size:14px">Best,<br>The FreakingMinds Team</p>
+    <p style="margin:0 0 8px;color:${HEADING_COLOR};font-size:16px;font-weight:700">Hi ${data.fullName},</p>
+    <p style="margin:0 0 16px;color:${TEXT_COLOR};font-size:15px;line-height:1.6">Thank you for applying to <strong style="color:${BRAND_MAGENTA}">CreativeMinds</strong> &mdash; FreakingMinds' curated network of creative professionals.</p>
+    <p style="margin:0 0 16px;color:${TEXT_COLOR};font-size:15px;line-height:1.6">We've received your application and our team will review it within 2&ndash;3 business days. You'll receive an email once a decision has been made.</p>
+    <div style="margin:20px 0;padding:16px 20px;background:#faf8f9;border-radius:10px;border-left:3px solid ${BRAND_MAGENTA}">
+      <p style="margin:0;color:${TEXT_COLOR};font-size:13px;line-height:1.5"><strong>What happens next?</strong><br>Our team reviews every application personally. If approved, you'll get a public profile on our talent network and access to project opportunities.</p>
+    </div>
+    <p style="margin:0;color:${TEXT_COLOR};font-size:15px;line-height:1.6">Best,<br><strong>The FreakingMinds Team</strong></p>
   `;
 
   return {
@@ -211,14 +271,14 @@ export function talentApplicationReceivedEmail(data: TalentApplicationData): { s
 
 export function talentApplicationTeamEmail(data: TalentApplicationData): { subject: string; html: string } {
   const body = `
-    <p style="margin:0 0 16px;color:${HEADING_COLOR};font-size:16px;font-weight:700">New CreativeMinds application received.</p>
+    <p style="margin:0 0 20px;color:${TEXT_COLOR};font-size:15px;line-height:1.6">A new CreativeMinds application needs review.</p>
     ${dataTable(
-      row('Name', data.fullName) +
-      row('Email', `<a href="mailto:${data.email}" style="color:${BRAND_MAGENTA}">${data.email}</a>`) +
+      row('Name', `<strong>${data.fullName}</strong>`) +
+      row('Email', `<a href="mailto:${data.email}" style="color:${BRAND_MAGENTA};text-decoration:none">${data.email}</a>`) +
       (data.category ? row('Category', data.category) : '') +
       (data.experience ? row('Experience', data.experience) : '')
     )}
-    <p style="margin:16px 0 0;color:${TEXT_COLOR};font-size:13px">Review in the <a href="https://freakingminds.in/admin/creativeminds" style="color:${BRAND_MAGENTA}">admin dashboard</a>.</p>
+    ${ctaButton('Review Application', 'https://freakingminds.in/admin/creativeminds')}
   `;
 
   return {
@@ -236,10 +296,13 @@ export function talentApprovedEmail(data: TalentApprovedData): { subject: string
   const profileUrl = `https://freakingminds.in/talent/${data.profileSlug}`;
 
   const body = `
-    <p style="margin:0 0 16px;color:${HEADING_COLOR};font-size:16px;font-weight:700">Congratulations, ${data.fullName}!</p>
-    <p style="margin:0 0 16px;color:${TEXT_COLOR};font-size:14px">Your CreativeMinds application has been approved! Your public talent profile is now live.</p>
-    <p style="margin:0 0 24px;color:${TEXT_COLOR};font-size:14px">View your profile: <a href="${profileUrl}" style="color:${BRAND_MAGENTA};font-weight:600">${profileUrl}</a></p>
-    <p style="margin:0;color:${TEXT_COLOR};font-size:14px">Welcome to the team!<br>The FreakingMinds Team</p>
+    <p style="margin:0 0 8px;color:${HEADING_COLOR};font-size:18px;font-weight:700">Congratulations, ${data.fullName}!</p>
+    <p style="margin:0 0 16px;color:${TEXT_COLOR};font-size:15px;line-height:1.6">Your <strong style="color:${BRAND_MAGENTA}">CreativeMinds</strong> application has been approved. Your public talent profile is now live on our network.</p>
+    <div style="margin:20px 0;padding:16px 20px;background:#faf8f9;border-radius:10px;border-left:3px solid #22c55e">
+      <p style="margin:0;color:${TEXT_COLOR};font-size:13px;line-height:1.5"><strong>What this means:</strong><br>Clients and brands browsing our talent network can now discover your profile. You may be contacted for project opportunities that match your skills.</p>
+    </div>
+    ${ctaButton('View Your Profile', profileUrl, '#22c55e')}
+    <p style="margin:16px 0 0;color:${TEXT_COLOR};font-size:15px;line-height:1.6">Welcome to the network!<br><strong>The FreakingMinds Team</strong></p>
   `;
 
   return {
@@ -254,10 +317,11 @@ interface TalentRejectedData {
 
 export function talentRejectedEmail(data: TalentRejectedData): { subject: string; html: string } {
   const body = `
-    <p style="margin:0 0 16px;color:${HEADING_COLOR};font-size:16px;font-weight:700">Hi ${data.fullName},</p>
-    <p style="margin:0 0 16px;color:${TEXT_COLOR};font-size:14px">Thank you for your interest in joining CreativeMinds. After reviewing your application, we've decided not to move forward at this time.</p>
-    <p style="margin:0 0 16px;color:${TEXT_COLOR};font-size:14px">This doesn't reflect on your talent — we may have specific needs that didn't align with your profile right now. You're welcome to reapply in the future as our needs evolve.</p>
-    <p style="margin:0;color:${TEXT_COLOR};font-size:14px">Wishing you the best,<br>The FreakingMinds Team</p>
+    <p style="margin:0 0 8px;color:${HEADING_COLOR};font-size:16px;font-weight:700">Hi ${data.fullName},</p>
+    <p style="margin:0 0 16px;color:${TEXT_COLOR};font-size:15px;line-height:1.6">Thank you for your interest in joining <strong style="color:${BRAND_MAGENTA}">CreativeMinds</strong>. After carefully reviewing your application, we've decided not to move forward at this time.</p>
+    <p style="margin:0 0 16px;color:${TEXT_COLOR};font-size:15px;line-height:1.6">This doesn't reflect on your talent &mdash; we may have specific needs that didn't align with your profile right now. You're welcome to reapply in the future as our requirements evolve.</p>
+    <p style="margin:0 0 16px;color:${TEXT_COLOR};font-size:15px;line-height:1.6">If you have questions, feel free to reach out at <a href="mailto:hello@freakingminds.in" style="color:${BRAND_MAGENTA};text-decoration:none">hello@freakingminds.in</a>.</p>
+    <p style="margin:0;color:${TEXT_COLOR};font-size:15px;line-height:1.6">Wishing you the best,<br><strong>The FreakingMinds Team</strong></p>
   `;
 
   return {
@@ -281,15 +345,15 @@ export function invoiceCreatedEmail(data: InvoiceEmailData): { subject: string; 
   const formatted = new Intl.NumberFormat(locale, { style: 'currency', currency: cur }).format(data.total);
 
   const body = `
-    <p style="margin:0 0 16px;color:${HEADING_COLOR};font-size:16px;font-weight:700">A new invoice has been created.</p>
+    <p style="margin:0 0 20px;color:${TEXT_COLOR};font-size:15px;line-height:1.6">A new invoice has been created.</p>
     ${dataTable(
-      row('Invoice #', data.invoiceNumber) +
+      row('Invoice #', `<strong>${data.invoiceNumber}</strong>`) +
       row('Client', data.clientName) +
-      row('Total', `<strong>${formatted}</strong>`) +
+      row('Total', `<strong style="color:${HEADING_COLOR};font-size:16px">${formatted}</strong>`) +
       (data.dueDate ? row('Due Date', data.dueDate) : '') +
       (data.status ? row('Status', badge(data.status.toUpperCase())) : '')
     )}
-    <p style="margin:16px 0 0;color:${TEXT_COLOR};font-size:13px">View in the <a href="https://freakingminds.in/admin/invoices" style="color:${BRAND_MAGENTA}">admin dashboard</a>.</p>
+    ${ctaButton('View Invoice', 'https://freakingminds.in/admin/invoices')}
   `;
 
   return {
@@ -307,14 +371,14 @@ interface ProposalEmailData {
 
 export function proposalCreatedEmail(data: ProposalEmailData): { subject: string; html: string } {
   const body = `
-    <p style="margin:0 0 16px;color:${HEADING_COLOR};font-size:16px;font-weight:700">A new proposal has been created.</p>
+    <p style="margin:0 0 20px;color:${TEXT_COLOR};font-size:15px;line-height:1.6">A new proposal has been created.</p>
     ${dataTable(
-      row('Proposal #', data.proposalNumber) +
+      row('Proposal #', `<strong>${data.proposalNumber}</strong>`) +
       row('Title', data.title) +
       (data.clientName ? row('Client', data.clientName) : '') +
       (data.status ? row('Status', badge(data.status.toUpperCase())) : '')
     )}
-    <p style="margin:16px 0 0;color:${TEXT_COLOR};font-size:13px">View in the <a href="https://freakingminds.in/admin/proposals" style="color:${BRAND_MAGENTA}">admin dashboard</a>.</p>
+    ${ctaButton('View Proposal', 'https://freakingminds.in/admin/proposals')}
   `;
 
   return {
@@ -340,14 +404,14 @@ export function contentActionEmail(data: ContentActionEmailData): { subject: str
   const color = isApproved ? '#22c55e' : '#f59e0b';
 
   const body = `
-    <p style="margin:0 0 16px;color:${HEADING_COLOR};font-size:16px;font-weight:700">A client has ${isApproved ? 'approved' : 'requested revisions on'} content.</p>
+    <p style="margin:0 0 20px;color:${TEXT_COLOR};font-size:15px;line-height:1.6">A client has ${isApproved ? 'approved' : 'requested revisions on'} content.</p>
     ${dataTable(
       row('Content', data.contentTitle) +
       row('Platform', data.platform) +
       row('Action', badge(label, color))
     )}
-    ${data.clientFeedback ? `<div style="margin:16px 0;padding:12px;background:#fff7ed;border-left:3px solid #f59e0b;border-radius:4px"><p style="margin:0 0 4px;color:${HEADING_COLOR};font-size:13px;font-weight:600">Client Feedback</p><p style="margin:0;color:${TEXT_COLOR};font-size:13px">${data.clientFeedback}</p></div>` : ''}
-    <p style="margin:16px 0 0;color:${TEXT_COLOR};font-size:13px">View in the <a href="https://freakingminds.in/admin/content" style="color:${BRAND_MAGENTA}">admin dashboard</a>.</p>
+    ${data.clientFeedback ? `<div style="margin:20px 0;padding:16px 20px;background:#fff7ed;border-left:3px solid #f59e0b;border-radius:10px"><p style="margin:0 0 6px;color:${HEADING_COLOR};font-size:13px;font-weight:600">Client Feedback</p><p style="margin:0;color:${TEXT_COLOR};font-size:14px;line-height:1.5">${data.clientFeedback}</p></div>` : ''}
+    ${ctaButton('View Content', 'https://freakingminds.in/admin/content')}
   `;
 
   return {
@@ -381,15 +445,15 @@ export function contractCreatedEmail(data: ContractEmailData): { subject: string
     : undefined;
 
   const body = `
-    <p style="margin:0 0 16px;color:${HEADING_COLOR};font-size:16px;font-weight:700">A new contract has been created.</p>
+    <p style="margin:0 0 20px;color:${TEXT_COLOR};font-size:15px;line-height:1.6">A new contract has been created.</p>
     ${dataTable(
-      row('Title', escHtml(data.title)) +
+      row('Title', `<strong>${escHtml(data.title)}</strong>`) +
       (data.clientName ? row('Client', escHtml(data.clientName)) : '') +
       (data.contractNumber ? row('Contract #', escHtml(data.contractNumber)) : '') +
-      (formatted ? row('Total Value', `<strong>${formatted}</strong>`) : '') +
+      (formatted ? row('Value', `<strong style="color:${HEADING_COLOR};font-size:16px">${formatted}</strong>`) : '') +
       row('Status', badge('DRAFT'))
     )}
-    <p style="margin:16px 0 0;color:${TEXT_COLOR};font-size:13px">View in the <a href="https://freakingminds.in/admin/clients" style="color:${BRAND_MAGENTA}">admin dashboard</a>.</p>
+    ${ctaButton('View Contract', 'https://freakingminds.in/admin/clients')}
   `;
 
   return {
@@ -423,13 +487,13 @@ export function contractStatusEmail(data: ContractStatusEmailData): { subject: s
   const safeTitle = escHtml(data.title);
 
   const body = `
-    <p style="margin:0 0 16px;color:${HEADING_COLOR};font-size:16px;font-weight:700">Contract status updated.</p>
+    <p style="margin:0 0 20px;color:${TEXT_COLOR};font-size:15px;line-height:1.6">Contract status has been updated.</p>
     ${dataTable(
       row('Contract', safeTitle) +
       row('Status', badge(label, color))
     )}
-    ${data.clientFeedback ? `<div style="margin:16px 0;padding:12px;background:#fff7ed;border-left:3px solid #f59e0b;border-radius:4px"><p style="margin:0 0 4px;color:${HEADING_COLOR};font-size:13px;font-weight:600">Client Feedback</p><p style="margin:0;color:${TEXT_COLOR};font-size:13px">${escHtml(data.clientFeedback)}</p></div>` : ''}
-    <p style="margin:16px 0 0;color:${TEXT_COLOR};font-size:13px">View in the <a href="https://freakingminds.in/admin/clients" style="color:${BRAND_MAGENTA}">admin dashboard</a>.</p>
+    ${data.clientFeedback ? `<div style="margin:20px 0;padding:16px 20px;background:#fff7ed;border-left:3px solid #f59e0b;border-radius:10px"><p style="margin:0 0 6px;color:${HEADING_COLOR};font-size:13px;font-weight:600">Client Feedback</p><p style="margin:0;color:${TEXT_COLOR};font-size:14px;line-height:1.5">${escHtml(data.clientFeedback)}</p></div>` : ''}
+    ${ctaButton('View Contract', 'https://freakingminds.in/admin/clients')}
   `;
 
   return {
