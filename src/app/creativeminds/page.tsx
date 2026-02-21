@@ -13,7 +13,6 @@ import {
   PenTool,
   Users,
   Briefcase,
-  ClipboardList,
   LineChart,
   Video,
   Camera,
@@ -22,8 +21,6 @@ import {
   Zap,
   TrendingUp,
   Award,
-  Headphones,
-  Star,
   Target,
   ArrowRight,
   Sparkles,
@@ -69,49 +66,49 @@ const moreCategories = [
 ];
 
 const processSteps = [
-  { step: '01', title: 'Brief us.', description: 'Share your project requirements — we\'ll scope the right talent.' },
-  { step: '02', title: 'We match.', description: 'Hand-picked professionals, vetted and ready for your project.' },
-  { step: '03', title: 'You create.', description: 'Your matched creative delivers quality work, on time.' },
+  { step: '01', title: 'Apply.', description: 'Show us your best work. A quick application with your portfolio — that\'s it.' },
+  { step: '02', title: 'Get reviewed.', description: 'Our team reviews your portfolio within 48 hours. No algorithms, real humans.' },
+  { step: '03', title: 'Start earning.', description: 'Get matched to real brand projects, build your public profile, and get paid.' },
 ];
 
-const businessBenefits = [
+const creativeBenefits = [
   {
-    icon: ShieldCheck, title: 'Vetted Professionals', tagline: 'Quality over quantity.',
-    description: 'Every creative is portfolio-reviewed and verified before joining our network.',
+    icon: Briefcase, title: 'Real Brand Projects', tagline: 'No more cheap gigs.',
+    description: 'Work with actual businesses who have real budgets — not someone offering "exposure" as payment.',
     gradient: 'v2-gradient-brand', wash: '201, 50, 93', featured: true,
   },
   {
-    icon: Zap, title: 'Fast Turnaround', tagline: 'Matched in 48 hours.',
-    description: 'Projects start immediately after onboarding — no weeks of sourcing.',
+    icon: ShieldCheck, title: 'No Bidding Wars', tagline: 'Your work speaks for itself.',
+    description: 'We match you to projects based on your skills, not who bids lowest. Your portfolio is your pitch.',
     gradient: 'v2-gradient-performance', wash: '168, 37, 72', featured: true,
   },
   {
-    icon: Users, title: 'Flexible Teams',
-    description: 'One specialist or an entire squad — scale up or down as needed.',
+    icon: Users, title: 'Agency Team Behind You',
+    description: 'You\'re not alone. Project managers, creative directors, and a full agency backing your work.',
     gradient: 'v2-gradient-social', wash: '224, 77, 125', featured: false,
   },
   {
-    icon: TrendingUp, title: 'Cost Effective',
-    description: 'Premium talent without the agency markup.',
+    icon: Globe, title: 'Your Own Profile Page',
+    description: 'Get a public talent profile that showcases your work to clients worldwide.',
     gradient: 'v2-gradient-content', wash: '255, 150, 100', featured: false,
   },
   {
-    icon: Award, title: 'Quality Guaranteed',
-    description: 'Revision policy and satisfaction guarantee on every project.',
+    icon: Zap, title: 'Fast Onboarding',
+    description: 'Apply today, get reviewed in 48 hours, start working on projects right away.',
     gradient: 'v2-gradient-seo', wash: '140, 29, 74', featured: false,
   },
   {
-    icon: Headphones, title: 'End-to-End Support',
-    description: 'We handle coordination so you focus on growth.',
+    icon: TrendingUp, title: 'Grow With Us',
+    description: 'As you deliver great work, you get access to bigger projects and better clients.',
     gradient: 'v2-gradient-deep', wash: '100, 30, 90', featured: false,
   },
 ];
 
 const talentPerks = [
-  { icon: Star, title: 'Premium Projects' },
-  { icon: Zap, title: 'Fast Payments' },
-  { icon: Globe, title: 'Global Exposure' },
-  { icon: TrendingUp, title: 'Skill Growth' },
+  { icon: Briefcase, title: 'Real Brand Projects' },
+  { icon: Globe, title: 'Public Profile Page' },
+  { icon: ShieldCheck, title: 'No Bidding Wars' },
+  { icon: Users, title: 'Agency Backing' },
 ];
 
 /* ─── Page ───────────────────────────────────────────────────────── */
@@ -221,8 +218,8 @@ export default function CreativeMindsPage() {
     );
   }
 
-  const featuredBenefits = businessBenefits.filter(b => b.featured);
-  const regularBenefits = businessBenefits.filter(b => !b.featured);
+  const featuredBenefits = creativeBenefits.filter(b => b.featured);
+  const regularBenefits = creativeBenefits.filter(b => !b.featured);
 
   return (
     <V2PageWrapper>
@@ -235,32 +232,35 @@ export default function CreativeMindsPage() {
             <div className="lg:col-span-7 flex flex-col items-start">
               <div className="v2-badge v2-badge-glass mb-8">
                 <Sparkles className="w-4 h-4 v2-text-primary" />
-                <span className="v2-text-primary">CreativeMinds Network</span>
+                <span className="v2-text-primary">CreativeMinds by FreakingMinds</span>
               </div>
 
               <h1 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold v2-text-primary leading-[1.08] tracking-tight" style={{ marginBottom: '28px' }}>
-                Your next creative team is{' '}
-                <span className="v2-accent">already here.</span>
+                Stop chasing gigs.{' '}
+                <span className="v2-accent">Start creating.</span>
               </h1>
 
               <p className="v2-text-secondary text-lg md:text-xl leading-relaxed max-w-full lg:max-w-lg" style={{ marginBottom: '40px' }}>
-                Vetted professionals. Matched in 48 hours. No agency markup.
-                Skip the hiring headache — we connect you with the right talent, fast.
+                Real clients. Real budgets. No bidding wars.
+                Join a freaking good network of creatives backed by an actual agency.
               </p>
 
               <div className="flex flex-col sm:flex-row items-stretch sm:items-start gap-4 w-full sm:w-auto" style={{ marginBottom: '40px' }}>
-                <Link href="/get-started" className="group v2-btn v2-btn-primary v2-btn-lg">
-                  Hire Creative Talent
+                <button
+                  onClick={() => setShowApplicationForm(true)}
+                  className="group v2-btn v2-btn-primary v2-btn-lg"
+                >
+                  Apply to Join
                   <ArrowRight className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" />
+                </button>
+                <Link href="/get-started" className="v2-btn v2-btn-secondary v2-btn-lg">
+                  Hire Talent Instead
                 </Link>
-                <a href="#for-creatives" className="v2-btn v2-btn-secondary v2-btn-lg">
-                  Join as Creative
-                </a>
               </div>
 
               {/* Inline proof points */}
               <div className="flex flex-wrap gap-x-6 gap-y-3">
-                {['500+ Verified Creatives', '150+ Projects Delivered', '48hr Matching'].map((item) => (
+                {['Portfolio-Reviewed Talent', 'Backed by FreakingMinds Agency', '48hr Application Review'].map((item) => (
                   <div key={item} className="flex items-center gap-2 text-sm v2-text-secondary">
                     <Check className="w-4 h-4 text-fm-magenta-600" />
                     <span>{item}</span>
@@ -306,13 +306,13 @@ export default function CreativeMindsPage() {
           <div className="max-w-3xl mx-auto" style={{ textAlign: 'center', marginBottom: '64px' }}>
             <div className="v2-badge v2-badge-glass mb-6">
               <Target className="w-4 h-4 v2-text-primary" />
-              <span className="v2-text-primary">Simple Process</span>
+              <span className="v2-text-primary">Your Journey</span>
             </div>
             <h2 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold v2-text-primary mb-8 leading-tight">
-              How It <span className="v2-accent">Works</span>
+              From application to <span className="v2-accent">earning.</span>
             </h2>
             <p className="text-lg v2-text-secondary leading-relaxed max-w-2xl mx-auto">
-              Three simple steps to connect you with the perfect creative talent for your project.
+              No endless interviews. No algorithm games. Three steps and you&apos;re in.
             </p>
           </div>
 
@@ -354,7 +354,7 @@ export default function CreativeMindsPage() {
 
               <div className="grid grid-cols-3 gap-8" style={{ position: 'relative', zIndex: 2 }}>
                 {processSteps.map((item, index) => {
-                  const icons = [ClipboardList, Users, Sparkles];
+                  const icons = [PenTool, ShieldCheck, Zap];
                   const StepIcon = icons[index];
                   return (
                     <div key={item.step} style={{ textAlign: 'center' }}>
@@ -397,7 +397,7 @@ export default function CreativeMindsPage() {
           {/* Mobile: vertical with dashed circles */}
           <div className="md:hidden flex flex-col items-center">
             {processSteps.map((item, index) => {
-              const icons = [ClipboardList, Users, Sparkles];
+              const icons = [PenTool, ShieldCheck, Zap];
               const StepIcon = icons[index];
               return (
                 <div key={item.step} className="flex flex-col items-center" style={{ textAlign: 'center' }}>
@@ -472,21 +472,21 @@ export default function CreativeMindsPage() {
             <div className={`transition-[opacity,transform] duration-500 ease-out ${bentoVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
               <div className="v2-badge v2-badge-glass mb-8">
                 <Sparkles className="w-4 h-4 v2-text-primary" />
-                <span className="v2-text-primary">Our Expertise</span>
+                <span className="v2-text-primary">We Need You</span>
               </div>
 
               <h2 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold v2-text-primary mb-6 leading-[1.1]">
-                Every skill,{' '}
-                <span className="v2-accent">one network.</span>
+                Whatever you do,{' '}
+                <span className="v2-accent">we want you in.</span>
               </h2>
 
               <p className="text-lg md:text-xl v2-text-secondary mb-10 leading-relaxed max-w-xl">
-                From brand design to full-stack development — vetted talent across every creative
-                discipline, ready to plug into your project.
+                Designers, developers, marketers, filmmakers, writers — if you&apos;re freaking great
+                at what you do, there&apos;s a spot for you here.
               </p>
 
               <div className="flex flex-wrap gap-x-6 gap-y-3 mb-10">
-                {['Verified Profiles', 'Quality Assured', 'Fast Matching'].map((item) => (
+                {['All Skill Levels Welcome', 'Global Talent Pool', 'Portfolio-Based Review'].map((item) => (
                   <div key={item} className="flex items-center gap-2 text-sm v2-text-secondary">
                     <Check className="w-4 h-4 text-fm-magenta-600" />
                     <span>{item}</span>
@@ -495,10 +495,13 @@ export default function CreativeMindsPage() {
               </div>
 
               <div className="flex flex-col md:flex-row gap-4">
-                <Link href="/get-started" className="v2-btn v2-btn-primary">
-                  Explore Network
+                <button
+                  onClick={() => setShowApplicationForm(true)}
+                  className="v2-btn v2-btn-primary"
+                >
+                  Apply Now
                   <ArrowRight className="w-5 h-5" />
-                </Link>
+                </button>
               </div>
             </div>
 
@@ -640,11 +643,11 @@ export default function CreativeMindsPage() {
           <div className="max-w-3xl mx-auto" style={{ textAlign: 'center', marginBottom: '64px' }}>
             <div className="v2-badge v2-badge-glass mb-6">
               <Award className="w-4 h-4 v2-text-primary" />
-              <span className="v2-text-primary">Why Choose Us</span>
+              <span className="v2-text-primary">Why Join</span>
             </div>
             <h2 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold v2-text-primary mb-8 leading-tight">
-              Skip the guesswork.{' '}
-              <span className="v2-accent">Hire with confidence.</span>
+              This isn&apos;t another{' '}
+              <span className="v2-accent">freelance platform.</span>
             </h2>
           </div>
 
@@ -725,17 +728,17 @@ export default function CreativeMindsPage() {
         <div className="v2-container v2-container-narrow">
           <div className="v2-paper rounded-3xl p-8 md:p-12" style={{ textAlign: 'center' }}>
             <div className="v2-badge v2-badge-light mb-6">
-              <Star className="w-4 h-4" />
-              <span>For Creatives</span>
+              <Briefcase className="w-4 h-4" />
+              <span>For Businesses</span>
             </div>
 
             <h2 className="font-display text-3xl md:text-4xl font-bold text-fm-neutral-900 mb-4 leading-tight">
-              Built for the <span className="text-fm-magenta-600">best</span>.
+              Need to <span className="text-fm-magenta-600">hire</span> instead?
             </h2>
 
             <p className="text-fm-neutral-600 mb-8 max-w-lg mx-auto">
-              Premium projects. Fast payments. Zero drama.
-              Join India&apos;s most curated creative talent network.
+              Tell us what you need — we&apos;ll match you with portfolio-reviewed creatives
+              from our network. No endless sourcing, no bidding wars.
             </p>
 
             {/* Perk badges */}
@@ -754,13 +757,13 @@ export default function CreativeMindsPage() {
               })}
             </div>
 
-            <button
-              onClick={() => setShowApplicationForm(true)}
+            <Link
+              href="/get-started"
               className="group v2-btn v2-btn-magenta"
             >
-              Apply to Join
+              Hire Creative Talent
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </button>
+            </Link>
           </div>
         </div>
       </section>
@@ -788,19 +791,22 @@ export default function CreativeMindsPage() {
             />
 
             <div className="relative grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-0" style={{ zIndex: 2 }}>
-              {/* Left — Business */}
+              {/* Left — Creatives (Primary) */}
               <div className="md:pr-8 lg:pr-12" style={{ textAlign: 'center' }}>
                 <h3 className="font-display text-2xl md:text-3xl font-bold text-fm-neutral-900 mb-4 leading-tight">
-                  Ready to build your{' '}
-                  <span className="text-fm-magenta-600">dream team</span>?
+                  Ready to do some{' '}
+                  <span className="text-fm-magenta-600">freaking great</span> work?
                 </h3>
                 <p className="text-fm-neutral-600 mb-6">
-                  Tell us what you need — we&apos;ll match you with the right creative talent.
+                  Apply in minutes. Get reviewed in 48 hours. Start working with real brands.
                 </p>
-                <Link href="/get-started" className="group v2-btn v2-btn-magenta">
-                  Hire Talent
+                <button
+                  onClick={() => setShowApplicationForm(true)}
+                  className="group v2-btn v2-btn-magenta"
+                >
+                  Apply to Join
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </Link>
+                </button>
               </div>
 
               {/* Divider */}
@@ -813,22 +819,19 @@ export default function CreativeMindsPage() {
               />
               <div className="md:hidden w-full h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(201,50,93,0.15), transparent)' }} />
 
-              {/* Right — Talent */}
+              {/* Right — Businesses (Secondary) */}
               <div className="md:pl-8 lg:pl-12" style={{ textAlign: 'center' }}>
                 <h3 className="font-display text-2xl md:text-3xl font-bold text-fm-neutral-900 mb-4 leading-tight">
-                  Ready to showcase your{' '}
-                  <span className="text-fm-magenta-600">talent</span>?
+                  Looking to{' '}
+                  <span className="text-fm-magenta-600">hire</span> instead?
                 </h3>
                 <p className="text-fm-neutral-600 mb-6">
-                  Join a curated network working with premium brands across India.
+                  Tell us what you need — we&apos;ll match you with the right creative from our network.
                 </p>
-                <button
-                  onClick={() => setShowApplicationForm(true)}
-                  className="group v2-btn v2-btn-outline"
-                >
-                  Apply Now
+                <Link href="/get-started" className="group v2-btn v2-btn-outline">
+                  Hire Talent
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </button>
+                </Link>
               </div>
             </div>
           </div>
