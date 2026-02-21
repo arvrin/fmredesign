@@ -98,11 +98,11 @@ export default function TalentProfilePage({ params }: { params: Promise<{ slug: 
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
-  // Editable drafts
-  const [draftContact, setDraftContact] = useState<TalentProfile['personalInfo'] | null>(null);
-  const [draftAvailability, setDraftAvailability] = useState<TalentProfile['availability'] | null>(null);
-  const [draftPortfolio, setDraftPortfolio] = useState<TalentProfile['portfolioLinks'] | null>(null);
-  const [draftPricing, setDraftPricing] = useState<TalentProfile['pricing'] | null>(null);
+  // Editable drafts — use Record<string, any> because JSONB shape may differ from TS interface
+  const [draftContact, setDraftContact] = useState<Record<string, any> | null>(null);
+  const [draftAvailability, setDraftAvailability] = useState<Record<string, any> | null>(null);
+  const [draftPortfolio, setDraftPortfolio] = useState<Record<string, any> | null>(null);
+  const [draftPricing, setDraftPricing] = useState<Record<string, any> | null>(null);
 
   useEffect(() => {
     fetch(`/api/talent/${slug}`)
@@ -120,10 +120,11 @@ export default function TalentProfilePage({ params }: { params: Promise<{ slug: 
 
   const startEditing = (section: EditSection) => {
     if (!profile) return;
-    if (section === 'contact') setDraftContact({ ...profile.personalInfo });
-    if (section === 'availability') setDraftAvailability({ ...profile.availability });
-    if (section === 'portfolio') setDraftPortfolio({ ...profile.portfolioLinks });
-    if (section === 'pricing') setDraftPricing({ ...profile.pricing });
+    const p = profile as Record<string, any>;
+    if (section === 'contact') setDraftContact({ ...(p.personalInfo || {}) });
+    if (section === 'availability') setDraftAvailability({ ...(p.availability || {}) });
+    if (section === 'portfolio') setDraftPortfolio({ ...(p.portfolioLinks || {}) });
+    if (section === 'pricing') setDraftPricing({ ...(p.pricing || {}) });
     setEditing(section);
     setSaveSuccess(false);
   };
@@ -164,7 +165,7 @@ export default function TalentProfilePage({ params }: { params: Promise<{ slug: 
             ...(editing === 'availability' && draftAvailability ? { availability: draftAvailability } : {}),
             ...(editing === 'portfolio' && draftPortfolio ? { portfolioLinks: draftPortfolio } : {}),
             ...(editing === 'pricing' && draftPricing ? { pricing: draftPricing } : {}),
-          };
+          } as TalentProfile;
         });
         setSaveSuccess(true);
         setTimeout(() => {
@@ -219,11 +220,27 @@ export default function TalentProfilePage({ params }: { params: Promise<{ slug: 
     );
   }
 
-  const { personalInfo: pi, professionalDetails: pd, availability: av, pricing: pr, portfolioLinks: pl } = profile;
-  const categoryLabel = TALENT_CATEGORIES[pd.category]?.label || pd.category;
-  const experienceLabel = EXPERIENCE_LEVELS.find((e) => e.value === pd.experienceLevel)?.label || pd.experienceLevel;
-  const currencySymbol = CURRENCIES.find((c) => c.code === profile.preferences.currency)?.symbol || '₹';
-  const commitmentLabel = PROJECT_COMMITMENT_OPTIONS.find((o) => o.value === av.projectCommitment)?.label || av.projectCommitment;
+  const pi = (profile.personalInfo || {}) as Record<string, any>;
+  const pd = (profile.professionalDetails || {}) as Record<string, any>;
+  const av = (profile.availability || {}) as Record<string, any>;
+  const pr = (profile.pricing || {}) as Record<string, any>;
+  const pl = (profile.portfolioLinks || {}) as Record<string, any>;
+  const prefs = (profile.preferences || {}) as Record<string, any>;
+  const categoryKey = pd.category || pd.primaryCategory || '';
+  const categoryLabel = TALENT_CATEGORIES[categoryKey as TalentCategory]?.label || categoryKey || 'Creative';
+  const experienceLabel = EXPERIENCE_LEVELS.find((e) => e.value === pd.experienceLevel)?.label || pd.experienceLevel || '';
+  const currencySymbol = CURRENCIES.find((c) => c.code === (prefs.currency || pr?.currency))?.symbol || '₹';
+  const currentStatus = av.currentStatus || av.status || 'available';
+  const commitmentLabel = PROJECT_COMMITMENT_OPTIONS.find((o) => o.value === av.projectCommitment)?.label || av.projectCommitment || 'Both';
+  const subcategories: string[] = Array.isArray(pd.subcategories) ? pd.subcategories : [];
+  const skills: string[] = Array.isArray(pd.skills) ? pd.skills.map((s: any) => typeof s === 'string' ? s : s?.name || '') : [];
+  const tools: string[] = Array.isArray(pd.tools) ? pd.tools : [];
+  const languages: string[] = Array.isArray(pi.languages) ? pi.languages : [];
+  const location = pi.location || {};
+  const hourlyRate = typeof pr.hourlyRate === 'object' ? pr.hourlyRate : { min: pr.hourlyRate || 0, max: 0 };
+  const projectRate = typeof pr.projectRate === 'object' ? pr.projectRate : { min: 0, max: 0 };
+  const retainerRate = typeof pr.retainerRate === 'object' ? pr.retainerRate : { min: 0, max: 0 };
+  const workSampleUrls: string[] = Array.isArray(pl.workSampleUrls) ? pl.workSampleUrls : [];
 
   const statusColors: Record<string, string> = {
     available: 'bg-green-100 text-green-800',
@@ -254,9 +271,9 @@ export default function TalentProfilePage({ params }: { params: Promise<{ slug: 
                   {categoryLabel} &middot; {experienceLabel}
                 </p>
               </div>
-              <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium ${statusColors[av.currentStatus] || 'bg-gray-100 text-gray-600'}`}>
-                <div className={`w-2 h-2 rounded-full ${av.currentStatus === 'available' ? 'bg-green-500' : av.currentStatus === 'partially_available' ? 'bg-yellow-500' : 'bg-red-500'}`} />
-                {av.currentStatus === 'available' ? 'Available' : av.currentStatus === 'partially_available' ? 'Partially Available' : 'Busy'}
+              <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium ${statusColors[currentStatus] || 'bg-gray-100 text-gray-600'}`}>
+                <div className={`w-2 h-2 rounded-full ${currentStatus === 'available' ? 'bg-green-500' : currentStatus === 'partially_available' ? 'bg-yellow-500' : 'bg-red-500'}`} />
+                {currentStatus === 'available' ? 'Available' : currentStatus === 'partially_available' ? 'Partially Available' : 'Busy'}
               </div>
             </div>
           </div>
@@ -273,11 +290,11 @@ export default function TalentProfilePage({ params }: { params: Promise<{ slug: 
               {/* Skills & Tools (read-only, set by admin) */}
               <div className="v2-paper rounded-2xl p-6 md:p-8">
                 <h2 className="text-lg font-bold text-fm-neutral-900 mb-4">Skills & Tools</h2>
-                {pd.subcategories.length > 0 && (
+                {subcategories.length > 0 && (
                   <div className="mb-4">
                     <p className="text-xs font-medium text-fm-neutral-500 uppercase tracking-wide mb-2">Specializations</p>
                     <div className="flex flex-wrap gap-2">
-                      {pd.subcategories.map((sub) => (
+                      {subcategories.map((sub) => (
                         <span key={sub} className="px-3 py-1 bg-fm-magenta-50 text-fm-magenta-700 rounded-full text-sm font-medium">
                           {sub}
                         </span>
@@ -285,23 +302,23 @@ export default function TalentProfilePage({ params }: { params: Promise<{ slug: 
                     </div>
                   </div>
                 )}
-                {pd.skills.length > 0 && (
+                {skills.length > 0 && (
                   <div className="mb-4">
                     <p className="text-xs font-medium text-fm-neutral-500 uppercase tracking-wide mb-2">Core Skills</p>
                     <div className="flex flex-wrap gap-2">
-                      {pd.skills.map((s) => (
-                        <span key={s.name} className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm">
-                          {s.name}
+                      {skills.map((s) => (
+                        <span key={s} className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm">
+                          {s}
                         </span>
                       ))}
                     </div>
                   </div>
                 )}
-                {pd.tools.length > 0 && (
+                {tools.length > 0 && (
                   <div>
                     <p className="text-xs font-medium text-fm-neutral-500 uppercase tracking-wide mb-2">Tools</p>
                     <div className="flex flex-wrap gap-2">
-                      {pd.tools.map((t) => (
+                      {tools.map((t) => (
                         <span key={t} className="px-3 py-1 bg-fm-neutral-100 text-fm-neutral-700 rounded-full text-sm">
                           {t}
                         </span>
@@ -328,13 +345,13 @@ export default function TalentProfilePage({ params }: { params: Promise<{ slug: 
                       <label className="block text-sm font-medium text-fm-neutral-700 mb-1">Portfolio Website</label>
                       <input
                         type="url"
-                        value={draftPortfolio.websiteUrl}
+                        value={draftPortfolio.websiteUrl || ''}
                         onChange={(e) => setDraftPortfolio({ ...draftPortfolio, websiteUrl: e.target.value })}
                         className={inputClass}
                         placeholder="https://yourportfolio.com"
                       />
                     </div>
-                    {(draftPortfolio.workSampleUrls || []).map((url, i) => (
+                    {(draftPortfolio.workSampleUrls || []).map((url: string, i: number) => (
                       <div key={i}>
                         <label className="block text-sm font-medium text-fm-neutral-700 mb-1">Work Sample {i + 1}</label>
                         <input
@@ -360,12 +377,12 @@ export default function TalentProfilePage({ params }: { params: Promise<{ slug: 
                         <ExternalLink className="w-3 h-3" />
                       </a>
                     )}
-                    {(pl.workSampleUrls || []).filter(Boolean).map((url, i) => (
+                    {workSampleUrls.filter(Boolean).map((url, i) => (
                       <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-fm-neutral-600 hover:text-fm-magenta-600 text-sm">
                         <ExternalLink className="w-3.5 h-3.5" /> Work Sample {i + 1}
                       </a>
                     ))}
-                    {!pl.websiteUrl && !(pl.workSampleUrls || []).filter(Boolean).length && (
+                    {!pl.websiteUrl && !workSampleUrls.filter(Boolean).length && (
                       <p className="text-fm-neutral-400 text-sm">No portfolio links added yet</p>
                     )}
                   </div>
@@ -410,8 +427,8 @@ export default function TalentProfilePage({ params }: { params: Promise<{ slug: 
                       <label className="block text-xs font-medium text-fm-neutral-600 mb-1">City</label>
                       <input
                         type="text"
-                        value={draftContact.location.city}
-                        onChange={(e) => setDraftContact({ ...draftContact, location: { ...draftContact.location, city: e.target.value } })}
+                        value={draftContact.location?.city || ''}
+                        onChange={(e) => setDraftContact({ ...draftContact, location: { ...(draftContact.location || {}), city: e.target.value } })}
                         className={inputClass}
                       />
                     </div>
@@ -430,9 +447,9 @@ export default function TalentProfilePage({ params }: { params: Promise<{ slug: 
                   <div className="space-y-3">
                     <InfoRow icon={<Mail className="w-4 h-4" />} label={pi.email} />
                     <InfoRow icon={<Phone className="w-4 h-4" />} label={pi.phone} />
-                    <InfoRow icon={<MapPin className="w-4 h-4" />} label={`${pi.location.city}, ${pi.location.state}`} />
-                    {pi.languages.length > 0 && (
-                      <InfoRow icon={<Globe className="w-4 h-4" />} label={pi.languages.join(', ')} />
+                    <InfoRow icon={<MapPin className="w-4 h-4" />} label={`${location.city || ''}, ${location.state || ''}`} />
+                    {languages.length > 0 && (
+                      <InfoRow icon={<Globe className="w-4 h-4" />} label={languages.join(', ')} />
                     )}
                   </div>
                 )}
@@ -454,8 +471,8 @@ export default function TalentProfilePage({ params }: { params: Promise<{ slug: 
                     <div>
                       <label className="block text-xs font-medium text-fm-neutral-600 mb-1">Status</label>
                       <select
-                        value={draftAvailability.currentStatus}
-                        onChange={(e) => setDraftAvailability({ ...draftAvailability, currentStatus: e.target.value })}
+                        value={draftAvailability.currentStatus || draftAvailability.status || 'available'}
+                        onChange={(e) => setDraftAvailability({ ...draftAvailability, currentStatus: e.target.value, status: e.target.value })}
                         className={inputClass}
                       >
                         <option value="available">Available</option>
@@ -469,7 +486,7 @@ export default function TalentProfilePage({ params }: { params: Promise<{ slug: 
                         type="number"
                         min={0}
                         max={80}
-                        value={draftAvailability.hoursPerWeek}
+                        value={draftAvailability.hoursPerWeek || 0}
                         onChange={(e) => setDraftAvailability({ ...draftAvailability, hoursPerWeek: parseInt(e.target.value) || 0 })}
                         className={inputClass}
                       />
@@ -477,7 +494,7 @@ export default function TalentProfilePage({ params }: { params: Promise<{ slug: 
                     <div>
                       <label className="block text-xs font-medium text-fm-neutral-600 mb-1">Commitment</label>
                       <select
-                        value={draftAvailability.projectCommitment}
+                        value={draftAvailability.projectCommitment || 'both'}
                         onChange={(e) => setDraftAvailability({ ...draftAvailability, projectCommitment: e.target.value })}
                         className={inputClass}
                       >
@@ -490,7 +507,7 @@ export default function TalentProfilePage({ params }: { params: Promise<{ slug: 
                       <input
                         type="checkbox"
                         id="remote"
-                        checked={draftAvailability.remoteWork}
+                        checked={draftAvailability.remoteWork || false}
                         onChange={(e) => setDraftAvailability({ ...draftAvailability, remoteWork: e.target.checked })}
                         className="rounded"
                       />
@@ -500,7 +517,7 @@ export default function TalentProfilePage({ params }: { params: Promise<{ slug: 
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    <InfoRow icon={<Clock className="w-4 h-4" />} label={`${av.hoursPerWeek} hrs/week`} />
+                    <InfoRow icon={<Clock className="w-4 h-4" />} label={`${av.hoursPerWeek || 0} hrs/week`} />
                     <InfoRow icon={<Briefcase className="w-4 h-4" />} label={commitmentLabel} />
                     {av.remoteWork && <InfoRow icon={<Globe className="w-4 h-4" />} label="Remote available" />}
                   </div>
@@ -520,14 +537,14 @@ export default function TalentProfilePage({ params }: { params: Promise<{ slug: 
 
                 {editing === 'pricing' && draftPricing ? (
                   <div className="space-y-3">
-                    <RateInput label="Hourly" symbol={currencySymbol} rate={draftPricing.hourlyRate} onChange={(r) => setDraftPricing({ ...draftPricing, hourlyRate: r })} />
-                    <RateInput label="Per-project" symbol={currencySymbol} rate={draftPricing.projectRate} onChange={(r) => setDraftPricing({ ...draftPricing, projectRate: r })} />
-                    <RateInput label="Monthly" symbol={currencySymbol} rate={draftPricing.retainerRate} onChange={(r) => setDraftPricing({ ...draftPricing, retainerRate: r })} />
+                    <RateInput label="Hourly" symbol={currencySymbol} rate={typeof draftPricing.hourlyRate === 'object' ? draftPricing.hourlyRate : { min: Number(draftPricing.hourlyRate) || 0, max: 0 }} onChange={(r) => setDraftPricing({ ...draftPricing, hourlyRate: r })} />
+                    <RateInput label="Per-project" symbol={currencySymbol} rate={typeof draftPricing.projectRate === 'object' ? draftPricing.projectRate : { min: 0, max: 0 }} onChange={(r) => setDraftPricing({ ...draftPricing, projectRate: r })} />
+                    <RateInput label="Monthly" symbol={currencySymbol} rate={typeof draftPricing.retainerRate === 'object' ? draftPricing.retainerRate : { min: 0, max: 0 }} onChange={(r) => setDraftPricing({ ...draftPricing, retainerRate: r })} />
                     <div className="flex items-center gap-2">
                       <input
                         type="checkbox"
                         id="negotiable"
-                        checked={draftPricing.openToNegotiation}
+                        checked={draftPricing.openToNegotiation || false}
                         onChange={(e) => setDraftPricing({ ...draftPricing, openToNegotiation: e.target.checked })}
                         className="rounded"
                       />
@@ -537,22 +554,22 @@ export default function TalentProfilePage({ params }: { params: Promise<{ slug: 
                   </div>
                 ) : (
                   <div className="space-y-2 text-sm">
-                    {pr.hourlyRate.max > 0 && (
+                    {Number(hourlyRate.max) > 0 && (
                       <div className="flex justify-between text-fm-neutral-600">
                         <span>Hourly</span>
-                        <span className="font-medium text-fm-neutral-900">{currencySymbol}{pr.hourlyRate.min}–{pr.hourlyRate.max}</span>
+                        <span className="font-medium text-fm-neutral-900">{currencySymbol}{Number(hourlyRate.min).toLocaleString()}–{Number(hourlyRate.max).toLocaleString()}</span>
                       </div>
                     )}
-                    {pr.projectRate.max > 0 && (
+                    {Number(projectRate.max) > 0 && (
                       <div className="flex justify-between text-fm-neutral-600">
                         <span>Per-project</span>
-                        <span className="font-medium text-fm-neutral-900">{currencySymbol}{pr.projectRate.min.toLocaleString()}–{pr.projectRate.max.toLocaleString()}</span>
+                        <span className="font-medium text-fm-neutral-900">{currencySymbol}{Number(projectRate.min).toLocaleString()}–{Number(projectRate.max).toLocaleString()}</span>
                       </div>
                     )}
-                    {pr.retainerRate.max > 0 && (
+                    {Number(retainerRate.max) > 0 && (
                       <div className="flex justify-between text-fm-neutral-600">
                         <span>Monthly</span>
-                        <span className="font-medium text-fm-neutral-900">{currencySymbol}{pr.retainerRate.min.toLocaleString()}–{pr.retainerRate.max.toLocaleString()}</span>
+                        <span className="font-medium text-fm-neutral-900">{currencySymbol}{Number(retainerRate.min).toLocaleString()}–{Number(retainerRate.max).toLocaleString()}</span>
                       </div>
                     )}
                     {pr.openToNegotiation && (
@@ -563,13 +580,13 @@ export default function TalentProfilePage({ params }: { params: Promise<{ slug: 
               </div>
 
               {/* Ratings */}
-              {profile.ratings.totalReviews > 0 && (
+              {(profile as any).ratings?.totalReviews > 0 && (
                 <div className="v2-paper rounded-2xl p-6">
                   <h2 className="text-base font-bold text-fm-neutral-900 mb-3">Ratings</h2>
                   <div className="flex items-center gap-2">
                     <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
-                    <span className="text-xl font-bold text-fm-neutral-900">{profile.ratings.overallRating.toFixed(1)}</span>
-                    <span className="text-sm text-fm-neutral-500">({profile.ratings.totalReviews} reviews)</span>
+                    <span className="text-xl font-bold text-fm-neutral-900">{Number((profile as any).ratings?.overallRating || 0).toFixed(1)}</span>
+                    <span className="text-sm text-fm-neutral-500">({(profile as any).ratings?.totalReviews} reviews)</span>
                   </div>
                 </div>
               )}
