@@ -6,22 +6,25 @@ Project-specific instructions for Claude Code when working on this codebase.
 
 FreakingMinds is a digital marketing agency platform built with Next.js 15 and Tailwind CSS v4. It includes:
 - **Public website** — Marketing site with V2 dark magenta/purple theme, 3D brain decorations, glass-morphism
-- **Admin dashboard** — Full agency management (clients, projects, content, invoices, proposals, leads, team, discovery, talent, audit)
-- **Client portal** — Client-facing dashboard (project tracking, content approval, documents, reports, support)
+- **Admin dashboard** — Full agency management (clients, projects, content, invoices, proposals, leads, team, discovery, talent, contracts, social publishing, audit)
+- **Client portal** — Client-facing dashboard (project tracking, content approval, contracts, documents, reports, support)
 - **CreativeMinds** — Talent marketplace for freelance creatives
 - **Blog** — Hardcoded blog with SEO (sitemap, JSON-LD, Open Graph)
 
 ## Tech Stack
 
-- **Framework**: Next.js 15.5.0 (App Router)
+- **Framework**: Next.js 15.5.12 (App Router)
 - **React**: 19.1.0
 - **Styling**: Tailwind CSS v4 (CSS-first configuration)
 - **Animations**: GSAP 3.14.2 (ScrollTrigger, custom hooks)
-- **Smooth Scroll**: Lenis 1.3.17 (installed but **disabled** — `SmoothScrollProvider` passes children through; GSAP ScrollTrigger works with native scroll)
 - **Icons**: Lucide React
 - **Forms**: react-hook-form + Zod (installed; Zod schemas in use for API validation, forms partially migrated)
 - **Database**: Supabase (PostgreSQL) — primary backend for admin, client portal, and all data
+- **Data Fetching**: @tanstack/react-query 5.x (admin hooks), @tanstack/react-table 8.x (data tables)
+- **URL State**: nuqs 2.x (URL query string state management)
 - **PDF**: jsPDF + jspdf-autotable (invoice/proposal PDF generation)
+- **Email**: Resend 6.x (transactional email — optional, graceful degradation if key not set)
+- **Social**: Meta Graph API v21.0 (Facebook/Instagram publishing — optional)
 - **Auth**: bcryptjs (password hashing), HMAC-SHA256 (session signing)
 - **Legacy**: Google Sheets API (leads/discovery forms only)
 
@@ -152,16 +155,18 @@ src/
 │   │   ├── team/           # Team list + [memberId] detail/edit/assignments/documents/performance + new
 │   │   └── users/          # Authorized user management (roles/permissions)
 │   ├── api/
-│   │   ├── admin/          # Admin APIs (auth, users, support, audit)
-│   │   ├── client-portal/  # Client portal APIs (profile, projects, content, etc.)
+│   │   ├── admin/          # Admin APIs (auth, users, support, audit, social, messages, notifications, growth)
+│   │   │   └── social/     # Social publishing APIs (accounts, publish, verify-token)
+│   │   ├── client-portal/  # Client portal APIs (profile, projects, content, contracts, etc.)
 │   │   │   └── [clientId]/ # All client-scoped endpoints
+│   │   ├── contracts/      # Contract CRUD API
 │   │   ├── shared/[token]/ # Public share link resolver
 │   │   ├── discovery/      # Discovery session API
 │   │   ├── talent/         # CreativeMinds talent API + [slug]
 │   │   └── ...             # Other APIs (clients, projects, invoices, leads, proposals, team, content)
 │   ├── client/             # Client portal
 │   │   ├── login/          # Client login page
-│   │   └── [clientId]/     # Dashboard pages (overview, projects, content, reports, documents, support, settings)
+│   │   └── [clientId]/     # Dashboard pages (overview, projects, content, contracts, reports, documents, support, settings)
 │   ├── shared/[token]/     # Public shared resource viewer (documents, reports, content)
 │   ├── creativeminds/      # Public talent application page
 │   ├── talent/[slug]/      # Public talent profile viewer
@@ -178,7 +183,8 @@ src/
 │   └── layout.tsx          # Root layout (fonts, JSON-LD, analytics pixel)
 ├── components/
 │   ├── admin/              # Admin components (modals, forms, dashboards)
-│   │   └── discovery/      # Discovery wizard section components
+│   │   ├── discovery/      # Discovery wizard section components
+│   │   └── social/         # Social publishing (PublishButton, SocialAccountsPanel, SocialPublishStatus)
 │   ├── animations/         # GSAP animation components
 │   ├── layout/             # Header, Footer, ConditionalLayout
 │   ├── layouts/            # V2PageWrapper
@@ -187,6 +193,7 @@ src/
 │   └── ui/                 # Shared UI (Badge, Input, Toggle, tabs)
 ├── design-system/          # DashboardLayout, Card, Button, MetricCard, IconBox
 ├── hooks/                  # useAdminAuth, useAdminData, useBreadcrumbs, useCountUp, useGSAP, useMagneticEffect, useAdminFilters
+│   └── admin/              # useClientDetail, useTeamMembers, useSocialAccounts, useCreativeMinds, useLeads
 ├── lib/
 │   ├── admin/              # Admin types, auth, services, permissions, audit-log, PDF generators
 │   │   ├── permissions.ts  # Role-based permission system (23 permissions, 5 roles)
@@ -194,22 +201,32 @@ src/
 │   │   ├── invoice-numbering.ts  # Auto-incrementing invoice numbers
 │   │   ├── proposal-numbering.ts # Auto-incrementing proposal numbers
 │   │   ├── pdf.ts          # Invoice PDF generator (jsPDF)
+│   │   ├── pdf-simple.ts   # Alternative lightweight PDF utility
 │   │   ├── proposal-pdf-generator.ts # Proposal PDF generator
 │   │   ├── discovery-service.ts # Discovery session CRUD
 │   │   ├── discovery-types.ts # Discovery session types (10-section wizard)
 │   │   ├── talent-types.ts # CreativeMinds talent pool types
 │   │   ├── lead-types.ts   # Lead scoring and management types
 │   │   ├── client-service.ts # Client service (API client pattern)
-│   │   ├── team-service.ts # Team member service
+│   │   ├── client-types.ts # Rich client profile types
+│   │   ├── contract-types.ts # Contract status, interface, transform helpers
+│   │   ├── contract-templates.ts # Pre-defined contract templates
+│   │   ├── proposal-types.ts # Proposal types
+│   │   ├── api.ts          # Admin API helper utilities
+│   │   ├── auth.ts         # Admin auth helpers
+│   │   ├── toast.ts        # Admin toast notification utility
 │   │   └── types.ts        # Core admin types (company info via env vars)
 │   ├── client-portal/      # resolve-client, context, status-colors, export
+│   ├── social/             # Social publishing (meta-api, publish-engine, token-crypto, types)
+│   ├── email/              # Email notifications (Resend integration — send.ts, resend.ts)
 │   ├── validations/        # Zod schemas (schemas.ts) — shared by API routes + forms
 │   ├── admin-auth-middleware.ts  # requireAdminAuth() — admin API route guard
 │   ├── client-session.ts   # requireClientAuth(), session cookies — client API route guard
 │   ├── rate-limiter.ts     # In-memory rate limiter (5 req/60s per IP)
 │   ├── env.ts              # Zod-validated environment variables
 │   ├── blog-data.ts        # Hardcoded blog posts (add new posts here)
-│   ├── supabase.ts         # Supabase admin client
+│   ├── notifications.ts    # In-app notification system (createNotification, notifyAdmins, notifyClient)
+│   ├── supabase.ts         # Supabase admin client (getSupabaseAdmin + legacy supabaseAdmin Proxy)
 │   ├── supabase-utils.ts   # Supabase helper utilities
 │   └── utils.ts            # cn() classname utility
 ├── providers/              # SmoothScrollProvider (disabled — passes through)
@@ -221,14 +238,18 @@ src/
 
 ### Connection
 - `src/lib/supabase.ts` — lazy-initialized admin client using `SUPABASE_SERVICE_ROLE_KEY` (full access, no RLS)
-- Import: `import { supabaseAdmin } from '@/lib/supabase'`
+- **Preferred import**: `import { getSupabaseAdmin } from '@/lib/supabase'` — call `getSupabaseAdmin()` to get the client
+- **Legacy import**: `import { supabaseAdmin } from '@/lib/supabase'` — still works via Proxy (backward compatible), but prefer the function
 
 ### Key Tables
 | Table | Purpose | Key Columns |
 |-------|---------|-------------|
 | `clients` | Client profiles | id, name, email, slug, portal_password, logo, industry, status, health, account_manager, contract_*, services |
 | `projects` | Client projects | id, client_id, name, status, progress, milestones (jsonb), deliverables (jsonb), budget, spent |
-| `content_calendar` | Content items | id, client_id, title, status, platform, type, scheduled_date, approved_at, client_feedback, revision_notes |
+| `content_calendar` | Content items | id, project_id, client_id, title, description, content, status, platform, type, scheduled_date, published_date, author, assigned_designer, assigned_writer, image_url, video_url, hashtags[], mentions[], tags[], files[], client_feedback, revision_notes, approved_at, meta_post_id, last_publish_error, engagement (jsonb: likes/comments/shares/reach/impressions) |
+| `contracts` | Client contracts | id, client_id, title, type, status, start_date, end_date, value, terms, template |
+| `social_accounts` | Connected social accounts | id, client_id, platform, account_name, page_id, access_token (encrypted), is_active |
+| `notifications` | In-app notifications | id, client_id, user_id, type, title, message, priority, action_url, read, created_at |
 | `support_tickets` | Support system | id, client_id, subject, status, priority, category, assigned_to |
 | `client_documents` | Shared files | id, client_id, name, file_url, file_type, category, file_size |
 | `share_links` | Public share tokens | id, client_id, token (unique), resource_type, resource_id, expires_at |
@@ -337,9 +358,16 @@ if (!resolved) return 404;
 | `/api/admin/users` | GET, POST, PUT, DELETE | Manage authorized users |
 | `/api/admin/support` | GET, PUT | Admin support ticket management |
 | `/api/admin/audit` | GET | Audit log viewer (filterable by resource_type, action) |
+| `/api/admin/messages` | GET, POST | Admin messaging system |
+| `/api/admin/notifications` | GET, POST | In-app notification management |
+| `/api/admin/growth` | GET | Growth metrics/analytics |
+| `/api/admin/social/accounts` | GET, POST, PUT, DELETE | Social media account CRUD |
+| `/api/admin/social/publish` | POST | Publish content to Meta (Facebook/Instagram) |
+| `/api/admin/social/verify-token` | POST | Verify Meta Graph API access token |
 | `/api/clients` | GET, POST, PUT | Client CRUD |
-| `/api/projects` | GET, POST, PUT | Project CRUD |
-| `/api/content` | GET, POST, PUT | Content CRUD |
+| `/api/projects` | GET, POST, PUT | Project CRUD (supports `?id=xxx` single-item fetch) |
+| `/api/content` | GET, POST, PUT, DELETE | Content CRUD (supports `?id=xxx` single-item fetch, server-side pagination `?page=X&pageSize=Y`, filters `?status=&type=&platform=&startDate=&endDate=`) |
+| `/api/contracts` | GET, POST, PUT | Contract CRUD |
 | `/api/invoices` | GET, POST | Invoice management |
 | `/api/proposals` | GET, POST | Proposal management |
 | `/api/team` | GET, POST, PUT | Team member management |
@@ -367,7 +395,7 @@ if (!resolved) return 404;
   ├─ Fetches profile from /api/client-portal/[clientId]/profile
   ├─ ClientPortalProvider context (profile, clientId, slug, refreshProfile)
   └─ DashboardLayout variant="client" with NavigationGroup[] navigation
-       Pages: Overview, Projects, Content, Reports, Documents, Support, Settings
+       Pages: Overview, Projects, Content, Contracts, Reports, Documents, Support, Settings
 ```
 
 ### Client Portal API Routes
@@ -379,6 +407,9 @@ if (!resolved) return 404;
 | `/api/client-portal/[clientId]/profile` | GET, PUT | Profile read/update |
 | `/api/client-portal/[clientId]/projects` | GET | List projects |
 | `/api/client-portal/[clientId]/content` | GET, PUT | Content + approval workflow |
+| `/api/client-portal/[clientId]/contracts` | GET, POST, PUT | Client contract management |
+| `/api/client-portal/[clientId]/proposals` | GET, POST, PUT | Client proposal viewing/updates |
+| `/api/client-portal/[clientId]/notifications` | GET, POST | Client notifications |
 | `/api/client-portal/[clientId]/reports` | GET | Performance reports |
 | `/api/client-portal/[clientId]/documents` | GET | Document vault |
 | `/api/client-portal/[clientId]/activity` | GET | Activity feed |
@@ -482,6 +513,74 @@ Allows clients to share specific resources (documents, reports, content) via pub
 - **Viewer**: `/shared/[token]` — public page that resolves token and displays the shared resource
 - **API resolver**: `GET /api/shared/[token]` — looks up `share_links` table, returns resource data
 - **Supabase table**: `share_links` (token, resource_type, resource_id, expires_at)
+
+---
+
+## Social Media Publishing
+
+Allows publishing content directly to Facebook and Instagram via Meta Graph API v21.0.
+
+### Architecture
+```
+src/lib/social/
+├── types.ts           # SocialAccount, PublishResult, MetaPageInfo types
+├── meta-api.ts        # Meta Graph API client (verifyPageToken, publishToFacebook, publishToInstagram)
+├── publish-engine.ts  # publishContentItem() orchestrator — updates content_calendar with meta_post_id
+├── token-crypto.ts    # AES-GCM encryption for storing access tokens securely
+└── index.ts           # Public API exports
+```
+
+### How It Works
+1. **Connect account** (`/admin/settings` → Social Accounts): Admin enters a Meta Page Access Token
+2. **Token verification**: `POST /api/admin/social/verify-token` validates token against Meta API, returns page info
+3. **Token storage**: Access token is AES-GCM encrypted using `META_TOKEN_SECRET` env var before saving to `social_accounts` table
+4. **Publishing**: From content detail page, click "Publish Now" → `POST /api/admin/social/publish` → Meta Graph API
+5. **Post tracking**: Published post ID saved to `content_calendar.meta_post_id`, errors to `last_publish_error`
+
+### Key Components
+- `PublishButton` — "Publish Now" button on content detail pages (shows for Instagram/Facebook content)
+- `SocialAccountsPanel` — UI for managing connected social accounts (in admin settings)
+- `SocialPublishStatus` — Status indicator showing publish state on content list items
+
+### Environment
+- `META_TOKEN_SECRET` (optional, min 32 chars) — AES-GCM key for encrypting stored access tokens. If not set, social publishing features are disabled.
+
+---
+
+## Contracts
+
+Client contract management integrated into both admin dashboard and client portal.
+
+### Key Files
+- `src/lib/admin/contract-types.ts` — ContractStatus enum, Contract interface, transformContract()
+- `src/lib/admin/contract-templates.ts` — Pre-defined contract templates
+- `src/components/admin/ContractsTab.tsx` — Contract management UI (used in client detail)
+- `src/app/api/contracts/route.ts` — Admin contract CRUD
+- `src/app/api/client-portal/[clientId]/contracts/route.ts` — Client-side contract API
+- `src/app/client/[clientId]/contracts/page.tsx` — Client portal contracts page
+
+---
+
+## Notification & Email System
+
+### In-App Notifications (`src/lib/notifications.ts`)
+- `createNotification()` — create a notification record in `notifications` table
+- `notifyAdmins()` — notify all admin users
+- `notifyClient(clientId, options)` — notify a specific client
+- Fire-and-forget pattern (never throws, logs errors silently)
+- 17 notification types: contract, project, content, invoice, ticket, document, proposal, team-member, general
+
+### Email Notifications (`src/lib/email/`)
+- `send.ts` — core email sender using Resend API
+- `resend.ts` — Resend client initialization
+- `notifyTeam()` — send to team email (`NOTIFICATION_EMAIL`)
+- `notifyRecipient()` — send to specific email address
+- Brand-styled HTML email templates
+- Conditional on `RESEND_API_KEY` — graceful degradation if not configured
+
+### Environment
+- `RESEND_API_KEY` (optional) — Resend API key for sending emails
+- `NOTIFICATION_EMAIL` (optional) — team email address for notifications
 
 ---
 
@@ -730,6 +829,13 @@ COMPANY_PAN=...
 COMPANY_MSME=...
 COMPANY_ADDRESS=...
 
+# Email notifications (optional — Resend)
+RESEND_API_KEY=re_...
+NOTIFICATION_EMAIL=team@freakingminds.com
+
+# Social media publishing (optional — Meta Graph API)
+META_TOKEN_SECRET=minimum-32-character-secret-key-here
+
 # Google Sheets (legacy — leads/discovery only)
 GOOGLE_SHEETS_PRIVATE_KEY=...
 GOOGLE_SHEETS_CLIENT_EMAIL=...
@@ -805,13 +911,17 @@ if (!body.success) return NextResponse.json({ error: body.error.flatten() }, { s
 | `ProposalDashboard` | `admin/ProposalDashboard.tsx` | Proposal list with filters |
 | `CommandPalette` | `admin/CommandPalette.tsx` | Cmd+K quick navigation |
 | `CommunicationHub` | `admin/CommunicationHub.tsx` | Client communication dashboard |
-| `AnalyticsDashboard` | `admin/AnalyticsDashboard.tsx` | Analytics overview |
 | `ClientDashboard` | `admin/ClientDashboard.tsx` | Individual client dashboard |
 | `ClientProfile` | `admin/ClientProfile.tsx` | Client profile editor |
 | `DocumentManager` | `admin/DocumentManager.tsx` | Document upload/management |
 | `GrowthEngine` | `admin/GrowthEngine.tsx` | Growth metrics dashboard |
 | `AdminSystem` | `admin/AdminSystem.tsx` | System health diagnostics |
 | `AdminErrorBoundary` | `admin/AdminErrorBoundary.tsx` | Error boundary for admin pages |
+| `ConfirmDialog` | `admin/ConfirmDialog.tsx` | Confirmation modal dialog (delete, destructive actions) |
+| `ContractsTab` | `admin/ContractsTab.tsx` | Contract management UI for client detail page |
+| `PublishButton` | `admin/social/PublishButton.tsx` | Social media publish button for content items |
+| `SocialAccountsPanel` | `admin/social/SocialAccountsPanel.tsx` | Connected social accounts manager |
+| `SocialPublishStatus` | `admin/social/SocialPublishStatus.tsx` | Publish status indicator on content list |
 
 ---
 
