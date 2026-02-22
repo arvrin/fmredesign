@@ -26,6 +26,9 @@ import {
   AtSign,
   ChevronLeft,
   ChevronRight,
+  Sparkles,
+  X,
+  Loader2,
 } from 'lucide-react';
 import { adminToast } from '@/lib/admin/toast';
 import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
@@ -62,7 +65,14 @@ export default function ContentCalendarPage() {
   const [totalItems, setTotalItems] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [projects, setProjects] = useState<any[]>([]);
+  const [clients, setClients] = useState<{ id: string; name: string }[]>([]);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+
+  // AI Generate modal state
+  const [showAiModal, setShowAiModal] = useState(false);
+  const [aiGenerating, setAiGenerating] = useState(false);
+  const [aiWorkflowType, setAiWorkflowType] = useState<'monthly_calendar' | 'holiday_event'>('monthly_calendar');
+  const [aiClientId, setAiClientId] = useState<string>('');
 
   // Build API URL from filter state and fetch content
   const fetchContent = useCallback(async () => {
@@ -96,11 +106,23 @@ export default function ContentCalendarPage() {
   // Fetch content when filters or page change
   useEffect(() => { fetchContent(); }, [fetchContent]);
 
-  // Load projects once for the project name lookup + filter dropdown
+  // Load projects and clients once for lookups + filter dropdowns
   useEffect(() => {
     fetch('/api/projects')
       .then(r => r.json())
       .then(result => { if (result.success) setProjects(result.data); })
+      .catch(() => {});
+    fetch('/api/clients')
+      .then(r => r.json())
+      .then(result => {
+        if (result.success) {
+          setClients(
+            (result.data || [])
+              .filter((c: any) => c.status === 'active')
+              .map((c: any) => ({ id: c.id, name: c.name }))
+          );
+        }
+      })
       .catch(() => {});
   }, []);
 
@@ -176,6 +198,34 @@ export default function ContentCalendarPage() {
     }
   };
 
+  const handleAiGenerate = async () => {
+    setAiGenerating(true);
+    try {
+      const response = await fetch('/api/admin/content/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          workflow_type: aiWorkflowType,
+          client_id: aiClientId || undefined,
+        }),
+      });
+      const result = await response.json();
+      if (response.ok && result.success) {
+        adminToast.success(result.message || 'Content generation started');
+        setShowAiModal(false);
+        // Re-fetch content after a short delay to show new drafts
+        setTimeout(() => fetchContent(), 3000);
+      } else {
+        adminToast.error(result.error || 'Failed to trigger content generation');
+      }
+    } catch (error) {
+      console.error('Error triggering AI generation:', error);
+      adminToast.error('Error triggering content generation');
+    } finally {
+      setAiGenerating(false);
+    }
+  };
+
   const handleDeleteContent = async (contentId: string) => {
     try {
       const response = await fetch(`/api/content?id=${contentId}`, {
@@ -226,14 +276,24 @@ export default function ContentCalendarPage() {
         title="Content Calendar"
         description="Plan, create, and schedule your content across all platforms"
         actions={
-          <DashboardButton
-            variant="primary"
-            size="sm"
-            onClick={() => router.push('/admin/content/new')}
-          >
-            <Plus className="h-4 w-4" />
-            New Content
-          </DashboardButton>
+          <div className="flex items-center gap-2">
+            <DashboardButton
+              variant="secondary"
+              size="sm"
+              onClick={() => setShowAiModal(true)}
+            >
+              <Sparkles className="h-4 w-4" />
+              AI Generate
+            </DashboardButton>
+            <DashboardButton
+              variant="primary"
+              size="sm"
+              onClick={() => router.push('/admin/content/new')}
+            >
+              <Plus className="h-4 w-4" />
+              New Content
+            </DashboardButton>
+          </div>
         }
       />
 
@@ -378,6 +438,11 @@ export default function ContentCalendarPage() {
                         metaPostId={content.metaPostId}
                         publishError={content.lastPublishError}
                       />
+                      {content.aiGenerated && (
+                        <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-violet-100 text-violet-700">
+                          AI Draft
+                        </span>
+                      )}
                     </div>
 
                     <p className="text-fm-neutral-600 mb-4 line-clamp-2">{content.description}</p>
@@ -507,6 +572,127 @@ export default function ContentCalendarPage() {
         }}
         onCancel={() => setDeleteConfirm(null)}
       />
+
+      {/* AI Generate Modal */}
+      {showAiModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4" style={{ zIndex: 50 }}>
+          <DashboardCard variant="admin" className="w-full max-w-md">
+            <CardHeader className="flex flex-row items-center justify-between pb-4">
+              <CardTitle className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-violet-600" />
+                AI Content Generation
+              </CardTitle>
+              <button
+                onClick={() => setShowAiModal(false)}
+                className="text-fm-neutral-400 hover:text-fm-neutral-600 transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              {/* Workflow Type */}
+              <div>
+                <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
+                  Generation Type
+                </label>
+                <div className="space-y-2">
+                  <label className="flex items-start gap-3 p-3 rounded-lg border border-fm-neutral-200 cursor-pointer hover:bg-fm-neutral-50 transition-colors">
+                    <input
+                      type="radio"
+                      name="workflow_type"
+                      value="monthly_calendar"
+                      checked={aiWorkflowType === 'monthly_calendar'}
+                      onChange={() => setAiWorkflowType('monthly_calendar')}
+                      className="mt-0.5"
+                    />
+                    <div>
+                      <div className="font-medium text-sm">Monthly Calendar Fill</div>
+                      <div className="text-xs text-fm-neutral-500">
+                        Generate 16 posts for this month (educational, promotional, engagement mix)
+                      </div>
+                    </div>
+                  </label>
+                  <label className="flex items-start gap-3 p-3 rounded-lg border border-fm-neutral-200 cursor-pointer hover:bg-fm-neutral-50 transition-colors">
+                    <input
+                      type="radio"
+                      name="workflow_type"
+                      value="holiday_event"
+                      checked={aiWorkflowType === 'holiday_event'}
+                      onChange={() => setAiWorkflowType('holiday_event')}
+                      className="mt-0.5"
+                    />
+                    <div>
+                      <div className="font-medium text-sm">Holiday & Event Posts</div>
+                      <div className="text-xs text-fm-neutral-500">
+                        Generate posts for upcoming Indian holidays and global events (next 14 days)
+                      </div>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              {/* Client Selection */}
+              <div>
+                <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
+                  Client (optional)
+                </label>
+                <Select
+                  value={aiClientId}
+                  onChange={(e) => setAiClientId(e.target.value)}
+                >
+                  <option value="">All active clients</option>
+                  {clients.map((client) => (
+                    <option key={client.id} value={client.id}>
+                      {client.name}
+                    </option>
+                  ))}
+                </Select>
+                <p className="text-xs text-fm-neutral-500 mt-1">
+                  Leave empty to generate for all active clients
+                </p>
+              </div>
+
+              {/* Info */}
+              <div className="bg-violet-50 rounded-lg p-3">
+                <p className="text-xs text-violet-700">
+                  Drafts will appear in 1-2 minutes. All AI-generated content is marked as &quot;Draft&quot; for your review before publishing.
+                </p>
+              </div>
+
+              {/* Actions */}
+              <div className="flex items-center gap-3 pt-2">
+                <DashboardButton
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowAiModal(false)}
+                  disabled={aiGenerating}
+                >
+                  Cancel
+                </DashboardButton>
+                <DashboardButton
+                  variant="primary"
+                  size="sm"
+                  onClick={handleAiGenerate}
+                  disabled={aiGenerating}
+                  className="flex-1"
+                >
+                  {aiGenerating ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-4 w-4" />
+                      Generate Content
+                    </>
+                  )}
+                </DashboardButton>
+              </div>
+            </CardContent>
+          </DashboardCard>
+        </div>
+      )}
     </div>
   );
 }

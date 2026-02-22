@@ -1,0 +1,520 @@
+{
+  "name": "FM Holiday & Event Post Generator",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 10 * * 1"
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Weekly Monday Schedule",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [220, 300]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "generate-holiday-content",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [220, 520],
+      "webhookId": "generate-holiday-content"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Indian holidays + global events calendar\n// Dates are approximate — some vary yearly (lunar calendar)\nconst holidays = [\n  // Indian National Holidays\n  { date: '01-26', name: 'Republic Day', type: 'national', description: 'Celebrates the adoption of the Indian Constitution' },\n  { date: '08-15', name: 'Independence Day', type: 'national', description: 'India\\'s independence from British rule' },\n  { date: '10-02', name: 'Gandhi Jayanti', type: 'national', description: 'Birth anniversary of Mahatma Gandhi' },\n  \n  // Indian Festivals (approximate fixed dates — adjust yearly)\n  { date: '01-14', name: 'Makar Sankranti / Pongal', type: 'festival', description: 'Harvest festival celebrating the sun\\'s transition' },\n  { date: '03-14', name: 'Holi', type: 'festival', description: 'Festival of Colors celebrating spring and love' },\n  { date: '03-30', name: 'Ugadi / Gudi Padwa', type: 'festival', description: 'New Year for many Indian states' },\n  { date: '04-06', name: 'Ram Navami', type: 'festival', description: 'Celebrates the birth of Lord Rama' },\n  { date: '04-14', name: 'Baisakhi', type: 'festival', description: 'Punjabi harvest festival and Sikh New Year' },\n  { date: '08-26', name: 'Janmashtami', type: 'festival', description: 'Celebrates the birth of Lord Krishna' },\n  { date: '09-05', name: 'Onam', type: 'festival', description: 'Kerala\\'s harvest festival' },\n  { date: '10-02', name: 'Navratri Begins', type: 'festival', description: 'Nine nights celebrating Goddess Durga' },\n  { date: '10-12', name: 'Dussehra / Vijayadashami', type: 'festival', description: 'Victory of good over evil' },\n  { date: '10-20', name: 'Karwa Chauth', type: 'festival', description: 'Festival celebrating marital bonds' },\n  { date: '11-01', name: 'Diwali', type: 'festival', description: 'Festival of Lights — biggest Indian festival' },\n  { date: '11-03', name: 'Bhai Dooj', type: 'festival', description: 'Celebrates the bond between siblings' },\n  { date: '11-15', name: 'Guru Nanak Jayanti', type: 'festival', description: 'Birth anniversary of Guru Nanak' },\n  { date: '12-25', name: 'Christmas', type: 'festival', description: 'Celebrates the birth of Jesus Christ' },\n  \n  // Raksha Bandhan (varies — approximate)\n  { date: '08-09', name: 'Raksha Bandhan', type: 'festival', description: 'Celebrates the bond between brothers and sisters' },\n  { date: '09-07', name: 'Ganesh Chaturthi', type: 'festival', description: 'Celebrates the birth of Lord Ganesha' },\n  { date: '10-21', name: 'Eid ul-Fitr', type: 'festival', description: 'Marks the end of Ramadan fasting' },\n  \n  // Global Events & Days\n  { date: '02-14', name: 'Valentine\\'s Day', type: 'global', description: 'Day of love and appreciation' },\n  { date: '03-08', name: 'International Women\\'s Day', type: 'global', description: 'Celebrating women\\'s achievements worldwide' },\n  { date: '04-22', name: 'Earth Day', type: 'global', description: 'Environmental protection awareness' },\n  { date: '05-01', name: 'May Day / Labour Day', type: 'global', description: 'Celebrating workers\\' contributions' },\n  { date: '05-11', name: 'Mother\\'s Day', type: 'global', description: 'Honoring mothers and motherhood' },\n  { date: '06-05', name: 'World Environment Day', type: 'global', description: 'UN day for environmental action' },\n  { date: '06-15', name: 'Father\\'s Day', type: 'global', description: 'Honoring fathers and fatherhood' },\n  { date: '06-21', name: 'International Yoga Day', type: 'global', description: 'Celebrating yoga\\'s global impact from India' },\n  { date: '10-10', name: 'World Mental Health Day', type: 'global', description: 'Raising awareness for mental health' },\n  { date: '11-14', name: 'Children\\'s Day', type: 'global', description: 'Celebrating children — Nehru\\'s birthday in India' },\n  { date: '12-31', name: 'New Year\\'s Eve', type: 'global', description: 'Celebrating the end of the year' },\n  { date: '01-01', name: 'New Year\\'s Day', type: 'global', description: 'Start of the new year' },\n  \n  // Business / Marketing Days\n  { date: '07-17', name: 'World Emoji Day', type: 'marketing', description: 'Fun engagement day for brands' },\n  { date: '11-27', name: 'Black Friday', type: 'marketing', description: 'Biggest shopping day globally' },\n  { date: '12-02', name: 'Cyber Monday', type: 'marketing', description: 'Online shopping deals day' },\n];\n\n// Find holidays in the next 14 days\nconst now = new Date();\nconst twoWeeksLater = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);\n\nconst upcomingHolidays = holidays.filter(h => {\n  const [month, day] = h.date.split('-').map(Number);\n  const holidayDate = new Date(now.getFullYear(), month - 1, day);\n  \n  // Handle year boundary (e.g., checking in late Dec for early Jan)\n  if (holidayDate < now) {\n    holidayDate.setFullYear(now.getFullYear() + 1);\n  }\n  \n  return holidayDate >= now && holidayDate <= twoWeeksLater;\n});\n\nif (upcomingHolidays.length === 0) {\n  return [{ json: { holidays: [], skip: true, message: 'No upcoming holidays in the next 14 days' } }];\n}\n\n// Add actual year-adjusted dates\nconst holidaysWithDates = upcomingHolidays.map(h => {\n  const [month, day] = h.date.split('-').map(Number);\n  let holidayDate = new Date(now.getFullYear(), month - 1, day);\n  if (holidayDate < now) holidayDate.setFullYear(now.getFullYear() + 1);\n  return {\n    ...h,\n    fullDate: holidayDate.toISOString().split('T')[0]\n  };\n});\n\nreturn [{ json: { holidays: holidaysWithDates, skip: false, count: holidaysWithDates.length } }];"
+      },
+      "id": "check-holidays",
+      "name": "Check Upcoming Holidays",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [500, 400]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "skip-check",
+              "leftValue": "={{ $json.skip }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "has-holidays",
+      "name": "Has Upcoming Holidays?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [720, 400]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/clients?status=eq.active&select=id,name,slug,industry",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        },
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        }
+      },
+      "id": "get-clients",
+      "name": "Get Active Clients",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [960, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Create client × holiday combinations\nconst holidays = $('Check Upcoming Holidays').first().json.holidays;\nconst clientsRaw = $input.first().json;\nconst clients = Array.isArray(clientsRaw) ? clientsRaw : [clientsRaw];\n\nconst combinations = [];\nfor (const client of clients) {\n  for (const holiday of holidays) {\n    combinations.push({\n      client,\n      holiday,\n      lookupKey: `${client.id}_${holiday.fullDate}`\n    });\n  }\n}\n\nreturn combinations.map(c => ({ json: c }));"
+      },
+      "id": "create-combinations",
+      "name": "Client x Holiday Combinations",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1180, 300]
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "id": "loop-combos",
+      "name": "Loop Combinations",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [1400, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/content_calendar?client_id=eq.{{ $json.client.id }}&scheduled_date=eq.{{ $json.holiday.fullDate }}&select=id&limit=1",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        },
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        }
+      },
+      "id": "check-existing",
+      "name": "Check If Content Exists",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1620, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "no-existing",
+              "leftValue": "={{ Array.isArray($json) ? $json.length : 0 }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "content-exists-check",
+      "name": "Content Already Exists?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1840, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/discovery_sessions?client_id=eq.{{ $('Loop Combinations').item.json.client.id }}&select=content_creative,target_audience,company_fundamentals&order=created_at.desc&limit=1",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        },
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        }
+      },
+      "id": "get-discovery",
+      "name": "Get Discovery Session",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2060, 200]
+    },
+    {
+      "parameters": {
+        "jsCode": "const combo = $('Loop Combinations').item.json;\nconst client = combo.client;\nconst holiday = combo.holiday;\nconst discoveryRaw = $('Get Discovery Session').first()?.json;\n\nconst discovery = Array.isArray(discoveryRaw) ? discoveryRaw[0] : discoveryRaw;\nconst companyInfo = discovery?.company_fundamentals || {};\nconst audience = discovery?.target_audience || {};\nconst creative = discovery?.content_creative || {};\n\nconst prompt = `You are a social media content strategist for FreakingMinds, a digital marketing agency.\n\nCreate a holiday/event social media post for this client:\n\nClient: ${client.name}\nIndustry: ${client.industry || 'General Business'}\nBrand Voice: ${creative.brand_voice || creative.tone_of_voice || 'Professional yet approachable'}\nTarget Audience: ${audience.primary_audience || audience.demographics || 'Business professionals'}\nCompany Description: ${companyInfo.description || companyInfo.company_description || client.name}\n\nHoliday/Event: ${holiday.name}\nDate: ${holiday.fullDate}\nType: ${holiday.type}\nContext: ${holiday.description}\n\nCreate ONE social media post that:\n1. Celebrates the holiday/event authentically\n2. Ties it back to the client's brand/industry naturally (don't force it)\n3. Uses appropriate tone — festive for festivals, respectful for national days, fun for marketing days\n4. Includes a call-to-action where appropriate\n5. Is culturally sensitive and accurate\n\nProvide:\n- title: short headline (max 60 chars)\n- description: brief description (max 150 chars)  \n- content: the actual caption/copy (200-400 chars, include emojis)\n- type: \"post\" or \"carousel\"\n- platform: \"instagram\"\n- hashtags: array of 5-8 relevant hashtags (without #, include holiday-specific ones)\n\nRespond with ONLY a valid JSON object. No markdown, no explanation.`;\n\nreturn [{ json: { prompt, client, holiday } }];"
+      },
+      "id": "build-holiday-prompt",
+      "name": "Build Holiday Prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2280, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={{ $env.GEMINI_API_KEY }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [{\n    \"parts\": [{\n      \"text\": {{ JSON.stringify($json.prompt) }}\n    }]\n  }],\n  \"generationConfig\": {\n    \"responseMimeType\": \"application/json\",\n    \"temperature\": 0.8,\n    \"maxOutputTokens\": 2048\n  }\n}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          },
+          "timeout": 30000
+        }
+      },
+      "id": "call-gemini",
+      "name": "Call Gemini API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2500, 200]
+    },
+    {
+      "parameters": {
+        "amount": 4,
+        "unit": "seconds"
+      },
+      "id": "rate-limit-wait",
+      "name": "Wait (Rate Limit)",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [2720, 200]
+    },
+    {
+      "parameters": {
+        "jsCode": "const geminiResponse = $('Call Gemini API').first().json;\nconst promptData = $('Build Holiday Prompt').first().json;\nconst client = promptData.client;\nconst holiday = promptData.holiday;\n\n// Extract text from Gemini response\nlet responseText = '';\ntry {\n  responseText = geminiResponse.candidates[0].content.parts[0].text;\n} catch (e) {\n  throw new Error('Failed to extract Gemini response: ' + JSON.stringify(geminiResponse).substring(0, 500));\n}\n\n// Parse JSON\nlet post;\ntry {\n  post = JSON.parse(responseText);\n} catch (e) {\n  const match = responseText.match(/\\{[\\s\\S]*\\}/);\n  if (match) {\n    post = JSON.parse(match[0]);\n  } else {\n    throw new Error('Failed to parse response: ' + responseText.substring(0, 500));\n  }\n}\n\nconst id = `content-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;\nconst batchId = `holiday-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`;\n\nconst record = {\n  id,\n  client_id: client.id,\n  project_id: '',\n  title: (post.title || `${holiday.name} Post`).substring(0, 200),\n  description: (post.description || holiday.description).substring(0, 500),\n  content: (post.content || '').substring(0, 2000),\n  type: ['post', 'carousel', 'reel', 'story'].includes(post.type) ? post.type : 'post',\n  platform: post.platform || 'instagram',\n  scheduled_date: holiday.fullDate,\n  status: 'draft',\n  ai_generated: true,\n  ai_generation_batch_id: batchId,\n  generation_source: 'holiday_event',\n  hashtags: Array.isArray(post.hashtags) ? post.hashtags.slice(0, 10) : [],\n  mentions: [],\n  tags: [holiday.type, holiday.name.toLowerCase().replace(/[^a-z0-9]/g, '_')].filter(Boolean),\n  files: []\n};\n\nreturn [{ json: record }];"
+      },
+      "id": "parse-holiday-response",
+      "name": "Parse Holiday Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2940, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/content_calendar",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify([$json]) }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        },
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        }
+      },
+      "id": "insert-holiday-content",
+      "name": "Insert Holiday Content",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [3160, 200]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": true,\n  \"message\": \"Holiday content generation completed\"\n}"
+      },
+      "id": "respond-webhook",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1620, 520]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": true,\n  \"message\": \"No upcoming holidays in the next 14 days\",\n  \"posts_generated\": 0\n}"
+      },
+      "id": "respond-no-holidays",
+      "name": "Respond No Holidays",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [960, 520]
+    }
+  ],
+  "connections": {
+    "Weekly Monday Schedule": {
+      "main": [
+        [
+          {
+            "node": "Check Upcoming Holidays",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Check Upcoming Holidays",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Upcoming Holidays": {
+      "main": [
+        [
+          {
+            "node": "Has Upcoming Holidays?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Upcoming Holidays?": {
+      "main": [
+        [
+          {
+            "node": "Get Active Clients",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond No Holidays",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Active Clients": {
+      "main": [
+        [
+          {
+            "node": "Client x Holiday Combinations",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Client x Holiday Combinations": {
+      "main": [
+        [
+          {
+            "node": "Loop Combinations",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Combinations": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Check If Content Exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check If Content Exists": {
+      "main": [
+        [
+          {
+            "node": "Content Already Exists?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Content Already Exists?": {
+      "main": [
+        [
+          {
+            "node": "Get Discovery Session",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Combinations",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Discovery Session": {
+      "main": [
+        [
+          {
+            "node": "Build Holiday Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Holiday Prompt": {
+      "main": [
+        [
+          {
+            "node": "Call Gemini API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Gemini API": {
+      "main": [
+        [
+          {
+            "node": "Wait (Rate Limit)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait (Rate Limit)": {
+      "main": [
+        [
+          {
+            "node": "Parse Holiday Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Holiday Response": {
+      "main": [
+        [
+          {
+            "node": "Insert Holiday Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Holiday Content": {
+      "main": [
+        [
+          {
+            "node": "Loop Combinations",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "FreakingMinds",
+      "id": "1"
+    },
+    {
+      "name": "Holiday Content",
+      "id": "3"
+    }
+  ],
+  "pinData": {}
+}

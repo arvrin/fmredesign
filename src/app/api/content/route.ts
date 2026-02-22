@@ -54,6 +54,9 @@ export async function GET(request: NextRequest) {
         metaPostId: data.meta_post_id || null,
         lastPublishError: data.last_publish_error || null,
         engagement: data.engagement || null,
+        aiGenerated: data.ai_generated || false,
+        aiGenerationBatchId: data.ai_generation_batch_id || null,
+        generationSource: data.generation_source || null,
         createdAt: data.created_at,
         updatedAt: data.updated_at,
       };
@@ -154,6 +157,9 @@ export async function GET(request: NextRequest) {
       metaPostId: item.meta_post_id || null,
       lastPublishError: item.last_publish_error || null,
       engagement: item.engagement || null,
+      aiGenerated: item.ai_generated || false,
+      aiGenerationBatchId: item.ai_generation_batch_id || null,
+      generationSource: item.generation_source || null,
       createdAt: item.created_at,
       updatedAt: item.updated_at,
     }));

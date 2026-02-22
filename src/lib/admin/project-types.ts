@@ -150,6 +150,11 @@ export interface ContentItem {
   metaPostId?: string;
   lastPublishError?: string;
 
+  // AI generation
+  aiGenerated?: boolean;
+  aiGenerationBatchId?: string;
+  generationSource?: string;
+
   // Performance (post-publication)
   engagement?: {
     likes: number;

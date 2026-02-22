@@ -1,0 +1,401 @@
+{
+  "name": "FM Monthly Content Calendar Auto-Fill",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9 1 * *"
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Monthly Schedule",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [220, 300]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "generate-monthly-content",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [220, 520],
+      "webhookId": "generate-monthly-content"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/clients?status=eq.active&select=id,name,slug,industry",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        },
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        }
+      },
+      "id": "get-active-clients",
+      "name": "Get Active Clients",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [500, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// If webhook provided a client_id, filter to just that client\nconst webhookData = $('Webhook Trigger').first()?.json;\nconst clients = $input.all().map(item => item.json);\n\nif (webhookData?.body?.client_id) {\n  const filtered = Array.isArray(clients[0]) ? clients[0] : clients;\n  const match = filtered.filter(c => c.id === webhookData.body.client_id);\n  return match.map(c => ({ json: c }));\n}\n\n// If it's an array nested in first item, flatten\nif (Array.isArray(clients[0])) {\n  return clients[0].map(c => ({ json: c }));\n}\n\nreturn $input.all();"
+      },
+      "id": "filter-client",
+      "name": "Filter Client (if specified)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [720, 400]
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "id": "loop-clients",
+      "name": "Loop Clients",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [940, 400]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/discovery_sessions?client_id=eq.{{ $json.id }}&select=content_creative,target_audience,company_fundamentals&order=created_at.desc&limit=1",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        },
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        }
+      },
+      "id": "get-discovery",
+      "name": "Get Discovery Session",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1160, 400]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/content_calendar?client_id=eq.{{ $('Loop Clients').item.json.id }}&scheduled_date=gte.{{ new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0] }}&scheduled_date=lte.{{ new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString().split('T')[0] }}&select=scheduled_date",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        },
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        }
+      },
+      "id": "get-existing-content",
+      "name": "Get Existing Content This Month",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1160, 600]
+    },
+    {
+      "parameters": {
+        "jsCode": "const client = $('Loop Clients').item.json;\nconst discoveryRaw = $('Get Discovery Session').first()?.json;\nconst existingContent = $('Get Existing Content This Month').first()?.json || [];\n\n// Parse discovery data\nconst discovery = Array.isArray(discoveryRaw) ? discoveryRaw[0] : discoveryRaw;\nconst companyInfo = discovery?.company_fundamentals || {};\nconst audience = discovery?.target_audience || {};\nconst creative = discovery?.content_creative || {};\n\n// Get existing scheduled dates to avoid collisions\nconst existingDates = new Set(\n  (Array.isArray(existingContent) ? existingContent : [])\n    .map(c => c.scheduled_date?.split('T')[0])\n    .filter(Boolean)\n);\n\n// Generate available dates this month (weekdays, skip existing)\nconst now = new Date();\nconst year = now.getFullYear();\nconst month = now.getMonth();\nconst availableDates = [];\nfor (let day = 1; day <= 28; day++) {\n  const d = new Date(year, month, day);\n  const dow = d.getDay();\n  if (dow === 0 || dow === 6) continue; // skip weekends\n  const dateStr = d.toISOString().split('T')[0];\n  if (!existingDates.has(dateStr)) availableDates.push(dateStr);\n}\n\n// Pick 16 dates spread across the month\nconst selectedDates = [];\nconst step = Math.max(1, Math.floor(availableDates.length / 16));\nfor (let i = 0; i < Math.min(16, availableDates.length); i++) {\n  selectedDates.push(availableDates[Math.min(i * step, availableDates.length - 1)]);\n}\n\nconst contentMix = [\n  { type: 'post', category: 'educational', count: 4 },\n  { type: 'post', category: 'promotional', count: 4 },\n  { type: 'reel', category: 'behind_the_scenes', count: 2 },\n  { type: 'carousel', category: 'testimonial', count: 2 },\n  { type: 'post', category: 'trend_news', count: 2 },\n  { type: 'story', category: 'engagement', count: 2 },\n];\n\nconst prompt = `You are a social media content strategist for a digital marketing agency called FreakingMinds.\n\nGenerate exactly 16 social media posts for this client:\n\nClient: ${client.name}\nIndustry: ${client.industry || 'General Business'}\nBrand Voice: ${creative.brand_voice || creative.tone_of_voice || 'Professional yet approachable'}\nTarget Audience: ${audience.primary_audience || audience.demographics || 'Business professionals'}\nCompany Description: ${companyInfo.description || companyInfo.company_description || client.name}\nKey Services/Products: ${companyInfo.services || companyInfo.key_products || 'Digital services'}\nContent Themes: ${creative.content_themes || creative.key_topics || 'Industry insights, tips, behind the scenes'}\n\nContent Mix Required:\n- 4 educational posts (tips, how-tos, industry insights)\n- 4 promotional posts (services, offers, case studies)\n- 2 behind-the-scenes reels (team, process, culture)\n- 2 testimonial/social-proof carousels (client wins, results)\n- 2 trend/news posts (industry trends, news commentary)\n- 2 engagement stories (polls, questions, quizzes)\n\nFor each post provide:\n- title: short headline (max 60 chars)\n- description: brief description of what the post is about (max 150 chars)\n- content: the actual caption/copy (150-300 chars, include emojis where appropriate)\n- type: one of \"post\", \"reel\", \"carousel\", \"story\"\n- platform: \"instagram\"\n- hashtags: array of 5-8 relevant hashtags (without #)\n- category: one of \"educational\", \"promotional\", \"behind_the_scenes\", \"testimonial\", \"trend_news\", \"engagement\"\n\nAvailable scheduled dates: ${selectedDates.join(', ')}\nAssign one date to each post, spreading them evenly.\n\nRespond with ONLY a valid JSON array of 16 objects. No markdown, no explanation.`;\n\nreturn [{\n  json: {\n    prompt,\n    client,\n    selectedDates,\n    batchId: `batch-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`\n  }\n}];"
+      },
+      "id": "build-prompt",
+      "name": "Build Gemini Prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1400, 400]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={{ $env.GEMINI_API_KEY }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [{\n    \"parts\": [{\n      \"text\": {{ JSON.stringify($json.prompt) }}\n    }]\n  }],\n  \"generationConfig\": {\n    \"responseMimeType\": \"application/json\",\n    \"temperature\": 0.8,\n    \"maxOutputTokens\": 4096\n  }\n}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          },
+          "timeout": 30000
+        }
+      },
+      "id": "call-gemini",
+      "name": "Call Gemini API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1620, 400]
+    },
+    {
+      "parameters": {
+        "amount": 4,
+        "unit": "seconds"
+      },
+      "id": "rate-limit-wait",
+      "name": "Wait (Rate Limit)",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [1840, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "const geminiResponse = $('Call Gemini API').first().json;\nconst buildData = $('Build Gemini Prompt').first().json;\nconst client = buildData.client;\nconst batchId = buildData.batchId;\nconst selectedDates = buildData.selectedDates;\n\n// Extract text from Gemini response\nlet responseText = '';\ntry {\n  responseText = geminiResponse.candidates[0].content.parts[0].text;\n} catch (e) {\n  throw new Error('Failed to extract Gemini response: ' + JSON.stringify(geminiResponse).substring(0, 500));\n}\n\n// Parse JSON from response\nlet posts;\ntry {\n  // Try direct parse first\n  posts = JSON.parse(responseText);\n} catch (e) {\n  // Try to extract JSON array from markdown code block\n  const match = responseText.match(/\\[\\s*\\{[\\s\\S]*\\}\\s*\\]/);\n  if (match) {\n    posts = JSON.parse(match[0]);\n  } else {\n    throw new Error('Failed to parse Gemini response as JSON: ' + responseText.substring(0, 500));\n  }\n}\n\nif (!Array.isArray(posts)) {\n  throw new Error('Expected array of posts, got: ' + typeof posts);\n}\n\n// Build Supabase records\nconst records = posts.map((post, index) => {\n  const id = `content-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;\n  const scheduledDate = post.scheduled_date || post.scheduledDate || selectedDates[index % selectedDates.length];\n  \n  return {\n    id,\n    client_id: client.id,\n    project_id: '',\n    title: (post.title || 'Untitled Post').substring(0, 200),\n    description: (post.description || '').substring(0, 500),\n    content: (post.content || '').substring(0, 2000),\n    type: ['post', 'reel', 'carousel', 'story', 'video', 'article', 'ad', 'email'].includes(post.type) ? post.type : 'post',\n    platform: post.platform || 'instagram',\n    scheduled_date: scheduledDate,\n    status: 'draft',\n    ai_generated: true,\n    ai_generation_batch_id: batchId,\n    generation_source: 'monthly_autofill',\n    hashtags: Array.isArray(post.hashtags) ? post.hashtags.slice(0, 10) : [],\n    mentions: [],\n    tags: [post.category || 'general'].filter(Boolean),\n    files: []\n  };\n});\n\nreturn [{ json: { records, clientName: client.name, count: records.length, batchId } }];"
+      },
+      "id": "parse-response",
+      "name": "Parse & Validate Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2060, 400]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/content_calendar",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.records) }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        },
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        }
+      },
+      "id": "insert-content",
+      "name": "Insert Content to Supabase",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2280, 400]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": true,\n  \"message\": \"Content generation completed\",\n  \"posts_generated\": {{ $('Parse & Validate Response').item.json.count }},\n  \"batch_id\": \"{{ $('Parse & Validate Response').item.json.batchId }}\"\n}"
+      },
+      "id": "respond-webhook",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [2500, 520]
+    }
+  ],
+  "connections": {
+    "Monthly Schedule": {
+      "main": [
+        [
+          {
+            "node": "Get Active Clients",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get Active Clients",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Active Clients": {
+      "main": [
+        [
+          {
+            "node": "Filter Client (if specified)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Client (if specified)": {
+      "main": [
+        [
+          {
+            "node": "Loop Clients",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Clients": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Discovery Session",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Existing Content This Month",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Discovery Session": {
+      "main": [
+        [
+          {
+            "node": "Build Gemini Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Existing Content This Month": {
+      "main": [
+        [
+          {
+            "node": "Build Gemini Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Gemini Prompt": {
+      "main": [
+        [
+          {
+            "node": "Call Gemini API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Gemini API": {
+      "main": [
+        [
+          {
+            "node": "Wait (Rate Limit)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait (Rate Limit)": {
+      "main": [
+        [
+          {
+            "node": "Parse & Validate Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse & Validate Response": {
+      "main": [
+        [
+          {
+            "node": "Insert Content to Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Content to Supabase": {
+      "main": [
+        [
+          {
+            "node": "Loop Clients",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "FreakingMinds",
+      "id": "1"
+    },
+    {
+      "name": "Content Generation",
+      "id": "2"
+    }
+  ],
+  "pinData": {}
+}
