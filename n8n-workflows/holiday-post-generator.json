@@ -73,9 +73,8 @@
     {
       "parameters": {
         "method": "GET",
-        "url": "={{ $env.SUPABASE_URL }}/rest/v1/clients?status=eq.active&select=id,name,slug,industry",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
+        "url": "=https://tbtfnswvvphamwjkzaad.supabase.co/rest/v1/clients?status=eq.active&select=id,name,slug,industry",
+        "authentication": "none",
         "options": {
           "response": {
             "response": {
@@ -87,7 +86,7 @@
           "parameters": [
             {
               "name": "apikey",
-              "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+              "value": "=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRidGZuc3d2dnBoYW13amt6YWFkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MTE0NDA1NCwiZXhwIjoyMDg2NzIwMDU0fQ.ccbp9u2iJy3hE5TbK1nm7O_A_Jobzfl1vucaBuo6okQ"
             }
           ]
         }
@@ -122,9 +121,8 @@
     {
       "parameters": {
         "method": "GET",
-        "url": "={{ $env.SUPABASE_URL }}/rest/v1/content_calendar?client_id=eq.{{ $json.client.id }}&scheduled_date=eq.{{ $json.holiday.fullDate }}&select=id&limit=1",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
+        "url": "=https://tbtfnswvvphamwjkzaad.supabase.co/rest/v1/content_calendar?client_id=eq.{{ $json.client.id }}&scheduled_date=eq.{{ $json.holiday.fullDate }}&select=id&limit=1",
+        "authentication": "none",
         "options": {
           "response": {
             "response": {
@@ -136,7 +134,7 @@
           "parameters": [
             {
               "name": "apikey",
-              "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+              "value": "=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRidGZuc3d2dnBoYW13amt6YWFkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MTE0NDA1NCwiZXhwIjoyMDg2NzIwMDU0fQ.ccbp9u2iJy3hE5TbK1nm7O_A_Jobzfl1vucaBuo6okQ"
             }
           ]
         }
@@ -178,9 +176,8 @@
     {
       "parameters": {
         "method": "GET",
-        "url": "={{ $env.SUPABASE_URL }}/rest/v1/discovery_sessions?client_id=eq.{{ $('Loop Combinations').item.json.client.id }}&select=content_creative,target_audience,company_fundamentals&order=created_at.desc&limit=1",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
+        "url": "=https://tbtfnswvvphamwjkzaad.supabase.co/rest/v1/discovery_sessions?client_id=eq.{{ $('Loop Combinations').item.json.client.id }}&select=content_creative,target_audience,company_fundamentals&order=created_at.desc&limit=1",
+        "authentication": "none",
         "options": {
           "response": {
             "response": {
@@ -192,7 +189,7 @@
           "parameters": [
             {
               "name": "apikey",
-              "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+              "value": "=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRidGZuc3d2dnBoYW13amt6YWFkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MTE0NDA1NCwiZXhwIjoyMDg2NzIwMDU0fQ.ccbp9u2iJy3hE5TbK1nm7O_A_Jobzfl1vucaBuo6okQ"
             }
           ]
         }
@@ -216,7 +213,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={{ $env.GEMINI_API_KEY }}",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyDVv36_h2j0FMXGCBgiYwaEXd4vWjw8RZQ",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={\n  \"contents\": [{\n    \"parts\": [{\n      \"text\": {{ JSON.stringify($json.prompt) }}\n    }]\n  }],\n  \"generationConfig\": {\n    \"responseMimeType\": \"application/json\",\n    \"temperature\": 0.8,\n    \"maxOutputTokens\": 2048\n  }\n}",
@@ -259,9 +256,8 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $env.SUPABASE_URL }}/rest/v1/content_calendar",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
+        "url": "=https://tbtfnswvvphamwjkzaad.supabase.co/rest/v1/content_calendar",
+        "authentication": "none",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify([$json]) }}",
@@ -276,7 +272,7 @@
           "parameters": [
             {
               "name": "apikey",
-              "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+              "value": "=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRidGZuc3d2dnBoYW13amt6YWFkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MTE0NDA1NCwiZXhwIjoyMDg2NzIwMDU0fQ.ccbp9u2iJy3hE5TbK1nm7O_A_Jobzfl1vucaBuo6okQ"
             },
             {
               "name": "Prefer",
