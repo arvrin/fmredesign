@@ -24,8 +24,6 @@ import {
   Repeat,
   Hash,
   AtSign,
-  ChevronLeft,
-  ChevronRight,
   Sparkles,
   X,
   Loader2,
@@ -48,6 +46,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/select-native';
 import { SocialPublishStatus } from '@/components/admin/social/SocialPublishStatus';
+import { Pagination } from '@/components/admin/Pagination';
+import { getPlatformColor } from '@/lib/admin/format-helpers';
 import type { ContentItem, ContentStatus, ContentType, Platform } from '@/lib/admin/project-types';
 
 const PAGE_SIZE = 25;
@@ -61,6 +61,7 @@ export default function ContentCalendarPage() {
   const [typeFilter, setTypeFilter] = useState<ContentType | 'all'>('all');
   const [platformFilter, setPlatformFilter] = useState<Platform | 'all'>('all');
   const [projectFilter, setProjectFilter] = useState<string | 'all'>('all');
+  const [clientFilter, setClientFilter] = useState<string>('all');
   const [page, setPage] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
@@ -86,6 +87,7 @@ export default function ContentCalendarPage() {
       if (statusFilter !== 'all') params.set('status', statusFilter);
       if (typeFilter !== 'all') params.set('type', typeFilter);
       if (platformFilter !== 'all') params.set('platform', platformFilter);
+      if (clientFilter !== 'all') params.set('clientId', clientFilter);
 
       const response = await fetch(`/api/content?${params}`);
       const result = await response.json();
@@ -101,7 +103,7 @@ export default function ContentCalendarPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, statusFilter, typeFilter, platformFilter]);
+  }, [page, statusFilter, typeFilter, platformFilter, clientFilter]);
 
   // Fetch content when filters or page change
   useEffect(() => { fetchContent(); }, [fetchContent]);
@@ -143,6 +145,7 @@ export default function ContentCalendarPage() {
   const handleStatusFilter = (v: ContentStatus | 'all') => { setStatusFilter(v); setPage(1); };
   const handleTypeFilter = (v: ContentType | 'all') => { setTypeFilter(v); setPage(1); };
   const handlePlatformFilter = (v: Platform | 'all') => { setPlatformFilter(v); setPage(1); };
+  const handleClientFilter = (v: string) => { setClientFilter(v); setPage(1); };
 
   const getStatusIcon = (status: ContentStatus) => {
     switch (status) {
@@ -172,29 +175,6 @@ export default function ContentCalendarPage() {
         return <FileText className="h-4 w-4" />;
       default:
         return <Image className="h-4 w-4" />;
-    }
-  };
-
-  const getPlatformColor = (platform: Platform) => {
-    switch (platform) {
-      case 'instagram':
-        return 'bg-pink-100 text-pink-800';
-      case 'facebook':
-        return 'bg-blue-100 text-blue-800';
-      case 'linkedin':
-        return 'bg-blue-100 text-blue-800';
-      case 'twitter':
-        return 'bg-sky-100 text-sky-800';
-      case 'youtube':
-        return 'bg-red-100 text-red-800';
-      case 'tiktok':
-        return 'bg-black text-white';
-      case 'website':
-        return 'bg-green-100 text-green-800';
-      case 'email':
-        return 'bg-purple-100 text-purple-800';
-      default:
-        return 'bg-fm-neutral-100 text-fm-neutral-800';
     }
   };
 
@@ -383,6 +363,16 @@ export default function ContentCalendarPage() {
             </Select>
 
             <Select
+              value={clientFilter}
+              onChange={(e) => handleClientFilter(e.target.value)}
+            >
+              <option value="all">All Clients</option>
+              {clients.map(client => (
+                <option key={client.id} value={client.id}>{client.name}</option>
+              ))}
+            </Select>
+
+            <Select
               value={projectFilter}
               onChange={(e) => setProjectFilter(e.target.value)}
             >
@@ -402,12 +392,12 @@ export default function ContentCalendarPage() {
             icon={<Calendar className="w-6 h-6" />}
             title="No content found"
             description={
-              totalItems === 0 && statusFilter === 'all' && typeFilter === 'all' && platformFilter === 'all'
+              totalItems === 0 && statusFilter === 'all' && typeFilter === 'all' && platformFilter === 'all' && clientFilter === 'all'
                 ? "Get started by creating your first content piece"
                 : "Try adjusting your search or filter criteria"
             }
             action={
-              totalItems === 0 && statusFilter === 'all' ? (
+              totalItems === 0 && statusFilter === 'all' && clientFilter === 'all' ? (
                 <DashboardButton variant="primary" size="sm" onClick={() => router.push('/admin/content/new')}>
                   Create First Content
                 </DashboardButton>
@@ -417,6 +407,7 @@ export default function ContentCalendarPage() {
         ) : (
           filteredContent.map((content) => {
             const project = projects.find(p => p.id === content.projectId);
+            const clientName = clients.find(c => c.id === content.clientId)?.name;
             return (
               <div key={content.id} className="bg-white rounded-xl border border-fm-neutral-200 p-4 sm:p-6 hover:shadow-lg transition-shadow">
                 <div className="flex items-start justify-between">
@@ -447,7 +438,11 @@ export default function ContentCalendarPage() {
 
                     <p className="text-fm-neutral-600 mb-4 line-clamp-2">{content.description}</p>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 text-sm mb-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4 text-sm mb-4">
+                      <div>
+                        <span className="text-fm-neutral-500">Client:</span>
+                        <span className="ml-2 font-medium">{clientName || 'N/A'}</span>
+                      </div>
                       <div>
                         <span className="text-fm-neutral-500">Project:</span>
                         <span className="ml-2 font-medium">{project?.name || 'N/A'}</span>
@@ -529,36 +524,13 @@ export default function ContentCalendarPage() {
       </div>
 
       {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between bg-white rounded-xl border border-fm-neutral-200 px-4 sm:px-6 py-3">
-          <p className="text-sm text-fm-neutral-600">
-            Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, totalItems)} of {totalItems}
-          </p>
-          <div className="flex items-center gap-2">
-            <DashboardButton
-              variant="ghost"
-              size="sm"
-              disabled={page <= 1}
-              onClick={() => setPage(p => p - 1)}
-            >
-              <ChevronLeft className="h-4 w-4" />
-              Previous
-            </DashboardButton>
-            <span className="text-sm font-medium text-fm-neutral-700 px-2">
-              {page} / {totalPages}
-            </span>
-            <DashboardButton
-              variant="ghost"
-              size="sm"
-              disabled={page >= totalPages}
-              onClick={() => setPage(p => p + 1)}
-            >
-              Next
-              <ChevronRight className="h-4 w-4" />
-            </DashboardButton>
-          </div>
-        </div>
-      )}
+      <Pagination
+        currentPage={page}
+        totalPages={totalPages}
+        totalItems={totalItems}
+        pageSize={PAGE_SIZE}
+        onPageChange={setPage}
+      />
 
       <ConfirmDialog
         open={!!deleteConfirm}

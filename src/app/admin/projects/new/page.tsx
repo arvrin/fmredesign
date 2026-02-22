@@ -13,6 +13,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { ArrowLeft, Calendar, DollarSign, Users, Target, Save, CheckCircle } from 'lucide-react';
 import { Button } from '@/design-system/components/primitives/Button';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { adminToast } from '@/lib/admin/toast';
 import type { ProjectType } from '@/lib/admin/project-types';
 import { PROJECT_TEMPLATES } from '@/lib/admin/project-types';
@@ -237,14 +238,7 @@ export default function NewProjectPage() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-fm-neutral-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-fm-magenta-600 mx-auto mb-4"></div>
-          <p className="text-fm-neutral-600">Loading project data...</p>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner size="lg" message="Loading project data..." fullscreen />;
   }
 
   return (

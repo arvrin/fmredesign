@@ -36,6 +36,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/select-native';
+import { useTeamMember } from '@/hooks/admin/useTeamMember';
 import { TeamMember, TeamAssignment, TEAM_ROLES } from '@/lib/admin/types';
 import { adminToast } from '@/lib/admin/toast';
 
@@ -48,7 +49,7 @@ interface TeamAssignmentManagementProps {
 export default function TeamAssignmentManagementPage({ params }: TeamAssignmentManagementProps) {
   const router = useRouter();
   const { memberId } = use(params);
-  const [member, setMember] = useState<TeamMember | null>(null);
+  const { member, loading: memberLoading } = useTeamMember(memberId);
   const [assignments, setAssignments] = useState<TeamAssignment[]>([]);
   const [availableClients, setAvailableClients] = useState<any[]>([]);
   const [clientMap, setClientMap] = useState<Record<string, any>>({});
@@ -62,17 +63,12 @@ export default function TeamAssignmentManagementPage({ params }: TeamAssignmentM
   });
 
   useEffect(() => {
+    if (memberLoading) return;
     loadAssignmentData();
-  }, [memberId]);
+  }, [memberId, memberLoading]);
 
   const loadAssignmentData = async () => {
     try {
-      // Load team member from API
-      const memberRes = await fetch(`/api/team?id=${memberId}`);
-      const memberResult = await memberRes.json();
-      if (!memberResult.success || !memberResult.data) return;
-      setMember(memberResult.data);
-
       // Load current assignments from API
       const assignmentsRes = await fetch(`/api/team/assignments?teamMemberId=${memberId}`);
       const assignmentsResult = await assignmentsRes.json();
@@ -157,14 +153,7 @@ export default function TeamAssignmentManagementPage({ params }: TeamAssignmentM
     }
   };
 
-  const getWorkloadColor = (workload: number) => {
-    if (workload >= 100) return 'text-red-600';
-    if (workload >= 80) return 'text-orange-600';
-    if (workload >= 60) return 'text-yellow-600';
-    return 'text-green-600';
-  };
-
-  if (isLoading) {
+  if (isLoading || memberLoading) {
     return (
       <div className="space-y-6">
         <Skeleton className="h-8 w-64" />

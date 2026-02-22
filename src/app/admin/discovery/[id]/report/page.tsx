@@ -10,6 +10,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { DiscoverySession } from '@/lib/admin/discovery-types';
 import { DiscoveryService } from '@/lib/admin/discovery-service';
 import { Button } from '@/design-system/components/primitives/Button';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { adminToast } from '@/lib/admin/toast';
 import { ArrowLeft, FileText, Download, Eye, Users } from 'lucide-react';
 
@@ -110,14 +111,7 @@ export default function DiscoveryReportPage() {
   };
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-fm-neutral-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-fm-magenta-600 mx-auto mb-4"></div>
-          <p className="text-fm-neutral-600">Loading discovery report...</p>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner size="lg" message="Loading discovery report..." fullscreen />;
   }
 
   if (!session) {

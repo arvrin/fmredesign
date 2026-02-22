@@ -33,6 +33,9 @@ import { AGENCY_SERVICES } from '@/lib/admin/types';
 import { formatContractCurrency } from '@/lib/admin/contract-types';
 import { useClientPortal } from '@/lib/client-portal/context';
 import { getStatusColor, getHealthColor } from '@/lib/client-portal/status-colors';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { EmptyState } from '@/components/ui/empty-state';
+import { ProgressBar } from '@/components/ui/progress-bar';
 
 interface Project {
   id: string;
@@ -155,11 +158,7 @@ export default function ClientDashboard() {
   }, [clientId]);
 
   if (pageLoading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-fm-magenta-600" />
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   // Calculate metrics for the dashboard
@@ -428,12 +427,7 @@ export default function ClientDashboard() {
                         </div>
                         {contractProgress !== null ? (
                           <div className="space-y-1">
-                            <div className="w-full bg-fm-neutral-200 rounded-full h-2.5">
-                              <div
-                                className="bg-gradient-to-r from-fm-magenta-500 to-fm-magenta-600 h-2.5 rounded-full transition-all duration-500"
-                                style={{ width: `${contractProgress}%` }}
-                              />
-                            </div>
+                            <ProgressBar value={contractProgress} gradient />
                             <p className="text-xs text-fm-neutral-500">{contractProgress}% elapsed</p>
                           </div>
                         ) : (
@@ -492,11 +486,11 @@ export default function ClientDashboard() {
           </CardHeader>
           <CardContent className="space-y-4">
             {projects.length === 0 ? (
-              <div className="text-center py-8">
-                <Briefcase className="h-12 w-12 text-fm-neutral-400 mx-auto mb-4" />
-                <p className="text-fm-neutral-600 font-medium">No projects yet</p>
-                <p className="text-fm-neutral-500 text-sm">New projects will appear here once set up</p>
-              </div>
+              <EmptyState
+                icon={<Briefcase className="w-6 h-6" />}
+                title="No projects yet"
+                description="New projects will appear here once set up"
+              />
             ) : (
               projects.slice(0, 3).map((project) => (
                 <Card key={project.id} variant="glass" className="border-fm-magenta-100">
@@ -517,12 +511,7 @@ export default function ClientDashboard() {
                           <span className="text-fm-neutral-600">Progress</span>
                           <span className="font-medium text-fm-magenta-600">{project.progress}%</span>
                         </div>
-                        <div className="w-full bg-fm-neutral-200 rounded-full h-2">
-                          <div
-                            className="bg-gradient-to-r from-fm-magenta-500 to-fm-magenta-600 h-2 rounded-full transition-all duration-300"
-                            style={{ width: `${project.progress}%` }}
-                          />
-                        </div>
+                        <ProgressBar value={project.progress} gradient />
                       </div>
                       <div className="flex justify-between items-center pt-2">
                         <span className="text-sm text-fm-neutral-600">
@@ -571,11 +560,11 @@ export default function ClientDashboard() {
           </CardHeader>
           <CardContent className="space-y-4">
             {contentItems.length === 0 ? (
-              <div className="text-center py-8">
-                <Calendar className="h-12 w-12 text-fm-neutral-400 mx-auto mb-4" />
-                <p className="text-fm-neutral-600 font-medium">No content scheduled</p>
-                <p className="text-fm-neutral-500 text-sm">Content items will appear here once created</p>
-              </div>
+              <EmptyState
+                icon={<Calendar className="w-6 h-6" />}
+                title="No content scheduled"
+                description="Content items will appear here once created"
+              />
             ) : (
               contentItems.slice(0, 4).map((item) => (
                 <Card key={item.id} variant="glass" className="border-fm-magenta-100">
@@ -665,10 +654,10 @@ export default function ClientDashboard() {
                 })}
               </div>
             ) : (
-              <div className="text-center py-6">
-                <Activity className="w-10 h-10 text-fm-neutral-300 mx-auto mb-2" />
-                <p className="text-fm-neutral-500 text-sm">No recent activity</p>
-              </div>
+              <EmptyState
+                icon={<Activity className="w-6 h-6" />}
+                title="No recent activity"
+              />
             )}
           </CardContent>
         </Card>

@@ -26,6 +26,10 @@ import { useClientPortal } from '@/lib/client-portal/context';
 import { formatContractCurrency } from '@/lib/admin/contract-types';
 import { getStatusColor, getPriorityColor } from '@/lib/client-portal/status-colors';
 import { downloadCSV } from '@/lib/client-portal/export';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { EmptyState } from '@/components/ui/empty-state';
+import { ProgressBar } from '@/components/ui/progress-bar';
+import { FilterTabBar } from '@/components/ui/filter-tab-bar';
 
 interface Project {
   id: string;
@@ -111,11 +115,7 @@ export default function ClientProjectsPage() {
   });
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-fm-magenta-600" />
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   // Calculate summary metrics
@@ -195,29 +195,17 @@ export default function ClientProjectsPage() {
       </div>
 
       {/* Filter Tabs */}
-      <div className="flex items-center space-x-4 mb-6">
-        <Button
-          variant={filter === 'all' ? 'client' : 'ghost'}
-          size="sm"
-          onClick={() => setFilter('all')}
-        >
-          All Projects ({projects.length})
-        </Button>
-        <Button
-          variant={filter === 'active' ? 'client' : 'ghost'}
-          size="sm"
-          onClick={() => setFilter('active')}
-        >
-          Active ({activeProjects})
-        </Button>
-        <Button
-          variant={filter === 'completed' ? 'client' : 'ghost'}
-          size="sm"
-          onClick={() => setFilter('completed')}
-        >
-          Completed ({completedProjects})
-        </Button>
-      </div>
+      <FilterTabBar
+        tabs={[
+          { key: 'all', label: 'All Projects', count: projects.length },
+          { key: 'active', label: 'Active', count: activeProjects },
+          { key: 'completed', label: 'Completed', count: completedProjects },
+        ]}
+        active={filter}
+        onChange={(key) => setFilter(key as 'all' | 'active' | 'completed')}
+        variant="client"
+        className="mb-6"
+      />
 
       {/* Projects Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -249,12 +237,7 @@ export default function ClientProjectsPage() {
                   <span className="text-fm-neutral-600">Overall Progress</span>
                   <span className="font-semibold text-fm-magenta-600">{project.progress}%</span>
                 </div>
-                <div className="w-full bg-fm-neutral-200 rounded-full h-2">
-                  <div
-                    className="bg-gradient-to-r from-fm-magenta-500 to-fm-magenta-600 h-2 rounded-full transition-all duration-500"
-                    style={{ width: `${project.progress}%` }}
-                  />
-                </div>
+                <ProgressBar value={project.progress} gradient />
               </div>
 
               {/* Key Metrics */}
@@ -352,20 +335,22 @@ export default function ClientProjectsPage() {
       </div>
 
       {filteredProjects.length === 0 && (
-        <Card variant="glass" className="p-12 text-center">
-          <Briefcase className="w-16 h-16 text-fm-neutral-400 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-fm-neutral-900 mb-2">No projects found</h3>
-          <p className="text-fm-neutral-600">
-            {filter === 'all'
+        <EmptyState
+          icon={<Briefcase className="w-6 h-6" />}
+          title="No projects found"
+          description={
+            filter === 'all'
               ? "You don't have any projects yet"
-              : `No ${filter} projects at the moment`}
-          </p>
-          {filter !== 'all' && (
-            <Button variant="ghost" size="sm" onClick={() => setFilter('all')} className="mt-4 text-fm-magenta-600">
-              View All Projects
-            </Button>
-          )}
-        </Card>
+              : `No ${filter} projects at the moment`
+          }
+          action={
+            filter !== 'all' ? (
+              <Button variant="ghost" size="sm" onClick={() => setFilter('all')} className="text-fm-magenta-600">
+                View All Projects
+              </Button>
+            ) : undefined
+          }
+        />
       )}
     </>
   );

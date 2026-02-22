@@ -7,7 +7,6 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
-  DashboardButton as Button,
   IconBox,
 } from '@/design-system';
 import { Badge } from '@/components/ui/Badge';
@@ -24,6 +23,9 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { useClientPortal } from '@/lib/client-portal/context';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { EmptyState } from '@/components/ui/empty-state';
+import { FilterTabBar } from '@/components/ui/filter-tab-bar';
 
 interface Document {
   id: string;
@@ -120,11 +122,7 @@ export default function ClientDocumentsPage() {
   }, [clientId, category]);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-fm-magenta-600" />
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   return (
@@ -147,19 +145,13 @@ export default function ClientDocumentsPage() {
       </div>
 
       {/* Category Filter */}
-      <div className="flex items-center gap-2 sm:gap-3 mb-6 overflow-x-auto pb-2 -mx-3 px-3 sm:mx-0 sm:px-0">
-        {CATEGORIES.map((cat) => (
-          <Button
-            key={cat.key}
-            variant={category === cat.key ? 'client' : 'ghost'}
-            size="sm"
-            onClick={() => setCategory(cat.key)}
-            className="flex-shrink-0"
-          >
-            {cat.label}
-          </Button>
-        ))}
-      </div>
+      <FilterTabBar
+        tabs={CATEGORIES.map((cat) => ({ key: cat.key, label: cat.label }))}
+        active={category}
+        onChange={setCategory}
+        variant="client"
+        className="mb-6"
+      />
 
       {/* Documents Grid */}
       {documents.length > 0 ? (
@@ -209,15 +201,15 @@ export default function ClientDocumentsPage() {
           ))}
         </div>
       ) : (
-        <Card variant="glass" className="p-12" style={{ textAlign: 'center' as const }}>
-          <FolderOpen className="w-16 h-16 text-fm-neutral-400 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-fm-neutral-900 mb-2">No documents yet</h3>
-          <p className="text-fm-neutral-600">
-            {category === 'all'
+        <EmptyState
+          icon={<FolderOpen className="w-6 h-6" />}
+          title="No documents yet"
+          description={
+            category === 'all'
               ? 'Documents shared by your team will appear here'
-              : `No ${category} documents at the moment`}
-          </p>
-        </Card>
+              : `No ${category} documents at the moment`
+          }
+        />
       )}
     </>
   );

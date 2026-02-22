@@ -29,6 +29,8 @@ import {
 } from 'lucide-react';
 import { useClientPortal } from '@/lib/client-portal/context';
 import { getStatusColor, getPriorityColor } from '@/lib/client-portal/status-colors';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { EmptyState } from '@/components/ui/empty-state';
 
 interface SupportTicket {
   id: string;
@@ -181,11 +183,7 @@ export default function ClientSupportPage() {
   );
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-fm-magenta-600" />
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   return (
@@ -459,14 +457,16 @@ export default function ClientSupportPage() {
             ))}
 
             {tickets.length === 0 && (
-              <Card variant="glass" className="p-8 text-center">
-                <MessageSquare className="w-12 h-12 text-fm-neutral-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-fm-neutral-900 mb-2">No support tickets</h3>
-                <p className="text-fm-neutral-600 mb-4">You don&apos;t have any open support tickets</p>
-                <Button variant="client" size="sm" onClick={() => setShowNewTicketForm(true)}>
-                  Create Your First Ticket
-                </Button>
-              </Card>
+              <EmptyState
+                icon={<MessageSquare className="w-6 h-6" />}
+                title="No support tickets"
+                description="You don't have any open support tickets"
+                action={
+                  <Button variant="client" size="sm" onClick={() => setShowNewTicketForm(true)}>
+                    Create Your First Ticket
+                  </Button>
+                }
+              />
             )}
           </div>
         </div>

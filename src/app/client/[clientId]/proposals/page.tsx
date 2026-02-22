@@ -6,7 +6,6 @@ import {
   DashboardCard as Card,
   CardContent,
 } from '@/design-system';
-import { Badge } from '@/components/ui/Badge';
 import {
   FileText,
   Clock,
@@ -18,6 +17,9 @@ import {
   DollarSign,
 } from 'lucide-react';
 import { useClientPortal } from '@/lib/client-portal/context';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { EmptyState } from '@/components/ui/empty-state';
+import { StatusBadge } from '@/components/ui/status-badge';
 
 interface Proposal {
   id: string;
@@ -38,30 +40,6 @@ interface Proposal {
   approvedAt: string | null;
   createdAt: string;
 }
-
-const statusColor = (status: string) => {
-  switch (status) {
-    case 'sent':      return 'bg-blue-100 text-blue-700';
-    case 'viewed':    return 'bg-purple-100 text-purple-700';
-    case 'approved':  return 'bg-green-100 text-green-700';
-    case 'declined':  return 'bg-red-100 text-red-700';
-    case 'expired':   return 'bg-gray-100 text-gray-700';
-    case 'converted': return 'bg-emerald-100 text-emerald-700';
-    default:          return 'bg-gray-100 text-gray-700';
-  }
-};
-
-const statusLabel = (status: string) => {
-  switch (status) {
-    case 'sent':      return 'Pending Review';
-    case 'viewed':    return 'Viewed';
-    case 'approved':  return 'Approved';
-    case 'declined':  return 'Declined';
-    case 'expired':   return 'Expired';
-    case 'converted': return 'Converted';
-    default:          return status;
-  }
-};
 
 export default function ClientProposalsPage() {
   const { clientId } = useClientPortal();
@@ -98,11 +76,7 @@ export default function ClientProposalsPage() {
     .reduce((sum, p) => sum + (p.investment?.total || 0), 0);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-fm-magenta-600" />
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   return (
@@ -144,13 +118,11 @@ export default function ClientProposalsPage() {
 
       {/* Proposal Cards */}
       {proposals.length === 0 ? (
-        <Card variant="client" className="p-12" style={{ textAlign: 'center' as const }}>
-          <FileText className="w-16 h-16 text-fm-neutral-400 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-fm-neutral-900 mb-2">No proposals yet</h3>
-          <p className="text-fm-neutral-600">
-            Your service proposals will appear here once they&apos;re sent for review.
-          </p>
-        </Card>
+        <EmptyState
+          icon={<FileText className="w-6 h-6" />}
+          title="No proposals yet"
+          description="Your service proposals will appear here once they're sent for review."
+        />
       ) : (
         <div className="space-y-3">
           {proposals.map((proposal) => {
@@ -178,9 +150,7 @@ export default function ClientProposalsPage() {
                         <h3 className="text-sm sm:text-base font-semibold text-fm-neutral-900 truncate">
                           {proposal.title}
                         </h3>
-                        <Badge className={statusColor(proposal.status)} variant="secondary">
-                          {statusLabel(proposal.status)}
-                        </Badge>
+                        <StatusBadge status={proposal.status} />
                       </div>
                       <div className="flex items-center gap-3 text-xs sm:text-sm text-fm-neutral-500 flex-wrap">
                         {proposal.proposalNumber && (

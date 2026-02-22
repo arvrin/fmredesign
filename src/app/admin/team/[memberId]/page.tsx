@@ -37,10 +37,13 @@ import {
   MetricCard
 } from '@/design-system';
 import { Badge } from '@/components/ui/Badge';
+import { TagChip } from '@/components/ui/tag-chip';
 import { PageHeader } from '@/components/ui/page-header';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
+import { useTeamMember } from '@/hooks/admin/useTeamMember';
+import { getWorkloadColor, getLocationEmoji } from '@/lib/admin/format-helpers';
 import { TeamMember, TEAM_ROLES, TEAM_DEPARTMENTS } from '@/lib/admin/types';
 
 interface TeamMemberProfileProps {
@@ -52,62 +55,28 @@ interface TeamMemberProfileProps {
 export default function TeamMemberProfilePage({ params }: TeamMemberProfileProps) {
   const router = useRouter();
   const { memberId } = use(params);
-  const [member, setMember] = useState<TeamMember | null>(null);
+  const { member, loading: isLoading } = useTeamMember(memberId);
   const [assignedClients, setAssignedClients] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    loadMemberData();
-  }, [memberId]);
-
-  const loadMemberData = async () => {
-    try {
-      // Fetch team member from API
-      const res = await fetch(`/api/team?id=${memberId}`);
-      const result = await res.json();
-
-      if (result.success && result.data) {
-        setMember(result.data);
-
-        // Load assigned clients via assignments API
-        if (result.data.assignedClients && result.data.assignedClients.length > 0) {
-          try {
-            const clientsRes = await fetch('/api/clients');
-            const clientsResult = await clientsRes.json();
-            if (clientsResult.success && clientsResult.data) {
-              const assignedClientIds = result.data.assignedClients;
-              const clients = clientsResult.data.filter((c: any) =>
-                assignedClientIds.includes(c.id)
-              );
-              setAssignedClients(clients);
-            }
-          } catch {
-            // Clients fetch failed, not critical
-          }
+    if (!member?.assignedClients?.length) return;
+    const loadClients = async () => {
+      try {
+        const clientsRes = await fetch('/api/clients');
+        const clientsResult = await clientsRes.json();
+        if (clientsResult.success && clientsResult.data) {
+          const assignedClientIds = member.assignedClients;
+          const clients = clientsResult.data.filter((c: any) =>
+            assignedClientIds.includes(c.id)
+          );
+          setAssignedClients(clients);
         }
+      } catch {
+        // Clients fetch failed, not critical
       }
-    } catch (error) {
-      console.error('Error loading member data:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const getWorkloadColor = (workload: number) => {
-    if (workload >= 100) return 'text-red-600';
-    if (workload >= 80) return 'text-orange-600';
-    if (workload >= 60) return 'text-yellow-600';
-    return 'text-green-600';
-  };
-
-  const getLocationIcon = (location: string) => {
-    switch (location) {
-      case 'office': return '🏢';
-      case 'remote': return '🏠';
-      case 'hybrid': return '🔄';
-      default: return '📍';
-    }
-  };
+    };
+    loadClients();
+  }, [member]);
 
   if (isLoading) {
     return (
@@ -238,7 +207,7 @@ export default function TeamMemberProfilePage({ params }: TeamMemberProfileProps
                     <div>
                       <p className="text-sm font-medium text-fm-neutral-700">Work Location</p>
                       <p className="text-fm-neutral-900">
-                        {getLocationIcon(member.location)} {member.location}
+                        {getLocationEmoji(member.location)} {member.location}
                       </p>
                     </div>
                   </div>
@@ -268,12 +237,9 @@ export default function TeamMemberProfilePage({ params }: TeamMemberProfileProps
               {(member.skills || []).length > 0 ? (
                 <div className="flex flex-wrap gap-2">
                   {(member.skills || []).map((skill, index) => (
-                    <span
-                      key={index}
-                      className="px-3 py-1 text-sm bg-fm-magenta-100 text-fm-magenta-700 rounded-full border border-fm-magenta-200"
-                    >
+                    <TagChip key={index} variant="magenta" className="px-3 text-sm border border-fm-magenta-200">
                       {skill}
-                    </span>
+                    </TagChip>
                   ))}
                 </div>
               ) : (

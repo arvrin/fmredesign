@@ -32,7 +32,10 @@ import {
   CardTitle,
 } from '@/design-system';
 import { Badge } from '@/components/ui/Badge';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { EmptyState } from '@/components/ui/empty-state';
 import { PublishButton } from '@/components/admin/social/PublishButton';
+import { getPlatformColor } from '@/lib/admin/format-helpers';
 import type {
   ContentItem,
   ContentStatus,
@@ -71,20 +74,6 @@ function getStatusLabel(status: ContentStatus): string {
     default:
       return status.charAt(0).toUpperCase() + status.slice(1);
   }
-}
-
-function getPlatformColor(platform: Platform): string {
-  const map: Record<Platform, string> = {
-    instagram: 'bg-pink-100 text-pink-800 border-pink-200',
-    facebook: 'bg-blue-100 text-blue-800 border-blue-200',
-    linkedin: 'bg-blue-100 text-blue-800 border-blue-200',
-    twitter: 'bg-sky-100 text-sky-800 border-sky-200',
-    youtube: 'bg-red-100 text-red-800 border-red-200',
-    tiktok: 'bg-neutral-900 text-white border-neutral-700',
-    website: 'bg-green-100 text-green-800 border-green-200',
-    email: 'bg-purple-100 text-purple-800 border-purple-200',
-  };
-  return map[platform] ?? 'bg-fm-neutral-100 text-fm-neutral-800 border-fm-neutral-200';
 }
 
 function getTypeLabel(type: ContentType): string {
@@ -160,37 +149,27 @@ export default function ContentDetailPage({
 
   // Loading state
   if (loading) {
-    return (
-      <div className="min-h-screen bg-fm-neutral-50 flex items-center justify-center">
-        <div style={{ textAlign: 'center' }}>
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-fm-magenta-600 mx-auto mb-4" />
-          <p className="text-fm-neutral-600">Loading content details...</p>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner size="lg" message="Loading content details..." fullscreen />;
   }
 
   // Error state
   if (error || !content) {
     return (
       <div className="min-h-screen bg-fm-neutral-50 flex items-center justify-center">
-        <div style={{ textAlign: 'center' }}>
-          <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-          <p className="text-fm-neutral-900 font-medium mb-2">
-            {error || 'Content not found'}
-          </p>
-          <p className="text-fm-neutral-600 mb-6">
-            The content item you are looking for does not exist or could not be
-            loaded.
-          </p>
-          <DashboardButton
-            variant="ghost"
-            onClick={() => router.push('/admin/content')}
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Content Calendar
-          </DashboardButton>
-        </div>
+        <EmptyState
+          icon={<AlertCircle className="w-6 h-6" />}
+          title={error || 'Content not found'}
+          description="The content item you are looking for does not exist or could not be loaded."
+          action={
+            <DashboardButton
+              variant="ghost"
+              onClick={() => router.push('/admin/content')}
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Content Calendar
+            </DashboardButton>
+          }
+        />
       </div>
     );
   }

@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useState, useEffect, use } from 'react';
+import { use } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   ArrowLeft,
@@ -26,7 +26,7 @@ import {
 import { PageHeader } from '@/components/ui/page-header';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
-import { TeamMember } from '@/lib/admin/types';
+import { useTeamMember } from '@/hooks/admin/useTeamMember';
 
 interface TeamMemberDocumentsProps {
   params: Promise<{
@@ -37,27 +37,7 @@ interface TeamMemberDocumentsProps {
 export default function TeamMemberDocumentsPage({ params }: TeamMemberDocumentsProps) {
   const router = useRouter();
   const { memberId } = use(params);
-  const [member, setMember] = useState<TeamMember | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    loadMemberData();
-  }, [memberId]);
-
-  const loadMemberData = async () => {
-    try {
-      const res = await fetch(`/api/team?id=${memberId}`);
-      const result = await res.json();
-
-      if (result.success && result.data) {
-        setMember(result.data);
-      }
-    } catch (error) {
-      console.error('Error loading member data:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const { member, loading: isLoading } = useTeamMember(memberId);
 
   if (isLoading) {
     return (

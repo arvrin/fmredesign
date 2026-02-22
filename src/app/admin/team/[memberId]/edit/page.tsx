@@ -30,6 +30,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/select-native';
+import { useTeamMember } from '@/hooks/admin/useTeamMember';
 import {
   TeamMember,
   TeamRole,
@@ -49,36 +50,22 @@ interface EditTeamMemberProps {
 export default function EditTeamMemberPage({ params }: EditTeamMemberProps) {
   const router = useRouter();
   const { memberId } = use(params);
-  const [originalMember, setOriginalMember] = useState<TeamMember | null>(null);
+  const { member: originalMember, loading: isLoading } = useTeamMember(memberId);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
 
   const [formData, setFormData] = useState<Partial<TeamMember>>({});
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
 
+  // Initialize form data when member is loaded
   useEffect(() => {
-    loadMemberData();
-  }, [memberId]);
-
-  const loadMemberData = async () => {
-    try {
-      const res = await fetch(`/api/team?id=${memberId}`);
-      const result = await res.json();
-
-      if (result.success && result.data) {
-        setOriginalMember(result.data);
-        setFormData(result.data);
-        setSelectedSkills(result.data.skills || []);
-      }
-    } catch (error) {
-      console.error('Error loading member data:', error);
-    } finally {
-      setIsLoading(false);
+    if (originalMember) {
+      setFormData(originalMember);
+      setSelectedSkills(originalMember.skills || []);
     }
-  };
+  }, [originalMember]);
 
   const handleInputChange = (field: string, value: any) => {
     setFormData(prev => ({

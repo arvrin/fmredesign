@@ -38,8 +38,11 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/select-native';
+import { AvatarInitials } from '@/components/ui/avatar-initials';
+import { TagChip } from '@/components/ui/tag-chip';
 import { Badge } from '@/components/ui/Badge';
 import { adminToast } from '@/lib/admin/toast';
+import { getWorkloadColor, getLocationEmoji } from '@/lib/admin/format-helpers';
 import { TeamMember, TeamMetrics, TEAM_ROLES, TEAM_DEPARTMENTS } from '@/lib/admin/types';
 
 export default function TeamDashboardPage() {
@@ -81,22 +84,6 @@ export default function TeamDashboardPage() {
 
     return matchesSearch && matchesDepartment && matchesType;
   });
-
-  const getWorkloadColor = (workload: number) => {
-    if (workload >= 100) return 'text-red-600';
-    if (workload >= 80) return 'text-orange-600';
-    if (workload >= 60) return 'text-yellow-600';
-    return 'text-green-600';
-  };
-
-  const getLocationIcon = (location: string) => {
-    switch (location) {
-      case 'office': return '🏢';
-      case 'remote': return '🏠';
-      case 'hybrid': return '🔄';
-      default: return '📍';
-    }
-  };
 
   if (isLoading) {
     return (
@@ -238,9 +225,7 @@ export default function TeamDashboardPage() {
                 <div className="flex flex-col sm:flex-row items-start sm:justify-between gap-3 sm:gap-0">
                   <div className="flex items-start gap-3 sm:gap-4 flex-1 min-w-0">
                     {/* Avatar */}
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-fm-magenta-100 flex items-center justify-center text-fm-magenta-600 font-semibold text-base sm:text-lg shrink-0">
-                      {member.name.split(' ').map(n => n[0]).join('').toUpperCase()}
-                    </div>
+                    <AvatarInitials name={member.name} size="lg" className="w-10 h-10 sm:w-12 sm:h-12 text-base sm:text-lg" />
 
                     {/* Member Info */}
                     <div className="flex-1">
@@ -272,7 +257,7 @@ export default function TeamDashboardPage() {
                         <div className="space-y-2">
                           <div className="flex items-center gap-2 text-fm-neutral-600">
                             <MapPin className="w-4 h-4" />
-                            <span>{getLocationIcon(member.location)} {member.location}</span>
+                            <span>{getLocationEmoji(member.location)} {member.location}</span>
                           </div>
                           <div className="flex items-center gap-2 text-fm-neutral-600">
                             <Clock className="w-4 h-4" />
@@ -292,17 +277,10 @@ export default function TeamDashboardPage() {
                         <div className="mt-3">
                           <div className="flex flex-wrap gap-2">
                             {(member.skills || []).slice(0, 6).map((skill, index) => (
-                              <span
-                                key={index}
-                                className="px-2 py-1 text-xs bg-fm-neutral-100 text-fm-neutral-700 rounded-full"
-                              >
-                                {skill}
-                              </span>
+                              <TagChip key={index}>{skill}</TagChip>
                             ))}
                             {(member.skills || []).length > 6 && (
-                              <span className="px-2 py-1 text-xs bg-fm-neutral-100 text-fm-neutral-700 rounded-full">
-                                +{(member.skills || []).length - 6} more
-                              </span>
+                              <TagChip>+{(member.skills || []).length - 6} more</TagChip>
                             )}
                           </div>
                         </div>

@@ -20,6 +20,7 @@ import {
 import { PageHeader } from '@/components/ui/page-header';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { EmptyState } from '@/components/ui/empty-state';
+import { ProgressBar } from '@/components/ui/progress-bar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/select-native';
@@ -280,12 +281,7 @@ export default function DiscoveryDashboardPage() {
                         <span>Completion Progress</span>
                         <span>{Math.round(((session.completedSections?.length || 0) / 10) * 100)}%</span>
                       </div>
-                      <div className="w-full bg-fm-neutral-200 rounded-full h-2">
-                        <div
-                          className="bg-fm-magenta-600 h-2 rounded-full transition-all duration-300"
-                          style={{ width: `${((session.completedSections?.length || 0) / 10) * 100}%` }}
-                        />
-                      </div>
+                      <ProgressBar value={((session.completedSections?.length || 0) / 10) * 100} size="md" />
                     </div>
                   </div>
 

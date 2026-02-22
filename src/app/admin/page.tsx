@@ -25,6 +25,7 @@ import { PageHeader } from '@/components/ui/page-header';
 import { EmptyState } from '@/components/ui/empty-state';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ProgressBar } from '@/components/ui/progress-bar';
 import { cn } from '@/lib/utils';
 import { adminToast } from '@/lib/admin/toast';
 
@@ -394,12 +395,7 @@ export default function AdminDashboard() {
                     <p className="text-xs text-fm-neutral-500">
                       {project.endDate ? new Date(project.endDate).toLocaleDateString() : 'No deadline'}
                     </p>
-                    <div className="w-16 bg-fm-neutral-100 rounded-full h-1 mt-1.5">
-                      <div
-                        className="bg-fm-magenta-600 h-1 rounded-full transition-all duration-300"
-                        style={{ width: `${project.progress || 0}%` }}
-                      />
-                    </div>
+                    <ProgressBar value={project.progress || 0} size="sm" className="w-16 mt-1.5" />
                   </div>
                 </div>
               ))}

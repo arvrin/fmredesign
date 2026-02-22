@@ -34,6 +34,11 @@ import {
   CardTitle
 } from '@/design-system';
 import { Badge } from '@/components/ui/Badge';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { EmptyState } from '@/components/ui/empty-state';
+import { ProgressBar } from '@/components/ui/progress-bar';
+import { AvatarInitials } from '@/components/ui/avatar-initials';
+import { TagChip } from '@/components/ui/tag-chip';
 import type {
   Project,
   ProjectStatus,
@@ -180,37 +185,27 @@ export default function ProjectDetailPage({
 
   // ------ Loading state ------ //
   if (loading) {
-    return (
-      <div className="min-h-screen bg-fm-neutral-50 flex items-center justify-center">
-        <div style={{ textAlign: 'center' }}>
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-fm-magenta-600 mx-auto mb-4" />
-          <p className="text-fm-neutral-600">Loading project details...</p>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner size="lg" message="Loading project details..." fullscreen />;
   }
 
   // ------ Error / not found state ------ //
   if (error || !project) {
     return (
       <div className="min-h-screen bg-fm-neutral-50 flex items-center justify-center">
-        <div style={{ textAlign: 'center' }}>
-          <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-          <p className="text-fm-neutral-900 font-medium text-lg mb-2">
-            {error || 'Project not found'}
-          </p>
-          <p className="text-fm-neutral-600 mb-6">
-            The project you are looking for may have been removed or the link is
-            incorrect.
-          </p>
-          <DashboardButton
-            variant="ghost"
-            onClick={() => router.push('/admin/projects')}
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Projects
-          </DashboardButton>
-        </div>
+        <EmptyState
+          icon={<AlertCircle className="w-6 h-6" />}
+          title={error || 'Project not found'}
+          description="The project you are looking for may have been removed or the link is incorrect."
+          action={
+            <DashboardButton
+              variant="ghost"
+              onClick={() => router.push('/admin/projects')}
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to Projects
+            </DashboardButton>
+          }
+        />
       </div>
     );
   }
@@ -393,12 +388,7 @@ export default function ProjectDetailPage({
               </div>
               <span className="text-lg font-bold text-fm-magenta-600">{project.progress}%</span>
             </div>
-            <div className="w-full bg-fm-neutral-200 rounded-full h-3">
-              <div
-                className="h-3 rounded-full transition-all duration-500 bg-gradient-to-r from-fm-magenta-600 to-fm-magenta-700"
-                style={{ width: `${Math.min(project.progress, 100)}%` }}
-              />
-            </div>
+            <ProgressBar value={project.progress} size="lg" gradient />
           </CardContent>
         </DashboardCard>
 
@@ -607,14 +597,7 @@ export default function ProjectDetailPage({
                           key={index}
                           className="flex items-center gap-3 p-3 bg-fm-neutral-50 rounded-lg border border-fm-neutral-200"
                         >
-                          <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-xs font-bold flex-shrink-0">
-                            {member
-                              .split(' ')
-                              .map((n) => n[0])
-                              .join('')
-                              .toUpperCase()
-                              .slice(0, 2)}
-                          </div>
+                          <AvatarInitials name={member} size="sm" className="bg-blue-100 text-blue-600" />
                           <p className="text-sm font-medium text-fm-neutral-900">{member}</p>
                         </div>
                       ))}
@@ -717,12 +700,9 @@ export default function ProjectDetailPage({
             <CardContent className="px-6 pb-6">
               <div className="flex flex-wrap gap-2">
                 {(project.tags || []).map((tag, index) => (
-                  <span
-                    key={index}
-                    className="px-3 py-1 text-sm bg-fm-neutral-100 text-fm-neutral-700 rounded-full border border-fm-neutral-200"
-                  >
+                  <TagChip key={index} className="px-3 text-sm border border-fm-neutral-200">
                     {tag}
-                  </span>
+                  </TagChip>
                 ))}
               </div>
             </CardContent>

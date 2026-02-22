@@ -25,13 +25,13 @@ import {
   Award,
   Calendar,
   Share2,
-  Copy,
-  Check,
-  X,
 } from 'lucide-react';
 import { useClientPortal } from '@/lib/client-portal/context';
 import { formatContractCurrency } from '@/lib/admin/contract-types';
 import { downloadCSV } from '@/lib/client-portal/export';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { EmptyState } from '@/components/ui/empty-state';
+import { ShareLinkPanel } from '@/components/ui/share-link-panel';
 
 interface Report {
   id: string;
@@ -86,7 +86,6 @@ export default function ClientReportsPage() {
   const [selectedPeriod, setSelectedPeriod] = useState<'monthly' | 'quarterly' | 'annual'>('monthly');
   const [shareUrl, setShareUrl] = useState<string | null>(null);
   const [shareLoading, setShareLoading] = useState(false);
-  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (!clientId) return;
@@ -151,19 +150,8 @@ export default function ClientReportsPage() {
     }
   };
 
-  const handleCopy = async () => {
-    if (!shareUrl) return;
-    await navigator.clipboard.writeText(shareUrl);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-fm-magenta-600" />
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   const s = summary || {
@@ -216,22 +204,7 @@ export default function ClientReportsPage() {
 
         {/* Share URL */}
         {shareUrl && (
-          <div className="mt-4 p-4 bg-fm-neutral-50 border border-fm-neutral-200 rounded-lg flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-            <input
-              readOnly
-              value={shareUrl}
-              className="flex-1 text-sm bg-white border border-fm-neutral-300 rounded-md px-3 py-2 text-fm-neutral-700"
-            />
-            <div className="flex items-center gap-2">
-              <Button variant="client" size="sm" onClick={handleCopy}>
-                {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                {copied ? 'Copied!' : 'Copy'}
-              </Button>
-              <Button variant="ghost" size="sm" onClick={() => setShareUrl(null)}>
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
+          <ShareLinkPanel url={shareUrl} onDismiss={() => setShareUrl(null)} />
         )}
       </div>
 
@@ -436,11 +409,11 @@ export default function ClientReportsPage() {
               ))}
             </div>
           ) : (
-            <Card variant="glass" className="p-8 text-center">
-              <FileText className="w-12 h-12 text-fm-neutral-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-fm-neutral-900 mb-2">No reports yet</h3>
-              <p className="text-fm-neutral-600">Reports will be generated as projects and content data accumulates</p>
-            </Card>
+            <EmptyState
+              icon={<FileText className="w-6 h-6" />}
+              title="No reports yet"
+              description="Reports will be generated as projects and content data accumulates"
+            />
           )}
         </div>
 

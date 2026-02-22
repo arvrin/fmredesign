@@ -32,6 +32,9 @@ import {
 import { useClientPortal } from '@/lib/client-portal/context';
 import { getStatusColor } from '@/lib/client-portal/status-colors';
 import { downloadCSV } from '@/lib/client-portal/export';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { EmptyState } from '@/components/ui/empty-state';
+import { FilterTabBar } from '@/components/ui/filter-tab-bar';
 
 interface ContentItem {
   id: string;
@@ -191,11 +194,7 @@ export default function ClientContentPage() {
     sum + (item.engagement?.reach || 0), 0);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-fm-magenta-600" />
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   return (
@@ -272,48 +271,18 @@ export default function ClientContentPage() {
 
       {/* Filter Tabs */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 -mx-3 px-3 sm:mx-0 sm:px-0 sm:gap-4">
-          <Button
-            variant={filter === 'all' ? 'client' : 'ghost'}
-            size="sm"
-            onClick={() => setFilter('all')}
-            className="flex-shrink-0"
-          >
-            All ({contentItems.length})
-          </Button>
-          <Button
-            variant={filter === 'published' ? 'client' : 'ghost'}
-            size="sm"
-            onClick={() => setFilter('published')}
-            className="flex-shrink-0"
-          >
-            Published ({publishedContent.length})
-          </Button>
-          <Button
-            variant={filter === 'scheduled' ? 'client' : 'ghost'}
-            size="sm"
-            onClick={() => setFilter('scheduled')}
-            className="flex-shrink-0"
-          >
-            Scheduled ({scheduledContent.length})
-          </Button>
-          <Button
-            variant={filter === 'review' ? 'client' : 'ghost'}
-            size="sm"
-            onClick={() => setFilter('review')}
-            className="flex-shrink-0"
-          >
-            Review ({reviewContent.length})
-          </Button>
-          <Button
-            variant={filter === 'draft' ? 'client' : 'ghost'}
-            size="sm"
-            onClick={() => setFilter('draft')}
-            className="flex-shrink-0"
-          >
-            Drafts ({contentItems.filter(i => i.status === 'draft').length})
-          </Button>
-        </div>
+        <FilterTabBar
+          tabs={[
+            { key: 'all', label: 'All', count: contentItems.length },
+            { key: 'published', label: 'Published', count: publishedContent.length },
+            { key: 'scheduled', label: 'Scheduled', count: scheduledContent.length },
+            { key: 'review', label: 'Review', count: reviewContent.length },
+            { key: 'draft', label: 'Drafts', count: contentItems.filter(i => i.status === 'draft').length },
+          ]}
+          active={filter}
+          onChange={(key) => setFilter(key as typeof filter)}
+          variant="client"
+        />
         <input
           type="month"
           value={selectedMonth}
@@ -505,15 +474,15 @@ export default function ClientContentPage() {
       </div>
 
       {filteredContent.length === 0 && (
-        <Card variant="glass" className="p-12 text-center">
-          <FileText className="w-16 h-16 text-fm-neutral-400 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-fm-neutral-900 mb-2">No content found</h3>
-          <p className="text-fm-neutral-600">
-            {filter === 'all'
+        <EmptyState
+          icon={<FileText className="w-6 h-6" />}
+          title="No content found"
+          description={
+            filter === 'all'
               ? "No content items scheduled yet"
-              : `No ${filter} content at the moment`}
-          </p>
-        </Card>
+              : `No ${filter} content at the moment`
+          }
+        />
       )}
     </>
   );

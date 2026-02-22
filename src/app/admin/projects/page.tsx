@@ -37,6 +37,8 @@ import {
 import { PageHeader } from '@/components/ui/page-header';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { EmptyState } from '@/components/ui/empty-state';
+import { ProgressBar } from '@/components/ui/progress-bar';
+import { TagChip } from '@/components/ui/tag-chip';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/select-native';
@@ -370,26 +372,17 @@ export default function ProjectsPage() {
                       <span className="text-sm font-medium text-fm-neutral-700">Progress</span>
                       <span className="text-sm text-fm-neutral-600">{project.progress}%</span>
                     </div>
-                    <div className="w-full bg-fm-neutral-200 rounded-full h-2">
-                      <div
-                        className="bg-fm-magenta-600 h-2 rounded-full transition-all duration-300"
-                        style={{ width: `${project.progress}%` }}
-                      ></div>
-                    </div>
+                    <ProgressBar value={project.progress} size="md" />
                   </div>
 
                   {/* Tags */}
                   {(project.tags || []).length > 0 && (
                     <div className="flex flex-wrap gap-2 mt-4">
                       {(project.tags || []).slice(0, 3).map((tag, index) => (
-                        <span key={index} className="px-2 py-1 text-xs bg-fm-neutral-100 text-fm-neutral-600 rounded-full">
-                          {tag}
-                        </span>
+                        <TagChip key={index}>{tag}</TagChip>
                       ))}
                       {(project.tags || []).length > 3 && (
-                        <span className="px-2 py-1 text-xs bg-fm-neutral-100 text-fm-neutral-600 rounded-full">
-                          +{(project.tags || []).length - 3} more
-                        </span>
+                        <TagChip>+{(project.tags || []).length - 3} more</TagChip>
                       )}
                     </div>
                   )}

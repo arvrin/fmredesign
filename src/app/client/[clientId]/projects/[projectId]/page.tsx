@@ -24,14 +24,15 @@ import {
   Users,
   FileText,
   Share2,
-  Copy,
-  Check,
-  X,
 } from 'lucide-react';
 import { useClientPortal } from '@/lib/client-portal/context';
 import { formatContractCurrency } from '@/lib/admin/contract-types';
 import { getStatusColor, getPriorityColor } from '@/lib/client-portal/status-colors';
 import { downloadCSV } from '@/lib/client-portal/export';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { EmptyState } from '@/components/ui/empty-state';
+import { ProgressBar } from '@/components/ui/progress-bar';
+import { ShareLinkPanel } from '@/components/ui/share-link-panel';
 
 interface ProjectDetail {
   id: string;
@@ -76,7 +77,6 @@ export default function ProjectDetailPage() {
   const [loading, setLoading] = useState(true);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
   const [shareLoading, setShareLoading] = useState(false);
-  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (!clientId || !projectId) return;
@@ -103,11 +103,7 @@ export default function ProjectDetailPage() {
   }, [clientId, projectId]);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-fm-magenta-600" />
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   if (!project) {
@@ -167,13 +163,6 @@ export default function ProjectDetailPage() {
     }
   };
 
-  const handleCopy = async () => {
-    if (!shareUrl) return;
-    await navigator.clipboard.writeText(shareUrl);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
   return (
     <>
       {/* Header */}
@@ -223,22 +212,7 @@ export default function ProjectDetailPage() {
 
         {/* Share URL Popover */}
         {shareUrl && (
-          <div className="mt-4 p-4 bg-fm-neutral-50 border border-fm-neutral-200 rounded-lg flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-            <input
-              readOnly
-              value={shareUrl}
-              className="flex-1 text-sm bg-white border border-fm-neutral-300 rounded-md px-3 py-2 text-fm-neutral-700"
-            />
-            <div className="flex items-center gap-2">
-              <Button variant="client" size="sm" onClick={handleCopy}>
-                {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                {copied ? 'Copied!' : 'Copy'}
-              </Button>
-              <Button variant="ghost" size="sm" onClick={() => setShareUrl(null)}>
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
+          <ShareLinkPanel url={shareUrl} onDismiss={() => setShareUrl(null)} />
         )}
       </div>
 
@@ -317,12 +291,7 @@ export default function ProjectDetailPage() {
               <span className="text-fm-neutral-600">Completion</span>
               <span className="font-semibold text-fm-magenta-600">{project.progress}%</span>
             </div>
-            <div className="w-full bg-fm-neutral-200 rounded-full h-3">
-              <div
-                className="bg-gradient-to-r from-fm-magenta-500 to-fm-magenta-600 h-3 rounded-full transition-all duration-500"
-                style={{ width: `${project.progress}%` }}
-              />
-            </div>
+            <ProgressBar value={project.progress} size="lg" gradient />
 
             {/* Budget breakdown */}
             <div className="grid grid-cols-2 gap-6 pt-4 border-t border-fm-neutral-100">
@@ -386,10 +355,10 @@ export default function ProjectDetailPage() {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-8 text-fm-neutral-500">
-                <Target className="w-10 h-10 mx-auto mb-2 text-fm-neutral-300" />
-                <p>No milestones defined yet</p>
-              </div>
+              <EmptyState
+                icon={<Target className="w-6 h-6" />}
+                title="No milestones defined yet"
+              />
             )}
           </CardContent>
         </Card>
@@ -424,10 +393,10 @@ export default function ProjectDetailPage() {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-8 text-fm-neutral-500">
-                <FileText className="w-10 h-10 mx-auto mb-2 text-fm-neutral-300" />
-                <p>No deliverables defined yet</p>
-              </div>
+              <EmptyState
+                icon={<FileText className="w-6 h-6" />}
+                title="No deliverables defined yet"
+              />
             )}
           </CardContent>
         </Card>

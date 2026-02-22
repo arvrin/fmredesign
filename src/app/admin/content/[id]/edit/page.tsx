@@ -6,9 +6,11 @@
 
 import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Save, Loader2 } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import { DashboardButton, DashboardCard, CardContent, CardHeader, CardTitle } from '@/design-system';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { EmptyState } from '@/components/ui/empty-state';
 import { adminToast } from '@/lib/admin/toast';
 import type { ContentItem, ContentStatus, ContentType, Platform } from '@/lib/admin/project-types';
 import { useTeamMembers } from '@/hooks/admin/useTeamMembers';
@@ -83,19 +85,17 @@ export default function EditContentPage({ params }: { params: Promise<{ id: stri
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-fm-magenta-600" />
-      </div>
-    );
+    return <LoadingSpinner size="sm" />;
   }
 
   if (!item) {
     return (
-      <div className="p-8" style={{ textAlign: 'center' }}>
-        <p className="text-fm-neutral-600 mb-4">Content item not found</p>
-        <Link href="/admin/content" className="text-fm-magenta-600 hover:underline">Back to Content</Link>
-      </div>
+      <EmptyState
+        icon={<AlertCircle className="w-6 h-6" />}
+        title="Content Not Found"
+        description="The requested content item could not be found."
+        action={<Link href="/admin/content"><DashboardButton variant="secondary">Back to Content</DashboardButton></Link>}
+      />
     );
   }
 

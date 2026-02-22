@@ -79,7 +79,6 @@ export default function WeHavePage() {
     { name: 'HeaderV3', path: 'components/layout/HeaderV3.tsx' },
     { name: 'FooterV2', path: 'components/layout/FooterV2.tsx' },
     { name: 'ConditionalLayout', path: 'components/layout/ConditionalLayout.tsx' },
-    { name: 'BackgroundAnimations', path: 'components/layout/BackgroundAnimations.tsx' },
     { name: 'V2PageWrapper', path: 'components/layouts/V2PageWrapper.tsx' },
   ];
 
@@ -148,30 +147,11 @@ export default function WeHavePage() {
   ];
 
   const designSystemMolecules = [
-    { name: 'ArticleCard', path: 'design-system/components/molecules/ArticleCard/ArticleCard.tsx' },
-    { name: 'CaseStudyCard', path: 'design-system/components/molecules/CaseStudyCard/CaseStudyCard.tsx' },
-    { name: 'CategoryFilter', path: 'design-system/components/molecules/CategoryFilter/CategoryFilter.tsx' },
-    { name: 'ContactForm', path: 'design-system/components/molecules/ContactForm/ContactForm.tsx' },
-    { name: 'ContactInfo', path: 'design-system/components/molecules/ContactInfo/ContactInfo.tsx' },
-    { name: 'FAQItem', path: 'design-system/components/molecules/FAQItem/FAQItem.tsx' },
-    { name: 'FeaturedArticle', path: 'design-system/components/molecules/FeaturedArticle/FeaturedArticle.tsx' },
     { name: 'GlassCard', path: 'design-system/components/molecules/GlassCard/GlassCard.tsx' },
-    { name: 'IndustryCard', path: 'design-system/components/molecules/IndustryCard/IndustryCard.tsx' },
-    { name: 'PortfolioCard', path: 'design-system/components/molecules/PortfolioCard/PortfolioCard.tsx' },
-    { name: 'PricingCard', path: 'design-system/components/molecules/PricingCard/PricingCard.tsx' },
-    { name: 'ProcessStep', path: 'design-system/components/molecules/ProcessStep/ProcessStep.tsx' },
-    { name: 'ServiceCard', path: 'design-system/components/molecules/ServiceCard/ServiceCard.tsx' },
-    { name: 'SidebarWidget', path: 'design-system/components/molecules/SidebarWidget/SidebarWidget.tsx' },
     { name: 'StatCard', path: 'design-system/components/molecules/StatCard/StatCard.tsx' },
-    { name: 'TeamCard', path: 'design-system/components/molecules/TeamCard/TeamCard.tsx' },
-    { name: 'TestimonialCard', path: 'design-system/components/molecules/TestimonialCard/TestimonialCard.tsx' },
-    { name: 'ValueCard', path: 'design-system/components/molecules/ValueCard/ValueCard.tsx' },
   ];
 
-  const designSystemOrganisms = [
-    { name: 'SectionBuilder', path: 'design-system/components/organisms/SectionBuilder/SectionBuilder.tsx' },
-    { name: 'HeroSectionBuilder', path: 'design-system/components/organisms/HeroSectionBuilder/HeroSectionBuilder.tsx' },
-  ];
+  const designSystemOrganisms: { name: string; path: string }[] = [];
 
   const designSystemLayouts = [
     { name: 'DashboardLayout', path: 'design-system/components/layouts/DashboardLayout.tsx' },
