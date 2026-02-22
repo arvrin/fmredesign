@@ -35,22 +35,27 @@
     {
       "parameters": {
         "method": "GET",
-        "url": "=https://tbtfnswvvphamwjkzaad.supabase.co/rest/v1/clients?status=eq.active&select=id,name,slug,industry",
+        "url": "https://tbtfnswvvphamwjkzaad.supabase.co/rest/v1/clients?status=eq.active&select=id,name,slug,industry",
         "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRidGZuc3d2dnBoYW13amt6YWFkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MTE0NDA1NCwiZXhwIjoyMDg2NzIwMDU0fQ.ccbp9u2iJy3hE5TbK1nm7O_A_Jobzfl1vucaBuo6okQ"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRidGZuc3d2dnBoYW13amt6YWFkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MTE0NDA1NCwiZXhwIjoyMDg2NzIwMDU0fQ.ccbp9u2iJy3hE5TbK1nm7O_A_Jobzfl1vucaBuo6okQ"
+            }
+          ]
+        },
         "options": {
           "response": {
             "response": {
               "responseFormat": "json"
             }
           }
-        },
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "apikey",
-              "value": "=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRidGZuc3d2dnBoYW13amt6YWFkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MTE0NDA1NCwiZXhwIjoyMDg2NzIwMDU0fQ.ccbp9u2iJy3hE5TbK1nm7O_A_Jobzfl1vucaBuo6okQ"
-            }
-          ]
         }
       },
       "id": "get-active-clients",
@@ -85,20 +90,25 @@
         "method": "GET",
         "url": "=https://tbtfnswvvphamwjkzaad.supabase.co/rest/v1/discovery_sessions?client_id=eq.{{ $json.id }}&select=content_creative,target_audience,company_fundamentals&order=created_at.desc&limit=1",
         "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRidGZuc3d2dnBoYW13amt6YWFkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MTE0NDA1NCwiZXhwIjoyMDg2NzIwMDU0fQ.ccbp9u2iJy3hE5TbK1nm7O_A_Jobzfl1vucaBuo6okQ"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRidGZuc3d2dnBoYW13amt6YWFkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MTE0NDA1NCwiZXhwIjoyMDg2NzIwMDU0fQ.ccbp9u2iJy3hE5TbK1nm7O_A_Jobzfl1vucaBuo6okQ"
+            }
+          ]
+        },
         "options": {
           "response": {
             "response": {
               "responseFormat": "json"
             }
           }
-        },
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "apikey",
-              "value": "=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRidGZuc3d2dnBoYW13amt6YWFkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MTE0NDA1NCwiZXhwIjoyMDg2NzIwMDU0fQ.ccbp9u2iJy3hE5TbK1nm7O_A_Jobzfl1vucaBuo6okQ"
-            }
-          ]
         }
       },
       "id": "get-discovery",
@@ -112,20 +122,25 @@
         "method": "GET",
         "url": "=https://tbtfnswvvphamwjkzaad.supabase.co/rest/v1/content_calendar?client_id=eq.{{ $('Loop Clients').item.json.id }}&scheduled_date=gte.{{ new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0] }}&scheduled_date=lte.{{ new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString().split('T')[0] }}&select=scheduled_date",
         "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRidGZuc3d2dnBoYW13amt6YWFkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MTE0NDA1NCwiZXhwIjoyMDg2NzIwMDU0fQ.ccbp9u2iJy3hE5TbK1nm7O_A_Jobzfl1vucaBuo6okQ"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRidGZuc3d2dnBoYW13amt6YWFkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MTE0NDA1NCwiZXhwIjoyMDg2NzIwMDU0fQ.ccbp9u2iJy3hE5TbK1nm7O_A_Jobzfl1vucaBuo6okQ"
+            }
+          ]
+        },
         "options": {
           "response": {
             "response": {
               "responseFormat": "json"
             }
           }
-        },
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "apikey",
-              "value": "=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRidGZuc3d2dnBoYW13amt6YWFkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MTE0NDA1NCwiZXhwIjoyMDg2NzIwMDU0fQ.ccbp9u2iJy3hE5TbK1nm7O_A_Jobzfl1vucaBuo6okQ"
-            }
-          ]
         }
       },
       "id": "get-existing-content",
@@ -190,29 +205,38 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://tbtfnswvvphamwjkzaad.supabase.co/rest/v1/content_calendar",
+        "url": "https://tbtfnswvvphamwjkzaad.supabase.co/rest/v1/content_calendar",
         "authentication": "none",
+        "sendHeaders": true,
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify($json.records) }}",
-        "options": {
-          "response": {
-            "response": {
-              "responseFormat": "json"
-            }
-          }
-        },
         "headerParameters": {
           "parameters": [
             {
               "name": "apikey",
-              "value": "=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRidGZuc3d2dnBoYW13amt6YWFkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MTE0NDA1NCwiZXhwIjoyMDg2NzIwMDU0fQ.ccbp9u2iJy3hE5TbK1nm7O_A_Jobzfl1vucaBuo6okQ"
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRidGZuc3d2dnBoYW13amt6YWFkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MTE0NDA1NCwiZXhwIjoyMDg2NzIwMDU0fQ.ccbp9u2iJy3hE5TbK1nm7O_A_Jobzfl1vucaBuo6okQ"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRidGZuc3d2dnBoYW13amt6YWFkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MTE0NDA1NCwiZXhwIjoyMDg2NzIwMDU0fQ.ccbp9u2iJy3hE5TbK1nm7O_A_Jobzfl1vucaBuo6okQ"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
             },
             {
               "name": "Prefer",
               "value": "return=representation"
             }
           ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
         }
       },
       "id": "insert-content",
