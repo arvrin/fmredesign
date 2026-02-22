@@ -52,3 +52,6 @@ next-env.d.ts
 fm-admin-469817-575a41fd1488.json
 vercel-env-variables.txt
 .env*.local
+
+# n8n workflow JSONs (contain baked-in API keys)
+n8n-workflows/*.json
