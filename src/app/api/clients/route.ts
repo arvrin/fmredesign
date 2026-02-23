@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
     if (id) {
       const { data, error } = await supabase
         .from('clients')
-        .select('id, name, email, phone, address, city, state, zip_code, country, gst_number, industry, company_size, website, status, health, account_manager, contract_type, contract_value, contract_start_date, contract_end_date, billing_cycle, services, created_at, updated_at, total_value, tags, notes, brand_name, parent_client_id, is_brand_group')
+        .select('id, name, email, phone, address, city, state, zip_code, country, gst_number, industry, company_size, website, status, health, account_manager, contract_type, contract_value, contract_start_date, contract_end_date, billing_cycle, services, created_at, updated_at, total_value, tags, notes, brand_name, parent_client_id, is_brand_group, logo_url, brand_colors, brand_fonts, tagline, brand_guidelines_url')
         .eq('id', id)
         .single();
 
@@ -89,12 +89,17 @@ export async function GET(request: NextRequest) {
         brandName: data.brand_name,
         parentClientId: data.parent_client_id,
         isBrandGroup: data.is_brand_group,
+        logoUrl: data.logo_url,
+        brandColors: data.brand_colors,
+        brandFonts: data.brand_fonts,
+        tagline: data.tagline,
+        brandGuidelinesUrl: data.brand_guidelines_url,
       };
 
       return NextResponse.json({ success: true, data: formatted });
     }
 
-    const selectCols = 'id, name, email, phone, address, city, state, zip_code, country, gst_number, industry, company_size, website, status, health, account_manager, contract_type, contract_value, contract_start_date, contract_end_date, billing_cycle, services, created_at, updated_at, total_value, tags, notes, brand_name, parent_client_id, is_brand_group';
+    const selectCols = 'id, name, email, phone, address, city, state, zip_code, country, gst_number, industry, company_size, website, status, health, account_manager, contract_type, contract_value, contract_start_date, contract_end_date, billing_cycle, services, created_at, updated_at, total_value, tags, notes, brand_name, parent_client_id, is_brand_group, logo_url, brand_colors, brand_fonts, tagline, brand_guidelines_url';
 
     // Pagination: only active when `page` param is provided (backwards compat)
     const pageParam = searchParams.get('page');
@@ -164,6 +169,11 @@ export async function GET(request: NextRequest) {
       brandName: c.brand_name,
       parentClientId: c.parent_client_id,
       isBrandGroup: c.is_brand_group,
+      logoUrl: c.logo_url,
+      brandColors: c.brand_colors,
+      brandFonts: c.brand_fonts,
+      tagline: c.tagline,
+      brandGuidelinesUrl: c.brand_guidelines_url,
     }));
 
     const body: Record<string, unknown> = {
@@ -299,6 +309,11 @@ export async function POST(request: NextRequest) {
         brand_name: formData.brandName || null,
         parent_client_id: formData.parentClientId || null,
         is_brand_group: formData.isBrandGroup || false,
+        logo_url: formData.logoUrl || null,
+        brand_colors: Array.isArray(formData.brandColors) ? formData.brandColors : null,
+        brand_fonts: Array.isArray(formData.brandFonts) ? formData.brandFonts : null,
+        tagline: formData.tagline || null,
+        brand_guidelines_url: formData.brandGuidelinesUrl || null,
       },
     ]);
 
@@ -378,6 +393,11 @@ export async function PUT(request: NextRequest) {
     if (formData.brandName !== undefined) updates.brand_name = formData.brandName || null;
     if (formData.parentClientId !== undefined) updates.parent_client_id = formData.parentClientId || null;
     if (formData.isBrandGroup !== undefined) updates.is_brand_group = formData.isBrandGroup || false;
+    if (formData.logoUrl !== undefined) updates.logo_url = formData.logoUrl || null;
+    if (formData.brandColors !== undefined) updates.brand_colors = Array.isArray(formData.brandColors) ? formData.brandColors : null;
+    if (formData.brandFonts !== undefined) updates.brand_fonts = Array.isArray(formData.brandFonts) ? formData.brandFonts : null;
+    if (formData.tagline !== undefined) updates.tagline = formData.tagline || null;
+    if (formData.brandGuidelinesUrl !== undefined) updates.brand_guidelines_url = formData.brandGuidelinesUrl || null;
     if (formData.portalPassword !== undefined) {
       updates.portal_password = formData.portalPassword
         ? await bcrypt.hash(formData.portalPassword, 12)

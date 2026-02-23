@@ -25,6 +25,12 @@ import {
   FolderOpen,
   Layers,
   LifeBuoy,
+  Palette,
+  Upload,
+  Plus,
+  Trash2,
+  ExternalLink,
+  X,
 } from 'lucide-react';
 import { Button } from '@/design-system/components/primitives/Button';
 import {
@@ -37,6 +43,7 @@ import { adminToast } from '@/lib/admin/toast';
 import { useTeamMembers } from '@/hooks/admin/useTeamMembers';
 import { TEAM_ROLES } from '@/lib/admin/types';
 import ContractsTab from './ContractsTab';
+import { useRef } from 'react';
 
 // Types for API responses
 interface ProjectItem {
@@ -93,6 +100,10 @@ export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState<any>({});
+  const [brandColorInputs, setBrandColorInputs] = useState<string[]>([]);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [logoUploading, setLogoUploading] = useState(false);
+  const logoInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     loadClientData();
@@ -161,8 +172,19 @@ export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
 
         // Contact Details
         contactRole: clientData.primaryContact?.role || 'Primary Contact',
-        linkedIn: clientData.primaryContact?.linkedInUrl || ''
+        linkedIn: clientData.primaryContact?.linkedInUrl || '',
+
+        // Brand Identity
+        logoUrl: (clientData as any).logoUrl || '',
+        brandFonts: ((clientData as any).brandFonts || []).join(', '),
+        tagline: (clientData as any).tagline || '',
+        brandGuidelinesUrl: (clientData as any).brandGuidelinesUrl || '',
       });
+
+      // Initialize brand color inputs
+      const colors = (clientData as any).brandColors || [];
+      setBrandColorInputs(colors.length > 0 ? colors : []);
+      setLogoPreview((clientData as any).logoUrl || null);
     }
 
     setLoading(false);
@@ -210,8 +232,18 @@ export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
 
         // Contact Details
         contactRole: client.primaryContact?.role || 'Primary Contact',
-        linkedIn: client.primaryContact?.linkedInUrl || ''
+        linkedIn: client.primaryContact?.linkedInUrl || '',
+
+        // Brand Identity
+        logoUrl: (client as any).logoUrl || '',
+        brandFonts: ((client as any).brandFonts || []).join(', '),
+        tagline: (client as any).tagline || '',
+        brandGuidelinesUrl: (client as any).brandGuidelinesUrl || '',
       });
+
+      const colors = (client as any).brandColors || [];
+      setBrandColorInputs(colors.length > 0 ? colors : []);
+      setLogoPreview((client as any).logoUrl || null);
     }
   };
 
@@ -315,7 +347,14 @@ export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
             
             // Contact Details
             contactRole: editData.contactRole,
-            linkedIn: editData.linkedIn
+            linkedIn: editData.linkedIn,
+
+            // Brand Identity
+            logoUrl: editData.logoUrl || undefined,
+            brandColors: brandColorInputs.filter(c => /^#[0-9a-fA-F]{6}$/.test(c)),
+            brandFonts: editData.brandFonts ? editData.brandFonts.split(',').map((f: string) => f.trim()).filter(Boolean) : [],
+            tagline: editData.tagline || undefined,
+            brandGuidelinesUrl: editData.brandGuidelinesUrl || undefined,
           }),
         });
         
@@ -402,11 +441,17 @@ export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
             >
               <span className="hidden sm:inline">Back</span>
             </Button>
-            <div className="w-10 h-10 sm:w-16 sm:h-16 bg-fm-magenta-100 rounded-xl flex items-center justify-center shrink-0">
-              <span className="text-fm-magenta-700 font-bold text-lg sm:text-2xl">
-                {client.name.charAt(0)}
-              </span>
-            </div>
+            {(client as any).logoUrl ? (
+              <div className="w-10 h-10 sm:w-16 sm:h-16 rounded-xl overflow-hidden border border-fm-neutral-200 bg-white flex items-center justify-center shrink-0">
+                <img src={(client as any).logoUrl} alt={`${client.name} logo`} className="max-w-full max-h-full object-contain p-1" />
+              </div>
+            ) : (
+              <div className="w-10 h-10 sm:w-16 sm:h-16 bg-fm-magenta-100 rounded-xl flex items-center justify-center shrink-0">
+                <span className="text-fm-magenta-700 font-bold text-lg sm:text-2xl">
+                  {client.name.charAt(0)}
+                </span>
+              </div>
+            )}
             <div className="min-w-0">
               <h1 className="text-lg sm:text-2xl font-bold text-fm-neutral-900 truncate">{client.name}</h1>
               <p className="text-sm text-fm-neutral-600">{(client as any).industry || 'Not specified'}</p>
@@ -820,6 +865,158 @@ export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
                         </div>
                       </div>
                     </div>
+
+                    {/* Brand Identity Edit Section */}
+                    <div>
+                      <h4 className="text-sm font-semibold text-fm-neutral-900 mb-3 pb-2 border-b border-fm-neutral-200 flex items-center gap-1.5">
+                        <Palette className="h-4 w-4" />
+                        Brand Identity
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* Logo Upload */}
+                        <div className="md:col-span-2">
+                          <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Brand Logo</label>
+                          <div className="flex items-center gap-4">
+                            {logoPreview ? (
+                              <div className="relative w-16 h-16 rounded-lg border border-fm-neutral-200 overflow-hidden bg-fm-neutral-50 flex items-center justify-center">
+                                <img src={logoPreview} alt="Logo preview" className="max-w-full max-h-full object-contain" />
+                                <button
+                                  type="button"
+                                  onClick={() => { setLogoPreview(null); setEditData({...editData, logoUrl: ''}); }}
+                                  className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5"
+                                >
+                                  <X className="h-3 w-3" />
+                                </button>
+                              </div>
+                            ) : (
+                              <div
+                                onClick={() => logoInputRef.current?.click()}
+                                className="w-16 h-16 rounded-lg border-2 border-dashed border-fm-neutral-300 flex items-center justify-center cursor-pointer hover:border-fm-magenta-400 transition-colors"
+                              >
+                                <Upload className="h-5 w-5 text-fm-neutral-400" />
+                              </div>
+                            )}
+                            <div className="flex-1">
+                              <button
+                                type="button"
+                                onClick={() => logoInputRef.current?.click()}
+                                disabled={logoUploading}
+                                className="text-sm text-fm-magenta-700 hover:text-fm-magenta-800 font-medium"
+                              >
+                                {logoUploading ? 'Uploading...' : 'Upload logo'}
+                              </button>
+                              <p className="text-xs text-fm-neutral-500 mt-0.5">PNG, JPEG, SVG, or WebP. Max 2MB.</p>
+                            </div>
+                            <input
+                              ref={logoInputRef}
+                              type="file"
+                              accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                              className="hidden"
+                              onChange={async (e) => {
+                                const file = e.target.files?.[0];
+                                if (!file) return;
+                                setLogoUploading(true);
+                                try {
+                                  const fd = new FormData();
+                                  fd.append('file', file);
+                                  fd.append('clientId', clientId);
+                                  const res = await fetch('/api/admin/upload-logo', { method: 'POST', body: fd });
+                                  const result = await res.json();
+                                  if (result.success) {
+                                    setEditData({...editData, logoUrl: result.url});
+                                    setLogoPreview(result.url);
+                                  } else {
+                                    adminToast.error(result.error || 'Failed to upload logo');
+                                  }
+                                } catch { adminToast.error('Failed to upload logo'); }
+                                finally { setLogoUploading(false); }
+                              }}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Brand Colors */}
+                        <div className="md:col-span-2">
+                          <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Brand Colors</label>
+                          <div className="space-y-2">
+                            {brandColorInputs.map((color, index) => (
+                              <div key={index} className="flex items-center gap-2">
+                                <input
+                                  type="color"
+                                  value={color}
+                                  onChange={(e) => {
+                                    const updated = [...brandColorInputs];
+                                    updated[index] = e.target.value;
+                                    setBrandColorInputs(updated);
+                                  }}
+                                  className="w-10 h-10 rounded cursor-pointer border border-fm-neutral-200"
+                                />
+                                <input
+                                  type="text"
+                                  value={color}
+                                  onChange={(e) => {
+                                    const updated = [...brandColorInputs];
+                                    updated[index] = e.target.value;
+                                    setBrandColorInputs(updated);
+                                  }}
+                                  className="w-28 h-10 px-2 text-sm bg-fm-neutral-50 border border-fm-neutral-300 rounded-md font-mono"
+                                />
+                                <span className="text-xs text-fm-neutral-500">
+                                  {index === 0 ? 'Primary' : index === 1 ? 'Secondary' : 'Accent'}
+                                </span>
+                                {brandColorInputs.length > 1 && (
+                                  <button type="button" onClick={() => setBrandColorInputs(brandColorInputs.filter((_, i) => i !== index))} className="p-1 text-fm-neutral-400 hover:text-red-500">
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </button>
+                                )}
+                              </div>
+                            ))}
+                            {brandColorInputs.length < 5 && (
+                              <button type="button" onClick={() => setBrandColorInputs([...brandColorInputs, '#000000'])} className="flex items-center gap-1 text-sm text-fm-magenta-700 hover:text-fm-magenta-800">
+                                <Plus className="h-3.5 w-3.5" /> Add color
+                              </button>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Tagline */}
+                        <div>
+                          <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Tagline / Slogan</label>
+                          <input
+                            type="text"
+                            value={editData.tagline || ''}
+                            onChange={(e) => setEditData({...editData, tagline: e.target.value})}
+                            placeholder="Your brand's catchphrase"
+                            className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
+                          />
+                        </div>
+
+                        {/* Brand Fonts */}
+                        <div>
+                          <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Brand Fonts</label>
+                          <input
+                            type="text"
+                            value={editData.brandFonts || ''}
+                            onChange={(e) => setEditData({...editData, brandFonts: e.target.value})}
+                            placeholder="Poppins, Montserrat"
+                            className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
+                          />
+                          <p className="text-xs text-fm-neutral-500 mt-1">Comma-separated font names</p>
+                        </div>
+
+                        {/* Brand Guidelines URL */}
+                        <div className="md:col-span-2">
+                          <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Brand Guidelines URL</label>
+                          <input
+                            type="url"
+                            value={editData.brandGuidelinesUrl || ''}
+                            onChange={(e) => setEditData({...editData, brandGuidelinesUrl: e.target.value})}
+                            placeholder="https://drive.google.com/..."
+                            className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
+                          />
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
@@ -894,6 +1091,58 @@ export function ClientProfile({ clientId, onBack }: ClientProfileProps) {
                   </div>
                 </div>
               </div>
+
+              {/* Brand Identity Card */}
+              {((client as any).logoUrl || ((client as any).brandColors && (client as any).brandColors.length > 0) || (client as any).tagline) && (
+                <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-4 sm:p-6">
+                  <h3 className="text-sm font-semibold text-fm-neutral-500 uppercase tracking-wider pb-2 border-b border-fm-neutral-100 flex items-center gap-1.5">
+                    <Palette className="h-4 w-4" />
+                    Brand Identity
+                  </h3>
+                  <div className="space-y-4">
+                    {(client as any).logoUrl && (
+                      <div>
+                        <p className="text-sm text-fm-neutral-600 mb-2">Logo</p>
+                        <div className="w-20 h-20 rounded-lg border border-fm-neutral-200 overflow-hidden bg-fm-neutral-50 flex items-center justify-center">
+                          <img src={(client as any).logoUrl} alt={`${client.name} logo`} className="max-w-full max-h-full object-contain" />
+                        </div>
+                      </div>
+                    )}
+                    {(client as any).brandColors && (client as any).brandColors.length > 0 && (
+                      <div>
+                        <p className="text-sm text-fm-neutral-600 mb-2">Colors</p>
+                        <div className="flex gap-2 flex-wrap">
+                          {((client as any).brandColors as string[]).map((color: string, i: number) => (
+                            <div key={i} className="flex items-center gap-1.5">
+                              <div className="w-8 h-8 rounded-md border border-fm-neutral-200" style={{ backgroundColor: color }} />
+                              <span className="text-xs text-fm-neutral-600 font-mono">{color}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {(client as any).tagline && (
+                      <div>
+                        <p className="text-sm text-fm-neutral-600">Tagline</p>
+                        <p className="font-medium text-fm-neutral-900 italic">"{(client as any).tagline}"</p>
+                      </div>
+                    )}
+                    {(client as any).brandFonts && (client as any).brandFonts.length > 0 && (
+                      <div>
+                        <p className="text-sm text-fm-neutral-600">Fonts</p>
+                        <p className="font-medium text-fm-neutral-900">{((client as any).brandFonts as string[]).join(', ')}</p>
+                      </div>
+                    )}
+                    {(client as any).brandGuidelinesUrl && (
+                      <a href={(client as any).brandGuidelinesUrl} target="_blank" rel="noopener noreferrer"
+                         className="flex items-center gap-1 text-sm text-fm-magenta-700 hover:underline">
+                        <ExternalLink className="h-3.5 w-3.5" />
+                        Brand Guidelines
+                      </a>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* Tags */}
               {((client as any).tags && (client as any).tags.length > 0) && (

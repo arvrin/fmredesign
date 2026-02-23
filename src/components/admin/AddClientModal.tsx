@@ -5,11 +5,11 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useState, useEffect, useRef } from 'react';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { X } from 'lucide-react';
+import { X, Upload, Plus, Trash2, Palette } from 'lucide-react';
 import { Button } from '@/design-system/components/primitives/Button';
 import { adminToast } from '@/lib/admin/toast';
 import { createClientSchema } from '@/lib/validations/schemas';
@@ -50,6 +50,7 @@ export function AddClientModal({ isOpen, onClose, onClientAdded }: AddClientModa
     register,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<ClientFormData>({
     resolver: zodResolver(createClientSchema),
@@ -73,8 +74,58 @@ export function AddClientModal({ isOpen, onClose, onClientAdded }: AddClientModa
       brandName: '',
       parentClientId: '',
       isBrandGroup: false,
+      logoUrl: '',
+      brandColors: [],
+      brandFonts: [],
+      tagline: '',
+      brandGuidelinesUrl: '',
     },
   });
+
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [logoUploading, setLogoUploading] = useState(false);
+  const [brandColorInputs, setBrandColorInputs] = useState<string[]>(['#c9325d']);
+  const logoInputRef = useRef<HTMLInputElement>(null);
+
+  const handleLogoUpload = async (file: File) => {
+    setLogoUploading(true);
+    try {
+      const formDataUpload = new FormData();
+      formDataUpload.append('file', file);
+      formDataUpload.append('clientId', `temp-${Date.now()}`);
+      const res = await fetch('/api/admin/upload-logo', { method: 'POST', body: formDataUpload });
+      const result = await res.json();
+      if (result.success) {
+        setValue('logoUrl', result.url);
+        setLogoPreview(result.url);
+      } else {
+        adminToast.error(result.error || 'Failed to upload logo');
+      }
+    } catch {
+      adminToast.error('Failed to upload logo');
+    } finally {
+      setLogoUploading(false);
+    }
+  };
+
+  const addBrandColor = () => {
+    if (brandColorInputs.length < 5) {
+      setBrandColorInputs([...brandColorInputs, '#000000']);
+    }
+  };
+
+  const removeBrandColor = (index: number) => {
+    const updated = brandColorInputs.filter((_, i) => i !== index);
+    setBrandColorInputs(updated);
+    setValue('brandColors', updated);
+  };
+
+  const updateBrandColor = (index: number, value: string) => {
+    const updated = [...brandColorInputs];
+    updated[index] = value;
+    setBrandColorInputs(updated);
+    setValue('brandColors', updated);
+  };
 
   const [existingClients, setExistingClients] = useState<{ id: string; name: string }[]>([]);
   useEffect(() => {
@@ -91,16 +142,20 @@ export function AddClientModal({ isOpen, onClose, onClientAdded }: AddClientModa
 
   const onSubmit = async (data: ClientFormData) => {
     try {
+      // Ensure brandColors from local state is included
+      const payload = { ...data, brandColors: brandColorInputs.filter(c => /^#[0-9a-fA-F]{6}$/.test(c)) };
       const response = await fetch('/api/clients', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: JSON.stringify(payload),
       });
 
       const result = await response.json();
 
       if (result.success) {
         reset();
+        setLogoPreview(null);
+        setBrandColorInputs(['#c9325d']);
         onClientAdded();
         onClose();
       } else {
@@ -191,6 +246,126 @@ export function AddClientModal({ isOpen, onClose, onClientAdded }: AddClientModa
                 ))}
               </select>
               <p className="text-xs text-fm-neutral-500 mt-1">Link this as a sub-brand under a parent client</p>
+            </div>
+
+            {/* Brand Identity */}
+            <div className="md:col-span-2 mt-2">
+              <h3 className="text-sm font-semibold text-fm-neutral-500 uppercase tracking-wider pb-2 border-b border-fm-neutral-100">
+                <Palette className="inline h-4 w-4 mr-1.5 -mt-0.5" />
+                Brand Identity
+              </h3>
+            </div>
+
+            {/* Logo Upload */}
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Brand Logo</label>
+              <div className="flex items-center gap-4">
+                {logoPreview ? (
+                  <div className="relative w-16 h-16 rounded-lg border border-fm-neutral-200 overflow-hidden bg-fm-neutral-50 flex items-center justify-center">
+                    <img src={logoPreview} alt="Logo preview" className="max-w-full max-h-full object-contain" />
+                    <button
+                      type="button"
+                      onClick={() => { setLogoPreview(null); setValue('logoUrl', ''); }}
+                      className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ) : (
+                  <div
+                    onClick={() => logoInputRef.current?.click()}
+                    className="w-16 h-16 rounded-lg border-2 border-dashed border-fm-neutral-300 flex items-center justify-center cursor-pointer hover:border-fm-magenta-400 transition-colors"
+                  >
+                    <Upload className="h-5 w-5 text-fm-neutral-400" />
+                  </div>
+                )}
+                <div className="flex-1">
+                  <button
+                    type="button"
+                    onClick={() => logoInputRef.current?.click()}
+                    disabled={logoUploading}
+                    className="text-sm text-fm-magenta-700 hover:text-fm-magenta-800 font-medium"
+                  >
+                    {logoUploading ? 'Uploading...' : 'Upload logo'}
+                  </button>
+                  <p className="text-xs text-fm-neutral-500 mt-0.5">PNG, JPEG, SVG, or WebP. Max 2MB.</p>
+                </div>
+                <input
+                  ref={logoInputRef}
+                  type="file"
+                  accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleLogoUpload(file);
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Brand Colors */}
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Brand Colors</label>
+              <div className="space-y-2">
+                {brandColorInputs.map((color, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <input
+                      type="color"
+                      value={color}
+                      onChange={(e) => updateBrandColor(index, e.target.value)}
+                      className="w-10 h-10 rounded cursor-pointer border border-fm-neutral-200"
+                    />
+                    <input
+                      type="text"
+                      value={color}
+                      onChange={(e) => updateBrandColor(index, e.target.value)}
+                      placeholder="#c9325d"
+                      className="w-28 h-10 px-2 text-sm bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 font-mono"
+                    />
+                    <span className="text-xs text-fm-neutral-500">
+                      {index === 0 ? 'Primary' : index === 1 ? 'Secondary' : 'Accent'}
+                    </span>
+                    {brandColorInputs.length > 1 && (
+                      <button type="button" onClick={() => removeBrandColor(index)} className="p-1 text-fm-neutral-400 hover:text-red-500">
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                  </div>
+                ))}
+                {brandColorInputs.length < 5 && (
+                  <button type="button" onClick={addBrandColor} className="flex items-center gap-1 text-sm text-fm-magenta-700 hover:text-fm-magenta-800">
+                    <Plus className="h-3.5 w-3.5" /> Add color
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Brand Fonts */}
+            <div>
+              <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Brand Fonts</label>
+              <input
+                {...register('brandFonts')}
+                className={inputClass}
+                placeholder="Poppins, Montserrat"
+                onChange={(e) => {
+                  const fonts = e.target.value.split(',').map(f => f.trim()).filter(Boolean);
+                  setValue('brandFonts', fonts);
+                }}
+              />
+              <p className="text-xs text-fm-neutral-500 mt-1">Comma-separated font names</p>
+            </div>
+
+            {/* Tagline */}
+            <div>
+              <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Tagline / Slogan</label>
+              <input {...register('tagline')} className={inputClass} placeholder="Your brand's catchphrase" />
+            </div>
+
+            {/* Brand Guidelines URL */}
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Brand Guidelines URL</label>
+              <input {...register('brandGuidelinesUrl')} type="url" className={inputClass} placeholder="https://drive.google.com/..." />
+              <p className="text-xs text-fm-neutral-500 mt-1">Link to brand guidelines document (Google Drive, Dropbox, etc.)</p>
             </div>
 
             {/* Address Information */}

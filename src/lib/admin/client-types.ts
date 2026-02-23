@@ -42,6 +42,13 @@ export interface ClientProfile {
   parentClientId?: string;
   isBrandGroup?: boolean;
 
+  // Brand Identity
+  logoUrl?: string;
+  brandColors?: string[];
+  brandFonts?: string[];
+  tagline?: string;
+  brandGuidelinesUrl?: string;
+
   // Metadata
   onboardedAt: string;
   lastActivity: string;

@@ -45,6 +45,11 @@ export const createClientSchema = z.object({
   brandName: optionalString,
   parentClientId: optionalString,
   isBrandGroup: z.boolean().optional(),
+  logoUrl: optionalString,
+  brandColors: z.array(z.string().regex(/^#[0-9a-fA-F]{6}$/, 'Must be a valid hex color')).optional(),
+  brandFonts: z.array(z.string()).optional(),
+  tagline: optionalString,
+  brandGuidelinesUrl: optionalString,
 });
 
 export const updateClientSchema = z.object({
