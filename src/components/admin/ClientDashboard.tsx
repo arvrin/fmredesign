@@ -329,11 +329,17 @@ export function ClientDashboard({ onClientSelect }: ClientDashboardProps) {
                 {/* Header */}
                 <div className="flex items-start justify-between">
                   <div className="flex items-center space-x-3">
-                    <div className="w-12 h-12 bg-fm-magenta-100 rounded-lg flex items-center justify-center">
-                      <span className="text-fm-magenta-700 font-bold text-lg">
-                        {client.name?.charAt(0) || 'C'}
-                      </span>
-                    </div>
+                    {(client as any).logoUrl ? (
+                      <div className="w-12 h-12 rounded-lg overflow-hidden border border-fm-neutral-200 bg-white flex items-center justify-center">
+                        <img src={(client as any).logoUrl} alt={`${client.name} logo`} className="max-w-full max-h-full object-contain p-1" />
+                      </div>
+                    ) : (
+                      <div className="w-12 h-12 bg-fm-magenta-100 rounded-lg flex items-center justify-center">
+                        <span className="text-fm-magenta-700 font-bold text-lg">
+                          {client.name?.charAt(0) || 'C'}
+                        </span>
+                      </div>
+                    )}
                     <div>
                       <h3 className="font-semibold text-fm-neutral-900">{client.name}</h3>
                       <p className="text-sm text-fm-neutral-600">
@@ -397,11 +403,17 @@ export function ClientDashboard({ onClientSelect }: ClientDashboardProps) {
               // List View
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center space-x-4 flex-1 min-w-0">
-                  <div className="w-10 h-10 bg-fm-magenta-100 rounded-lg flex items-center justify-center">
-                    <span className="text-fm-magenta-700 font-bold">
-                      {client.name?.charAt(0) || 'C'}
-                    </span>
-                  </div>
+                  {(client as any).logoUrl ? (
+                    <div className="w-10 h-10 rounded-lg overflow-hidden border border-fm-neutral-200 bg-white flex items-center justify-center">
+                      <img src={(client as any).logoUrl} alt={`${client.name} logo`} className="max-w-full max-h-full object-contain p-1" />
+                    </div>
+                  ) : (
+                    <div className="w-10 h-10 bg-fm-magenta-100 rounded-lg flex items-center justify-center">
+                      <span className="text-fm-magenta-700 font-bold">
+                        {client.name?.charAt(0) || 'C'}
+                      </span>
+                    </div>
+                  )}
                   
                   <div className="flex-1 grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div>
