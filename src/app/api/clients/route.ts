@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
     if (id) {
       const { data, error } = await supabase
         .from('clients')
-        .select('id, name, email, phone, address, city, state, zip_code, country, gst_number, industry, company_size, website, status, health, account_manager, contract_type, contract_value, contract_start_date, contract_end_date, billing_cycle, services, created_at, updated_at, total_value, tags, notes')
+        .select('id, name, email, phone, address, city, state, zip_code, country, gst_number, industry, company_size, website, status, health, account_manager, contract_type, contract_value, contract_start_date, contract_end_date, billing_cycle, services, created_at, updated_at, total_value, tags, notes, brand_name, parent_client_id, is_brand_group')
         .eq('id', id)
         .single();
 
@@ -86,12 +86,15 @@ export async function GET(request: NextRequest) {
         totalValue: data.total_value,
         tags: data.tags,
         notes: data.notes,
+        brandName: data.brand_name,
+        parentClientId: data.parent_client_id,
+        isBrandGroup: data.is_brand_group,
       };
 
       return NextResponse.json({ success: true, data: formatted });
     }
 
-    const selectCols = 'id, name, email, phone, address, city, state, zip_code, country, gst_number, industry, company_size, website, status, health, account_manager, contract_type, contract_value, contract_start_date, contract_end_date, billing_cycle, services, created_at, updated_at, total_value, tags, notes';
+    const selectCols = 'id, name, email, phone, address, city, state, zip_code, country, gst_number, industry, company_size, website, status, health, account_manager, contract_type, contract_value, contract_start_date, contract_end_date, billing_cycle, services, created_at, updated_at, total_value, tags, notes, brand_name, parent_client_id, is_brand_group';
 
     // Pagination: only active when `page` param is provided (backwards compat)
     const pageParam = searchParams.get('page');
@@ -158,6 +161,9 @@ export async function GET(request: NextRequest) {
       totalValue: c.total_value,
       tags: c.tags,
       notes: c.notes,
+      brandName: c.brand_name,
+      parentClientId: c.parent_client_id,
+      isBrandGroup: c.is_brand_group,
     }));
 
     const body: Record<string, unknown> = {
@@ -290,6 +296,9 @@ export async function POST(request: NextRequest) {
           ? clientData.contractDetails.services
           : null,
         tags: Array.isArray(clientData.tags) ? clientData.tags : null,
+        brand_name: formData.brandName || null,
+        parent_client_id: formData.parentClientId || null,
+        is_brand_group: formData.isBrandGroup || false,
       },
     ]);
 
@@ -366,6 +375,9 @@ export async function PUT(request: NextRequest) {
     if (formData.totalValue !== undefined) updates.total_value = parseFloat(formData.totalValue) || 0;
     if (formData.services) updates.services = formData.services;
     if (formData.tags) updates.tags = formData.tags;
+    if (formData.brandName !== undefined) updates.brand_name = formData.brandName || null;
+    if (formData.parentClientId !== undefined) updates.parent_client_id = formData.parentClientId || null;
+    if (formData.isBrandGroup !== undefined) updates.is_brand_group = formData.isBrandGroup || false;
     if (formData.portalPassword !== undefined) {
       updates.portal_password = formData.portalPassword
         ? await bcrypt.hash(formData.portalPassword, 12)

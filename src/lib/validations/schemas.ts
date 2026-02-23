@@ -42,6 +42,9 @@ export const createClientSchema = z.object({
   services: z.array(z.string()).optional(),
   tags: z.array(z.string()).optional(),
   portalPassword: optionalString,
+  brandName: optionalString,
+  parentClientId: optionalString,
+  isBrandGroup: z.boolean().optional(),
 });
 
 export const updateClientSchema = z.object({

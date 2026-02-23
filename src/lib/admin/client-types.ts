@@ -37,6 +37,11 @@ export interface ClientProfile {
   // Contract & Billing
   contractDetails: ContractDetails;
   
+  // Brand Grouping
+  brandName?: string;
+  parentClientId?: string;
+  isBrandGroup?: boolean;
+
   // Metadata
   onboardedAt: string;
   lastActivity: string;

@@ -5,6 +5,7 @@
 
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -69,8 +70,24 @@ export function AddClientModal({ isOpen, onClose, onClientAdded }: AddClientModa
       gstNumber: '',
       accountManager: '',
       portalPassword: '',
+      brandName: '',
+      parentClientId: '',
+      isBrandGroup: false,
     },
   });
+
+  const [existingClients, setExistingClients] = useState<{ id: string; name: string }[]>([]);
+  useEffect(() => {
+    if (!isOpen) return;
+    fetch('/api/clients')
+      .then(r => r.json())
+      .then(result => {
+        if (result.success) {
+          setExistingClients((result.data || []).map((c: any) => ({ id: c.id, name: c.name })));
+        }
+      })
+      .catch(() => {});
+  }, [isOpen]);
 
   const onSubmit = async (data: ClientFormData) => {
     try {
@@ -152,6 +169,28 @@ export function AddClientModal({ isOpen, onClose, onClientAdded }: AddClientModa
             <div>
               <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Website</label>
               <input {...register('website')} type="url" className={inputClass} placeholder="https://example.com" />
+            </div>
+
+            {/* Brand / Grouping */}
+            <div className="md:col-span-2 mt-2">
+              <h3 className="text-sm font-semibold text-fm-neutral-500 uppercase tracking-wider pb-2 border-b border-fm-neutral-100">Brand / Grouping</h3>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Brand Name</label>
+              <input {...register('brandName')} className={inputClass} placeholder="e.g. Sharma's (used in content)" />
+              <p className="text-xs text-fm-neutral-500 mt-1">Name used in AI-generated content. Leave empty to use client name.</p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Parent Client</label>
+              <select {...register('parentClientId')} className={selectClass}>
+                <option value="">None (standalone client)</option>
+                {existingClients.map(c => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+              <p className="text-xs text-fm-neutral-500 mt-1">Link this as a sub-brand under a parent client</p>
             </div>
 
             {/* Address Information */}
