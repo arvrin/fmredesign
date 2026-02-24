@@ -101,7 +101,7 @@ export async function GET(
     // Fetch recent support tickets
     const { data: tickets } = await supabaseAdmin
       .from('support_tickets')
-      .select('id, subject, status, created_at, updated_at')
+      .select('id, title, status, created_at, updated_at')
       .eq('client_id', resolved.id)
       .order('updated_at', { ascending: false })
       .limit(5);
@@ -112,14 +112,14 @@ export async function GET(
           activities.push({
             type: 'ticket_created',
             title: 'Support ticket created',
-            description: t.subject || 'Support request',
+            description: t.title || 'Support request',
             timestamp: t.created_at,
           });
         } else {
           activities.push({
             type: 'ticket_updated',
             title: 'Ticket updated',
-            description: `${t.subject || 'Support request'} — ${t.status}`,
+            description: `${t.title || 'Support request'} — ${t.status}`,
             timestamp: t.updated_at,
           });
         }

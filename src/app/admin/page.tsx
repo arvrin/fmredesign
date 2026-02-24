@@ -132,23 +132,34 @@ export default function AdminDashboard() {
 
   const loadDashboardData = async () => {
     try {
-      const [invoicesResponse, clientsResponse, projectsResponse, contentResponse] =
+      // Optimized: fetch only upcoming 7 days of content instead of all content
+      const now = new Date();
+      const sevenDaysLater = new Date();
+      sevenDaysLater.setDate(now.getDate() + 7);
+      const todayStr = now.toISOString().split('T')[0];
+      const sevenDaysStr = sevenDaysLater.toISOString().split('T')[0];
+
+      const [invoicesResponse, clientsResponse, projectsResponse, contentResponse, contentCountResponse] =
         await Promise.all([
           fetch('/api/invoices').catch(() => ({ json: () => Promise.resolve({ success: false, data: [] }) })),
           fetch('/api/clients').catch(() => ({ json: () => Promise.resolve({ success: false, data: [] }) })),
           fetch('/api/projects').catch(() => ({ json: () => Promise.resolve({ success: false, data: [] }) })),
-          fetch('/api/content').catch(() => ({ json: () => Promise.resolve({ success: false, data: [] }) })),
+          fetch(`/api/content?startDate=${todayStr}&endDate=${sevenDaysStr}&status=approved,scheduled&sortBy=scheduledDate&sortDirection=asc`).catch(() => ({ json: () => Promise.resolve({ success: false, data: [] }) })),
+          fetch('/api/content?pageSize=1').catch(() => ({ json: () => Promise.resolve({ success: false, data: [], pagination: { totalItems: 0 } }) })),
         ]);
 
       const invoicesResult = await invoicesResponse.json();
       const clientsResult = await clientsResponse.json();
       const projectsResult = await projectsResponse.json();
       const contentResult = await contentResponse.json();
+      const contentCountResult = await contentCountResponse.json();
 
       const invoices: DashboardInvoice[] = invoicesResult.success ? invoicesResult.data : [];
       const clients = clientsResult.success ? clientsResult.data : [];
       const projects = projectsResult.success ? projectsResult.data : [];
-      const content = contentResult.success ? contentResult.data : [];
+      // Already filtered to next 7 days, approved/scheduled by API
+      const upcomingContentItems = contentResult.success ? contentResult.data : [];
+      const totalContentCount = contentCountResult.pagination?.totalItems ?? contentCountResult.total ?? 0;
 
       const totalRevenue = invoices
         .filter((inv) => inv.status === 'paid')
@@ -160,19 +171,6 @@ export default function AdminDashboard() {
 
       const activeProjects = projects.filter((p: any) => p.status === 'active').length;
 
-      const now = new Date();
-      const sevenDaysFromNow = new Date();
-      sevenDaysFromNow.setDate(now.getDate() + 7);
-
-      const scheduledContent = content.filter((c: any) => {
-        const scheduleDate = new Date(c.scheduledDate);
-        return (
-          scheduleDate >= now &&
-          scheduleDate <= sevenDaysFromNow &&
-          ['approved', 'scheduled'].includes(c.status)
-        );
-      }).length;
-
       setStats({
         totalInvoices: invoices.length,
         totalClients: clients.length,
@@ -180,8 +178,8 @@ export default function AdminDashboard() {
         pendingInvoices,
         totalProjects: projects.length,
         activeProjects,
-        totalContent: content.length,
-        scheduledContent,
+        totalContent: totalContentCount,
+        scheduledContent: upcomingContentItems.length,
       });
 
       setRecentInvoices(
@@ -196,15 +194,8 @@ export default function AdminDashboard() {
           .slice(0, 5)
       );
 
-      setUpcomingContent(
-        content
-          .filter((c: any) => {
-            const scheduleDate = new Date(c.scheduledDate);
-            return scheduleDate >= now && ['approved', 'scheduled'].includes(c.status);
-          })
-          .sort((a: any, b: any) => new Date(a.scheduledDate).getTime() - new Date(b.scheduledDate).getTime())
-          .slice(0, 5)
-      );
+      // Already sorted by scheduledDate asc from API
+      setUpcomingContent(upcomingContentItems.slice(0, 5));
     } catch (error) {
       console.error('Error loading dashboard data:', error);
       adminToast.error('Failed to load dashboard data');

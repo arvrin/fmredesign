@@ -83,7 +83,7 @@ export default function ClientProjectsPage() {
             endDate: p.endDate || '',
             budget: p.budget || 0,
             spent: p.spent || 0,
-            team: [],
+            team: p.assignedTalent || p.team || [],
             deliverables: {
               total: (p.deliverables || []).length,
               completed: (p.deliverables || []).filter((d: any) => d.status === 'completed').length

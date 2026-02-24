@@ -590,16 +590,23 @@ export default function ClientDashboard() {
                 </Card>
               ))
             )}
-            {contentItems.length > 4 && (
-              <div className="pt-4 border-t border-fm-neutral-100">
+            <div className="pt-4 border-t border-fm-neutral-100 flex flex-col sm:flex-row gap-2">
+              {contentItems.length > 4 && (
                 <Link
                   href={`/client/${slug}/content`}
-                  className="flex items-center justify-center w-full text-sm font-medium text-fm-magenta-600 hover:text-fm-magenta-700 hover:bg-fm-magenta-50 py-2 rounded-md transition-colors"
+                  className="flex items-center justify-center flex-1 text-sm font-medium text-fm-magenta-600 hover:text-fm-magenta-700 hover:bg-fm-magenta-50 py-2 rounded-md transition-colors"
                 >
-                  View Full Calendar
+                  View All Content
                 </Link>
-              </div>
-            )}
+              )}
+              <Link
+                href={`/client/${slug}/content?view=calendar`}
+                className="flex items-center justify-center flex-1 text-sm font-medium text-fm-magenta-600 hover:text-fm-magenta-700 hover:bg-fm-magenta-50 py-2 rounded-md transition-colors gap-1.5"
+              >
+                <Calendar className="w-4 h-4" />
+                View Calendar
+              </Link>
+            </div>
           </CardContent>
         </Card>
       </div>

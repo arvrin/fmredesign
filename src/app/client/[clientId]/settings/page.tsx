@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   DashboardCard as Card,
   CardContent,
@@ -31,20 +31,49 @@ export default function ClientSettingsPage() {
   const [saving, setSaving] = useState(false);
   const [alert, setAlert] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
-  // Form state initialised from profile
+  // Form state — starts empty, populated by API fetch below
   const [form, setForm] = useState({
-    name: profile.name || '',
-    website: profile.primaryContact ? (profile as any).website || '' : '',
-    description: (profile as any).description || '',
-    email: profile.primaryContact?.email || '',
-    phone: (profile as any).primaryContact?.phone || '',
-    logo: profile.logo || '',
-    address: (profile as any).headquarters?.street || '',
-    city: (profile as any).headquarters?.city || '',
-    state: (profile as any).headquarters?.state || '',
-    zip_code: (profile as any).headquarters?.zipCode || '',
-    country: (profile as any).headquarters?.country || '',
+    name: '',
+    website: '',
+    description: '',
+    email: '',
+    phone: '',
+    logo: '',
+    address: '',
+    city: '',
+    state: '',
+    zip_code: '',
+    country: '',
   });
+
+  useEffect(() => {
+    // Fetch full profile from API (context only has a subset)
+    const fetchProfile = async () => {
+      try {
+        const res = await fetch(`/api/client-portal/${clientId}/profile`);
+        if (res.ok) {
+          const json = await res.json();
+          const p = json.data;
+          setForm({
+            name: p.name || '',
+            website: p.website || '',
+            description: p.description || '',
+            email: p.primaryContact?.email || '',
+            phone: p.primaryContact?.phone || '',
+            logo: p.logo || '',
+            address: p.headquarters?.street || '',
+            city: p.headquarters?.city || '',
+            state: p.headquarters?.state || '',
+            zip_code: p.headquarters?.zipCode || '',
+            country: p.headquarters?.country || '',
+          });
+        }
+      } catch (err) {
+        console.error('Error fetching profile:', err);
+      }
+    };
+    if (clientId) fetchProfile();
+  }, [clientId]);
 
   const handleChange = (field: string, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));

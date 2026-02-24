@@ -159,18 +159,17 @@ export default function ProjectDetailPage({
   useEffect(() => {
     const loadProject = async () => {
       try {
-        const response = await fetch('/api/projects');
+        const response = await fetch(`/api/projects?id=${id}`);
         const result = await response.json();
 
         if (result.success) {
-          const found = result.data.find((p: Project) => p.id === id);
-          if (found) {
-            setProject(found);
+          if (result.data) {
+            setProject(result.data);
           } else {
             setError('Project not found');
           }
         } else {
-          setError('Failed to load projects');
+          setError('Failed to load project');
         }
       } catch (err) {
         console.error('Error loading project:', err);
@@ -253,7 +252,7 @@ export default function ProjectDetailPage({
               </div>
               <p className="text-fm-neutral-600 mt-1">
                 {getTypeLabel(project.type)}
-                {project.clientId && <span> &middot; Client {project.clientId}</span>}
+                {project.clientId && <span> &middot; Client ID: {project.clientId.slice(0, 8)}...</span>}
               </p>
             </div>
             <DashboardButton

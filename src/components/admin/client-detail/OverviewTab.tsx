@@ -11,12 +11,14 @@ import {
   Users,
   TrendingUp,
 } from 'lucide-react';
+import { BrandIdentitySection } from './BrandIdentitySection';
 
 interface OverviewTabProps {
   clientProfile: ClientProfile;
+  onProfileUpdate?: () => void;
 }
 
-export function OverviewTab({ clientProfile }: OverviewTabProps) {
+export function OverviewTab({ clientProfile, onProfileUpdate }: OverviewTabProps) {
   return (
     <div className="space-y-4 sm:space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
@@ -143,6 +145,20 @@ export function OverviewTab({ clientProfile }: OverviewTabProps) {
           </div>
         </CardContent>
       </Card>
+
+      {/* Brand Identity */}
+      <BrandIdentitySection
+        clientId={clientProfile.id}
+        clientData={{
+          logoUrl: (clientProfile as any).logoUrl,
+          brandColors: (clientProfile as any).brandColors,
+          brandFonts: (clientProfile as any).brandFonts,
+          tagline: (clientProfile as any).tagline,
+          brandGuidelinesUrl: (clientProfile as any).brandGuidelinesUrl,
+          name: clientProfile.name,
+        }}
+        onUpdate={onProfileUpdate || (() => {})}
+      />
     </div>
   );
 }

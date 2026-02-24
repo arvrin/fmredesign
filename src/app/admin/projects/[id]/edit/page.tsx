@@ -22,12 +22,11 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    fetch('/api/projects')
+    fetch(`/api/projects?id=${id}`)
       .then(res => res.json())
       .then(result => {
         if (result.success) {
-          const found = result.data.find((p: Project) => p.id === id);
-          setProject(found || null);
+          setProject(result.data);
         }
       })
       .catch(err => console.error('Error loading project:', err))

@@ -6,29 +6,20 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { 
-  Users, 
-  TrendingUp, 
-  DollarSign, 
+import {
+  Users,
+  TrendingUp,
+  DollarSign,
   Activity,
   Search,
-  Filter,
   Plus,
-  MoreVertical,
-  Calendar,
-  MessageSquare,
-  BarChart3,
   Target,
-  Clock,
   AlertCircle,
   CheckCircle,
   Eye,
   Edit,
-  Trash2,
   Phone,
   Mail,
-  Globe,
-  MapPin
 } from 'lucide-react';
 import { 
   DashboardButton, 
@@ -224,9 +215,9 @@ export function ClientDashboard({ onClientSelect }: ClientDashboardProps) {
           />
 
           <MetricCard
-            title="Active Campaigns"
-            value={dashboardStats.activeCampaigns}
-            subtitle="Currently running"
+            title="Avg Client Value"
+            value={ClientUtils.formatCurrency(dashboardStats.avgClientValue)}
+            subtitle="Per client"
             icon={<Target className="w-6 h-6" />}
             variant="admin"
           />
@@ -349,9 +340,6 @@ export function ClientDashboard({ onClientSelect }: ClientDashboardProps) {
                   </div>
                   <div className="flex items-center space-x-2">
                     {getHealthIcon(client.health)}
-                    <button className="p-1 hover:bg-fm-neutral-100 rounded">
-                      <MoreVertical className="h-4 w-4 text-fm-neutral-400" />
-                    </button>
                   </div>
                 </div>
 
@@ -385,17 +373,11 @@ export function ClientDashboard({ onClientSelect }: ClientDashboardProps) {
                   </p>
                 </div>
 
-                {/* Action DashboardButtons */}
+                {/* Action Button */}
                 <div className="flex space-x-2 pt-2">
                   <DashboardButton size="sm" variant="secondary" className="flex-1">
                     <Eye className="h-4 w-4" />
                     View
-                  </DashboardButton>
-                  <DashboardButton size="sm" variant="secondary">
-                    <MessageSquare className="h-4 w-4" />
-                  </DashboardButton>
-                  <DashboardButton size="sm" variant="secondary">
-                    <BarChart3 className="h-4 w-4" />
                   </DashboardButton>
                 </div>
               </div>
@@ -450,9 +432,6 @@ export function ClientDashboard({ onClientSelect }: ClientDashboardProps) {
                   </DashboardButton>
                   <DashboardButton size="sm" variant="secondary">
                     <Edit className="h-4 w-4" />
-                  </DashboardButton>
-                  <DashboardButton size="sm" variant="secondary">
-                    <MoreVertical className="h-4 w-4" />
                   </DashboardButton>
                 </div>
               </div>

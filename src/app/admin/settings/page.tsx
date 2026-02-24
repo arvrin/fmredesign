@@ -13,22 +13,12 @@ import {
   Palette,
   Key,
   Building,
-  CreditCard,
   Save,
   RefreshCw,
   AlertTriangle,
   CheckCircle,
   Info,
   Zap,
-  Camera,
-  Upload,
-  Smartphone,
-  Clock,
-  FileText,
-  Users,
-  Database,
-  Monitor,
-  Lock,
   Share2
 } from 'lucide-react';
 import {
@@ -99,19 +89,6 @@ interface AdminSettings {
     payment_gateway: boolean;
     crm_integration: boolean;
   };
-  billing: {
-    plan: string;
-    usage: {
-      leads: number;
-      clients: number;
-      storage: number;
-    };
-    limits: {
-      max_leads: number;
-      max_clients: number;
-      max_storage: number;
-    };
-  };
 }
 
 export default function SettingsPage() {
@@ -173,19 +150,6 @@ export default function SettingsPage() {
       payment_gateway: false,
       crm_integration: false
     },
-    billing: {
-      plan: 'Professional',
-      usage: {
-        leads: 142,
-        clients: 28,
-        storage: 2.4
-      },
-      limits: {
-        max_leads: 1000,
-        max_clients: 50,
-        max_storage: 10
-      }
-    }
   });
 
   useEffect(() => {
@@ -310,10 +274,6 @@ export default function SettingsPage() {
                     <Share2 className="h-4 w-4" />
                     Social Media
                   </TabsTrigger>
-                  <TabsTrigger value="billing" className="justify-start gap-3">
-                    <CreditCard className="h-4 w-4" />
-                    Billing & Usage
-                  </TabsTrigger>
                 </TabsList>
               </CardContent>
             </DashboardCard>
@@ -345,16 +305,7 @@ export default function SettingsPage() {
                     </div>
                     <div className="space-y-2">
                       <h3 className="font-medium text-fm-neutral-900">Profile Photo</h3>
-                      <div className="flex gap-2">
-                        <DashboardButton size="sm" variant="secondary">
-                          <Upload className="h-4 w-4" />
-                          Upload
-                        </DashboardButton>
-                        <DashboardButton size="sm" variant="secondary">
-                          <Camera className="h-4 w-4" />
-                          Take Photo
-                        </DashboardButton>
-                      </div>
+                      <p className="text-sm text-fm-neutral-500">Avatar upload coming soon</p>
                     </div>
                   </div>
 
@@ -529,17 +480,12 @@ export default function SettingsPage() {
                 <CardContent className="space-y-4 sm:space-y-6">
                   {/* Password Section */}
                   <div className="p-3 sm:p-4 bg-fm-neutral-50 rounded-lg">
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-3">
-                      <div className="flex items-center space-x-3">
-                        <Key className="h-5 w-5 text-fm-neutral-600" />
-                        <div>
-                          <p className="font-medium text-fm-neutral-900">Password</p>
-                          <p className="text-sm text-fm-neutral-600">Last changed 30 days ago</p>
-                        </div>
+                    <div className="flex items-center space-x-3">
+                      <Key className="h-5 w-5 text-fm-neutral-600" />
+                      <div>
+                        <p className="font-medium text-fm-neutral-900">Password</p>
+                        <p className="text-sm text-fm-neutral-600">Managed via environment variable (ADMIN_PASSWORD)</p>
                       </div>
-                      <DashboardButton variant="secondary" size="sm">
-                        Change Password
-                      </DashboardButton>
                     </div>
                   </div>
 
@@ -739,80 +685,6 @@ export default function SettingsPage() {
               </DashboardCard>
             </TabsContent>
 
-            <TabsContent value="billing">
-              <div className="space-y-4 sm:space-y-6">
-                <DashboardCard variant="admin">
-                  <CardHeader>
-                    <CardTitle>Current Plan</CardTitle>
-                    <CardDescription>
-                      Your subscription and usage information
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="p-4 sm:p-6 bg-gradient-to-r from-fm-magenta-700 to-fm-magenta-500 rounded-lg text-white">
-                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                        <div>
-                          <h3 className="text-lg font-semibold">{settings.billing.plan} Plan</h3>
-                          <p className="text-white/80">Full access to all admin features</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-xl sm:text-2xl font-bold">₹4,999</p>
-                          <p className="text-white/80">per month</p>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </DashboardCard>
-
-                <DashboardCard variant="admin">
-                  <CardHeader>
-                    <CardTitle>Usage Statistics</CardTitle>
-                    <CardDescription>
-                      Current usage vs plan limits
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-                      <div className="text-center p-3 sm:p-4 border border-fm-neutral-200 rounded-lg">
-                        <p className="text-xl sm:text-2xl font-bold text-fm-magenta-700">
-                          {settings.billing.usage.leads}
-                        </p>
-                        <p className="text-sm text-fm-neutral-600">
-                          Leads ({settings.billing.limits.max_leads} limit)
-                        </p>
-                      </div>
-                      <div className="text-center p-3 sm:p-4 border border-fm-neutral-200 rounded-lg">
-                        <p className="text-xl sm:text-2xl font-bold text-fm-magenta-700">
-                          {settings.billing.usage.clients}
-                        </p>
-                        <p className="text-sm text-fm-neutral-600">
-                          Clients ({settings.billing.limits.max_clients} limit)
-                        </p>
-                      </div>
-                      <div className="text-center p-3 sm:p-4 border border-fm-neutral-200 rounded-lg">
-                        <p className="text-xl sm:text-2xl font-bold text-fm-magenta-700">
-                          {settings.billing.usage.storage} GB
-                        </p>
-                        <p className="text-sm text-fm-neutral-600">
-                          Storage ({settings.billing.limits.max_storage} GB limit)
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="space-y-4 mt-6">
-                      <DashboardButton variant="secondary" className="w-full">
-                        <FileText className="h-4 w-4" />
-                        Download Invoice
-                      </DashboardButton>
-                      <DashboardButton variant="secondary" className="w-full">
-                        <CreditCard className="h-4 w-4" />
-                        Update Payment Method
-                      </DashboardButton>
-                    </div>
-                  </CardContent>
-                </DashboardCard>
-              </div>
-            </TabsContent>
           </div>
         </div>
       </Tabs>

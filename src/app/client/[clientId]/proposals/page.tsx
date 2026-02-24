@@ -74,6 +74,7 @@ export default function ClientProposalsPage() {
   const totalValue = proposals
     .filter((p) => p.status === 'approved' || p.status === 'converted')
     .reduce((sum, p) => sum + (p.investment?.total || 0), 0);
+  const proposalCurrency = proposals.find(p => p.investment?.currency)?.investment?.currency || 'INR';
 
   if (loading) {
     return <LoadingSpinner />;
@@ -109,7 +110,7 @@ export default function ClientProposalsPage() {
         />
         <MetricCard
           title="Total Value"
-          value={totalValue > 0 ? `₹${totalValue.toLocaleString()}` : '—'}
+          value={totalValue > 0 ? (proposalCurrency === 'INR' ? `₹${totalValue.toLocaleString()}` : `${proposalCurrency} ${totalValue.toLocaleString()}`) : '—'}
           subtitle="Approved proposal value"
           icon={<DollarSign className="w-6 h-6" />}
           variant="client"
@@ -159,7 +160,7 @@ export default function ClientProposalsPage() {
                         <span className="capitalize">{proposal.proposalType}</span>
                         {proposal.investment?.total && (
                           <span className="font-medium text-fm-neutral-700">
-                            ₹{proposal.investment.total.toLocaleString()}
+                            {(proposal.investment?.currency === 'INR' || !proposal.investment?.currency) ? '₹' : proposal.investment.currency + ' '}{proposal.investment.total.toLocaleString()}
                           </span>
                         )}
                         {proposal.validUntil && (
@@ -210,7 +211,7 @@ export default function ClientProposalsPage() {
                                   )}
                                 </div>
                                 {pkg.price && (
-                                  <span className="text-fm-neutral-700 font-medium">₹{pkg.price.toLocaleString()}</span>
+                                  <span className="text-fm-neutral-700 font-medium">{(proposal.investment?.currency === 'INR' || !proposal.investment?.currency) ? '₹' : proposal.investment?.currency + ' '}{pkg.price.toLocaleString()}</span>
                                 )}
                               </div>
                             ))}
@@ -223,7 +224,7 @@ export default function ClientProposalsPage() {
                                   )}
                                 </div>
                                 {svc.price && (
-                                  <span className="text-fm-neutral-700 font-medium">₹{svc.price.toLocaleString()}</span>
+                                  <span className="text-fm-neutral-700 font-medium">{(proposal.investment?.currency === 'INR' || !proposal.investment?.currency) ? '₹' : proposal.investment?.currency + ' '}{svc.price.toLocaleString()}</span>
                                 )}
                               </div>
                             ))}

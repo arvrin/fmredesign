@@ -22,8 +22,6 @@ import {
   ArrowDownRight,
   Activity,
   Zap,
-  Award,
-  Calendar,
   Share2,
 } from 'lucide-react';
 import { useClientPortal } from '@/lib/client-portal/context';
@@ -83,7 +81,6 @@ export default function ClientReportsPage() {
   const [monthlyPerformance, setMonthlyPerformance] = useState<MonthlyPerformance[]>([]);
   const [insights, setInsights] = useState<Insight[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedPeriod, setSelectedPeriod] = useState<'monthly' | 'quarterly' | 'annual'>('monthly');
   const [shareUrl, setShareUrl] = useState<string | null>(null);
   const [shareLoading, setShareLoading] = useState(false);
 
@@ -252,34 +249,9 @@ export default function ClientReportsPage() {
       {/* Performance Chart */}
       <Card variant="client" className="mb-8" hover glow>
         <CardHeader>
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div>
-              <CardTitle className="text-lg sm:text-xl">Performance Overview</CardTitle>
-              <CardDescription>Content metrics trend over the last 6 months</CardDescription>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Button
-                variant={selectedPeriod === 'monthly' ? 'client' : 'ghost'}
-                size="sm"
-                onClick={() => setSelectedPeriod('monthly')}
-              >
-                Monthly
-              </Button>
-              <Button
-                variant={selectedPeriod === 'quarterly' ? 'client' : 'ghost'}
-                size="sm"
-                onClick={() => setSelectedPeriod('quarterly')}
-              >
-                Quarterly
-              </Button>
-              <Button
-                variant={selectedPeriod === 'annual' ? 'client' : 'ghost'}
-                size="sm"
-                onClick={() => setSelectedPeriod('annual')}
-              >
-                Annual
-              </Button>
-            </div>
+          <div>
+            <CardTitle className="text-lg sm:text-xl">Performance Overview</CardTitle>
+            <CardDescription>Content metrics trend over the last 6 months</CardDescription>
           </div>
         </CardHeader>
         <CardContent>
@@ -436,26 +408,6 @@ export default function ClientReportsPage() {
             </CardContent>
           </Card>
 
-          {/* Quick Actions */}
-          <Card variant="glass" className="mt-6">
-            <CardHeader>
-              <CardTitle className="text-lg">Quick Actions</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Button variant="ghost" size="sm" className="w-full justify-start text-fm-magenta-600">
-                <Calendar className="w-4 h-4" />
-                Schedule Performance Review
-              </Button>
-              <Button variant="ghost" size="sm" className="w-full justify-start text-fm-magenta-600">
-                <FileText className="w-4 h-4" />
-                Request Custom Report
-              </Button>
-              <Button variant="ghost" size="sm" className="w-full justify-start text-fm-magenta-600">
-                <Activity className="w-4 h-4" />
-                View Real-time Analytics
-              </Button>
-            </CardContent>
-          </Card>
         </div>
       </div>
     </>

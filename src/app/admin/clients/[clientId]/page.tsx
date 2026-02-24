@@ -16,6 +16,8 @@ import {
   ProjectsTab,
   TeamTab,
   CommunicationTab,
+  ContentTab,
+  SupportTab,
 } from '@/components/admin/client-detail';
 import { ArrowLeft, AlertCircle } from 'lucide-react';
 
@@ -51,6 +53,7 @@ export default function AdminClientDetail() {
     clientProfile,
     loading,
     error,
+    refreshProfile,
     assignedTeamMembers,
     availableTeamMembers,
     showAddTeamForm,
@@ -125,9 +128,11 @@ export default function AdminClientDetail() {
               <TabsTrigger value="overview" className="text-xs sm:text-sm">Overview</TabsTrigger>
               <TabsTrigger value="portal" className="text-xs sm:text-sm">Portal</TabsTrigger>
               <TabsTrigger value="projects" className="text-xs sm:text-sm">Projects</TabsTrigger>
+              <TabsTrigger value="content" className="text-xs sm:text-sm">Content</TabsTrigger>
               <TabsTrigger value="contracts" className="text-xs sm:text-sm">Contracts</TabsTrigger>
               <TabsTrigger value="team" className="text-xs sm:text-sm">Team</TabsTrigger>
               <TabsTrigger value="communication" className="text-xs sm:text-sm">Comms</TabsTrigger>
+              <TabsTrigger value="support" className="text-xs sm:text-sm">Support</TabsTrigger>
             </TabsList>
             {/* Right fade hint for scrollable tabs on mobile */}
             <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white to-transparent pointer-events-none sm:hidden" />
@@ -135,7 +140,7 @@ export default function AdminClientDetail() {
 
           <TabsContent value="overview" className="space-y-6">
             <SectionErrorBoundary section="Overview">
-              <OverviewTab clientProfile={clientProfile} />
+              <OverviewTab clientProfile={clientProfile} onProfileUpdate={refreshProfile} />
             </SectionErrorBoundary>
           </TabsContent>
 
@@ -166,6 +171,12 @@ export default function AdminClientDetail() {
             </SectionErrorBoundary>
           </TabsContent>
 
+          <TabsContent value="content" className="space-y-6">
+            <SectionErrorBoundary section="Content">
+              <ContentTab clientId={clientId} />
+            </SectionErrorBoundary>
+          </TabsContent>
+
           <TabsContent value="contracts" className="space-y-6">
             <SectionErrorBoundary section="Contracts">
               <ContractsTab clientId={clientId} clientName={clientProfile?.name} />
@@ -190,6 +201,12 @@ export default function AdminClientDetail() {
           <TabsContent value="communication" className="space-y-6">
             <SectionErrorBoundary section="Communication">
               <CommunicationTab activityFeed={activityFeed} loading={activityLoading} />
+            </SectionErrorBoundary>
+          </TabsContent>
+
+          <TabsContent value="support" className="space-y-6">
+            <SectionErrorBoundary section="Support">
+              <SupportTab clientId={clientId} />
             </SectionErrorBoundary>
           </TabsContent>
         </Tabs>

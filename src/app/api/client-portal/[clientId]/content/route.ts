@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { resolveClientId } from '@/lib/client-portal/resolve-client';
 import { requireClientAuth } from '@/lib/client-session';
 import { notifyAdmins } from '@/lib/notifications';
 import { notifyTeam, contentActionEmail } from '@/lib/email/send';
@@ -33,10 +34,15 @@ export async function GET(
     const authError = await requireClientAuth(request, clientId);
     if (authError) return authError;
 
+    const resolved = await resolveClientId(clientId);
+    if (!resolved) {
+      return NextResponse.json({ success: false, error: 'Client not found' }, { status: 404 });
+    }
+
     let query = supabaseAdmin
       .from('content_calendar')
       .select('*')
-      .eq('client_id', clientId)
+      .eq('client_id', resolved.id)
       .order('scheduled_date', { ascending: false });
 
     if (status) {
@@ -110,6 +116,11 @@ export async function PUT(
     const authError = await requireClientAuth(request, clientId);
     if (authError) return authError;
 
+    const resolved = await resolveClientId(clientId);
+    if (!resolved) {
+      return NextResponse.json({ success: false, error: 'Client not found' }, { status: 404 });
+    }
+
     const body = await request.json();
     const { contentId, action, feedback } = body;
 
@@ -124,9 +135,9 @@ export async function PUT(
     // Verify the content belongs to this client and is in review status
     const { data: content, error: fetchError } = await supabaseAdmin
       .from('content_calendar')
-      .select('id, status, client_id')
+      .select('id, status, client_id, title, platform')
       .eq('id', contentId)
-      .eq('client_id', clientId)
+      .eq('client_id', resolved.id)
       .single();
 
     if (fetchError || !content) {
@@ -170,8 +181,8 @@ export async function PUT(
 
     // Fire-and-forget email to team
     const emailData = contentActionEmail({
-      contentTitle: content.id,
-      platform: '',
+      contentTitle: content.title || 'Content item',
+      platform: content.platform || '',
       action: action === 'approve' ? 'approved' : 'revision_requested',
       clientFeedback: feedback || undefined,
     });

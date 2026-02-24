@@ -93,9 +93,8 @@ export function CommunicationHub({ clientId, onScheduleMeeting }: CommunicationH
       console.error('Error loading messages:', err);
     }
 
-    // Keep meetings in localStorage for now
-    const meetingData = ClientService.getClientMeetings(clientId);
-    setMeetings(meetingData);
+    // Meetings: no backend table yet, show empty
+    setMeetings([]);
   };
 
   const handleSendMessage = async () => {

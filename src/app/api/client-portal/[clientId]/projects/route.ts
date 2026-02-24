@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { resolveClientId } from '@/lib/client-portal/resolve-client';
 import { requireClientAuth } from '@/lib/client-session';
 
 export async function GET(
@@ -27,10 +28,15 @@ export async function GET(
     const authError = await requireClientAuth(request, clientId);
     if (authError) return authError;
 
+    const resolved = await resolveClientId(clientId);
+    if (!resolved) {
+      return NextResponse.json({ success: false, error: 'Client not found' }, { status: 404 });
+    }
+
     let query = supabaseAdmin
       .from('projects')
       .select('*')
-      .eq('client_id', clientId)
+      .eq('client_id', resolved.id)
       .order('created_at', { ascending: false });
 
     if (status) {

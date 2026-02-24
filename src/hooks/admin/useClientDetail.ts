@@ -95,6 +95,7 @@ export interface UseClientDetailReturn {
   clientProfile: ClientProfile | null;
   loading: boolean;
   error: string | null;
+  refreshProfile: () => Promise<void>;
 
   // Team
   assignedTeamMembers: AssignedTeamMember[];
@@ -178,6 +179,20 @@ export function useClientDetail(clientId: string): UseClientDetailReturn {
       setAvailableTeamMembers(available);
     } catch (err) {
       console.error('Error loading team data:', err);
+    }
+  }, [clientId]);
+
+  // ── Refresh profile (re-fetch without full loading state) ──
+  const refreshProfile = useCallback(async () => {
+    if (!clientId) return;
+    try {
+      const response = await fetch(`/api/client-portal/${clientId}/profile`);
+      if (response.ok) {
+        const data = await response.json();
+        setClientProfile(data.data);
+      }
+    } catch (err) {
+      console.error('Error refreshing client profile:', err);
     }
   }, [clientId]);
 
@@ -362,6 +377,7 @@ export function useClientDetail(clientId: string): UseClientDetailReturn {
     clientProfile,
     loading,
     error,
+    refreshProfile,
     assignedTeamMembers,
     availableTeamMembers,
     showAddTeamForm,

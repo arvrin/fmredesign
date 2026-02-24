@@ -93,6 +93,8 @@ export default function ContentCalendarPage() {
       if (typeFilter !== 'all') params.set('type', typeFilter);
       if (platformFilter !== 'all') params.set('platform', platformFilter);
       if (clientFilter !== 'all') params.set('clientId', clientFilter);
+      if (searchQuery) params.set('search', searchQuery);
+      if (projectFilter !== 'all') params.set('projectId', projectFilter);
 
       const response = await fetch(`/api/content?${params}`);
       const result = await response.json();
@@ -115,7 +117,7 @@ export default function ContentCalendarPage() {
     } finally {
       setCalendarLoading(false);
     }
-  }, [statusFilter, typeFilter, platformFilter, clientFilter]);
+  }, [statusFilter, typeFilter, platformFilter, clientFilter, searchQuery, projectFilter]);
 
   const handleCalendarDateRangeChange = useCallback(
     (start: string, end: string) => {

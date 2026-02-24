@@ -19,10 +19,6 @@ import {
   Send,
   Search,
   HelpCircle,
-  BookOpen,
-  Video,
-  Download,
-  ExternalLink,
   MessageCircle,
   ChevronRight,
   Plus
@@ -222,7 +218,7 @@ export default function ClientSupportPage() {
             </div>
             <h3 className="font-semibold text-fm-neutral-900 mb-2">Phone Support</h3>
             <p className="text-sm text-fm-neutral-600 mb-4">Speak directly with your account manager</p>
-            <a href="tel:+919876543210" className="w-full">
+            <a href="tel:+918888886321" className="w-full">
               <Button variant="ghost" size="sm" className="w-full text-fm-magenta-600">
                 Call Now
               </Button>
@@ -516,26 +512,14 @@ export default function ClientSupportPage() {
             )}
           </div>
 
-          {/* Resources */}
           <Card variant="client" className="mt-8">
             <CardHeader>
-              <CardTitle className="text-lg">Additional Resources</CardTitle>
+              <CardTitle className="text-lg">Need More Help?</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
-              <Button variant="ghost" size="sm" className="w-full justify-start text-fm-magenta-600">
-                <BookOpen className="w-4 h-4" />
-                User Guide & Documentation
-                <ExternalLink className="w-4 h-4 ml-auto" />
-              </Button>
-              <Button variant="ghost" size="sm" className="w-full justify-start text-fm-magenta-600">
-                <Video className="w-4 h-4" />
-                Tutorial Videos
-                <ExternalLink className="w-4 h-4 ml-auto" />
-              </Button>
-              <Button variant="ghost" size="sm" className="w-full justify-start text-fm-magenta-600">
-                <Download className="w-4 h-4" />
-                Download Resources
-              </Button>
+            <CardContent>
+              <p className="text-sm text-fm-neutral-600">
+                Contact your account manager for personalized assistance or create a support ticket.
+              </p>
             </CardContent>
           </Card>
         </div>

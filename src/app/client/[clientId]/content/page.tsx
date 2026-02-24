@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { useSearchParams } from 'next/navigation';
 import {
   MetricCard,
   DashboardCard as Card,
@@ -29,7 +30,8 @@ import {
   Twitter,
   Linkedin,
   Youtube,
-  Globe
+  Globe,
+  X,
 } from 'lucide-react';
 import { useClientPortal } from '@/lib/client-portal/context';
 import { getStatusColor } from '@/lib/client-portal/status-colors';
@@ -66,6 +68,8 @@ interface ContentItem {
 
 export default function ClientContentPage() {
   const { clientId } = useClientPortal();
+  const searchParams = useSearchParams();
+  const initialView = searchParams.get('view') === 'calendar' ? 'calendar' : 'grid';
 
   const [contentItems, setContentItems] = useState<ContentItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -74,10 +78,11 @@ export default function ClientContentPage() {
   const [feedbackMap, setFeedbackMap] = useState<Record<string, string>>({});
   const [actioningId, setActioningId] = useState<string | null>(null);
   const [expandedReviewId, setExpandedReviewId] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<'grid' | 'calendar'>('grid');
+  const [viewMode, setViewMode] = useState<'grid' | 'calendar'>(initialView);
   const [calendarItems, setCalendarItems] = useState<CalendarContentItem[]>([]);
   const [calendarLoading, setCalendarLoading] = useState(false);
   const calendarRangeRef = useRef<{ start: string; end: string } | null>(null);
+  const [detailPanelItem, setDetailPanelItem] = useState<ContentItem | null>(null);
 
   useEffect(() => {
     if (!clientId) return;
@@ -385,8 +390,134 @@ export default function ClientContentPage() {
           loading={calendarLoading}
           variant="client"
           onDateRangeChange={handleCalendarDateRangeChange}
-          onItemClick={() => {}}
+          onItemClick={(id) => {
+            const item = contentItems.find((c) => c.id === id);
+            if (item) setDetailPanelItem(item);
+          }}
         />
+      )}
+
+      {/* Content Detail Slide-Over Panel */}
+      {detailPanelItem && (
+        <div className="fixed inset-0" style={{ zIndex: 50 }}>
+          <div
+            className="absolute inset-0 bg-black/30"
+            onClick={() => setDetailPanelItem(null)}
+          />
+          <div className="absolute right-0 top-0 bottom-0 w-full max-w-md bg-white shadow-xl overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b border-fm-neutral-100 px-4 py-3 flex items-center justify-between">
+              <h3 className="font-semibold text-fm-neutral-900 truncate">
+                {detailPanelItem.title}
+              </h3>
+              <button
+                onClick={() => setDetailPanelItem(null)}
+                className="p-1.5 rounded-lg hover:bg-fm-neutral-100 transition-colors"
+              >
+                <X className="h-5 w-5 text-fm-neutral-500" />
+              </button>
+            </div>
+            <div className="p-4 space-y-4">
+              <div className="flex items-center gap-2 flex-wrap">
+                <Badge className={getStatusColor(detailPanelItem.status)} variant="secondary">
+                  {detailPanelItem.status}
+                </Badge>
+                <span className="px-2 py-1 bg-blue-50 text-blue-700 rounded-md text-xs font-medium">
+                  {detailPanelItem.platform}
+                </span>
+                <span className="text-xs text-fm-neutral-500 capitalize">
+                  {detailPanelItem.type}
+                </span>
+              </div>
+              {detailPanelItem.description && (
+                <div>
+                  <p className="text-sm font-medium text-fm-neutral-700 mb-1">Description</p>
+                  <p className="text-sm text-fm-neutral-600">{detailPanelItem.description}</p>
+                </div>
+              )}
+              <div>
+                <p className="text-sm font-medium text-fm-neutral-700 mb-1">Scheduled Date</p>
+                <p className="text-sm text-fm-neutral-600">
+                  {detailPanelItem.scheduledDate
+                    ? new Date(detailPanelItem.scheduledDate).toLocaleDateString('en-US', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })
+                    : 'Not scheduled'}
+                </p>
+              </div>
+              {detailPanelItem.author && (
+                <div>
+                  <p className="text-sm font-medium text-fm-neutral-700 mb-1">Author</p>
+                  <p className="text-sm text-fm-neutral-600">{detailPanelItem.author}</p>
+                </div>
+              )}
+
+              {/* Approval actions for review items */}
+              {detailPanelItem.status === 'review' && (
+                <div className="pt-4 border-t border-fm-neutral-100 space-y-3">
+                  <textarea
+                    value={feedbackMap[detailPanelItem.id] || ''}
+                    onChange={(e) =>
+                      setFeedbackMap((prev) => ({
+                        ...prev,
+                        [detailPanelItem.id]: e.target.value,
+                      }))
+                    }
+                    placeholder="Add feedback (optional)..."
+                    rows={3}
+                    className="w-full rounded-md border border-fm-neutral-300 bg-fm-neutral-50 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-fm-magenta-500"
+                  />
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant="client"
+                      size="sm"
+                      disabled={actioningId === detailPanelItem.id}
+                      onClick={() => {
+                        handleContentAction(detailPanelItem.id, 'approve');
+                        setDetailPanelItem(null);
+                      }}
+                    >
+                      <CheckCircle2 className="w-4 h-4" />
+                      Approve
+                    </Button>
+                    <Button
+                      variant="warning-ghost"
+                      size="sm"
+                      disabled={actioningId === detailPanelItem.id}
+                      onClick={() => {
+                        handleContentAction(detailPanelItem.id, 'request_revision');
+                        setDetailPanelItem(null);
+                      }}
+                    >
+                      Request Revision
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {detailPanelItem.clientFeedback && (
+                <div className="pt-3 border-t border-fm-neutral-100">
+                  <p className="text-xs text-fm-neutral-500 mb-1">Your Feedback</p>
+                  <p className="text-sm text-fm-neutral-700 bg-green-50 rounded-md p-2">
+                    {detailPanelItem.clientFeedback}
+                  </p>
+                </div>
+              )}
+              {detailPanelItem.revisionNotes && (
+                <div className="pt-3 border-t border-fm-neutral-100">
+                  <p className="text-xs text-fm-neutral-500 mb-1">Revision Notes</p>
+                  <p className="text-sm text-fm-neutral-700 bg-orange-50 rounded-md p-2">
+                    {detailPanelItem.revisionNotes}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Content Grid */}

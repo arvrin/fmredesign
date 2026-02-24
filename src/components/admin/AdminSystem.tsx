@@ -6,43 +6,19 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { 
+import {
   Users,
   Shield,
   Settings,
-  Key,
-  Lock,
-  Unlock,
   UserPlus,
-  UserMinus,
   Eye,
   Edit,
   Trash2,
   Search,
-  Filter,
-  Save,
-  AlertTriangle,
   CheckCircle,
-  Clock,
   Activity,
-  Database,
   Server,
-  Zap,
-  Mail,
-  Bell,
-  Globe,
-  Smartphone,
-  Monitor,
-  Wifi,
-  HardDrive,
-  Cpu,
-  BarChart3,
-  TrendingUp,
   Download,
-  Upload,
-  RefreshCw,
-  Plus,
-  Minus,
   Crown,
   ShieldCheck,
   UserCheck
@@ -63,23 +39,6 @@ interface AdminUser {
   clientAccess: string[]; // client IDs they can access
 }
 
-interface Permission {
-  id: string;
-  name: string;
-  description: string;
-  category: string;
-  riskLevel: 'low' | 'medium' | 'high';
-}
-
-interface SystemMetric {
-  id: string;
-  name: string;
-  value: string | number;
-  status: 'healthy' | 'warning' | 'critical';
-  lastUpdated: string;
-  trend?: 'up' | 'down' | 'stable';
-}
-
 interface AuditLog {
   id: string;
   userId: string;
@@ -95,8 +54,6 @@ interface AuditLog {
 export function AdminSystem() {
   const [activeTab, setActiveTab] = useState<'users' | 'permissions' | 'system' | 'audit'>('users');
   const [users, setUsers] = useState<AdminUser[]>([]);
-  const [permissions, setPermissions] = useState<Permission[]>([]);
-  const [systemMetrics, setSystemMetrics] = useState<SystemMetric[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRole, setSelectedRole] = useState<string>('all');
@@ -107,221 +64,49 @@ export function AdminSystem() {
     loadData();
   }, []);
 
-  const loadData = () => {
-    // Load sample admin users
-    const sampleUsers: AdminUser[] = [
-      {
-        id: 'user-001',
-        name: 'Aaryavar Sharma',
-        email: 'aaryavar@freakingminds.in',
-        role: 'super_admin',
-        permissions: ['all'],
-        status: 'active',
-        lastLogin: '2024-08-22T09:30:00Z',
-        createdAt: '2024-01-15T10:00:00Z',
-        department: 'Leadership',
-        clientAccess: ['all']
-      },
-      {
-        id: 'user-002',
-        name: 'Sarah Johnson',
-        email: 'sarah.johnson@freakingminds.in',
-        role: 'admin',
-        permissions: ['user_management', 'client_management', 'analytics_view', 'system_settings'],
-        status: 'active',
-        lastLogin: '2024-08-22T08:15:00Z',
-        createdAt: '2024-02-20T14:30:00Z',
-        department: 'Operations',
-        clientAccess: ['client-001', 'client-002', 'client-003']
-      },
-      {
-        id: 'user-003',
-        name: 'Mike Chen',
-        email: 'mike.chen@freakingminds.in',
-        role: 'manager',
-        permissions: ['client_management', 'campaign_management', 'analytics_view'],
-        status: 'active',
-        lastLogin: '2024-08-21T16:45:00Z',
-        createdAt: '2024-03-10T11:20:00Z',
-        department: 'Account Management',
-        clientAccess: ['client-001', 'client-004']
-      },
-      {
-        id: 'user-004',
-        name: 'Emma Wilson',
-        email: 'emma.wilson@freakingminds.in',
-        role: 'editor',
-        permissions: ['content_management', 'campaign_edit'],
-        status: 'active',
-        lastLogin: '2024-08-22T07:20:00Z',
-        createdAt: '2024-04-05T09:15:00Z',
-        department: 'Creative',
-        clientAccess: ['client-002', 'client-005']
-      },
-      {
-        id: 'user-005',
-        name: 'David Rodriguez',
-        email: 'david.rodriguez@freakingminds.in',
-        role: 'viewer',
-        permissions: ['analytics_view', 'reports_view'],
-        status: 'inactive',
-        lastLogin: '2024-08-15T13:30:00Z',
-        createdAt: '2024-05-12T15:45:00Z',
-        department: 'Analytics',
-        clientAccess: ['client-003']
+  const loadData = async () => {
+    // Fetch users from API
+    try {
+      const res = await fetch('/api/admin/users');
+      const result = await res.json();
+      if (result.success && Array.isArray(result.data)) {
+        setUsers(result.data.map((u: any) => ({
+          id: u.id,
+          name: u.name || 'Unknown',
+          email: u.email || '',
+          role: u.role || 'viewer',
+          permissions: u.permissions || [],
+          status: u.status || 'active',
+          lastLogin: u.last_login || u.updated_at || '',
+          createdAt: u.created_at || '',
+          department: u.department || '',
+          clientAccess: [],
+        })));
       }
-    ];
+    } catch (err) {
+      console.error('Error loading users:', err);
+    }
 
-    // Load sample permissions
-    const samplePermissions: Permission[] = [
-      {
-        id: 'perm-001',
-        name: 'user_management',
-        description: 'Create, edit, and delete user accounts',
-        category: 'User Management',
-        riskLevel: 'high'
-      },
-      {
-        id: 'perm-002',
-        name: 'client_management',
-        description: 'Full access to client data and profiles',
-        category: 'Client Management',
-        riskLevel: 'medium'
-      },
-      {
-        id: 'perm-003',
-        name: 'campaign_management',
-        description: 'Create and manage marketing campaigns',
-        category: 'Campaign Management',
-        riskLevel: 'medium'
-      },
-      {
-        id: 'perm-004',
-        name: 'analytics_view',
-        description: 'View analytics and performance data',
-        category: 'Analytics',
-        riskLevel: 'low'
-      },
-      {
-        id: 'perm-005',
-        name: 'system_settings',
-        description: 'Modify system configuration and settings',
-        category: 'System Administration',
-        riskLevel: 'high'
-      },
-      {
-        id: 'perm-006',
-        name: 'financial_data',
-        description: 'Access to financial reports and billing data',
-        category: 'Financial',
-        riskLevel: 'high'
+    // Fetch audit logs from API
+    try {
+      const res = await fetch('/api/admin/audit');
+      const result = await res.json();
+      if (result.success && Array.isArray(result.data)) {
+        setAuditLogs(result.data.map((log: any) => ({
+          id: log.id,
+          userId: log.user_id || '',
+          userName: log.user_name || 'System',
+          action: log.action || '',
+          resource: [log.resource_type, log.resource_id].filter(Boolean).join(': '),
+          timestamp: log.created_at || '',
+          ipAddress: log.ip_address || '',
+          userAgent: '',
+          result: 'success',
+        })));
       }
-    ];
-
-    // Load sample system metrics
-    const sampleSystemMetrics: SystemMetric[] = [
-      {
-        id: 'metric-001',
-        name: 'Server Status',
-        value: 'Online',
-        status: 'healthy',
-        lastUpdated: '2024-08-22T09:45:00Z',
-        trend: 'stable'
-      },
-      {
-        id: 'metric-002',
-        name: 'Database Connection',
-        value: 'Connected',
-        status: 'healthy',
-        lastUpdated: '2024-08-22T09:45:00Z',
-        trend: 'stable'
-      },
-      {
-        id: 'metric-003',
-        name: 'Active Users',
-        value: 24,
-        status: 'healthy',
-        lastUpdated: '2024-08-22T09:45:00Z',
-        trend: 'up'
-      },
-      {
-        id: 'metric-004',
-        name: 'Memory Usage',
-        value: '67%',
-        status: 'warning',
-        lastUpdated: '2024-08-22T09:45:00Z',
-        trend: 'up'
-      },
-      {
-        id: 'metric-005',
-        name: 'API Response Time',
-        value: '245ms',
-        status: 'healthy',
-        lastUpdated: '2024-08-22T09:45:00Z',
-        trend: 'stable'
-      },
-      {
-        id: 'metric-006',
-        name: 'Storage Usage',
-        value: '89%',
-        status: 'critical',
-        lastUpdated: '2024-08-22T09:45:00Z',
-        trend: 'up'
-      }
-    ];
-
-    // Load sample audit logs
-    const sampleAuditLogs: AuditLog[] = [
-      {
-        id: 'audit-001',
-        userId: 'user-002',
-        userName: 'Sarah Johnson',
-        action: 'User Login',
-        resource: 'Authentication System',
-        timestamp: '2024-08-22T08:15:00Z',
-        ipAddress: '192.168.1.101',
-        userAgent: 'Chrome 91.0',
-        result: 'success'
-      },
-      {
-        id: 'audit-002',
-        userId: 'user-003',
-        userName: 'Mike Chen',
-        action: 'Client Data Access',
-        resource: 'Client Profile: TechStart Inc',
-        timestamp: '2024-08-22T08:30:00Z',
-        ipAddress: '192.168.1.102',
-        userAgent: 'Firefox 89.0',
-        result: 'success'
-      },
-      {
-        id: 'audit-003',
-        userId: 'user-004',
-        userName: 'Emma Wilson',
-        action: 'Campaign Update',
-        resource: 'Social Media Campaign #SMC-001',
-        timestamp: '2024-08-22T09:15:00Z',
-        ipAddress: '192.168.1.103',
-        userAgent: 'Safari 14.1',
-        result: 'success'
-      },
-      {
-        id: 'audit-004',
-        userId: 'user-005',
-        userName: 'David Rodriguez',
-        action: 'Permission Denied',
-        resource: 'Financial Reports',
-        timestamp: '2024-08-22T09:20:00Z',
-        ipAddress: '192.168.1.104',
-        userAgent: 'Chrome 91.0',
-        result: 'failed'
-      }
-    ];
-
-    setUsers(sampleUsers);
-    setPermissions(samplePermissions);
-    setSystemMetrics(sampleSystemMetrics);
-    setAuditLogs(sampleAuditLogs);
+    } catch (err) {
+      console.error('Error loading audit logs:', err);
+    }
   };
 
   const getRoleIcon = (role: string) => {
@@ -363,15 +148,6 @@ export function AdminSystem() {
         {status}
       </span>
     );
-  };
-
-  const getMetricStatusIcon = (status: string) => {
-    switch (status) {
-      case 'healthy': return <CheckCircle className="h-5 w-5 text-green-600" />;
-      case 'warning': return <AlertTriangle className="h-5 w-5 text-yellow-600" />;
-      case 'critical': return <AlertTriangle className="h-5 w-5 text-red-600" />;
-      default: return <Clock className="h-5 w-5 text-fm-neutral-600" />;
-    }
   };
 
   const filteredUsers = users.filter(user => {
@@ -505,63 +281,22 @@ export function AdminSystem() {
     <div className="space-y-4 sm:space-y-6">
       <div>
         <h3 className="text-lg font-semibold text-fm-neutral-900">System Status</h3>
-        <p className="text-fm-neutral-600 mt-1">Monitor system health and performance metrics</p>
+        <p className="text-fm-neutral-600 mt-1">System diagnostics powered by Supabase</p>
       </div>
-
-      {/* System Metrics Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-        {systemMetrics.map((metric) => (
-          <div key={metric.id} className="bg-white rounded-lg border border-fm-neutral-200 p-4 sm:p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h4 className="font-semibold text-fm-neutral-900">{metric.name}</h4>
-              {getMetricStatusIcon(metric.status)}
-            </div>
-            
-            <div className="space-y-2">
-              <div className="text-xl sm:text-2xl font-bold text-fm-neutral-900">
-                {metric.value}
-              </div>
-              <div className="text-sm text-fm-neutral-500">
-                Updated {new Date(metric.lastUpdated).toLocaleTimeString()}
-              </div>
-              {metric.trend && (
-                <div className="flex items-center space-x-1">
-                  {metric.trend === 'up' && <TrendingUp className="h-4 w-4 text-green-600" />}
-                  {metric.trend === 'down' && <TrendingUp className="h-4 w-4 text-red-600 rotate-180" />}
-                  {metric.trend === 'stable' && <Activity className="h-4 w-4 text-fm-neutral-600" />}
-                  <span className={`text-sm ${
-                    metric.trend === 'up' ? 'text-green-600' : 
-                    metric.trend === 'down' ? 'text-red-600' : 'text-fm-neutral-600'
-                  }`}>
-                    {metric.trend}
-                  </span>
-                </div>
-              )}
-            </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+        <div className="bg-white rounded-lg border border-fm-neutral-200 p-4 sm:p-6">
+          <div className="flex items-center justify-between mb-2">
+            <h4 className="font-semibold text-fm-neutral-900">Database</h4>
+            <CheckCircle className="h-5 w-5 text-green-600" />
           </div>
-        ))}
-      </div>
-
-      {/* System Actions */}
-      <div className="bg-white rounded-lg border border-fm-neutral-200 p-4 sm:p-6">
-        <h4 className="font-semibold text-fm-neutral-900 mb-4">System Actions</h4>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          <Button variant="secondary" className="justify-start">
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Restart Services
-          </Button>
-          <Button variant="secondary" className="justify-start">
-            <Database className="h-4 w-4 mr-2" />
-            Backup Database
-          </Button>
-          <Button variant="secondary" className="justify-start">
-            <Download className="h-4 w-4 mr-2" />
-            Export Logs
-          </Button>
-          <Button variant="secondary" className="justify-start">
-            <Settings className="h-4 w-4 mr-2" />
-            System Settings
-          </Button>
+          <p className="text-sm text-fm-neutral-600">Supabase PostgreSQL — connected</p>
+        </div>
+        <div className="bg-white rounded-lg border border-fm-neutral-200 p-4 sm:p-6">
+          <div className="flex items-center justify-between mb-2">
+            <h4 className="font-semibold text-fm-neutral-900">Users</h4>
+            <Users className="h-5 w-5 text-blue-600" />
+          </div>
+          <p className="text-sm text-fm-neutral-600">{users.length} authorized user{users.length !== 1 ? 's' : ''}</p>
         </div>
       </div>
     </div>

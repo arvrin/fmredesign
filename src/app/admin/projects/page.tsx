@@ -10,7 +10,6 @@ import { useRouter } from 'next/navigation';
 import {
   Plus,
   Search,
-  Filter,
   Calendar,
   Users,
   DollarSign,
@@ -55,7 +54,6 @@ export default function ProjectsPage() {
   const [typeFilter, setTypeFilter] = useState<ProjectType | 'all'>('all');
   const [sortBy, setSortBy] = useState<'name' | 'startDate' | 'endDate' | 'status' | 'budget'>('startDate');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
-  const [showFilters, setShowFilters] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
   // Load projects
@@ -298,14 +296,6 @@ export default function ProjectsPage() {
               <option value="full_service">Full Service</option>
             </Select>
 
-            <DashboardButton
-              variant="secondary"
-              onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center gap-2"
-            >
-              <Filter className="h-4 w-4" />
-              Filters
-            </DashboardButton>
           </div>
         </div>
       </DashboardCard>
