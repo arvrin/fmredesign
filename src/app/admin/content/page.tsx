@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Plus,
@@ -25,11 +25,10 @@ import {
   Hash,
   AtSign,
   Sparkles,
-  X,
-  Loader2,
   ChevronDown,
   LayoutList,
   Layers,
+  CalendarDays,
 } from 'lucide-react';
 import { adminToast } from '@/lib/admin/toast';
 import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
@@ -50,6 +49,8 @@ import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/select-native';
 import { SocialPublishStatus } from '@/components/admin/social/SocialPublishStatus';
 import { Pagination } from '@/components/admin/Pagination';
+import { ContentCalendar } from '@/components/content-calendar';
+import type { CalendarContentItem } from '@/components/content-calendar';
 import { getPlatformColor } from '@/lib/admin/format-helpers';
 import type { ContentItem, ContentStatus, ContentType, Platform } from '@/lib/admin/project-types';
 
@@ -71,14 +72,69 @@ export default function ContentCalendarPage() {
   const [projects, setProjects] = useState<any[]>([]);
   const [clients, setClients] = useState<{ id: string; name: string }[]>([]);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<'grouped' | 'flat'>('grouped');
+  const [viewMode, setViewMode] = useState<'grouped' | 'flat' | 'calendar'>('grouped');
   const [expandedClients, setExpandedClients] = useState<Set<string>>(new Set());
 
-  // AI Generate modal state
-  const [showAiModal, setShowAiModal] = useState(false);
-  const [aiGenerating, setAiGenerating] = useState(false);
-  const [aiWorkflowType, setAiWorkflowType] = useState<'monthly_calendar' | 'holiday_event'>('monthly_calendar');
-  const [aiClientId, setAiClientId] = useState<string>('');
+  // Calendar view state
+  const [calendarItems, setCalendarItems] = useState<CalendarContentItem[]>([]);
+  const [calendarLoading, setCalendarLoading] = useState(false);
+  const calendarRangeRef = useRef<{ start: string; end: string } | null>(null);
+
+  // Calendar data fetching
+  const fetchCalendarContent = useCallback(async (startDate: string, endDate: string) => {
+    try {
+      setCalendarLoading(true);
+      const params = new URLSearchParams();
+      params.set('startDate', startDate);
+      params.set('endDate', endDate);
+      params.set('sortBy', 'scheduledDate');
+      params.set('sortDirection', 'asc');
+      if (statusFilter !== 'all') params.set('status', statusFilter);
+      if (typeFilter !== 'all') params.set('type', typeFilter);
+      if (platformFilter !== 'all') params.set('platform', platformFilter);
+      if (clientFilter !== 'all') params.set('clientId', clientFilter);
+
+      const response = await fetch(`/api/content?${params}`);
+      const result = await response.json();
+
+      if (result.success) {
+        const mapped: CalendarContentItem[] = (result.data || []).map((c: any) => ({
+          id: c.id,
+          title: c.title || 'Untitled',
+          scheduledDate: c.scheduledDate || '',
+          status: c.status || 'draft',
+          type: c.type || 'post',
+          platform: c.platform || 'website',
+          clientId: c.clientId,
+          description: c.description,
+        }));
+        setCalendarItems(mapped);
+      }
+    } catch (error) {
+      console.error('Error loading calendar content:', error);
+    } finally {
+      setCalendarLoading(false);
+    }
+  }, [statusFilter, typeFilter, platformFilter, clientFilter]);
+
+  const handleCalendarDateRangeChange = useCallback(
+    (start: string, end: string) => {
+      calendarRangeRef.current = { start, end };
+      if (viewMode === 'calendar') {
+        fetchCalendarContent(start, end);
+      }
+    },
+    [viewMode, fetchCalendarContent]
+  );
+
+  // Re-fetch calendar data when filters change while in calendar mode
+  useEffect(() => {
+    if (viewMode === 'calendar' && calendarRangeRef.current) {
+      fetchCalendarContent(calendarRangeRef.current.start, calendarRangeRef.current.end);
+    }
+  }, [viewMode, fetchCalendarContent]);
+
+  // AI Generate — disabled (no backend endpoint yet; use n8n workflow)
 
   // Build API URL from filter state and fetch content
   const fetchContent = useCallback(async () => {
@@ -225,34 +281,6 @@ export default function ContentCalendarPage() {
     }
   };
 
-  const handleAiGenerate = async () => {
-    setAiGenerating(true);
-    try {
-      const response = await fetch('/api/admin/content/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          workflow_type: aiWorkflowType,
-          client_id: aiClientId || undefined,
-        }),
-      });
-      const result = await response.json();
-      if (response.ok && result.success) {
-        adminToast.success(result.message || 'Content generation started');
-        setShowAiModal(false);
-        // Re-fetch content after a short delay to show new drafts
-        setTimeout(() => fetchContent(), 3000);
-      } else {
-        adminToast.error(result.error || 'Failed to trigger content generation');
-      }
-    } catch (error) {
-      console.error('Error triggering AI generation:', error);
-      adminToast.error('Error triggering content generation');
-    } finally {
-      setAiGenerating(false);
-    }
-  };
-
   const handleDeleteContent = async (contentId: string) => {
     try {
       const response = await fetch(`/api/content?id=${contentId}`, {
@@ -307,7 +335,8 @@ export default function ContentCalendarPage() {
             <DashboardButton
               variant="secondary"
               size="sm"
-              onClick={() => setShowAiModal(true)}
+              disabled
+              title="Use n8n workflow for AI generation"
             >
               <Sparkles className="h-4 w-4" />
               AI Generate
@@ -388,6 +417,17 @@ export default function ContentCalendarPage() {
               <LayoutList className="h-4 w-4" />
               Flat
             </button>
+            <button
+              onClick={() => setViewMode('calendar')}
+              className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors ${
+                viewMode === 'calendar'
+                  ? 'bg-fm-magenta-600 text-white'
+                  : 'bg-white text-fm-neutral-600 hover:bg-fm-neutral-50'
+              }`}
+            >
+              <CalendarDays className="h-4 w-4" />
+              Calendar
+            </button>
           </div>
         </div>
 
@@ -457,6 +497,23 @@ export default function ContentCalendarPage() {
           </Select>
         </div>
       </DashboardCard>
+
+      {/* Calendar View */}
+      {viewMode === 'calendar' && (
+        <ContentCalendar
+          items={calendarItems}
+          loading={calendarLoading}
+          variant="admin"
+          onDateRangeChange={handleCalendarDateRangeChange}
+          onItemClick={(id) => router.push(`/admin/content/${id}`)}
+          getClientName={(clientId) =>
+            clients.find((c) => c.id === clientId)?.name || 'Unknown'
+          }
+        />
+      )}
+
+      {/* List / Grouped views (hidden in calendar mode) */}
+      {viewMode !== 'calendar' && <>
 
       {/* Expand/Collapse controls for grouped view */}
       {viewMode === 'grouped' && filteredContent.length > 0 && (
@@ -793,6 +850,8 @@ export default function ContentCalendarPage() {
         onPageChange={setPage}
       />
 
+      </>}
+
       <ConfirmDialog
         open={!!deleteConfirm}
         title="Delete Content"
@@ -806,126 +865,6 @@ export default function ContentCalendarPage() {
         onCancel={() => setDeleteConfirm(null)}
       />
 
-      {/* AI Generate Modal */}
-      {showAiModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4" style={{ zIndex: 50 }}>
-          <DashboardCard variant="admin" className="w-full max-w-md">
-            <CardHeader className="flex flex-row items-center justify-between pb-4">
-              <CardTitle className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-violet-600" />
-                AI Content Generation
-              </CardTitle>
-              <button
-                onClick={() => setShowAiModal(false)}
-                className="text-fm-neutral-400 hover:text-fm-neutral-600 transition-colors"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </CardHeader>
-            <CardContent className="space-y-5">
-              {/* Workflow Type */}
-              <div>
-                <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
-                  Generation Type
-                </label>
-                <div className="space-y-2">
-                  <label className="flex items-start gap-3 p-3 rounded-lg border border-fm-neutral-200 cursor-pointer hover:bg-fm-neutral-50 transition-colors">
-                    <input
-                      type="radio"
-                      name="workflow_type"
-                      value="monthly_calendar"
-                      checked={aiWorkflowType === 'monthly_calendar'}
-                      onChange={() => setAiWorkflowType('monthly_calendar')}
-                      className="mt-0.5"
-                    />
-                    <div>
-                      <div className="font-medium text-sm">Monthly Calendar Fill</div>
-                      <div className="text-xs text-fm-neutral-500">
-                        Generate 16 posts for this month (educational, promotional, engagement mix)
-                      </div>
-                    </div>
-                  </label>
-                  <label className="flex items-start gap-3 p-3 rounded-lg border border-fm-neutral-200 cursor-pointer hover:bg-fm-neutral-50 transition-colors">
-                    <input
-                      type="radio"
-                      name="workflow_type"
-                      value="holiday_event"
-                      checked={aiWorkflowType === 'holiday_event'}
-                      onChange={() => setAiWorkflowType('holiday_event')}
-                      className="mt-0.5"
-                    />
-                    <div>
-                      <div className="font-medium text-sm">Holiday & Event Posts</div>
-                      <div className="text-xs text-fm-neutral-500">
-                        Generate posts for upcoming Indian holidays and global events (next 14 days)
-                      </div>
-                    </div>
-                  </label>
-                </div>
-              </div>
-
-              {/* Client Selection */}
-              <div>
-                <label className="block text-sm font-medium text-fm-neutral-700 mb-2">
-                  Client (optional)
-                </label>
-                <Select
-                  value={aiClientId}
-                  onChange={(e) => setAiClientId(e.target.value)}
-                >
-                  <option value="">All active clients</option>
-                  {clients.map((client) => (
-                    <option key={client.id} value={client.id}>
-                      {client.name}
-                    </option>
-                  ))}
-                </Select>
-                <p className="text-xs text-fm-neutral-500 mt-1">
-                  Leave empty to generate for all active clients
-                </p>
-              </div>
-
-              {/* Info */}
-              <div className="bg-violet-50 rounded-lg p-3">
-                <p className="text-xs text-violet-700">
-                  Drafts will appear in 1-2 minutes. All AI-generated content is marked as &quot;Draft&quot; for your review before publishing.
-                </p>
-              </div>
-
-              {/* Actions */}
-              <div className="flex items-center gap-3 pt-2">
-                <DashboardButton
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowAiModal(false)}
-                  disabled={aiGenerating}
-                >
-                  Cancel
-                </DashboardButton>
-                <DashboardButton
-                  variant="primary"
-                  size="sm"
-                  onClick={handleAiGenerate}
-                  disabled={aiGenerating}
-                  className="flex-1"
-                >
-                  {aiGenerating ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      Generating...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="h-4 w-4" />
-                      Generate Content
-                    </>
-                  )}
-                </DashboardButton>
-              </div>
-            </CardContent>
-          </DashboardCard>
-        </div>
-      )}
     </div>
   );
 }

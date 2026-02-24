@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   MetricCard,
   DashboardCard as Card,
@@ -11,6 +11,8 @@ import {
 import { Badge } from '@/components/ui/Badge';
 import {
   Calendar,
+  CalendarDays,
+  LayoutGrid,
   FileText,
   Video,
   Image,
@@ -35,6 +37,8 @@ import { downloadCSV } from '@/lib/client-portal/export';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { EmptyState } from '@/components/ui/empty-state';
 import { FilterTabBar } from '@/components/ui/filter-tab-bar';
+import { ContentCalendar } from '@/components/content-calendar';
+import type { CalendarContentItem } from '@/components/content-calendar';
 
 interface ContentItem {
   id: string;
@@ -70,6 +74,10 @@ export default function ClientContentPage() {
   const [feedbackMap, setFeedbackMap] = useState<Record<string, string>>({});
   const [actioningId, setActioningId] = useState<string | null>(null);
   const [expandedReviewId, setExpandedReviewId] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'grid' | 'calendar'>('grid');
+  const [calendarItems, setCalendarItems] = useState<CalendarContentItem[]>([]);
+  const [calendarLoading, setCalendarLoading] = useState(false);
+  const calendarRangeRef = useRef<{ start: string; end: string } | null>(null);
 
   useEffect(() => {
     if (!clientId) return;
@@ -114,6 +122,55 @@ export default function ClientContentPage() {
 
     fetchData();
   }, [clientId]);
+
+  // Calendar data fetching
+  const fetchCalendarContent = useCallback(async (startDate: string, endDate: string) => {
+    if (!clientId) return;
+    try {
+      setCalendarLoading(true);
+      const params = new URLSearchParams();
+      params.set('startDate', startDate);
+      params.set('endDate', endDate);
+      params.set('limit', '200');
+      if (filter !== 'all') params.set('status', filter);
+
+      const res = await fetch(`/api/client-portal/${clientId}/content?${params}`);
+      if (res.ok) {
+        const data = await res.json();
+        const mapped: CalendarContentItem[] = (data.data || []).map((c: any) => ({
+          id: c.id,
+          title: c.title || 'Untitled',
+          scheduledDate: c.scheduledDate || c.scheduled_date || '',
+          status: c.status || 'draft',
+          type: c.type || 'post',
+          platform: c.platform || 'website',
+          description: c.description,
+        }));
+        setCalendarItems(mapped);
+      }
+    } catch (err) {
+      console.error('Error fetching calendar content:', err);
+    } finally {
+      setCalendarLoading(false);
+    }
+  }, [clientId, filter]);
+
+  const handleCalendarDateRangeChange = useCallback(
+    (start: string, end: string) => {
+      calendarRangeRef.current = { start, end };
+      if (viewMode === 'calendar') {
+        fetchCalendarContent(start, end);
+      }
+    },
+    [viewMode, fetchCalendarContent]
+  );
+
+  // Re-fetch calendar data when filter changes while in calendar mode
+  useEffect(() => {
+    if (viewMode === 'calendar' && calendarRangeRef.current) {
+      fetchCalendarContent(calendarRangeRef.current.start, calendarRangeRef.current.end);
+    }
+  }, [viewMode, fetchCalendarContent]);
 
   const getTypeIcon = (type: string) => {
     switch (type) {
@@ -181,7 +238,7 @@ export default function ClientContentPage() {
 
   const filteredContent = contentItems.filter(item => {
     const matchesStatus = filter === 'all' || item.status === filter;
-    const matchesMonth = !selectedMonth || item.scheduledDate.startsWith(selectedMonth);
+    const matchesMonth = !selectedMonth || (item.scheduledDate && item.scheduledDate.startsWith(selectedMonth));
     return matchesStatus && matchesMonth;
   });
 
@@ -283,16 +340,57 @@ export default function ClientContentPage() {
           onChange={(key) => setFilter(key as typeof filter)}
           variant="client"
         />
-        <input
-          type="month"
-          value={selectedMonth}
-          onChange={(e) => setSelectedMonth(e.target.value)}
-          className="px-3 py-1.5 text-sm border border-fm-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-300 flex-shrink-0"
-        />
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {/* Grid / Calendar toggle */}
+          <div className="flex items-center rounded-lg border border-fm-neutral-200 overflow-hidden">
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium transition-colors ${
+                viewMode === 'grid'
+                  ? 'bg-fm-magenta-600 text-white'
+                  : 'bg-white text-fm-neutral-600 hover:bg-fm-neutral-50'
+              }`}
+            >
+              <LayoutGrid className="h-4 w-4" />
+              Grid
+            </button>
+            <button
+              onClick={() => setViewMode('calendar')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium transition-colors ${
+                viewMode === 'calendar'
+                  ? 'bg-fm-magenta-600 text-white'
+                  : 'bg-white text-fm-neutral-600 hover:bg-fm-neutral-50'
+              }`}
+            >
+              <CalendarDays className="h-4 w-4" />
+              Calendar
+            </button>
+          </div>
+
+          {viewMode === 'grid' && (
+            <input
+              type="month"
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(e.target.value)}
+              className="px-3 py-1.5 text-sm border border-fm-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-300"
+            />
+          )}
+        </div>
       </div>
 
+      {/* Calendar View */}
+      {viewMode === 'calendar' && (
+        <ContentCalendar
+          items={calendarItems}
+          loading={calendarLoading}
+          variant="client"
+          onDateRangeChange={handleCalendarDateRangeChange}
+          onItemClick={() => {}}
+        />
+      )}
+
       {/* Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+      {viewMode === 'grid' && <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
         {filteredContent.map((item) => (
           <Card key={item.id} variant="client" hover glow className="overflow-hidden">
             <CardHeader className="pb-3">
@@ -455,25 +553,18 @@ export default function ClientContentPage() {
                 </div>
               )}
 
-              {/* Actions */}
-              <div className="flex items-center justify-between pt-2">
+              {/* Content type label */}
+              <div className="pt-2">
                 <span className="text-xs uppercase tracking-wider font-medium text-fm-magenta-600">
                   {item.type}
                 </span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-fm-magenta-600 hover:bg-fm-magenta-50"
-                >
-                  View Details
-                </Button>
               </div>
             </CardContent>
           </Card>
         ))}
-      </div>
+      </div>}
 
-      {filteredContent.length === 0 && (
+      {viewMode === 'grid' && filteredContent.length === 0 && (
         <EmptyState
           icon={<FileText className="w-6 h-6" />}
           title="No content found"
