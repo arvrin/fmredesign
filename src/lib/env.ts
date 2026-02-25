@@ -41,6 +41,7 @@ const envSchema = z.object({
   // Google Drive (document storage — optional)
   GOOGLE_SERVICE_ACCOUNT_EMAIL: z.string().email().optional(),
   GOOGLE_SERVICE_ACCOUNT_KEY: z.string().optional(),
+  GOOGLE_SERVICE_ACCOUNT_KEY_BASE64: z.string().optional(),
   GOOGLE_DRIVE_ROOT_FOLDER_ID: z.string().optional(),
 });
 

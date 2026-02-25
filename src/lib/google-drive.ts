@@ -26,9 +26,14 @@ function getCredentials() {
   const email =
     process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL ||
     process.env.GOOGLE_SHEETS_CLIENT_EMAIL;
-  const rawKey =
+  let rawKey =
     process.env.GOOGLE_SERVICE_ACCOUNT_KEY ||
     process.env.GOOGLE_SHEETS_PRIVATE_KEY;
+
+  // Support base64-encoded key (Vercel-safe: set GOOGLE_SERVICE_ACCOUNT_KEY_BASE64 instead)
+  if (!rawKey && process.env.GOOGLE_SERVICE_ACCOUNT_KEY_BASE64) {
+    rawKey = Buffer.from(process.env.GOOGLE_SERVICE_ACCOUNT_KEY_BASE64, 'base64').toString('utf-8');
+  }
 
   if (!email || !rawKey) {
     throw new Error(
