@@ -18,20 +18,32 @@ export async function GET(request: NextRequest) {
   // 1. Check env vars exist
   const email = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
   const rawKey = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
+  const b64Key = process.env.GOOGLE_SERVICE_ACCOUNT_KEY_BASE64;
   const rootFolderId = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID;
+  const impersonateEmail = process.env.GOOGLE_DRIVE_IMPERSONATE_EMAIL;
 
   checks['GOOGLE_SERVICE_ACCOUNT_EMAIL'] = email ? `SET (${email})` : 'MISSING';
   checks['GOOGLE_SERVICE_ACCOUNT_KEY'] = rawKey
     ? `SET (length: ${rawKey.length}, starts: ${rawKey.substring(0, 30)}...)`
     : 'MISSING';
+  checks['GOOGLE_SERVICE_ACCOUNT_KEY_BASE64'] = b64Key ? `SET (length: ${b64Key.length})` : 'MISSING';
   checks['GOOGLE_DRIVE_ROOT_FOLDER_ID'] = rootFolderId ? `SET (${rootFolderId})` : 'MISSING';
+  checks['GOOGLE_DRIVE_IMPERSONATE_EMAIL'] = impersonateEmail ? `SET (${impersonateEmail})` : 'NOT SET (service account will use own quota)';
 
-  if (!email || !rawKey || !rootFolderId) {
+  const hasKey = rawKey || b64Key;
+  if (!email || !hasKey || !rootFolderId) {
     return NextResponse.json({ success: false, checks, error: 'Missing env vars' });
   }
 
   // 2. Check key format
-  const privateKey = rawKey.replace(/\\n/g, '\n');
+  let keySource = rawKey || '';
+  if (!keySource && b64Key) {
+    keySource = Buffer.from(b64Key, 'base64').toString('utf-8');
+    checks['key_source'] = 'base64';
+  } else {
+    checks['key_source'] = 'raw';
+  }
+  const privateKey = keySource.replace(/\\n/g, '\n');
   checks['key_starts_with_BEGIN'] = String(privateKey.startsWith('-----BEGIN PRIVATE KEY-----'));
   checks['key_has_real_newlines'] = String(privateKey.includes('\n'));
   checks['key_processed_length'] = String(privateKey.length);
@@ -55,7 +67,9 @@ export async function GET(request: NextRequest) {
     const b64url = (s: string) => Buffer.from(s).toString('base64url');
     const now = Math.floor(Date.now() / 1000);
     const header = b64url(JSON.stringify({ alg: 'RS256', typ: 'JWT' }));
-    const payload = b64url(JSON.stringify({ iss: email, scope: SCOPE, aud: TOKEN_URL, iat: now, exp: now + 3600 }));
+    const claims: Record<string, unknown> = { iss: email, scope: SCOPE, aud: TOKEN_URL, iat: now, exp: now + 3600 };
+    if (impersonateEmail) claims.sub = impersonateEmail;
+    const payload = b64url(JSON.stringify(claims));
     const signInput = `${header}.${payload}`;
     const signer = crypto.createSign('RSA-SHA256');
     signer.update(signInput);

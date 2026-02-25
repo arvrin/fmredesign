@@ -70,18 +70,25 @@ export async function getAccessToken(): Promise<string> {
   }
 
   const { email, privateKey } = getCredentials();
+  const impersonateEmail = process.env.GOOGLE_DRIVE_IMPERSONATE_EMAIL;
 
   const now = Math.floor(Date.now() / 1000);
   const header = base64url(JSON.stringify({ alg: 'RS256', typ: 'JWT' }));
-  const payload = base64url(
-    JSON.stringify({
-      iss: email,
-      scope: SCOPE,
-      aud: TOKEN_URL,
-      iat: now,
-      exp: now + 3600, // 1 hour
-    })
-  );
+
+  // Build JWT claims — if impersonateEmail is set, service account acts as that user
+  // (required because service accounts have no storage quota)
+  const claims: Record<string, unknown> = {
+    iss: email,
+    scope: SCOPE,
+    aud: TOKEN_URL,
+    iat: now,
+    exp: now + 3600, // 1 hour
+  };
+  if (impersonateEmail) {
+    claims.sub = impersonateEmail;
+  }
+
+  const payload = base64url(JSON.stringify(claims));
 
   const signInput = `${header}.${payload}`;
   const signer = crypto.createSign('RSA-SHA256');
