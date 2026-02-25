@@ -311,6 +311,32 @@ export const contractActionSchema = z.object({
 });
 
 // ---------------------------------------------------------------------------
+// Document schemas
+// ---------------------------------------------------------------------------
+
+export const uploadDocumentSchema = z.object({
+  clientId: nonEmptyString,
+  category: z.enum(['brand', 'campaign', 'report', 'contract', 'invoice', 'design', 'client_upload', 'general']).optional(),
+  description: optionalString,
+  clientVisible: z.boolean().optional(),
+  isPublic: z.boolean().optional(),
+});
+
+export const updateDocumentSchema = z.object({
+  id: nonEmptyString,
+  name: optionalString,
+  description: optionalString,
+  category: z.enum(['brand', 'campaign', 'report', 'contract', 'invoice', 'design', 'client_upload', 'general']).optional(),
+  clientVisible: z.boolean().optional(),
+  isPublic: z.boolean().optional(),
+});
+
+export const clientUploadDocumentSchema = z.object({
+  category: z.enum(['brand', 'campaign', 'report', 'contract', 'invoice', 'design', 'client_upload', 'general']).optional(),
+  description: optionalString,
+});
+
+// ---------------------------------------------------------------------------
 // Helper: validate request body
 // ---------------------------------------------------------------------------
 

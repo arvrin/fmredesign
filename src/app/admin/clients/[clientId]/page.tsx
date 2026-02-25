@@ -18,6 +18,7 @@ import {
   CommunicationTab,
   ContentTab,
   SupportTab,
+  DocumentsTab,
 } from '@/components/admin/client-detail';
 import { ArrowLeft, AlertCircle } from 'lucide-react';
 
@@ -130,6 +131,7 @@ export default function AdminClientDetail() {
               <TabsTrigger value="projects" className="text-xs sm:text-sm">Projects</TabsTrigger>
               <TabsTrigger value="content" className="text-xs sm:text-sm">Content</TabsTrigger>
               <TabsTrigger value="contracts" className="text-xs sm:text-sm">Contracts</TabsTrigger>
+              <TabsTrigger value="documents" className="text-xs sm:text-sm">Documents</TabsTrigger>
               <TabsTrigger value="team" className="text-xs sm:text-sm">Team</TabsTrigger>
               <TabsTrigger value="communication" className="text-xs sm:text-sm">Comms</TabsTrigger>
               <TabsTrigger value="support" className="text-xs sm:text-sm">Support</TabsTrigger>
@@ -180,6 +182,12 @@ export default function AdminClientDetail() {
           <TabsContent value="contracts" className="space-y-6">
             <SectionErrorBoundary section="Contracts">
               <ContractsTab clientId={clientId} clientName={clientProfile?.name} />
+            </SectionErrorBoundary>
+          </TabsContent>
+
+          <TabsContent value="documents" className="space-y-6">
+            <SectionErrorBoundary section="Documents">
+              <DocumentsTab clientId={clientId} clientName={clientProfile?.name} />
             </SectionErrorBoundary>
           </TabsContent>
 

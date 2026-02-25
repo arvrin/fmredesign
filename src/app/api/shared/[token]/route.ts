@@ -61,6 +61,25 @@ export async function GET(
           deliverables: project.deliverables || [],
         };
       }
+    } else if (link.resource_type === 'document') {
+      const { data: doc } = await supabaseAdmin
+        .from('client_documents')
+        .select('id, name, description, file_type, file_size, category, drive_web_view_link, is_public')
+        .eq('id', link.resource_id)
+        .single();
+
+      if (doc) {
+        resource = {
+          type: 'document',
+          name: doc.name,
+          description: doc.description || '',
+          fileType: doc.file_type,
+          fileSize: doc.file_size,
+          category: doc.category,
+          previewUrl: doc.drive_web_view_link || null,
+          downloadUrl: `/api/shared/${token}/download`,
+        };
+      }
     } else if (link.resource_type === 'report') {
       // For reports, we fetch summary data from projects + content
       const [{ data: projects }, { data: content }] = await Promise.all([

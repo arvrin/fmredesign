@@ -37,6 +37,11 @@ const envSchema = z.object({
   GOOGLE_SHEETS_PRIVATE_KEY: z.string().optional(),
   GOOGLE_SHEETS_CLIENT_EMAIL: z.string().optional(),
   GOOGLE_SHEETS_SPREADSHEET_ID: z.string().optional(),
+
+  // Google Drive (document storage — optional)
+  GOOGLE_SERVICE_ACCOUNT_EMAIL: z.string().email().optional(),
+  GOOGLE_SERVICE_ACCOUNT_KEY: z.string().optional(),
+  GOOGLE_DRIVE_ROOT_FOLDER_ID: z.string().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;

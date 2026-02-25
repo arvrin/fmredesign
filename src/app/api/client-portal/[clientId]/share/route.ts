@@ -81,7 +81,7 @@ export async function POST(
       return NextResponse.json({ success: false, error: 'resourceType and resourceId are required' }, { status: 400 });
     }
 
-    if (!['project', 'report'].includes(resourceType)) {
+    if (!['project', 'report', 'document'].includes(resourceType)) {
       return NextResponse.json({ success: false, error: 'Invalid resource type' }, { status: 400 });
     }
 
