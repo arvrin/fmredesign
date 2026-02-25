@@ -9,6 +9,8 @@ import { resolveClientId } from '@/lib/client-portal/resolve-client';
 import { requireClientAuth } from '@/lib/client-session';
 import { downloadFile } from '@/lib/google-drive';
 
+export const maxDuration = 60;
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ clientId: string }> }

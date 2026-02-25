@@ -8,6 +8,8 @@ import { requireAdminAuth } from '@/lib/admin-auth-middleware';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { downloadFile } from '@/lib/google-drive';
 
+export const maxDuration = 60;
+
 export async function GET(request: NextRequest) {
   const authError = await requireAdminAuth(request);
   if (authError) return authError;

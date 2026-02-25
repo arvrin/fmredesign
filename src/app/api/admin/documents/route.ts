@@ -9,6 +9,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminAuth } from '@/lib/admin-auth-middleware';
 import { getSupabaseAdmin } from '@/lib/supabase';
+
+// Vercel: increase timeout for Google Drive operations
+export const maxDuration = 60;
 import {
   uploadFile,
   ensureClientFolder,

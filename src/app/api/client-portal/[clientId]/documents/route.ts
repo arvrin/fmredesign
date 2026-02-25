@@ -17,6 +17,8 @@ import { notifyAdmins } from '@/lib/notifications';
 import { MAX_FILE_SIZE_CLIENT } from '@/lib/document-types';
 import type { DocumentCategory } from '@/lib/document-types';
 
+export const maxDuration = 60;
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ clientId: string }> }
