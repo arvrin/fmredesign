@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { requireAdminAuth, requirePermission } from '@/lib/admin-auth-middleware';
 import { createProposalSchema, updateProposalSchema, validateBody } from '@/lib/validations/schemas';
-import { notifyTeam, proposalCreatedEmail } from '@/lib/email/send';
+import { notifyTeam, proposalCreatedEmail, notifyRecipient, proposalSentToClientEmail } from '@/lib/email/send';
 import { logAuditEvent, getClientIP } from '@/lib/admin/audit-log';
 import { notifyClient } from '@/lib/notifications';
 
@@ -262,6 +262,43 @@ export async function PUT(request: NextRequest) {
       details: { updatedFields: Object.keys(updates), newStatus: status },
       ip_address: getClientIP(request),
     });
+
+    // Notify client when proposal is marked as sent
+    if (status === 'sent') {
+      const { data: proposal } = await supabase
+        .from('proposals')
+        .select('title, proposal_number, client_is_existing, client_id')
+        .eq('id', id)
+        .single();
+
+      if (proposal?.client_is_existing && proposal.client_id) {
+        // In-app notification
+        notifyClient(proposal.client_id, {
+          type: 'proposal_sent',
+          title: 'New proposal ready for review',
+          message: proposal.title || 'Proposal',
+          priority: 'high',
+          actionUrl: `/client/${proposal.client_id}/proposals`,
+        });
+
+        // Email the client
+        const { data: client } = await supabase
+          .from('clients')
+          .select('email, name')
+          .eq('id', proposal.client_id)
+          .single();
+
+        if (client?.email) {
+          const emailData = proposalSentToClientEmail({
+            title: proposal.title || 'Proposal',
+            proposalNumber: proposal.proposal_number || undefined,
+            clientName: client.name || 'Client',
+            portalUrl: `https://freakingminds.in/client/${proposal.client_id}/proposals`,
+          });
+          notifyRecipient(client.email, emailData.subject, emailData.html);
+        }
+      }
+    }
 
     return NextResponse.json({
       success: true,

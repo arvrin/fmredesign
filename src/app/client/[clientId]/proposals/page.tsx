@@ -15,6 +15,10 @@ import {
   ChevronUp,
   Calendar,
   DollarSign,
+  ThumbsUp,
+  ThumbsDown,
+  MessageSquare,
+  Loader2,
 } from 'lucide-react';
 import { useClientPortal } from '@/lib/client-portal/context';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
@@ -47,6 +51,9 @@ export default function ClientProposalsPage() {
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [respondingTo, setRespondingTo] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (!clientId) return;
@@ -68,6 +75,33 @@ export default function ClientProposalsPage() {
 
     fetchProposals();
   }, [clientId]);
+
+  const handleProposalAction = async (proposalId: string, action: 'approve' | 'decline' | 'request_edit') => {
+    if (submitting) return;
+    setSubmitting(true);
+    try {
+      const res = await fetch(`/api/client-portal/${clientId}/proposals`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ proposalId, action, feedback: feedback || undefined }),
+      });
+      if (res.ok) {
+        const json = await res.json();
+        // Update local state
+        setProposals((prev) =>
+          prev.map((p) =>
+            p.id === proposalId ? { ...p, status: json.data?.status || action } : p
+          )
+        );
+        setRespondingTo(null);
+        setFeedback('');
+      }
+    } catch (err) {
+      console.error('Error responding to proposal:', err);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const pendingCount = proposals.filter((p) => p.status === 'sent' || p.status === 'viewed').length;
   const approvedCount = proposals.filter((p) => p.status === 'approved' || p.status === 'converted').length;
@@ -266,6 +300,64 @@ export default function ClientProposalsPage() {
                           </span>
                         )}
                       </div>
+
+                      {/* Approval Actions — only for sent/viewed proposals */}
+                      {(proposal.status === 'sent' || proposal.status === 'viewed') && (
+                        <div className="pt-3 border-t border-fm-neutral-100">
+                          {respondingTo === proposal.id ? (
+                            <div className="space-y-3">
+                              <textarea
+                                value={feedback}
+                                onChange={(e) => setFeedback(e.target.value)}
+                                placeholder="Add feedback or comments (optional)..."
+                                className="w-full p-3 rounded-lg border border-fm-neutral-200 text-sm text-fm-neutral-700 placeholder-fm-neutral-400 focus:outline-none focus:ring-2 focus:ring-fm-magenta-600/30 focus:border-fm-magenta-600 resize-none"
+                                rows={3}
+                              />
+                              <div className="flex flex-wrap gap-2">
+                                <button
+                                  onClick={() => handleProposalAction(proposal.id, 'approve')}
+                                  disabled={submitting}
+                                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 transition-colors"
+                                >
+                                  {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <ThumbsUp className="w-4 h-4" />}
+                                  Approve
+                                </button>
+                                <button
+                                  onClick={() => handleProposalAction(proposal.id, 'decline')}
+                                  disabled={submitting}
+                                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold text-white bg-red-500 hover:bg-red-600 disabled:opacity-50 transition-colors"
+                                >
+                                  {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <ThumbsDown className="w-4 h-4" />}
+                                  Decline
+                                </button>
+                                <button
+                                  onClick={() => handleProposalAction(proposal.id, 'request_edit')}
+                                  disabled={submitting}
+                                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold text-fm-neutral-700 bg-fm-neutral-100 hover:bg-fm-neutral-200 disabled:opacity-50 transition-colors"
+                                >
+                                  {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <MessageSquare className="w-4 h-4" />}
+                                  Request Changes
+                                </button>
+                                <button
+                                  onClick={() => { setRespondingTo(null); setFeedback(''); }}
+                                  disabled={submitting}
+                                  className="px-4 py-2 rounded-lg text-sm text-fm-neutral-500 hover:text-fm-neutral-700 transition-colors"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => setRespondingTo(proposal.id)}
+                              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold text-white bg-fm-magenta-600 hover:bg-fm-magenta-700 transition-colors"
+                            >
+                              <MessageSquare className="w-4 h-4" />
+                              Review & Respond
+                            </button>
+                          )}
+                        </div>
+                      )}
                     </div>
                   )}
                 </CardContent>

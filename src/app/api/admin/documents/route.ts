@@ -20,6 +20,7 @@ import {
 } from '@/lib/google-drive';
 import { logAuditEvent } from '@/lib/admin/audit-log';
 import { notifyClient } from '@/lib/notifications';
+import { notifyRecipient, documentSharedEmail } from '@/lib/email/send';
 import {
   MAX_FILE_SIZE_ADMIN,
   CATEGORY_TO_FOLDER,
@@ -237,6 +238,22 @@ export async function POST(request: NextRequest) {
         message: `A new file "${file.name}" has been shared with you.`,
         actionUrl: `/client/${clientId}/documents`,
       });
+
+      // Email the client about the shared document
+      const { data: clientForEmail } = await supabase
+        .from('clients')
+        .select('email, name')
+        .eq('id', clientId)
+        .single();
+
+      if (clientForEmail?.email) {
+        const emailData = documentSharedEmail({
+          clientName: clientForEmail.name || 'Client',
+          fileName: file.name,
+          portalUrl: `https://freakingminds.in/client/${clientId}/documents`,
+        });
+        notifyRecipient(clientForEmail.email, emailData.subject, emailData.html);
+      }
     }
 
     return NextResponse.json({

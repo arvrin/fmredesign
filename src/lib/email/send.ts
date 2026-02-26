@@ -464,6 +464,158 @@ export function contractCreatedEmail(data: ContractEmailData): { subject: string
   };
 }
 
+// ---------------------------------------------------------------------------
+// Proposal email templates
+// ---------------------------------------------------------------------------
+
+interface ProposalStatusEmailData {
+  title: string;
+  proposalNumber?: string;
+  action: 'approved' | 'declined' | 'edit_requested';
+  clientFeedback?: string;
+}
+
+/** Team notification when client acts on a proposal */
+export function proposalStatusEmail(data: ProposalStatusEmailData): { subject: string; html: string } {
+  const labels: Record<string, string> = {
+    approved: 'Approved',
+    declined: 'Declined',
+    edit_requested: 'Edit Requested',
+  };
+  const colors: Record<string, string> = {
+    approved: '#22c55e',
+    declined: '#ef4444',
+    edit_requested: '#f59e0b',
+  };
+
+  const label = labels[data.action] || data.action;
+  const color = colors[data.action] || BRAND_MAGENTA;
+  const safeTitle = escHtml(data.title);
+
+  const body = `
+    <p style="margin:0 0 20px;color:${TEXT_COLOR};font-size:15px;line-height:1.6">A client has responded to a proposal.</p>
+    ${dataTable(
+      row('Proposal', safeTitle) +
+      (data.proposalNumber ? row('Number', escHtml(data.proposalNumber)) : '') +
+      row('Status', badge(label, color))
+    )}
+    ${data.clientFeedback ? `<div style="margin:20px 0;padding:16px 20px;background:#fff7ed;border-left:3px solid #f59e0b;border-radius:10px"><p style="margin:0 0 6px;color:${HEADING_COLOR};font-size:13px;font-weight:600">Client Feedback</p><p style="margin:0;color:${TEXT_COLOR};font-size:14px;line-height:1.5">${escHtml(data.clientFeedback)}</p></div>` : ''}
+    ${ctaButton('View Proposal', 'https://freakingminds.in/admin/proposals')}
+  `;
+
+  return {
+    subject: `Proposal ${label}: ${data.title}`,
+    html: emailWrapper(`Proposal ${label}`, body),
+  };
+}
+
+interface ProposalSentToClientData {
+  title: string;
+  proposalNumber?: string;
+  clientName: string;
+  portalUrl: string;
+}
+
+/** Client-facing email when proposal is sent */
+export function proposalSentToClientEmail(data: ProposalSentToClientData): { subject: string; html: string } {
+  const body = `
+    <p style="margin:0 0 8px;color:${HEADING_COLOR};font-size:16px;font-weight:700">Hi ${escHtml(data.clientName)},</p>
+    <p style="margin:0 0 20px;color:${TEXT_COLOR};font-size:15px;line-height:1.6">A new proposal is ready for your review.</p>
+    ${dataTable(
+      row('Proposal', `<strong>${escHtml(data.title)}</strong>`) +
+      (data.proposalNumber ? row('Number', escHtml(data.proposalNumber)) : '') +
+      row('Status', badge('READY FOR REVIEW', '#3b82f6'))
+    )}
+    <p style="margin:16px 0 0;color:${TEXT_COLOR};font-size:14px;line-height:1.5">Please review the proposal in your client portal and let us know your thoughts.</p>
+    ${ctaButton('Review Proposal', data.portalUrl)}
+  `;
+
+  return {
+    subject: `New Proposal: ${data.title} — FreakingMinds`,
+    html: emailWrapper('Proposal Ready for Review', body),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Invoice status email template (client-facing)
+// ---------------------------------------------------------------------------
+
+interface InvoiceStatusEmailData {
+  invoiceNumber: string;
+  clientName: string;
+  total: number;
+  currency?: string;
+  dueDate?: string;
+  status: 'sent' | 'paid' | 'overdue';
+}
+
+/** Client-facing email for invoice status changes */
+export function invoiceStatusEmail(data: InvoiceStatusEmailData): { subject: string; html: string } {
+  const cur = data.currency || 'INR';
+  const locale = cur === 'INR' ? 'en-IN' : 'en-GB';
+  const formatted = new Intl.NumberFormat(locale, { style: 'currency', currency: cur }).format(data.total);
+
+  const labels: Record<string, string> = { sent: 'Invoice Sent', paid: 'Payment Received', overdue: 'Payment Overdue' };
+  const colors: Record<string, string> = { sent: '#3b82f6', paid: '#22c55e', overdue: '#ef4444' };
+  const label = labels[data.status] || data.status;
+  const color = colors[data.status] || BRAND_MAGENTA;
+
+  const messages: Record<string, string> = {
+    sent: 'A new invoice has been sent to you for review.',
+    paid: 'Your payment has been received. Thank you!',
+    overdue: 'Your invoice is past due. Please arrange payment at your earliest convenience.',
+  };
+
+  const body = `
+    <p style="margin:0 0 8px;color:${HEADING_COLOR};font-size:16px;font-weight:700">Hi ${escHtml(data.clientName)},</p>
+    <p style="margin:0 0 20px;color:${TEXT_COLOR};font-size:15px;line-height:1.6">${messages[data.status]}</p>
+    ${dataTable(
+      row('Invoice #', `<strong>${escHtml(data.invoiceNumber)}</strong>`) +
+      row('Amount', `<strong style="color:${HEADING_COLOR};font-size:16px">${formatted}</strong>`) +
+      (data.dueDate ? row('Due Date', data.dueDate) : '') +
+      row('Status', badge(label.toUpperCase(), color))
+    )}
+    ${ctaButton('View in Portal', 'https://freakingminds.in/client')}
+  `;
+
+  return {
+    subject: `${label}: ${data.invoiceNumber} — FreakingMinds`,
+    html: emailWrapper(label, body),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Document shared email template (client-facing)
+// ---------------------------------------------------------------------------
+
+interface DocumentSharedEmailData {
+  clientName: string;
+  fileName: string;
+  portalUrl: string;
+}
+
+/** Client-facing email when a document is shared */
+export function documentSharedEmail(data: DocumentSharedEmailData): { subject: string; html: string } {
+  const body = `
+    <p style="margin:0 0 8px;color:${HEADING_COLOR};font-size:16px;font-weight:700">Hi ${escHtml(data.clientName)},</p>
+    <p style="margin:0 0 20px;color:${TEXT_COLOR};font-size:15px;line-height:1.6">A new document has been shared with you.</p>
+    ${dataTable(
+      row('File', `<strong>${escHtml(data.fileName)}</strong>`)
+    )}
+    <p style="margin:16px 0 0;color:${TEXT_COLOR};font-size:14px;line-height:1.5">You can access this document in your client portal.</p>
+    ${ctaButton('View Documents', data.portalUrl)}
+  `;
+
+  return {
+    subject: `Document Shared: ${data.fileName} — FreakingMinds`,
+    html: emailWrapper('Document Shared', body),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Contract email templates
+// ---------------------------------------------------------------------------
+
 interface ContractStatusEmailData {
   title: string;
   action: 'sent' | 'accepted' | 'rejected' | 'edit_requested';

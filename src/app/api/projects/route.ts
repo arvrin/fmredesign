@@ -311,6 +311,22 @@ export async function PUT(request: NextRequest) {
     if (body.clientSatisfaction !== undefined) updates.client_satisfaction = body.clientSatisfaction;
 
     const supabase = getSupabaseAdmin();
+
+    // Fetch old state to detect milestone/deliverable changes
+    let oldMilestones: any[] = [];
+    let oldDeliverables: any[] = [];
+    if (body.milestones || body.deliverables) {
+      const { data: oldProject } = await supabase
+        .from('projects')
+        .select('milestones, deliverables')
+        .eq('id', body.id)
+        .single();
+      if (oldProject) {
+        oldMilestones = oldProject.milestones || [];
+        oldDeliverables = oldProject.deliverables || [];
+      }
+    }
+
     const { data, error } = await supabase
       .from('projects')
       .update(updates)
@@ -380,6 +396,43 @@ export async function PUT(request: NextRequest) {
           message: data.name,
           actionUrl: `/client/${data.client_id}/projects`,
         });
+      }
+    }
+
+    // Notify client on milestone/deliverable completions
+    if (data.client_id) {
+      if (body.milestones && Array.isArray(body.milestones)) {
+        const oldCompletedIds = new Set(
+          oldMilestones.filter((m: any) => m.status === 'completed').map((m: any) => m.id || m.name)
+        );
+        const newlyCompleted = body.milestones.filter(
+          (m: any) => m.status === 'completed' && !oldCompletedIds.has(m.id || m.name)
+        );
+        for (const milestone of newlyCompleted) {
+          notifyClient(data.client_id, {
+            type: 'project_status_changed',
+            title: 'Project milestone completed',
+            message: `${data.name} — ${milestone.name || 'Milestone'}`,
+            actionUrl: `/client/${data.client_id}/projects`,
+          });
+        }
+      }
+
+      if (body.deliverables && Array.isArray(body.deliverables)) {
+        const oldDeliveredIds = new Set(
+          oldDeliverables.filter((d: any) => d.status === 'delivered').map((d: any) => d.id || d.name)
+        );
+        const newlyDelivered = body.deliverables.filter(
+          (d: any) => d.status === 'delivered' && !oldDeliveredIds.has(d.id || d.name)
+        );
+        for (const deliverable of newlyDelivered) {
+          notifyClient(data.client_id, {
+            type: 'project_status_changed',
+            title: 'Deliverable ready',
+            message: `${data.name} — ${deliverable.name || 'Deliverable'}`,
+            actionUrl: `/client/${data.client_id}/projects`,
+          });
+        }
       }
     }
 

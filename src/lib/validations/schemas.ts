@@ -204,7 +204,7 @@ export const createProposalSchema = z.object({
   investment: z.record(z.string(), z.unknown()).optional(),
   proposalType: z.enum(['project', 'retainer', 'hybrid']).optional(),
   validUntil: optionalString,
-  status: z.enum(['draft', 'sent', 'viewed', 'approved', 'declined', 'expired', 'converted']).optional(),
+  status: z.enum(['draft', 'sent', 'viewed', 'approved', 'declined', 'expired', 'converted', 'edit_requested']).optional(),
 });
 
 export const updateProposalSchema = z.object({
@@ -307,6 +307,12 @@ export const updateContractSchema = z.object({
 export const contractActionSchema = z.object({
   contractId: nonEmptyString,
   action: z.enum(['accept', 'reject', 'request_edit']),
+  feedback: optionalString,
+});
+
+export const proposalActionSchema = z.object({
+  proposalId: nonEmptyString,
+  action: z.enum(['approve', 'decline', 'request_edit']),
   feedback: optionalString,
 });
 

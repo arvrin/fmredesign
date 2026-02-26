@@ -20,6 +20,8 @@ export type NotificationType =
   | 'content_created'
   | 'content_approved'
   | 'content_revision_requested'
+  | 'content_review_ready'
+  | 'content_published'
   | 'invoice_created'
   | 'invoice_sent'
   | 'invoice_overdue'
@@ -28,6 +30,9 @@ export type NotificationType =
   | 'ticket_reply'
   | 'document_shared'
   | 'proposal_sent'
+  | 'proposal_approved'
+  | 'proposal_declined'
+  | 'proposal_edit_requested'
   | 'team_member_assigned'
   | 'general';
 

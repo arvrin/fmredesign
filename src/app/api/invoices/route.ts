@@ -12,7 +12,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { requireAdminAuth, requirePermission } from '@/lib/admin-auth-middleware';
 import { createInvoiceSchema, updateInvoiceSchema, validateBody } from '@/lib/validations/schemas';
-import { notifyTeam, invoiceCreatedEmail } from '@/lib/email/send';
+import { notifyTeam, invoiceCreatedEmail, notifyRecipient, invoiceStatusEmail } from '@/lib/email/send';
 import { notifyClient } from '@/lib/notifications';
 import { logAuditEvent, getClientIP } from '@/lib/admin/audit-log';
 
@@ -296,10 +296,12 @@ export async function PUT(request: NextRequest) {
     if (rest.terms !== undefined) updates.terms = rest.terms;
 
     const supabase = getSupabaseAdmin();
-    const { error } = await supabase
+    const { data: invoice, error } = await supabase
       .from('invoices')
       .update(updates)
-      .eq('id', invoiceId);
+      .eq('id', invoiceId)
+      .select('id, invoice_number, client_id, client_name, client_email, total, due_date, status')
+      .single();
 
     if (error) throw error;
 
@@ -313,6 +315,40 @@ export async function PUT(request: NextRequest) {
       details: { updatedFields: Object.keys(updates), newStatus: status },
       ip_address: getClientIP(request),
     });
+
+    // Notify client on status changes
+    if (status && invoice) {
+      const clientId = invoice.client_id as string;
+      const invoiceStatus = status as string;
+
+      if (clientId && (invoiceStatus === 'sent' || invoiceStatus === 'paid' || invoiceStatus === 'overdue')) {
+        // In-app notification
+        const notifTitles: Record<string, string> = {
+          sent: 'New invoice available',
+          paid: 'Payment confirmed',
+          overdue: 'Invoice payment overdue',
+        };
+        notifyClient(clientId, {
+          type: invoiceStatus === 'sent' ? 'invoice_sent' : invoiceStatus === 'overdue' ? 'invoice_overdue' : 'invoice_created',
+          title: notifTitles[invoiceStatus],
+          message: `Invoice ${invoice.invoice_number} — ${invoice.client_name}`,
+          priority: invoiceStatus === 'paid' ? 'normal' : 'high',
+          actionUrl: `/client/${clientId}/documents`,
+        });
+
+        // Email the client for sent and overdue
+        if ((invoiceStatus === 'sent' || invoiceStatus === 'overdue') && invoice.client_email) {
+          const emailData = invoiceStatusEmail({
+            invoiceNumber: invoice.invoice_number as string,
+            clientName: (invoice.client_name as string) || 'Client',
+            total: Number(invoice.total) || 0,
+            dueDate: invoice.due_date as string | undefined,
+            status: invoiceStatus as 'sent' | 'overdue',
+          });
+          notifyRecipient(invoice.client_email as string, emailData.subject, emailData.html);
+        }
+      }
+    }
 
     return NextResponse.json({
       success: true,

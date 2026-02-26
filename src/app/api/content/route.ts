@@ -369,6 +369,27 @@ export async function PUT(request: NextRequest) {
       ip_address: getClientIP(request),
     });
 
+    // Notify client on status changes (admin → client)
+    if (body.status && data.client_id) {
+      if (body.status === 'review') {
+        notifyClient(data.client_id, {
+          type: 'content_review_ready',
+          title: 'Content ready for your review',
+          message: `${data.title} — ${data.platform}`,
+          priority: 'high',
+          actionUrl: `/client/${data.client_id}/content`,
+        });
+      } else if (body.status === 'published') {
+        notifyClient(data.client_id, {
+          type: 'content_published',
+          title: 'Content has been published',
+          message: `${data.title} — ${data.platform}`,
+          priority: 'normal',
+          actionUrl: `/client/${data.client_id}/content`,
+        });
+      }
+    }
+
     return NextResponse.json({
       success: true,
       data: responseContent,
