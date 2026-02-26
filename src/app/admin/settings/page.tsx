@@ -19,7 +19,16 @@ import {
   CheckCircle,
   Info,
   Zap,
-  Share2
+  Share2,
+  KeyRound,
+  Webhook,
+  Plus,
+  Copy,
+  Trash2,
+  ToggleLeft,
+  ToggleRight,
+  ExternalLink,
+  Clock
 } from 'lucide-react';
 import {
   DashboardButton,
@@ -98,6 +107,129 @@ export default function SettingsPage() {
 
   const [clients, setClients] = useState<{ id: string; name: string }[]>([]);
   const [selectedClientId, setSelectedClientId] = useState('');
+
+  // API Keys state
+  const [apiKeys, setApiKeys] = useState<any[]>([]);
+  const [apiKeysLoading, setApiKeysLoading] = useState(false);
+  const [showCreateKey, setShowCreateKey] = useState(false);
+  const [newKeyName, setNewKeyName] = useState('');
+  const [newKeyPerms, setNewKeyPerms] = useState<string[]>([]);
+  const [newKeyRateLimit, setNewKeyRateLimit] = useState(60);
+  const [createdKey, setCreatedKey] = useState<string | null>(null);
+
+  // Webhooks state
+  const [webhooks, setWebhooks] = useState<any[]>([]);
+  const [webhooksLoading, setWebhooksLoading] = useState(false);
+  const [showCreateWebhook, setShowCreateWebhook] = useState(false);
+  const [newWebhookName, setNewWebhookName] = useState('');
+  const [newWebhookUrl, setNewWebhookUrl] = useState('');
+  const [newWebhookEvents, setNewWebhookEvents] = useState<string[]>([]);
+  const [createdWebhookSecret, setCreatedWebhookSecret] = useState<string | null>(null);
+
+  const loadApiKeys = async () => {
+    setApiKeysLoading(true);
+    try {
+      const res = await fetch('/api/admin/api-keys');
+      const result = await res.json();
+      if (result.success) setApiKeys(result.data || []);
+    } catch {} finally { setApiKeysLoading(false); }
+  };
+
+  const createApiKey = async () => {
+    if (!newKeyName || newKeyPerms.length === 0) return;
+    try {
+      const res = await fetch('/api/admin/api-keys', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newKeyName, permissions: newKeyPerms, rate_limit: newKeyRateLimit }),
+      });
+      const result = await res.json();
+      if (result.success) {
+        setCreatedKey(result.data.key);
+        setNewKeyName('');
+        setNewKeyPerms([]);
+        setNewKeyRateLimit(60);
+        loadApiKeys();
+      }
+    } catch {}
+  };
+
+  const toggleApiKey = async (id: string, isActive: boolean) => {
+    await fetch('/api/admin/api-keys', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, is_active: !isActive }),
+    });
+    loadApiKeys();
+  };
+
+  const deleteApiKey = async (id: string) => {
+    await fetch(`/api/admin/api-keys?id=${id}`, { method: 'DELETE' });
+    loadApiKeys();
+  };
+
+  const loadWebhooks = async () => {
+    setWebhooksLoading(true);
+    try {
+      const res = await fetch('/api/admin/webhooks');
+      const result = await res.json();
+      if (result.success) setWebhooks(result.data || []);
+    } catch {} finally { setWebhooksLoading(false); }
+  };
+
+  const createWebhook = async () => {
+    if (!newWebhookName || !newWebhookUrl || newWebhookEvents.length === 0) return;
+    try {
+      const res = await fetch('/api/admin/webhooks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newWebhookName, url: newWebhookUrl, events: newWebhookEvents }),
+      });
+      const result = await res.json();
+      if (result.success) {
+        setCreatedWebhookSecret(result.data.secret);
+        setNewWebhookName('');
+        setNewWebhookUrl('');
+        setNewWebhookEvents([]);
+        loadWebhooks();
+      }
+    } catch {}
+  };
+
+  const toggleWebhook = async (id: string, isActive: boolean) => {
+    await fetch('/api/admin/webhooks', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, is_active: !isActive }),
+    });
+    loadWebhooks();
+  };
+
+  const deleteWebhook = async (id: string) => {
+    await fetch(`/api/admin/webhooks?id=${id}`, { method: 'DELETE' });
+    loadWebhooks();
+  };
+
+  const AVAILABLE_PERMISSIONS = [
+    'system.full_access', 'system.view_analytics',
+    'clients.read', 'clients.write',
+    'projects.read', 'projects.write',
+    'content.read', 'content.write', 'content.publish',
+    'finance.read', 'finance.write',
+    'settings.read', 'settings.write',
+  ];
+
+  const WEBHOOK_EVENT_TYPES = [
+    '*',
+    'client.created', 'client.updated',
+    'project.created', 'project.completed', 'project.status_changed',
+    'invoice.sent', 'invoice.paid',
+    'proposal.sent', 'proposal.approved',
+    'contract.sent', 'contract.signed',
+    'content.published', 'content.approved',
+    'ticket.created', 'ticket.resolved',
+    'lead.created', 'lead.converted',
+  ];
 
   const defaults: AdminSettings = {
     profile: {
@@ -320,6 +452,14 @@ export default function SettingsPage() {
                   <TabsTrigger value="social" className="justify-start gap-3">
                     <Share2 className="h-4 w-4" />
                     Social Media
+                  </TabsTrigger>
+                  <TabsTrigger value="api-keys" className="justify-start gap-3">
+                    <KeyRound className="h-4 w-4" />
+                    API Keys
+                  </TabsTrigger>
+                  <TabsTrigger value="webhooks" className="justify-start gap-3">
+                    <Webhook className="h-4 w-4" />
+                    Webhooks
                   </TabsTrigger>
                 </TabsList>
               </CardContent>
@@ -727,6 +867,269 @@ export default function SettingsPage() {
                     <p className="text-sm text-fm-neutral-500 py-4" style={{ textAlign: 'center' }}>
                       Select a client above to manage their social media accounts.
                     </p>
+                  )}
+                </CardContent>
+              </DashboardCard>
+            </TabsContent>
+
+            {/* API Keys Tab */}
+            <TabsContent value="api-keys" onFocusCapture={() => { if (apiKeys.length === 0 && !apiKeysLoading) loadApiKeys(); }}>
+              <DashboardCard variant="admin">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle>API Keys</CardTitle>
+                      <CardDescription>
+                        Create and manage API keys for external integrations
+                      </CardDescription>
+                    </div>
+                    <DashboardButton variant="primary" size="sm" onClick={() => { setShowCreateKey(true); setCreatedKey(null); }}>
+                      <Plus className="h-4 w-4" />
+                      Create Key
+                    </DashboardButton>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Created key banner */}
+                  {createdKey && (
+                    <div className="p-4 bg-green-50 border border-green-200 rounded-lg space-y-2">
+                      <div className="flex items-center gap-2 text-green-800">
+                        <CheckCircle className="h-4 w-4" />
+                        <span className="font-medium">API key created — copy it now!</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <code className="flex-1 text-xs bg-white p-2 rounded border border-green-200 break-all">{createdKey}</code>
+                        <DashboardButton variant="secondary" size="sm" onClick={() => { navigator.clipboard.writeText(createdKey); }}>
+                          <Copy className="h-4 w-4" />
+                        </DashboardButton>
+                      </div>
+                      <p className="text-xs text-green-700">This key will not be shown again. Store it securely.</p>
+                    </div>
+                  )}
+
+                  {/* Create key form */}
+                  {showCreateKey && (
+                    <div className="p-4 border border-fm-neutral-200 rounded-lg space-y-3">
+                      <Input
+                        label="Key Name"
+                        value={newKeyName}
+                        onChange={(e) => setNewKeyName(e.target.value)}
+                        placeholder="e.g., Zapier Integration"
+                      />
+                      <div>
+                        <label className="text-sm font-medium text-fm-neutral-900 mb-2 block">Permissions</label>
+                        <div className="grid grid-cols-2 gap-2">
+                          {AVAILABLE_PERMISSIONS.map((perm) => (
+                            <label key={perm} className="flex items-center gap-2 text-sm">
+                              <input
+                                type="checkbox"
+                                checked={newKeyPerms.includes(perm)}
+                                onChange={(e) => {
+                                  if (e.target.checked) setNewKeyPerms(prev => [...prev, perm]);
+                                  else setNewKeyPerms(prev => prev.filter(p => p !== perm));
+                                }}
+                                className="rounded"
+                              />
+                              <span className="text-fm-neutral-700">{perm}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                      <Input
+                        label="Rate Limit (req/min)"
+                        type="number"
+                        value={newKeyRateLimit.toString()}
+                        onChange={(e) => setNewKeyRateLimit(parseInt(e.target.value) || 60)}
+                      />
+                      <div className="flex gap-2">
+                        <DashboardButton variant="primary" size="sm" onClick={createApiKey} disabled={!newKeyName || newKeyPerms.length === 0}>
+                          Create
+                        </DashboardButton>
+                        <DashboardButton variant="secondary" size="sm" onClick={() => setShowCreateKey(false)}>
+                          Cancel
+                        </DashboardButton>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Key list */}
+                  {apiKeysLoading ? (
+                    <div className="flex justify-center py-8">
+                      <RefreshCw className="h-5 w-5 animate-spin text-fm-neutral-400" />
+                    </div>
+                  ) : apiKeys.length === 0 ? (
+                    <p className="text-sm text-fm-neutral-500 py-4" style={{ textAlign: 'center' }}>
+                      No API keys yet. Create one to get started.
+                    </p>
+                  ) : (
+                    <div className="space-y-3">
+                      {apiKeys.map((key: any) => (
+                        <div key={key.id} className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between p-3 border border-fm-neutral-200 rounded-lg">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-fm-neutral-900">{key.name}</span>
+                              <Badge variant={key.is_active ? 'default' : 'secondary'}>
+                                {key.is_active ? 'Active' : 'Inactive'}
+                              </Badge>
+                            </div>
+                            <code className="text-xs text-fm-neutral-500">{key.key_prefix}...</code>
+                            <div className="flex items-center gap-3 text-xs text-fm-neutral-500">
+                              <span>{key.rate_limit} req/min</span>
+                              {key.last_used_at && (
+                                <span className="flex items-center gap-1">
+                                  <Clock className="h-3 w-3" />
+                                  Last used {new Date(key.last_used_at).toLocaleDateString()}
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {(key.permissions || []).map((p: string) => (
+                                <span key={p} className="text-xs px-1.5 py-0.5 bg-fm-neutral-100 rounded text-fm-neutral-600">{p}</span>
+                              ))}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <DashboardButton variant="secondary" size="sm" onClick={() => toggleApiKey(key.id, key.is_active)}>
+                              {key.is_active ? <ToggleRight className="h-4 w-4" /> : <ToggleLeft className="h-4 w-4" />}
+                            </DashboardButton>
+                            <DashboardButton variant="secondary" size="sm" onClick={() => deleteApiKey(key.id)}>
+                              <Trash2 className="h-4 w-4 text-red-500" />
+                            </DashboardButton>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* API Docs link */}
+                  <div className="pt-4 border-t border-fm-neutral-200">
+                    <a href="/api/docs/ui" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm text-fm-magenta-600 hover:underline">
+                      <ExternalLink className="h-4 w-4" />
+                      View API Documentation
+                    </a>
+                  </div>
+                </CardContent>
+              </DashboardCard>
+            </TabsContent>
+
+            {/* Webhooks Tab */}
+            <TabsContent value="webhooks" onFocusCapture={() => { if (webhooks.length === 0 && !webhooksLoading) loadWebhooks(); }}>
+              <DashboardCard variant="admin">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle>Outgoing Webhooks</CardTitle>
+                      <CardDescription>
+                        Send event notifications to external URLs
+                      </CardDescription>
+                    </div>
+                    <DashboardButton variant="primary" size="sm" onClick={() => { setShowCreateWebhook(true); setCreatedWebhookSecret(null); }}>
+                      <Plus className="h-4 w-4" />
+                      Create Webhook
+                    </DashboardButton>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Created webhook secret banner */}
+                  {createdWebhookSecret && (
+                    <div className="p-4 bg-green-50 border border-green-200 rounded-lg space-y-2">
+                      <div className="flex items-center gap-2 text-green-800">
+                        <CheckCircle className="h-4 w-4" />
+                        <span className="font-medium">Webhook created — copy the signing secret!</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <code className="flex-1 text-xs bg-white p-2 rounded border border-green-200 break-all">{createdWebhookSecret}</code>
+                        <DashboardButton variant="secondary" size="sm" onClick={() => { navigator.clipboard.writeText(createdWebhookSecret); }}>
+                          <Copy className="h-4 w-4" />
+                        </DashboardButton>
+                      </div>
+                      <p className="text-xs text-green-700">Use this secret to verify webhook signatures (X-FM-Signature header).</p>
+                    </div>
+                  )}
+
+                  {/* Create webhook form */}
+                  {showCreateWebhook && (
+                    <div className="p-4 border border-fm-neutral-200 rounded-lg space-y-3">
+                      <Input
+                        label="Webhook Name"
+                        value={newWebhookName}
+                        onChange={(e) => setNewWebhookName(e.target.value)}
+                        placeholder="e.g., Slack Notifications"
+                      />
+                      <Input
+                        label="URL"
+                        value={newWebhookUrl}
+                        onChange={(e) => setNewWebhookUrl(e.target.value)}
+                        placeholder="https://example.com/webhook"
+                      />
+                      <div>
+                        <label className="text-sm font-medium text-fm-neutral-900 mb-2 block">Events</label>
+                        <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto">
+                          {WEBHOOK_EVENT_TYPES.map((evt) => (
+                            <label key={evt} className="flex items-center gap-2 text-sm">
+                              <input
+                                type="checkbox"
+                                checked={newWebhookEvents.includes(evt)}
+                                onChange={(e) => {
+                                  if (e.target.checked) setNewWebhookEvents(prev => [...prev, evt]);
+                                  else setNewWebhookEvents(prev => prev.filter(ev => ev !== evt));
+                                }}
+                                className="rounded"
+                              />
+                              <span className="text-fm-neutral-700">{evt}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <DashboardButton variant="primary" size="sm" onClick={createWebhook} disabled={!newWebhookName || !newWebhookUrl || newWebhookEvents.length === 0}>
+                          Create
+                        </DashboardButton>
+                        <DashboardButton variant="secondary" size="sm" onClick={() => setShowCreateWebhook(false)}>
+                          Cancel
+                        </DashboardButton>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Webhook list */}
+                  {webhooksLoading ? (
+                    <div className="flex justify-center py-8">
+                      <RefreshCw className="h-5 w-5 animate-spin text-fm-neutral-400" />
+                    </div>
+                  ) : webhooks.length === 0 ? (
+                    <p className="text-sm text-fm-neutral-500 py-4" style={{ textAlign: 'center' }}>
+                      No webhooks configured. Create one to send event notifications.
+                    </p>
+                  ) : (
+                    <div className="space-y-3">
+                      {webhooks.map((wh: any) => (
+                        <div key={wh.id} className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between p-3 border border-fm-neutral-200 rounded-lg">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-fm-neutral-900">{wh.name}</span>
+                              <Badge variant={wh.is_active ? 'default' : 'secondary'}>
+                                {wh.is_active ? 'Active' : 'Inactive'}
+                              </Badge>
+                            </div>
+                            <code className="text-xs text-fm-neutral-500 break-all">{wh.url}</code>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {(wh.events || []).map((e: string) => (
+                                <span key={e} className="text-xs px-1.5 py-0.5 bg-fm-neutral-100 rounded text-fm-neutral-600">{e}</span>
+                              ))}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <DashboardButton variant="secondary" size="sm" onClick={() => toggleWebhook(wh.id, wh.is_active)}>
+                              {wh.is_active ? <ToggleRight className="h-4 w-4" /> : <ToggleLeft className="h-4 w-4" />}
+                            </DashboardButton>
+                            <DashboardButton variant="secondary" size="sm" onClick={() => deleteWebhook(wh.id)}>
+                              <Trash2 className="h-4 w-4 text-red-500" />
+                            </DashboardButton>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   )}
                 </CardContent>
               </DashboardCard>

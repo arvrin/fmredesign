@@ -10,6 +10,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createHmac, timingSafeEqual } from 'crypto';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { PermissionService } from '@/lib/admin/permissions';
+import { validateApiKey } from '@/lib/api-key-auth';
+import { rateLimitByKey } from '@/lib/rate-limiter';
 
 const ADMIN_SESSION_COOKIE = 'fm-admin-session';
 const ADMIN_USER_COOKIE = 'fm-admin-user';
@@ -39,6 +41,10 @@ export async function requireAdminAuth(request: NextRequest): Promise<NextRespon
     || request.headers.get('x-admin-token');
 
   if (!sessionToken) {
+    // Fallback: try API key auth
+    const apiKey = await validateApiKey(request);
+    if (apiKey) return null; // API key auth passed
+
     return NextResponse.json(
       { success: false, error: 'Authentication required' },
       { status: 401 }
@@ -151,6 +157,34 @@ export async function requirePermission(
   request: NextRequest,
   permission: string
 ): Promise<{ error: NextResponse } | { user: AuthenticatedUser }> {
+  // 0. Try API key auth first (if Authorization: Bearer fmk_... is present)
+  const apiKey = await validateApiKey(request);
+  if (apiKey) {
+    // Check per-key rate limit
+    const rl = rateLimitByKey(apiKey.keyId, apiKey.rateLimit);
+    if (!rl.allowed) {
+      return {
+        error: NextResponse.json(
+          { success: false, error: 'Rate limit exceeded' },
+          {
+            status: 429,
+            headers: { 'Retry-After': String(rl.retryAfter) },
+          }
+        ),
+      };
+    }
+
+    if (!PermissionService.hasPermission(apiKey.user.permissions, permission)) {
+      return {
+        error: NextResponse.json(
+          { success: false, error: `Insufficient permissions. Required: ${permission}` },
+          { status: 403 }
+        ),
+      };
+    }
+    return { user: apiKey.user };
+  }
+
   // 1. Validate HMAC session cookie (reuse existing requireAdminAuth logic)
   const authError = await requireAdminAuth(request);
   if (authError) return { error: authError };

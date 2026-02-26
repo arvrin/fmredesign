@@ -47,6 +47,30 @@ export function rateLimit(
 }
 
 /**
+ * Per-API-key rate limiting.
+ * Separate sliding window keyed by API key ID.
+ * @returns { allowed: true } or { allowed: false, retryAfter: seconds }
+ */
+export function rateLimitByKey(
+  keyId: string,
+  limit: number = 60,
+  windowMs: number = 60_000
+): { allowed: true } | { allowed: false; retryAfter: number } {
+  const identifier = `apikey:${keyId}`;
+  const allowed = rateLimit(identifier, limit, windowMs);
+
+  if (allowed) return { allowed: true };
+
+  // Calculate retry-after from the oldest request in the window
+  const timestamps = requestMap.get(identifier) ?? [];
+  const now = Date.now();
+  const oldest = timestamps.find((t) => now - t < windowMs);
+  const retryAfter = oldest ? Math.ceil((oldest + windowMs - now) / 1000) : 1;
+
+  return { allowed: false, retryAfter };
+}
+
+/**
  * Get the client IP from a NextRequest.
  */
 export function getClientIp(request: Request): string {
