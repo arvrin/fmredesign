@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import { useAdminAuth } from '@/lib/admin/auth';
 import { ROLES } from '@/lib/admin/permissions';
 import {
@@ -29,7 +30,12 @@ import {
 } from 'lucide-react';
 import { adminToast } from '@/lib/admin/toast';
 import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
-import { UserFormModal } from '@/components/admin/UserFormModal';
+
+// Lazy-load modal — only shown on button click
+const UserFormModal = dynamic(
+  () => import('@/components/admin/UserFormModal').then(m => ({ default: m.UserFormModal })),
+  { ssr: false }
+);
 
 interface AuthorizedUser {
   id: string;

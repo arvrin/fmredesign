@@ -1,5 +1,6 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { useParams, useRouter } from 'next/navigation';
 import { DashboardButton } from '@/design-system';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -7,20 +8,21 @@ import { PageHeader } from '@/components/ui/page-header';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
-import ClientPortalLink from '@/components/admin/ClientPortalLink';
-import ContractsTab from '@/components/admin/ContractsTab';
 import { SectionErrorBoundary } from '@/components/admin/SectionErrorBoundary';
 import { useClientDetail } from '@/hooks/admin/useClientDetail';
-import {
-  OverviewTab,
-  ProjectsTab,
-  TeamTab,
-  CommunicationTab,
-  ContentTab,
-  SupportTab,
-  DocumentsTab,
-} from '@/components/admin/client-detail';
 import { ArrowLeft, AlertCircle } from 'lucide-react';
+
+// Lazy-load tab content — only active tab loads its bundle
+const TabSkeleton = () => <Skeleton className="h-64 w-full rounded-xl" />;
+const ClientPortalLink = dynamic(() => import('@/components/admin/ClientPortalLink'), { loading: TabSkeleton });
+const ContractsTab = dynamic(() => import('@/components/admin/ContractsTab'), { loading: TabSkeleton });
+const OverviewTab = dynamic(() => import('@/components/admin/client-detail/OverviewTab').then(m => ({ default: m.OverviewTab })), { loading: TabSkeleton });
+const ProjectsTab = dynamic(() => import('@/components/admin/client-detail/ProjectsTab').then(m => ({ default: m.ProjectsTab })), { loading: TabSkeleton });
+const TeamTab = dynamic(() => import('@/components/admin/client-detail/TeamTab').then(m => ({ default: m.TeamTab })), { loading: TabSkeleton });
+const CommunicationTab = dynamic(() => import('@/components/admin/client-detail/CommunicationTab').then(m => ({ default: m.CommunicationTab })), { loading: TabSkeleton });
+const ContentTab = dynamic(() => import('@/components/admin/client-detail/ContentTab').then(m => ({ default: m.ContentTab })), { loading: TabSkeleton });
+const SupportTab = dynamic(() => import('@/components/admin/client-detail/SupportTab').then(m => ({ default: m.SupportTab })), { loading: TabSkeleton });
+const DocumentsTab = dynamic(() => import('@/components/admin/client-detail/DocumentsTab').then(m => ({ default: m.DocumentsTab })), { loading: TabSkeleton });
 
 // ────────────────────────────────────────────────────────────
 // Helpers

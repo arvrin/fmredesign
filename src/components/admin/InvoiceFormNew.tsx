@@ -8,7 +8,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import {
   Plus,
@@ -36,7 +36,7 @@ import {
 } from '@/design-system';
 import { Badge } from '@/components/ui/Badge';
 import { adminToast } from '@/lib/admin/toast';
-import { SimplePDFGenerator } from '@/lib/admin/pdf-simple';
+import type { SimplePDFGenerator } from '@/lib/admin/pdf-simple';
 import { ClientService } from '@/lib/admin/client-service';
 import { InvoiceNumbering } from '@/lib/admin/invoice-numbering';
 import { AGENCY_SERVICES, SERVICE_CATEGORIES, DEFAULT_COMPANY_INFO } from '@/lib/admin/types';
@@ -176,7 +176,14 @@ export function InvoiceFormNew() {
   });
 
   const [clients, setClients] = useState<InvoiceClient[]>([]);
-  const [pdfGenerator] = useState(() => new SimplePDFGenerator());
+  const pdfGeneratorRef = useRef<SimplePDFGenerator | null>(null);
+  const getPdfGenerator = async () => {
+    if (!pdfGeneratorRef.current) {
+      const { SimplePDFGenerator } = await import('@/lib/admin/pdf-simple');
+      pdfGeneratorRef.current = new SimplePDFGenerator();
+    }
+    return pdfGeneratorRef.current;
+  };
   const steps = getStepState(invoice);
 
   // ---- Load clients ----
@@ -358,7 +365,8 @@ export function InvoiceFormNew() {
       return;
     }
     try {
-      const uri = await pdfGenerator.generateInvoice(invoice);
+      const gen = await getPdfGenerator();
+      const uri = await gen.generateInvoice(invoice);
       const win = window.open('', '_blank');
       if (win) {
         win.document.write(
@@ -376,7 +384,8 @@ export function InvoiceFormNew() {
 
   const handleDownload = async () => {
     try {
-      await pdfGenerator.downloadPDF(invoice);
+      const gen = await getPdfGenerator();
+      await gen.downloadPDF(invoice);
     } catch {
       adminToast.error('Error downloading PDF.');
     }

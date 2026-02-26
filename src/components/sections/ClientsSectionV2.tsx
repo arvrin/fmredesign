@@ -223,7 +223,8 @@ export function ClientsSectionV2() {
                   >
                     <img
                       src={`/clients/${logo}`}
-                      alt="Client"
+                      alt="Client logo"
+                      role="presentation"
                       loading="lazy"
                       width={140}
                       height={80}
@@ -245,7 +246,8 @@ export function ClientsSectionV2() {
                   >
                     <img
                       src={`/clients/${logo}`}
-                      alt="Client"
+                      alt="Client logo"
+                      role="presentation"
                       loading="lazy"
                       width={140}
                       height={80}

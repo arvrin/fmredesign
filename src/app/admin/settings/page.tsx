@@ -92,14 +92,14 @@ interface AdminSettings {
 }
 
 export default function SettingsPage() {
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error' | 'info', content: string } | null>(null);
 
   const [clients, setClients] = useState<{ id: string; name: string }[]>([]);
   const [selectedClientId, setSelectedClientId] = useState('');
 
-  const [settings, setSettings] = useState<AdminSettings>({
+  const defaults: AdminSettings = {
     profile: {
       name: 'Admin User',
       email: 'admin@freakingminds.in',
@@ -150,7 +150,9 @@ export default function SettingsPage() {
       payment_gateway: false,
       crm_integration: false
     },
-  });
+  };
+
+  const [settings, setSettings] = useState<AdminSettings>(defaults);
 
   useEffect(() => {
     fetch('/api/clients')
@@ -164,14 +166,37 @@ export default function SettingsPage() {
   }, []);
 
   useEffect(() => {
-    // Load settings from localStorage or API
-    const savedSettings = localStorage.getItem('freaking-minds-admin-settings');
-    if (savedSettings) {
+    // Load settings from API first, fallback to localStorage
+    const loadSettings = async () => {
       try {
-        setSettings(JSON.parse(savedSettings));
-      } catch (error) {
+        const res = await fetch('/api/admin/settings');
+        const result = await res.json();
+        if (result.success && result.data) {
+          const merged: AdminSettings = {
+            profile: { ...defaults.profile, ...result.data.profile },
+            general: { ...defaults.general, ...result.data.general },
+            notifications: { ...defaults.notifications, ...result.data.notifications },
+            security: { ...defaults.security, ...result.data.security },
+            privacy: { ...defaults.privacy, ...result.data.privacy },
+            appearance: { ...defaults.appearance, ...result.data.appearance },
+            integrations: { ...defaults.integrations, ...result.data.integrations },
+          };
+          setSettings(merged);
+          localStorage.setItem('freaking-minds-admin-settings', JSON.stringify(merged));
+          setLoading(false);
+          return;
+        }
+      } catch {
+        // API failed, try localStorage
       }
-    }
+      const savedSettings = localStorage.getItem('freaking-minds-admin-settings');
+      if (savedSettings) {
+        try { setSettings(JSON.parse(savedSettings)); } catch { /* ignore */ }
+      }
+      setLoading(false);
+    };
+    loadSettings();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const saveSettings = async (section: keyof AdminSettings, data: any) => {
@@ -183,9 +208,20 @@ export default function SettingsPage() {
         ...settings,
         [section]: { ...settings[section], ...data }
       };
-
       setSettings(newSettings);
+
+      // Save to API
+      const res = await fetch('/api/admin/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ section, data: newSettings[section] }),
+      });
+      const result = await res.json();
+
+      // Also cache in localStorage
       localStorage.setItem('freaking-minds-admin-settings', JSON.stringify(newSettings));
+
+      if (!result.success) throw new Error(result.error);
 
       setMessage({
         type: 'success',
@@ -196,12 +232,23 @@ export default function SettingsPage() {
     } catch (error) {
       setMessage({
         type: 'error',
-        content: 'Failed to save settings'
+        content: 'Failed to save settings to server. Changes saved locally.'
       });
     } finally {
       setSaving(false);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="space-y-4 sm:space-y-6">
+        <PageHeader title="Settings" description="Loading settings..." />
+        <div className="flex items-center justify-center py-12">
+          <RefreshCw className="h-6 w-6 animate-spin text-fm-neutral-400" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4 sm:space-y-6">

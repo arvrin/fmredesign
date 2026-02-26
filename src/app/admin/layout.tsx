@@ -7,12 +7,18 @@
 
 'use client';
 
+import dynamic from 'next/dynamic';
 import { useEffect, useState, useCallback, Suspense } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAdminAuth } from '@/lib/admin/auth';
 import { DashboardLayout, type NavigationGroup } from '@/design-system';
-import { CommandPalette } from '@/components/admin/CommandPalette';
 import { AdminErrorBoundary } from '@/components/admin/AdminErrorBoundary';
+
+// Lazy-load CommandPalette — only rendered on Cmd+K, not on every page load
+const CommandPalette = dynamic(
+  () => import('@/components/admin/CommandPalette').then(m => ({ default: m.CommandPalette })),
+  { ssr: false }
+);
 import { ToastProvider } from '@/components/ui/toast-provider';
 import { useBreadcrumbs } from '@/hooks/useBreadcrumbs';
 import {

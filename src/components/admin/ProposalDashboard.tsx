@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Plus,
   Search,
@@ -42,7 +42,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Proposal } from '@/lib/admin/proposal-types';
 import { adminToast } from '@/lib/admin/toast';
 import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
-import { ProposalPDFGenerator } from '@/lib/admin/proposal-pdf-generator';
+import type { ProposalPDFGenerator } from '@/lib/admin/proposal-pdf-generator';
 
 interface ProposalStats {
   total: number; draft: number; sent: number; viewed: number;
@@ -64,7 +64,14 @@ export function ProposalDashboard({ onCreateNew, onEditProposal }: ProposalDashb
   const [stats, setStats] = useState<ProposalStats>({ total: 0, draft: 0, sent: 0, viewed: 0, approved: 0, declined: 0, expired: 0, converted: 0, approvalRate: 0, conversionRate: 0 });
   const [totalValue, setTotalValue] = useState(0);
   const [convertedValue, setConvertedValue] = useState(0);
-  const [pdfGenerator] = useState(() => new ProposalPDFGenerator());
+  const pdfGeneratorRef = useRef<ProposalPDFGenerator | null>(null);
+  const getPdfGenerator = async () => {
+    if (!pdfGeneratorRef.current) {
+      const { ProposalPDFGenerator } = await import('@/lib/admin/proposal-pdf-generator');
+      pdfGeneratorRef.current = new ProposalPDFGenerator();
+    }
+    return pdfGeneratorRef.current;
+  };
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
   // Load proposals
@@ -161,7 +168,8 @@ export function ProposalDashboard({ onCreateNew, onEditProposal }: ProposalDashb
 
   const handlePreviewProposal = async (proposal: Proposal) => {
     try {
-      const pdfDataUri = await pdfGenerator.generateProposal(proposal);
+      const gen = await getPdfGenerator();
+      const pdfDataUri = await gen.generateProposal(proposal);
       const newWindow = window.open('', '_blank');
       if (newWindow) {
         newWindow.document.write(`

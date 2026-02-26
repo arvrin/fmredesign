@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { 
   Plus, 
   Trash2, 
@@ -38,7 +38,7 @@ import { Badge } from '@/components/ui/Badge';
 import { adminToast } from '@/lib/admin/toast';
 import { ClientService } from '@/lib/admin/client-service';
 import { ProposalNumbering } from '@/lib/admin/proposal-numbering';
-import { ProposalPDFGenerator } from '@/lib/admin/proposal-pdf-generator';
+import type { ProposalPDFGenerator } from '@/lib/admin/proposal-pdf-generator';
 import { 
   Proposal, 
   ProspectClient, 
@@ -138,7 +138,14 @@ export function ProposalFormNew({ initialProposal, onSaveSuccess }: ProposalForm
   const [urgencyMultiplier, setUrgencyMultiplier] = useState<string>('standard');
   const [retainerDuration, setRetainerDuration] = useState<string>('6-months');
   const [showAdvancedPricing, setShowAdvancedPricing] = useState(false);
-  const [pdfGenerator] = useState(() => new ProposalPDFGenerator());
+  const pdfGeneratorRef = useRef<ProposalPDFGenerator | null>(null);
+  const getPdfGenerator = async () => {
+    if (!pdfGeneratorRef.current) {
+      const { ProposalPDFGenerator } = await import('@/lib/admin/proposal-pdf-generator');
+      pdfGeneratorRef.current = new ProposalPDFGenerator();
+    }
+    return pdfGeneratorRef.current;
+  };
 
   // Load clients
   useEffect(() => {
@@ -325,7 +332,8 @@ export function ProposalFormNew({ initialProposal, onSaveSuccess }: ProposalForm
         return;
       }
 
-      const pdfDataUri = await pdfGenerator.generateProposal(proposal, proposal.template);
+      const gen = await getPdfGenerator();
+      const pdfDataUri = await gen.generateProposal(proposal, proposal.template);
       
       // Try different approaches for opening PDF
       const newWindow = window.open('', '_blank');
@@ -364,7 +372,8 @@ export function ProposalFormNew({ initialProposal, onSaveSuccess }: ProposalForm
         return;
       }
 
-      await pdfGenerator.downloadProposal(proposal, proposal.template);
+      const gen = await getPdfGenerator();
+      await gen.downloadProposal(proposal, proposal.template);
     } catch (error) {
       console.error('Error downloading PDF:', error);
       adminToast.error('Error downloading PDF. Please check the console for details.');

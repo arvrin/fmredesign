@@ -8,16 +8,16 @@
 
 'use client';
 
+import dynamic from 'next/dynamic';
 import { PageHeader } from '@/components/ui/page-header';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { SectionErrorBoundary } from '@/components/admin/SectionErrorBoundary';
 import { useCreativeMinds, type CreativeMindsTab } from '@/hooks/admin/useCreativeMinds';
-import {
-  TalentFilters,
-  ApplicationsList,
-  TalentsList,
-  AnalyticsView,
-} from '@/components/admin/creativeminds';
+import { TalentFilters, ApplicationsList } from '@/components/admin/creativeminds';
+
+// Lazy-load non-default tabs
+const TalentsList = dynamic(() => import('@/components/admin/creativeminds/TalentGrid').then(m => ({ default: m.TalentsList })));
+const AnalyticsView = dynamic(() => import('@/components/admin/creativeminds/AnalyticsView').then(m => ({ default: m.AnalyticsView })));
 
 export default function CreativeMindsAdminPage() {
   const {

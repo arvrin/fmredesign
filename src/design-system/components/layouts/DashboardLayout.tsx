@@ -474,7 +474,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                 {user.avatar ? (
                   <img
                     src={user.avatar}
-                    alt=""
+                    alt={`${user.name} avatar`}
                     className="w-full h-full rounded-full object-cover"
                   />
                 ) : (

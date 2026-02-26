@@ -8,14 +8,20 @@
 
 'use client';
 
+import dynamic from 'next/dynamic';
 import { Download, Plus } from 'lucide-react';
 import { DashboardButton, MetricCardSkeleton } from '@/design-system';
 import { PageHeader } from '@/components/ui/page-header';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SectionErrorBoundary } from '@/components/admin/SectionErrorBoundary';
-import { AddLeadModal } from '@/components/admin/AddLeadModal';
 import { LeadAnalytics, LeadFilters, LeadTable } from '@/components/admin/leads';
 import { useLeads } from '@/hooks/admin/useLeads';
+
+// Lazy-load modal — only shown on button click
+const AddLeadModal = dynamic(
+  () => import('@/components/admin/AddLeadModal').then(m => ({ default: m.AddLeadModal })),
+  { ssr: false }
+);
 
 export default function LeadDashboard() {
   const {

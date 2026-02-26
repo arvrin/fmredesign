@@ -92,7 +92,8 @@ export function ClientsSection() {
               >
                 <img
                   src={`/clients/${logo}`}
-                  alt="Client"
+                  alt="Client logo"
+                  role="presentation"
                   className="max-w-full max-h-full object-contain opacity-50 hover:opacity-100 transition-opacity duration-300"
                 />
               </div>
@@ -110,7 +111,8 @@ export function ClientsSection() {
               >
                 <img
                   src={`/clients/${logo}`}
-                  alt="Client"
+                  alt="Client logo"
+                  role="presentation"
                   className="max-w-full max-h-full object-contain opacity-50 hover:opacity-100 transition-opacity duration-300"
                 />
               </div>

@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -42,7 +42,7 @@ import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/select-native';
 import { adminToast } from '@/lib/admin/toast';
 import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
-import { SimplePDFGenerator } from '@/lib/admin/pdf-simple';
+import type { SimplePDFGenerator } from '@/lib/admin/pdf-simple';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -116,7 +116,14 @@ export default function InvoicesPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [openMenu, setOpenMenu] = useState<string | null>(null);
-  const [pdfGenerator] = useState(() => new SimplePDFGenerator());
+  const pdfGeneratorRef = useRef<SimplePDFGenerator | null>(null);
+  const getPdfGenerator = async () => {
+    if (!pdfGeneratorRef.current) {
+      const { SimplePDFGenerator } = await import('@/lib/admin/pdf-simple');
+      pdfGeneratorRef.current = new SimplePDFGenerator();
+    }
+    return pdfGeneratorRef.current;
+  };
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
   // ---- Fetch invoices ----
@@ -186,7 +193,8 @@ export default function InvoicesPage() {
 
   const downloadPDF = async (invoice: InvoiceListItem) => {
     try {
-      await pdfGenerator.downloadPDF(invoice as any);
+      const gen = await getPdfGenerator();
+      await gen.downloadPDF(invoice as any);
     } catch {
       adminToast.error('Error downloading PDF');
     }
@@ -194,7 +202,8 @@ export default function InvoicesPage() {
 
   const previewPDF = async (invoice: InvoiceListItem) => {
     try {
-      const uri = await pdfGenerator.generateInvoice(invoice as any);
+      const gen = await getPdfGenerator();
+      const uri = await gen.generateInvoice(invoice as any);
       const win = window.open('', '_blank');
       if (win) {
         win.document.write(

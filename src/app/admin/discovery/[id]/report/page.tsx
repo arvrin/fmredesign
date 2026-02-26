@@ -153,7 +153,7 @@ export default function DiscoveryReportPage() {
             <div className="flex items-center gap-3">
               <Button
                 variant="secondary"
-                onClick={() => router.push(`/admin/creativeminds/match?sessionId=${sessionId}`)}
+                onClick={() => router.push('/admin/creativeminds')}
                 icon={<Users className="h-4 w-4" />}
               >
                 Find Talent

@@ -4,6 +4,8 @@ import "./globals.css";
 import { ConditionalLayout } from "@/components/layout/ConditionalLayout";
 import { SmoothScrollProvider } from "@/providers/SmoothScrollProvider";
 import { QueryProvider } from "@/providers/QueryProvider";
+import { WebVitals } from "@/components/WebVitals";
+import { CookieConsent } from "@/components/CookieConsent";
 
 // Display font - elegant serif for headlines (authority & sophistication)
 const playfair = Playfair_Display({
@@ -191,6 +193,8 @@ export default function RootLayout({
             <ConditionalLayout>{children}</ConditionalLayout>
           </SmoothScrollProvider>
         </QueryProvider>
+        <WebVitals />
+        <CookieConsent />
       </body>
     </html>
   );

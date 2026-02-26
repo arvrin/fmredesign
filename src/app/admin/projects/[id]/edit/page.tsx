@@ -6,13 +6,13 @@
 
 import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Save, Loader2, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, AlertCircle, Plus, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { DashboardButton, DashboardCard, CardContent, CardHeader, CardTitle } from '@/design-system';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { EmptyState } from '@/components/ui/empty-state';
 import { adminToast } from '@/lib/admin/toast';
-import type { Project, ProjectStatus, ProjectPriority, ProjectType } from '@/lib/admin/project-types';
+import type { Project, ProjectStatus, ProjectPriority, ProjectType, ProjectMilestone, ProjectDeliverable } from '@/lib/admin/project-types';
 
 export default function EditProjectPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -52,6 +52,8 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
           notes: project.notes,
           tags: project.tags,
           clientSatisfaction: project.clientSatisfaction,
+          milestones: project.milestones,
+          deliverables: project.deliverables,
         }),
       });
       const result = await response.json();
@@ -70,6 +72,56 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
 
   const updateField = (field: string, value: any) => {
     setProject(prev => prev ? { ...prev, [field]: value } : null);
+  };
+
+  const addMilestone = () => {
+    if (!project) return;
+    const newMilestone: ProjectMilestone = {
+      id: `ms-${Date.now()}`,
+      title: '',
+      description: '',
+      dueDate: '',
+      isCompleted: false,
+    };
+    updateField('milestones', [...(project.milestones || []), newMilestone]);
+  };
+
+  const updateMilestone = (idx: number, field: keyof ProjectMilestone, value: any) => {
+    if (!project) return;
+    const updated = [...(project.milestones || [])];
+    updated[idx] = { ...updated[idx], [field]: value };
+    updateField('milestones', updated);
+  };
+
+  const removeMilestone = (idx: number) => {
+    if (!project) return;
+    updateField('milestones', (project.milestones || []).filter((_: any, i: number) => i !== idx));
+  };
+
+  const addDeliverable = () => {
+    if (!project) return;
+    const newDeliverable: ProjectDeliverable = {
+      id: `del-${Date.now()}`,
+      title: '',
+      description: '',
+      type: 'other',
+      status: 'pending',
+      dueDate: '',
+      files: [],
+    };
+    updateField('deliverables', [...(project.deliverables || []), newDeliverable]);
+  };
+
+  const updateDeliverable = (idx: number, field: keyof ProjectDeliverable, value: any) => {
+    if (!project) return;
+    const updated = [...(project.deliverables || [])];
+    updated[idx] = { ...updated[idx], [field]: value };
+    updateField('deliverables', updated);
+  };
+
+  const removeDeliverable = (idx: number) => {
+    if (!project) return;
+    updateField('deliverables', (project.deliverables || []).filter((_: any, i: number) => i !== idx));
   };
 
   if (loading) {
@@ -221,6 +273,141 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
               placeholder="e.g. urgent, redesign, phase-2"
             />
           </div>
+        </CardContent>
+      </DashboardCard>
+
+      {/* Milestones */}
+      <DashboardCard variant="admin">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle>Milestones</CardTitle>
+            <DashboardButton variant="secondary" size="sm" onClick={addMilestone}>
+              <Plus className="w-4 h-4" /> Add Milestone
+            </DashboardButton>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {(project.milestones || []).length === 0 ? (
+            <p className="text-sm text-fm-neutral-500">No milestones yet. Click "Add Milestone" to create one.</p>
+          ) : (
+            (project.milestones || []).map((ms, idx) => (
+              <div key={ms.id} className="p-4 border border-fm-neutral-200 rounded-lg space-y-3 bg-fm-neutral-50">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium text-fm-neutral-500">Milestone {idx + 1}</span>
+                  <button
+                    type="button"
+                    onClick={() => removeMilestone(idx)}
+                    className="text-red-500 hover:text-red-700 p-1"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-sm font-medium text-fm-neutral-900 mb-1">Name</label>
+                    <input
+                      type="text"
+                      value={ms.title}
+                      onChange={(e) => updateMilestone(idx, 'title', e.target.value)}
+                      className="w-full h-10 px-3 py-2 text-sm bg-white border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-1"
+                      placeholder="Milestone name"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-fm-neutral-900 mb-1">Due Date</label>
+                    <input
+                      type="date"
+                      value={ms.dueDate || ''}
+                      onChange={(e) => updateMilestone(idx, 'dueDate', e.target.value)}
+                      className="w-full h-10 px-3 py-2 text-sm bg-white border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-1"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-fm-neutral-900 mb-1">Status</label>
+                    <select
+                      value={ms.isCompleted ? 'completed' : 'pending'}
+                      onChange={(e) => {
+                        const completed = e.target.value === 'completed';
+                        updateMilestone(idx, 'isCompleted', completed);
+                        if (completed) updateMilestone(idx, 'completedAt', new Date().toISOString());
+                      }}
+                      className="w-full h-10 px-3 py-2 text-sm bg-white border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-1 appearance-none"
+                    >
+                      <option value="pending">Pending</option>
+                      <option value="completed">Completed</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </CardContent>
+      </DashboardCard>
+
+      {/* Deliverables */}
+      <DashboardCard variant="admin">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle>Deliverables</CardTitle>
+            <DashboardButton variant="secondary" size="sm" onClick={addDeliverable}>
+              <Plus className="w-4 h-4" /> Add Deliverable
+            </DashboardButton>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {(project.deliverables || []).length === 0 ? (
+            <p className="text-sm text-fm-neutral-500">No deliverables yet. Click "Add Deliverable" to create one.</p>
+          ) : (
+            (project.deliverables || []).map((del, idx) => (
+              <div key={del.id} className="p-4 border border-fm-neutral-200 rounded-lg space-y-3 bg-fm-neutral-50">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium text-fm-neutral-500">Deliverable {idx + 1}</span>
+                  <button
+                    type="button"
+                    onClick={() => removeDeliverable(idx)}
+                    className="text-red-500 hover:text-red-700 p-1"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm font-medium text-fm-neutral-900 mb-1">Name</label>
+                    <input
+                      type="text"
+                      value={del.title}
+                      onChange={(e) => updateDeliverable(idx, 'title', e.target.value)}
+                      className="w-full h-10 px-3 py-2 text-sm bg-white border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-1"
+                      placeholder="Deliverable name"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-fm-neutral-900 mb-1">Status</label>
+                    <select
+                      value={del.status}
+                      onChange={(e) => updateDeliverable(idx, 'status', e.target.value)}
+                      className="w-full h-10 px-3 py-2 text-sm bg-white border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-1 appearance-none"
+                    >
+                      <option value="pending">Pending</option>
+                      <option value="in_progress">In Progress</option>
+                      <option value="review">Review</option>
+                      <option value="completed">Completed</option>
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-fm-neutral-900 mb-1">Description</label>
+                  <input
+                    type="text"
+                    value={del.description || ''}
+                    onChange={(e) => updateDeliverable(idx, 'description', e.target.value)}
+                    className="w-full h-10 px-3 py-2 text-sm bg-white border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-1"
+                    placeholder="Brief description"
+                  />
+                </div>
+              </div>
+            ))
+          )}
         </CardContent>
       </DashboardCard>
     </div>

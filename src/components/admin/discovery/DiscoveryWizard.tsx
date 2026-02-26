@@ -11,27 +11,28 @@ import { DiscoverySession, DISCOVERY_SECTIONS } from '@/lib/admin/discovery-type
 import { DiscoveryService } from '@/lib/admin/discovery-service';
 import { Button } from '@/design-system/components/primitives/Button';
 import { adminToast } from '@/lib/admin/toast';
-import { 
-  ArrowLeft, 
-  ArrowRight, 
-  Save, 
-  FileText, 
-  CheckCircle, 
+import dynamic from 'next/dynamic';
+import {
+  ArrowLeft,
+  ArrowRight,
+  Save,
+  FileText,
+  CheckCircle,
   Circle,
   AlertCircle
 } from 'lucide-react';
 
-// Section Components
-import { CompanyFundamentalsForm } from './sections/CompanyFundamentalsForm';
-import { ProjectOverviewForm } from './sections/ProjectOverviewForm';
-import { TargetAudienceForm } from './sections/TargetAudienceForm';
-import { CurrentStateForm } from './sections/CurrentStateForm';
-import { GoalsKPIsForm } from './sections/GoalsKPIsForm';
-import { CompetitionMarketForm } from './sections/CompetitionMarketForm';
-import { BudgetResourcesForm } from './sections/BudgetResourcesForm';
-import { TechnicalRequirementsForm } from './sections/TechnicalRequirementsForm';
-import { ContentCreativeForm } from './sections/ContentCreativeForm';
-import { NextStepsForm } from './sections/NextStepsForm';
+// Section Components — dynamically imported (user sees one step at a time)
+const CompanyFundamentalsForm = dynamic(() => import('./sections/CompanyFundamentalsForm').then(m => ({ default: m.CompanyFundamentalsForm })));
+const ProjectOverviewForm = dynamic(() => import('./sections/ProjectOverviewForm').then(m => ({ default: m.ProjectOverviewForm })));
+const TargetAudienceForm = dynamic(() => import('./sections/TargetAudienceForm').then(m => ({ default: m.TargetAudienceForm })));
+const CurrentStateForm = dynamic(() => import('./sections/CurrentStateForm').then(m => ({ default: m.CurrentStateForm })));
+const GoalsKPIsForm = dynamic(() => import('./sections/GoalsKPIsForm').then(m => ({ default: m.GoalsKPIsForm })));
+const CompetitionMarketForm = dynamic(() => import('./sections/CompetitionMarketForm').then(m => ({ default: m.CompetitionMarketForm })));
+const BudgetResourcesForm = dynamic(() => import('./sections/BudgetResourcesForm').then(m => ({ default: m.BudgetResourcesForm })));
+const TechnicalRequirementsForm = dynamic(() => import('./sections/TechnicalRequirementsForm').then(m => ({ default: m.TechnicalRequirementsForm })));
+const ContentCreativeForm = dynamic(() => import('./sections/ContentCreativeForm').then(m => ({ default: m.ContentCreativeForm })));
+const NextStepsForm = dynamic(() => import('./sections/NextStepsForm').then(m => ({ default: m.NextStepsForm })));
 
 interface DiscoveryWizardProps {
   session: DiscoverySession;

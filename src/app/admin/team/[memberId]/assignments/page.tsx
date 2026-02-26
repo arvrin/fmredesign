@@ -346,15 +346,15 @@ export default function TeamAssignmentManagementPage({ params }: TeamAssignmentM
                 Current Client Assignments
               </CardTitle>
               <CardDescription>
-                {assignments.length} active assignments
+                {assignments.filter(a => a.status === 'active').length} active assignments
               </CardDescription>
             </div>
           </div>
         </CardHeader>
         <CardContent>
-          {assignments.length > 0 ? (
+          {assignments.filter(a => a.status === 'active').length > 0 ? (
             <div className="space-y-4">
-              {assignments.map((assignment) => {
+              {assignments.filter(a => a.status === 'active').map((assignment) => {
                 const client = clientMap[assignment.clientId];
                 if (!client) return null;
 
@@ -432,10 +432,55 @@ export default function TeamAssignmentManagementPage({ params }: TeamAssignmentM
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <EmptyState
-            icon={<Clock className="h-6 w-6" />}
-            title="Assignment history tracking coming soon"
-          />
+          {assignments.filter(a => a.status === 'completed' || a.status === 'paused').length > 0 ? (
+            <div className="space-y-3">
+              {assignments
+                .filter(a => a.status === 'completed' || a.status === 'paused')
+                .map((assignment) => {
+                  const client = clientMap[assignment.clientId];
+                  if (!client) return null;
+                  return (
+                    <div
+                      key={assignment.id}
+                      className="flex items-center justify-between p-4 bg-fm-neutral-50 rounded-lg border border-fm-neutral-200 opacity-80"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-full bg-fm-neutral-200 flex items-center justify-center">
+                          <Building className="w-5 h-5 text-fm-neutral-500" />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <h4 className="font-semibold text-fm-neutral-700">{client.name}</h4>
+                            {assignment.isLead && (
+                              <Badge variant="default" className="bg-fm-neutral-200 text-fm-neutral-600">
+                                Account Lead
+                              </Badge>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-4 text-sm text-fm-neutral-500">
+                            <span className="flex items-center gap-1">
+                              <Clock className="w-3 h-3" />
+                              {assignment.hoursAllocated}h/week
+                            </span>
+                            <span>
+                              {new Date(assignment.startDate).toLocaleDateString()}
+                              {assignment.endDate ? ` - ${new Date(assignment.endDate).toLocaleDateString()}` : ''}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <StatusBadge status={assignment.status} />
+                    </div>
+                  );
+                })}
+            </div>
+          ) : (
+            <EmptyState
+              icon={<Clock className="h-6 w-6" />}
+              title="No past assignments yet"
+              description="Completed or paused assignments will appear here."
+            />
+          )}
         </CardContent>
       </Card>
     </div>
