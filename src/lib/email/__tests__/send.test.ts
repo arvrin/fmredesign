@@ -91,7 +91,7 @@ describe('template: newLeadEmail', () => {
     expect(result.subject).toContain('John Doe');
     expect(result.subject).toContain('Acme Inc');
     expect(result.html).toContain('john@example.com');
-    expect(result.html).toContain('85/100');
+    expect(result.html).toContain('<strong>85</strong>/100');
     expect(result.html).toContain('HIGH');
     expect(result.html).toContain('website');
   });
