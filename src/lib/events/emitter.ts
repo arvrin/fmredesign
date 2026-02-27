@@ -40,7 +40,8 @@ export type EventType =
   | 'ticket.resolved'
   | 'team.member_added'
   | 'lead.created'
-  | 'lead.converted';
+  | 'lead.converted'
+  | 'lead.status_changed';
 
 // ---------------------------------------------------------------------------
 // Singleton event bus

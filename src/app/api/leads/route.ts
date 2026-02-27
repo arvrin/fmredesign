@@ -13,6 +13,8 @@ import { createLeadSchema, validateBody } from '@/lib/validations/schemas';
 import { notifyTeam, newLeadEmail } from '@/lib/email/send';
 import { logAuditEvent, getAuditUser, getClientIP } from '@/lib/admin/audit-log';
 import { notifyAdmins } from '@/lib/notifications';
+import { emitEvent } from '@/lib/events/emitter';
+import '@/lib/events/subscribers';
 
 // GET /api/leads - Fetch leads with optional filtering and sorting
 export async function GET(request: NextRequest) {
@@ -388,6 +390,18 @@ export async function PUT(request: NextRequest) {
     if (updateData.clientId !== undefined) updates.client_id = updateData.clientId;
 
     const supabase = getSupabaseAdmin();
+
+    // Fetch previous status before update (for status change detection)
+    let previousStatus: string | null = null;
+    if (updateData.status !== undefined) {
+      const { data: existing } = await supabase
+        .from('leads')
+        .select('status')
+        .eq('id', id)
+        .single();
+      previousStatus = existing?.status ?? null;
+    }
+
     const { data, error } = await supabase
       .from('leads')
       .update(updates)
@@ -445,6 +459,24 @@ export async function PUT(request: NextRequest) {
       details: { updatedFields: Object.keys(updates), newStatus: updateData.status },
       ip_address: getClientIP(request),
     });
+
+    // Emit event when lead status changes (triggers outgoing webhooks → AgentWorks)
+    if (
+      updateData.status !== undefined &&
+      previousStatus !== null &&
+      updateData.status !== previousStatus
+    ) {
+      emitEvent('lead.status_changed', {
+        entityId: id,
+        actor: { id: auth.user.id, name: auth.user.name },
+        timestamp: new Date().toISOString(),
+        data: {
+          previousStatus,
+          newStatus: updateData.status,
+          lead: updatedLead,
+        },
+      });
+    }
 
     return NextResponse.json({
       success: true,

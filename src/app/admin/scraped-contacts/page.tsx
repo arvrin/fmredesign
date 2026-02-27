@@ -9,7 +9,8 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { Download, Upload, Database } from 'lucide-react';
+import Link from 'next/link';
+import { Download, Upload, Database, Bot } from 'lucide-react';
 import { DashboardButton, MetricCardSkeleton } from '@/design-system';
 import { PageHeader } from '@/components/ui/page-header';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -105,6 +106,12 @@ export default function ScrapedContactsDashboard() {
               <Upload className="w-4 h-4" />
               Import JSON
             </DashboardButton>
+            <Link href="/admin/scraped-contacts/scrape-jobs">
+              <DashboardButton variant="primary" size="sm">
+                <Bot className="w-4 h-4" />
+                Scrape Jobs
+              </DashboardButton>
+            </Link>
           </div>
         }
       />
