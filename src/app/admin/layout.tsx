@@ -45,6 +45,7 @@ import {
   ScrollText,
   Target,
   MessageSquare,
+  Database,
 } from 'lucide-react';
 import React from 'react';
 
@@ -70,6 +71,7 @@ const adminNavigation: NavigationGroup[] = [
     title: 'Management',
     items: [
       { label: 'Leads', href: '/admin/leads', icon: <Target className="w-5 h-5" /> },
+      { label: 'Scraped Contacts', href: '/admin/scraped-contacts', icon: <Database className="w-5 h-5" /> },
       { label: 'Support', href: '/admin/support', icon: <MessageSquare className="w-5 h-5" /> },
       { label: 'Team', href: '/admin/team', icon: <UsersRound className="w-5 h-5" /> },
       { label: 'Discovery', href: '/admin/discovery', icon: <Search className="w-5 h-5" /> },
