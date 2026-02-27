@@ -46,6 +46,8 @@ import { Badge } from '@/components/ui/Badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { SocialAccountsPanel } from '@/components/admin/social/SocialAccountsPanel';
 import { cn } from '@/lib/utils';
+import { PERMISSIONS } from '@/lib/admin/permissions';
+import { ALL_EVENT_TYPES } from '@/lib/events/emitter';
 
 interface AdminSettings {
   profile: {
@@ -210,26 +212,9 @@ export default function SettingsPage() {
     loadWebhooks();
   };
 
-  const AVAILABLE_PERMISSIONS = [
-    'system.full_access', 'system.view_analytics',
-    'clients.read', 'clients.write',
-    'projects.read', 'projects.write',
-    'content.read', 'content.write', 'content.publish',
-    'finance.read', 'finance.write',
-    'settings.read', 'settings.write',
-  ];
+  const AVAILABLE_PERMISSIONS = PERMISSIONS.map((p) => p.key);
 
-  const WEBHOOK_EVENT_TYPES = [
-    '*',
-    'client.created', 'client.updated',
-    'project.created', 'project.completed', 'project.status_changed',
-    'invoice.sent', 'invoice.paid',
-    'proposal.sent', 'proposal.approved',
-    'contract.sent', 'contract.signed',
-    'content.published', 'content.approved',
-    'ticket.created', 'ticket.resolved',
-    'lead.created', 'lead.converted',
-  ];
+  const WEBHOOK_EVENT_TYPES = ['*', ...ALL_EVENT_TYPES];
 
   const defaults: AdminSettings = {
     profile: {

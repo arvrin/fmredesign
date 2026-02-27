@@ -33,6 +33,9 @@ const eventToNotificationType: Partial<Record<EventType, NotificationType>> = {
   'project.created': 'project_created',
   'project.status_changed': 'project_status_changed',
   'team.member_added': 'team_member_assigned',
+  'lead.created': 'general',
+  'lead.converted': 'general',
+  'lead.status_changed': 'general',
 };
 
 function notificationSubscriber(eventType: EventType, payload: EventPayload): void {
@@ -78,6 +81,8 @@ const eventToAuditAction: Partial<Record<EventType, AuditAction>> = {
   'proposal.declined': 'reject',
   'ticket.created': 'create',
   'lead.created': 'create',
+  'lead.converted': 'update',
+  'lead.status_changed': 'update',
 };
 
 function auditSubscriber(eventType: EventType, payload: EventPayload): void {
