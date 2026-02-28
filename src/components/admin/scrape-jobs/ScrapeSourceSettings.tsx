@@ -16,7 +16,7 @@ export function ScrapeSourceSettings({ hook }: ScrapeSourceSettingsProps) {
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-white/60">
+      <p className="text-sm text-fm-neutral-500">
         Configure credentials for each scraping source. Credentials are stored securely and used by the orchestrator at runtime.
       </p>
 
@@ -31,9 +31,9 @@ export function ScrapeSourceSettings({ hook }: ScrapeSourceSettingsProps) {
       </div>
 
       {sourceConfigs.length === 0 && (
-        <div className="rounded-xl border border-white/10 bg-white/5 p-12" style={{ textAlign: 'center' }}>
-          <Key className="w-10 h-10 text-white/30 mx-auto mb-3" />
-          <p className="text-white/60">No source configs found. They should be seeded automatically.</p>
+        <div className="rounded-xl border border-fm-neutral-200 bg-white p-12" style={{ textAlign: 'center' }}>
+          <Key className="w-10 h-10 text-fm-neutral-300 mx-auto mb-3" />
+          <p className="text-fm-neutral-500">No source configs found. They should be seeded automatically.</p>
         </div>
       )}
     </div>
@@ -81,38 +81,38 @@ function SourceConfigCard({
   };
 
   return (
-    <div className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-3">
+    <div className="rounded-xl border border-fm-neutral-200 bg-white p-4 space-y-3">
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-white/10">
-            <Shield className="w-4 h-4 text-white/60" />
+          <div className="p-2 rounded-lg bg-fm-neutral-100">
+            <Shield className="w-4 h-4 text-fm-neutral-500" />
           </div>
           <div>
-            <h3 className="text-sm font-semibold text-white">
+            <h3 className="text-sm font-semibold text-fm-neutral-900">
               {platform?.label || config.sourcePlatform}
             </h3>
-            <p className="text-xs text-white/40">{platform?.description}</p>
+            <p className="text-xs text-fm-neutral-400">{platform?.description}</p>
           </div>
         </div>
         <div>
           {config.isValid ? (
-            <span className="flex items-center gap-1 text-xs text-green-400">
+            <span className="flex items-center gap-1 text-xs text-green-600">
               <CheckCircle className="w-3.5 h-3.5" />
               Valid
             </span>
           ) : config.validationError ? (
-            <span className="flex items-center gap-1 text-xs text-red-400">
+            <span className="flex items-center gap-1 text-xs text-red-600">
               <AlertCircle className="w-3.5 h-3.5" />
               Invalid
             </span>
           ) : (
-            <span className="text-xs text-white/40">Not validated</span>
+            <span className="text-xs text-fm-neutral-400">Not validated</span>
           )}
         </div>
       </div>
 
       {/* Current status */}
-      <div className="flex items-center gap-3 text-xs text-white/50">
+      <div className="flex items-center gap-3 text-xs text-fm-neutral-500">
         <span>
           {fieldLabel}: {hasValue ? `${currentValue.slice(0, 10)}...${currentValue.slice(-4)}` : 'Not set'}
         </span>
@@ -124,7 +124,7 @@ function SourceConfigCard({
       </div>
 
       {config.validationError && (
-        <div className="flex items-start gap-1.5 text-xs text-red-400/80 bg-red-500/10 rounded-lg p-2">
+        <div className="flex items-start gap-1.5 text-xs text-red-600 bg-red-50 rounded-lg p-2">
           <AlertCircle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
           <span>{config.validationError}</span>
         </div>
@@ -138,7 +138,7 @@ function SourceConfigCard({
             value={fieldValue}
             onChange={(e) => setFieldValue(e.target.value)}
             placeholder={`Enter new ${fieldLabel.toLowerCase()}...`}
-            className="flex-1 px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white placeholder-white/30 text-sm focus:outline-none focus:border-fm-magenta-600"
+            className="flex-1 px-3 py-2 rounded-lg bg-white border border-fm-neutral-200 text-fm-neutral-900 placeholder-fm-neutral-400 text-sm focus:outline-none focus:border-fm-magenta-600"
           />
           <DashboardButton
             variant="primary"
@@ -152,8 +152,8 @@ function SourceConfigCard({
       )}
 
       {config.sourcePlatform === 'linkedin' && (
-        <div className="rounded-lg bg-yellow-900/20 border border-yellow-500/20 p-2.5">
-          <p className="text-xs text-yellow-400/80">
+        <div className="rounded-lg bg-yellow-50 border border-yellow-200 p-2.5">
+          <p className="text-xs text-yellow-700">
             LinkedIn integration is not yet implemented. Configuration will be available when support is added.
           </p>
         </div>

@@ -48,7 +48,7 @@ export function ScrapeJobList({ hook }: ScrapeJobListProps) {
     <div className="space-y-4">
       {/* Actions Bar */}
       <div className="flex items-center justify-between">
-        <p className="text-sm text-white/60">{jobs.length} job(s)</p>
+        <p className="text-sm text-fm-neutral-500">{jobs.length} job(s)</p>
         <DashboardButton variant="primary" size="sm" onClick={() => setShowCreateJob(true)}>
           <Plus className="w-4 h-4" />
           New Job
@@ -57,9 +57,9 @@ export function ScrapeJobList({ hook }: ScrapeJobListProps) {
 
       {/* Job Cards */}
       {jobs.length === 0 ? (
-        <div className="rounded-xl border border-white/10 bg-white/5 p-12" style={{ textAlign: 'center' }}>
-          <Globe className="w-10 h-10 text-white/30 mx-auto mb-3" />
-          <p className="text-white/60 mb-4">No scrape jobs yet</p>
+        <div className="rounded-xl border border-fm-neutral-200 bg-white p-12" style={{ textAlign: 'center' }}>
+          <Globe className="w-10 h-10 text-fm-neutral-300 mx-auto mb-3" />
+          <p className="text-fm-neutral-500 mb-4">No scrape jobs yet</p>
           <DashboardButton variant="primary" size="sm" onClick={() => setShowCreateJob(true)}>
             Create Your First Job
           </DashboardButton>
@@ -99,29 +99,29 @@ function JobCard({
   const latestRun = job.latestRun;
 
   return (
-    <div className="rounded-xl border border-white/10 bg-white/5 p-4 hover:bg-white/[0.07] transition-colors">
+    <div className="rounded-xl border border-fm-neutral-200 bg-white p-4 hover:bg-fm-neutral-50 transition-colors">
       <div className="flex items-start justify-between gap-4">
         {/* Left: Info */}
         <div className="flex items-start gap-3 min-w-0">
-          <div className="mt-0.5 p-2 rounded-lg bg-white/10 shrink-0">
+          <div className="mt-0.5 p-2 rounded-lg bg-fm-neutral-100 shrink-0">
             {SOURCE_ICONS[job.sourcePlatform] || <Globe className="w-4 h-4" />}
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <h3 className="text-sm font-semibold text-white truncate">{job.name}</h3>
-              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-white/10 text-white/70">
+              <h3 className="text-sm font-semibold text-fm-neutral-900 truncate">{job.name}</h3>
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-fm-neutral-100 text-fm-neutral-600">
                 {getSourceLabel(job.sourcePlatform)}
               </span>
-              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-white/10 text-white/70">
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-fm-neutral-100 text-fm-neutral-600">
                 {job.scheduleType}
               </span>
               {!job.isActive && (
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-900/30 text-yellow-400">
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-50 text-yellow-700">
                   Paused
                 </span>
               )}
             </div>
-            <div className="flex items-center gap-4 mt-1 text-xs text-white/50">
+            <div className="flex items-center gap-4 mt-1 text-xs text-fm-neutral-500">
               <span>Last run: {formatRelativeTime(job.lastRunAt)}</span>
               {latestRun && (
                 <>
@@ -136,7 +136,7 @@ function JobCard({
             {Object.keys(job.params).length > 0 && (
               <div className="mt-1.5 flex flex-wrap gap-1.5">
                 {Object.entries(job.params).slice(0, 3).map(([k, v]) => (
-                  <span key={k} className="text-xs text-white/40 bg-white/5 px-1.5 py-0.5 rounded">
+                  <span key={k} className="text-xs text-fm-neutral-500 bg-fm-neutral-50 px-1.5 py-0.5 rounded">
                     {k}: {String(v)}
                   </span>
                 ))}
@@ -158,14 +158,14 @@ function JobCard({
           </DashboardButton>
           <button
             onClick={onToggleActive}
-            className="p-2 rounded-lg text-white/40 hover:text-white/80 hover:bg-white/10 transition-colors"
+            className="p-2 rounded-lg text-fm-neutral-400 hover:text-fm-neutral-700 hover:bg-fm-neutral-100 transition-colors"
             title={job.isActive ? 'Pause job' : 'Activate job'}
           >
             <Pause className="w-4 h-4" />
           </button>
           <button
             onClick={onDelete}
-            className="p-2 rounded-lg text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+            className="p-2 rounded-lg text-fm-neutral-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
             title="Delete job"
           >
             <Trash2 className="w-4 h-4" />

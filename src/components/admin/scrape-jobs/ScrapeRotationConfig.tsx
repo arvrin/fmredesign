@@ -45,7 +45,7 @@ export function ScrapeRotationConfig({ hook }: ScrapeRotationConfigProps) {
       {/* Suggestions Panel */}
       {visibleSuggestions.length > 0 && (
         <div className="space-y-3">
-          <div className="flex items-center gap-2 text-sm text-white/60">
+          <div className="flex items-center gap-2 text-sm text-fm-neutral-500">
             <Lightbulb className="w-4 h-4 text-yellow-400" />
             <span>Suggestions based on your scraped data</span>
           </div>
@@ -53,26 +53,26 @@ export function ScrapeRotationConfig({ hook }: ScrapeRotationConfigProps) {
             {visibleSuggestions.slice(0, 6).map((suggestion) => (
               <div
                 key={`${suggestion.type}:${suggestion.value}`}
-                className="rounded-lg border border-white/10 bg-white/5 p-3 flex items-start justify-between gap-2"
+                className="rounded-lg border border-fm-neutral-200 bg-white p-3 flex items-start justify-between gap-2"
               >
                 <div>
                   <div className="flex items-center gap-1.5 mb-1">
                     <span className={`text-xs px-1.5 py-0.5 rounded ${
                       suggestion.type === 'country'
-                        ? 'bg-blue-500/20 text-blue-300'
-                        : 'bg-green-500/20 text-green-300'
+                        ? 'bg-blue-50 text-blue-700'
+                        : 'bg-green-50 text-green-700'
                     }`}>
                       {suggestion.type}
                     </span>
-                    <span className="text-sm text-white font-medium">{suggestion.value}</span>
+                    <span className="text-sm text-fm-neutral-900 font-medium">{suggestion.value}</span>
                   </div>
-                  <p className="text-xs text-white/40">{suggestion.reason}</p>
+                  <p className="text-xs text-fm-neutral-400">{suggestion.reason}</p>
                 </div>
                 <button
                   onClick={() =>
                     setDismissedSuggestions((prev) => new Set([...prev, `${suggestion.type}:${suggestion.value}`]))
                   }
-                  className="p-1 text-white/30 hover:text-white/60 shrink-0"
+                  className="p-1 text-fm-neutral-300 hover:text-fm-neutral-600 shrink-0"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
@@ -84,7 +84,7 @@ export function ScrapeRotationConfig({ hook }: ScrapeRotationConfigProps) {
 
       {/* Config List */}
       <div className="flex items-center justify-between">
-        <p className="text-sm text-white/60">{rotationConfigs.length} rotation config(s)</p>
+        <p className="text-sm text-fm-neutral-500">{rotationConfigs.length} rotation config(s)</p>
         <DashboardButton variant="primary" size="sm" onClick={() => setShowCreate(true)}>
           <Plus className="w-4 h-4" />
           New Rotation
@@ -93,22 +93,22 @@ export function ScrapeRotationConfig({ hook }: ScrapeRotationConfigProps) {
 
       {/* Create Form */}
       {showCreate && (
-        <div className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-3">
+        <div className="rounded-xl border border-fm-neutral-200 bg-white p-4 space-y-3">
           <div className="flex gap-3">
             <input
               type="text"
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
               placeholder="Rotation name, e.g., BNI Global Rotation"
-              className="flex-1 px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white placeholder-white/30 text-sm focus:outline-none focus:border-fm-magenta-600"
+              className="flex-1 px-3 py-2 rounded-lg bg-white border border-fm-neutral-200 text-fm-neutral-900 placeholder-fm-neutral-400 text-sm focus:outline-none focus:border-fm-magenta-600"
             />
             <select
               value={newPlatform}
               onChange={(e) => setNewPlatform(e.target.value as ScrapeSourcePlatform)}
-              className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-fm-magenta-600"
+              className="px-3 py-2 rounded-lg bg-white border border-fm-neutral-200 text-fm-neutral-900 text-sm focus:outline-none focus:border-fm-magenta-600"
             >
               {SOURCE_PLATFORM_OPTIONS.filter((o) => o.value !== 'other').map((o) => (
-                <option key={o.value} value={o.value} className="bg-[#1a1a2e]">{o.label}</option>
+                <option key={o.value} value={o.value} className="bg-white">{o.label}</option>
               ))}
             </select>
           </div>
@@ -125,9 +125,9 @@ export function ScrapeRotationConfig({ hook }: ScrapeRotationConfigProps) {
 
       {/* Rotation Cards */}
       {rotationConfigs.length === 0 && !showCreate ? (
-        <div className="rounded-xl border border-white/10 bg-white/5 p-12" style={{ textAlign: 'center' }}>
-          <RotateCw className="w-10 h-10 text-white/30 mx-auto mb-3" />
-          <p className="text-white/60 mb-4">No rotation configs. Create one to auto-rotate through countries and industries.</p>
+        <div className="rounded-xl border border-fm-neutral-200 bg-white p-12" style={{ textAlign: 'center' }}>
+          <RotateCw className="w-10 h-10 text-fm-neutral-300 mx-auto mb-3" />
+          <p className="text-fm-neutral-500 mb-4">No rotation configs. Create one to auto-rotate through countries and industries.</p>
           <DashboardButton variant="primary" size="sm" onClick={() => setShowCreate(true)}>
             Create Rotation
           </DashboardButton>
@@ -185,17 +185,17 @@ function RotationCard({
   const platform = SOURCE_PLATFORM_OPTIONS.find((o) => o.value === config.sourcePlatform)?.label || config.sourcePlatform;
 
   return (
-    <div className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-3">
+    <div className="rounded-xl border border-fm-neutral-200 bg-white p-4 space-y-3">
       <div className="flex items-start justify-between">
         <div>
           <div className="flex items-center gap-2">
-            <h3 className="text-sm font-semibold text-white">{config.name}</h3>
-            <span className="text-xs text-white/40 bg-white/10 px-2 py-0.5 rounded-full">{platform}</span>
+            <h3 className="text-sm font-semibold text-fm-neutral-900">{config.name}</h3>
+            <span className="text-xs text-fm-neutral-400 bg-fm-neutral-100 px-2 py-0.5 rounded-full">{platform}</span>
             {!config.isActive && (
-              <span className="text-xs text-yellow-400 bg-yellow-900/30 px-2 py-0.5 rounded-full">Paused</span>
+              <span className="text-xs text-yellow-700 bg-yellow-50 px-2 py-0.5 rounded-full">Paused</span>
             )}
           </div>
-          <p className="text-xs text-white/40 mt-1">
+          <p className="text-xs text-fm-neutral-400 mt-1">
             {config.countries.length} countries, {config.industries.length} industries | {config.runsPerDay} runs/day
           </p>
         </div>
@@ -205,7 +205,7 @@ function RotationCard({
           </DashboardButton>
           <button
             onClick={onDelete}
-            className="p-2 rounded-lg text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+            className="p-2 rounded-lg text-fm-neutral-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -213,7 +213,7 @@ function RotationCard({
       </div>
 
       {/* Current Position */}
-      <div className="flex items-center gap-4 text-xs text-white/50">
+      <div className="flex items-center gap-4 text-xs text-fm-neutral-500">
         <span>
           Current: {config.countries[config.currentCountryIndex] || 'N/A'} / {String(config.industries[config.currentIndustryIndex] ?? 'N/A')}
         </span>
@@ -224,38 +224,38 @@ function RotationCard({
 
       {/* Edit Form */}
       {editing && (
-        <div className="space-y-3 pt-2 border-t border-white/10">
+        <div className="space-y-3 pt-2 border-t border-fm-neutral-200">
           <div>
-            <label className="block text-xs font-medium text-white/60 mb-1">
-              Countries <span className="text-white/30">(comma-separated)</span>
+            <label className="block text-xs font-medium text-fm-neutral-500 mb-1">
+              Countries <span className="text-fm-neutral-400">(comma-separated)</span>
             </label>
             <textarea
               value={countries}
               onChange={(e) => setCountries(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm resize-none focus:outline-none focus:border-fm-magenta-600"
+              className="w-full px-3 py-2 rounded-lg bg-white border border-fm-neutral-200 text-fm-neutral-900 text-sm resize-none focus:outline-none focus:border-fm-magenta-600"
               rows={2}
               placeholder="India, Philippines, Australia, Italy"
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-white/60 mb-1">
-              Industries <span className="text-white/30">(comma-separated; use IDs for BNI, search terms for Google Maps)</span>
+            <label className="block text-xs font-medium text-fm-neutral-500 mb-1">
+              Industries <span className="text-fm-neutral-400">(comma-separated; use IDs for BNI, search terms for Google Maps)</span>
             </label>
             <textarea
               value={industries}
               onChange={(e) => setIndustries(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm resize-none focus:outline-none focus:border-fm-magenta-600"
+              className="w-full px-3 py-2 rounded-lg bg-white border border-fm-neutral-200 text-fm-neutral-900 text-sm resize-none focus:outline-none focus:border-fm-magenta-600"
               rows={2}
               placeholder="56, 57, 58 (BNI category IDs) or restaurants, hotels (search terms)"
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-white/60 mb-1">Runs per day</label>
+            <label className="block text-xs font-medium text-fm-neutral-500 mb-1">Runs per day</label>
             <input
               type="number"
               value={runsPerDay}
               onChange={(e) => setRunsPerDay(e.target.value)}
-              className="w-24 px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-fm-magenta-600"
+              className="w-24 px-3 py-2 rounded-lg bg-white border border-fm-neutral-200 text-fm-neutral-900 text-sm focus:outline-none focus:border-fm-magenta-600"
               min={1}
               max={20}
             />

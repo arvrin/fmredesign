@@ -208,17 +208,28 @@ export function useScrapeJobs(): UseScrapeJobsReturn {
 
   const triggerJob = useCallback(async (id: string) => {
     try {
+      // Step 1: Create pending run
       const response = await fetch('/api/admin/scrape-jobs', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, action: 'trigger' }),
       });
       const json = await response.json();
-      if (json.success) {
-        adminToast.success('Run triggered — execute the orchestrator to process it');
-        await loadRuns();
-      } else {
+      if (!json.success) {
         adminToast.error(json.error || 'Failed to trigger run');
+        return;
+      }
+
+      // Step 2: Start orchestrator to process it
+      adminToast.success('Run triggered — starting scraper...');
+      await loadRuns();
+
+      const execRes = await fetch('/api/admin/scrape-jobs/execute', { method: 'POST' });
+      const execJson = await execRes.json();
+      if (execJson.success) {
+        adminToast.success('Scraper is running in the background');
+      } else {
+        adminToast.error(execJson.error || 'Failed to start scraper');
       }
     } catch (error) {
       console.error('Error triggering job:', error);

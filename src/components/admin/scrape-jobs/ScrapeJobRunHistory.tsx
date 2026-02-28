@@ -49,7 +49,7 @@ export function ScrapeJobRunHistory({ hook }: ScrapeJobRunHistoryProps) {
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <p className="text-sm text-white/60">{runs.length} run(s)</p>
+        <p className="text-sm text-fm-neutral-500">{runs.length} run(s)</p>
         <DashboardButton variant="secondary" size="sm" onClick={() => loadRuns()}>
           <RefreshCw className="w-4 h-4" />
           Refresh
@@ -58,25 +58,25 @@ export function ScrapeJobRunHistory({ hook }: ScrapeJobRunHistoryProps) {
 
       {/* Run Table */}
       {runs.length === 0 ? (
-        <div className="rounded-xl border border-white/10 bg-white/5 p-12" style={{ textAlign: 'center' }}>
-          <Clock className="w-10 h-10 text-white/30 mx-auto mb-3" />
-          <p className="text-white/60">No runs yet. Trigger a job to see history.</p>
+        <div className="rounded-xl border border-fm-neutral-200 bg-white p-12" style={{ textAlign: 'center' }}>
+          <Clock className="w-10 h-10 text-fm-neutral-300 mx-auto mb-3" />
+          <p className="text-fm-neutral-500">No runs yet. Trigger a job to see history.</p>
         </div>
       ) : (
-        <div className="rounded-xl border border-white/10 overflow-hidden">
+        <div className="rounded-xl border border-fm-neutral-200 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-white/10 bg-white/5">
-                  <th className="px-4 py-3 text-left text-xs font-medium text-white/50 uppercase tracking-wider">Job</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-white/50 uppercase tracking-wider">Status</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-white/50 uppercase tracking-wider">Contacts</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-white/50 uppercase tracking-wider">Duration</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-white/50 uppercase tracking-wider">Trigger</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-white/50 uppercase tracking-wider">Started</th>
+                <tr className="border-b border-fm-neutral-200 bg-fm-neutral-50">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-fm-neutral-500 uppercase tracking-wider">Job</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-fm-neutral-500 uppercase tracking-wider">Status</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-fm-neutral-500 uppercase tracking-wider">Contacts</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-fm-neutral-500 uppercase tracking-wider">Duration</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-fm-neutral-500 uppercase tracking-wider">Trigger</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-fm-neutral-500 uppercase tracking-wider">Started</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5">
+              <tbody className="divide-y divide-fm-neutral-100">
                 {runs.map((run) => (
                   <RunRow key={run.id} run={run} />
                 ))}
@@ -91,46 +91,46 @@ export function ScrapeJobRunHistory({ hook }: ScrapeJobRunHistoryProps) {
 
 function RunRow({ run }: { run: ScrapeJobRun }) {
   return (
-    <tr className="hover:bg-white/5 transition-colors">
+    <tr className="hover:bg-fm-neutral-50 transition-colors">
       <td className="px-4 py-3">
         <div className="flex items-center gap-2">
-          <span className="text-white text-sm">{run.jobName || run.jobId}</span>
+          <span className="text-fm-neutral-900 text-sm">{run.jobName || run.jobId}</span>
           {run.jobSourcePlatform && (
-            <span className="text-xs text-white/40">{getSourceLabel(run.jobSourcePlatform)}</span>
+            <span className="text-xs text-fm-neutral-400">{getSourceLabel(run.jobSourcePlatform)}</span>
           )}
         </div>
       </td>
       <td className="px-4 py-3">{getStatusBadge(run.status)}</td>
       <td className="px-4 py-3">
         <div className="flex items-center gap-2">
-          <Users className="w-3.5 h-3.5 text-white/40" />
-          <span className="text-white/80">
+          <Users className="w-3.5 h-3.5 text-fm-neutral-400" />
+          <span className="text-fm-neutral-700">
             {run.contactsFound > 0 ? (
               <>
-                <span className="text-green-400">{run.contactsImported}</span>
-                <span className="text-white/40"> / {run.contactsFound}</span>
+                <span className="text-green-600">{run.contactsImported}</span>
+                <span className="text-fm-neutral-400"> / {run.contactsFound}</span>
                 {run.contactsSkipped > 0 && (
-                  <span className="text-white/30 text-xs ml-1">({run.contactsSkipped} skipped)</span>
+                  <span className="text-fm-neutral-400 text-xs ml-1">({run.contactsSkipped} skipped)</span>
                 )}
               </>
             ) : (
-              <span className="text-white/40">-</span>
+              <span className="text-fm-neutral-400">-</span>
             )}
           </span>
         </div>
       </td>
-      <td className="px-4 py-3 text-white/60 text-sm">
+      <td className="px-4 py-3 text-fm-neutral-500 text-sm">
         {formatDuration(run.durationSeconds)}
       </td>
       <td className="px-4 py-3">
-        <span className="text-xs text-white/50 capitalize">{run.triggeredBy}</span>
+        <span className="text-xs text-fm-neutral-500 capitalize">{run.triggeredBy}</span>
       </td>
       <td className="px-4 py-3">
-        <span className="text-xs text-white/50">{formatDate(run.startedAt || run.createdAt)}</span>
+        <span className="text-xs text-fm-neutral-500">{formatDate(run.startedAt || run.createdAt)}</span>
       </td>
       {run.errorMessage && (
         <td className="px-4 py-1 col-span-6">
-          <div className="flex items-start gap-1.5 text-xs text-red-400/80">
+          <div className="flex items-start gap-1.5 text-xs text-red-600">
             <AlertCircle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
             <span className="truncate max-w-md">{run.errorMessage}</span>
           </div>

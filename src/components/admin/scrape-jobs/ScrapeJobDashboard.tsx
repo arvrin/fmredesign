@@ -63,7 +63,7 @@ export function ScrapeJobDashboard({ hook }: ScrapeJobDashboardProps) {
       )}
 
       {/* Tabs */}
-      <div className="border-b border-white/10">
+      <div className="border-b border-fm-neutral-200">
         <nav className="flex gap-1 -mb-px">
           {TABS.map((tab) => (
             <button
@@ -71,8 +71,8 @@ export function ScrapeJobDashboard({ hook }: ScrapeJobDashboardProps) {
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
                 activeTab === tab.id
-                  ? 'border-fm-magenta-600 text-white'
-                  : 'border-transparent text-white/60 hover:text-white/80 hover:border-white/20'
+                  ? 'border-fm-magenta-600 text-fm-neutral-900'
+                  : 'border-transparent text-fm-neutral-500 hover:text-fm-neutral-700 hover:border-fm-neutral-300'
               }`}
             >
               {tab.icon}
