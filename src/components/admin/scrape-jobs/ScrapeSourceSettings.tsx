@@ -57,12 +57,12 @@ function SourceConfigCard({
   const [fieldValue, setFieldValue] = useState('');
   const [saving, setSaving] = useState(false);
 
-  const fieldKey = isBNI ? 'bearer_token' : isGoogleMaps ? 'serpapi_key' : '';
-  const fieldLabel = isBNI ? 'Bearer Token' : isGoogleMaps ? 'SerpAPI Key' : '';
+  const fieldKey = isBNI ? 'bearer_token' : isGoogleMaps ? 'google_maps_api_key' : '';
+  const fieldLabel = isBNI ? 'Bearer Token' : isGoogleMaps ? 'Google Maps API Key' : '';
   const fieldPlaceholder = isBNI
     ? 'eyJhbGciOi...'
     : isGoogleMaps
-    ? 'your-serpapi-key'
+    ? 'AIzaSy...'
     : '';
 
   const currentValue = configData[fieldKey] || '';

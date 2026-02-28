@@ -86,7 +86,7 @@ export interface ScrapeRotationSuggestion {
 
 export const SOURCE_PLATFORM_OPTIONS: { value: ScrapeSourcePlatform; label: string; description: string }[] = [
   { value: 'bni', label: 'BNI', description: 'BNI Connect Global directory' },
-  { value: 'google_maps', label: 'Google Maps', description: 'Google Maps via SerpAPI' },
+  { value: 'google_maps', label: 'Google Maps', description: 'Google Places API (official)' },
   { value: 'linkedin', label: 'LinkedIn', description: 'LinkedIn (coming soon)' },
   { value: 'other', label: 'Other', description: 'Custom source' },
 ];
