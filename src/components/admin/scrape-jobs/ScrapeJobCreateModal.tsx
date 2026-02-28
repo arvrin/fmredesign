@@ -146,20 +146,20 @@ export function ScrapeJobCreateModal({ isOpen, onClose, onCreate }: ScrapeJobCre
                   type="text"
                   value={gmQuery}
                   onChange={(e) => setGmQuery(e.target.value)}
-                  placeholder="e.g., restaurants in Mumbai"
+                  placeholder="e.g., digital marketing agencies"
                   className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white placeholder-white/30 text-sm focus:outline-none focus:border-fm-magenta-600"
                   required
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-white/70 mb-1.5">
-                  Location <span className="text-white/40">(optional)</span>
+                  City / Area <span className="text-white/40">(optional — appended to query)</span>
                 </label>
                 <input
                   type="text"
                   value={gmLocation}
                   onChange={(e) => setGmLocation(e.target.value)}
-                  placeholder="e.g., @19.076,72.877,12z"
+                  placeholder="e.g., Mumbai, Pune, Delhi"
                   className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white placeholder-white/30 text-sm focus:outline-none focus:border-fm-magenta-600"
                 />
               </div>
