@@ -134,7 +134,8 @@ export default function SettingsPage() {
       const res = await fetch('/api/admin/api-keys');
       const result = await res.json();
       if (result.success) setApiKeys(result.data || []);
-    } catch {} finally { setApiKeysLoading(false); }
+      else console.error('Failed to load API keys:', result.error);
+    } catch (err) { console.error('Failed to load API keys:', err); } finally { setApiKeysLoading(false); }
   };
 
   const createApiKey = async () => {
@@ -152,8 +153,13 @@ export default function SettingsPage() {
         setNewKeyPerms([]);
         setNewKeyRateLimit(60);
         loadApiKeys();
+        setMessage({ type: 'success', content: 'API key created successfully.' });
+      } else {
+        setMessage({ type: 'error', content: result.error || 'Failed to create API key.' });
       }
-    } catch {}
+    } catch (err) {
+      setMessage({ type: 'error', content: `API key creation failed: ${err instanceof Error ? err.message : 'Unknown error'}` });
+    }
   };
 
   const toggleApiKey = async (id: string, isActive: boolean) => {
@@ -176,7 +182,8 @@ export default function SettingsPage() {
       const res = await fetch('/api/admin/webhooks');
       const result = await res.json();
       if (result.success) setWebhooks(result.data || []);
-    } catch {} finally { setWebhooksLoading(false); }
+      else console.error('Failed to load webhooks:', result.error);
+    } catch (err) { console.error('Failed to load webhooks:', err); } finally { setWebhooksLoading(false); }
   };
 
   const createWebhook = async () => {
@@ -194,8 +201,13 @@ export default function SettingsPage() {
         setNewWebhookUrl('');
         setNewWebhookEvents([]);
         loadWebhooks();
+        setMessage({ type: 'success', content: 'Webhook created successfully.' });
+      } else {
+        setMessage({ type: 'error', content: result.error || 'Failed to create webhook.' });
       }
-    } catch {}
+    } catch (err) {
+      setMessage({ type: 'error', content: `Webhook creation failed: ${err instanceof Error ? err.message : 'Unknown error'}` });
+    }
   };
 
   const toggleWebhook = async (id: string, isActive: boolean) => {
@@ -280,6 +292,8 @@ export default function SettingsPage() {
         }
       })
       .catch(() => {});
+    loadApiKeys();
+    loadWebhooks();
   }, []);
 
   useEffect(() => {
@@ -858,7 +872,7 @@ export default function SettingsPage() {
             </TabsContent>
 
             {/* API Keys Tab */}
-            <TabsContent value="api-keys" onFocusCapture={() => { if (apiKeys.length === 0 && !apiKeysLoading) loadApiKeys(); }}>
+            <TabsContent value="api-keys">
               <DashboardCard variant="admin">
                 <CardHeader>
                   <div className="flex items-center justify-between">
@@ -998,7 +1012,7 @@ export default function SettingsPage() {
             </TabsContent>
 
             {/* Webhooks Tab */}
-            <TabsContent value="webhooks" onFocusCapture={() => { if (webhooks.length === 0 && !webhooksLoading) loadWebhooks(); }}>
+            <TabsContent value="webhooks">
               <DashboardCard variant="admin">
                 <CardHeader>
                   <div className="flex items-center justify-between">
