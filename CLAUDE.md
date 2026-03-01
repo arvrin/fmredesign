@@ -149,14 +149,23 @@ src/
 │   │   ├── leads/          # Lead management + analytics
 │   │   ├── projects/       # Project list + [id] detail/edit + new
 │   │   ├── proposals/      # Proposal list
+│   │   ├── scraped-contacts/ # Scraped contacts + scrape-jobs sub-page
 │   │   ├── settings/       # App settings
 │   │   ├── support/        # Support ticket management
 │   │   ├── system/         # System diagnostics
 │   │   ├── team/           # Team list + [memberId] detail/edit/assignments/documents/performance + new
 │   │   └── users/          # Authorized user management (roles/permissions)
 │   ├── api/
-│   │   ├── admin/          # Admin APIs (auth, users, support, audit, social, messages, notifications, growth)
-│   │   │   └── social/     # Social publishing APIs (accounts, publish, verify-token)
+│   │   ├── admin/          # Admin APIs (auth, users, support, audit, social, messages, notifications, growth, scrape-jobs, webhooks, api-keys, settings, documents)
+│   │   │   ├── api-keys/        # External API key management
+│   │   │   ├── content/generate/ # AI content generation
+│   │   │   ├── documents/       # Document management (CRUD, download, health, preview, storage)
+│   │   │   ├── invoice-sequence/ # Invoice numbering API (persistent, Supabase-backed)
+│   │   │   ├── scrape-jobs/     # Web scraping job management APIs (CRUD, config, execute, runs)
+│   │   │   ├── scraped-contacts/ # Scraped contact management
+│   │   │   ├── social/          # Social publishing APIs (accounts, publish, verify-token)
+│   │   │   ├── upload-logo/     # Client logo upload
+│   │   │   └── webhooks/        # Outgoing webhook management
 │   │   ├── client-portal/  # Client portal APIs (profile, projects, content, contracts, etc.)
 │   │   │   └── [clientId]/ # All client-scoped endpoints
 │   │   ├── contracts/      # Contract CRUD API
@@ -183,7 +192,12 @@ src/
 │   └── layout.tsx          # Root layout (fonts, JSON-LD, analytics pixel)
 ├── components/
 │   ├── admin/              # Admin components (modals, forms, dashboards)
+│   │   ├── client-detail/  # Client detail page sections
+│   │   ├── creativeminds/  # Talent pool management UI
 │   │   ├── discovery/      # Discovery wizard section components
+│   │   ├── leads/          # Lead pipeline management UI
+│   │   ├── scrape-jobs/    # Scrape job management UI
+│   │   ├── scraped-contacts/ # Scraped contacts UI
 │   │   └── social/         # Social publishing (PublishButton, SocialAccountsPanel, SocialPublishStatus)
 │   ├── animations/         # GSAP animation components
 │   ├── layout/             # Header, Footer, ConditionalLayout
@@ -193,15 +207,14 @@ src/
 │   └── ui/                 # Shared UI (Badge, Input, Toggle, tabs)
 ├── design-system/          # DashboardLayout, Card, Button, MetricCard, IconBox
 ├── hooks/                  # useAdminAuth, useAdminData, useBreadcrumbs, useCountUp, useGSAP, useMagneticEffect, useAdminFilters
-│   └── admin/              # useClientDetail, useTeamMembers, useSocialAccounts, useCreativeMinds, useLeads
+│   └── admin/              # useClientDetail, useTeamMembers, useSocialAccounts, useCreativeMinds, useLeads, useScrapedContacts, useScrapeJobs
 ├── lib/
 │   ├── admin/              # Admin types, auth, services, permissions, audit-log, PDF generators
 │   │   ├── permissions.ts  # Role-based permission system (23 permissions, 5 roles)
 │   │   ├── audit-log.ts    # Admin action audit logging
-│   │   ├── invoice-numbering.ts  # Auto-incrementing invoice numbers
+│   │   ├── invoice-numbering.ts  # API-backed invoice numbering (FM164/2025 format, Supabase persistence, localStorage fallback)
 │   │   ├── proposal-numbering.ts # Auto-incrementing proposal numbers
-│   │   ├── pdf.ts          # Invoice PDF generator (jsPDF)
-│   │   ├── pdf-simple.ts   # Alternative lightweight PDF utility
+│   │   ├── pdf-simple.ts   # Invoice PDF generator (jsPDF) — GST-compliant, multi-currency, SAC codes
 │   │   ├── proposal-pdf-generator.ts # Proposal PDF generator
 │   │   ├── discovery-service.ts # Discovery session CRUD
 │   │   ├── discovery-types.ts # Discovery session types (10-section wizard)
@@ -219,7 +232,9 @@ src/
 │   ├── client-portal/      # resolve-client, context, status-colors, export
 │   ├── social/             # Social publishing (meta-api, publish-engine, token-crypto, types)
 │   ├── email/              # Email notifications (Resend integration — send.ts, resend.ts)
+│   ├── webhooks/           # Outgoing webhooks (deliver.ts, processor.ts, verify.ts)
 │   ├── validations/        # Zod schemas (schemas.ts) — shared by API routes + forms
+│   ├── api-key-auth.ts     # API key authentication (validateApiKey)
 │   ├── admin-auth-middleware.ts  # requireAdminAuth() — admin API route guard
 │   ├── client-session.ts   # requireClientAuth(), session cookies — client API route guard
 │   ├── rate-limiter.ts     # In-memory rate limiter (5 req/60s per IP)
@@ -257,10 +272,21 @@ src/
 | `authorized_users` | Admin team members | id, mobile_number, name, email, role, permissions, status |
 | `admin_audit_log` | Audit trail | id, user_id, user_name, action, resource_type, resource_id, details (jsonb), ip_address, created_at |
 | `leads` | Lead capture (get-started form) | id, name, email, phone, company, budget, services, source, status, score, notes, created_at |
-| `invoices` | Invoice management | id, client_id, invoice_number, items (jsonb), subtotal, tax, total, status, due_date, paid_date |
+| `invoices` | Invoice management | id, client_id, invoice_number, line_items (jsonb), subtotal, tax_rate, tax_amount, total, status, due_date, currency, cgst_amount, sgst_amount, igst_amount, place_of_supply, company_gstin |
+| `invoice_sequences` | Persistent invoice numbering | id, prefix, current_counter, current_year, updated_at |
 | `proposals` | Proposal management | id, client_id, proposal_number, title, sections (jsonb), total, status, valid_until |
 | `talent_applications` | CreativeMinds applications | id, name, email, phone, category, skills, portfolio_url, experience, status |
 | `team_members` | Agency team profiles | id, name, email, role, department, skills, avatar_url, status |
+| `team_assignments` | Team member project assignments | id, team_member_id, client_id, project_id, role, hours_allocated, status |
+| `ticket_replies` | Support ticket replies | id, ticket_id, sender, message, created_at |
+| `admin_settings` | Admin configuration | id, key, value, updated_at |
+| `api_keys` | External API key management | id, name, key_hash, permissions, last_used_at, status |
+| `client_messages` | Client messaging | id, client_id, sender, message, read, created_at |
+| `scrape_jobs` | Web scraping job definitions | id, name, source_type, config (jsonb), status, schedule |
+| `scrape_job_runs` | Scrape job execution logs | id, job_id, status, results_count, started_at, completed_at |
+| `scraped_contacts` | Scraped contact data | id, job_id, name, email, phone, company, source |
+| `outgoing_webhooks` | Webhook definitions | id, name, url, events, secret, status |
+| `outgoing_webhook_deliveries` | Webhook delivery logs | id, webhook_id, event, payload, response_code, delivered_at |
 
 ### resolveClientId Pattern
 URL param `[clientId]` can be **slug OR database ID**. Always use the resolver:
@@ -313,7 +339,7 @@ if (!resolved) return 404;
   └─ DashboardLayout variant="admin" with NavigationGroup[] navigation
 ```
 
-### Admin Pages (33 total)
+### Admin Pages (34 total)
 | Route | Purpose |
 |-------|---------|
 | `/admin` | Main dashboard (overview metrics) |
@@ -342,6 +368,8 @@ if (!resolved) return 404;
 | `/admin/discovery/new` | New discovery |
 | `/admin/discovery/[id]/report` | Discovery report |
 | `/admin/creativeminds` | Talent pool management |
+| `/admin/scraped-contacts` | Scraped contacts dashboard |
+| `/admin/scraped-contacts/scrape-jobs` | Scrape job management |
 | `/admin/support` | Support tickets |
 | `/admin/users` | Authorized users (RBAC) |
 | `/admin/audit` | Audit log |
@@ -356,20 +384,36 @@ if (!resolved) return 404;
 | `/api/admin/auth/session` | GET | Validate session |
 | `/api/admin/auth/logout` | POST | Clear session |
 | `/api/admin/users` | GET, POST, PUT, DELETE | Manage authorized users |
+| `/api/admin/api-keys` | GET, POST, PUT, DELETE | External API key management |
 | `/api/admin/support` | GET, PUT | Admin support ticket management |
 | `/api/admin/audit` | GET | Audit log viewer (filterable by resource_type, action) |
 | `/api/admin/messages` | GET, POST | Admin messaging system |
 | `/api/admin/notifications` | GET, POST | In-app notification management |
 | `/api/admin/growth` | GET | Growth metrics/analytics |
+| `/api/admin/settings` | GET, PUT | Admin app settings |
+| `/api/admin/invoice-sequence` | GET, POST | Persistent invoice numbering (preview/increment) |
+| `/api/admin/upload-logo` | POST | Client logo upload |
+| `/api/admin/content/generate` | POST | AI content generation |
+| `/api/admin/documents` | GET, POST, PUT, DELETE | Document management |
+| `/api/admin/documents/download` | GET | Document file download |
+| `/api/admin/documents/health` | GET | Document storage health check |
+| `/api/admin/documents/preview` | GET | Document preview |
+| `/api/admin/documents/storage` | GET | Document storage info |
+| `/api/admin/scrape-jobs` | GET, POST, PUT, DELETE | Web scraping job CRUD |
+| `/api/admin/scrape-jobs/config` | GET, POST | Scrape job configuration |
+| `/api/admin/scrape-jobs/execute` | POST | Execute a scrape job |
+| `/api/admin/scrape-jobs/runs` | GET | Scrape job execution history |
+| `/api/admin/scraped-contacts` | GET, POST, PUT, DELETE | Scraped contact management |
+| `/api/admin/webhooks` | GET, POST, PUT, DELETE | Outgoing webhook management |
 | `/api/admin/social/accounts` | GET, POST, PUT, DELETE | Social media account CRUD |
 | `/api/admin/social/publish` | POST | Publish content to Meta (Facebook/Instagram) |
 | `/api/admin/social/verify-token` | POST | Verify Meta Graph API access token |
 | `/api/clients` | GET, POST, PUT | Client CRUD |
 | `/api/projects` | GET, POST, PUT | Project CRUD (supports `?id=xxx` single-item fetch) |
 | `/api/content` | GET, POST, PUT, DELETE | Content CRUD (supports `?id=xxx` single-item fetch, server-side pagination `?page=X&pageSize=Y`, filters `?status=&type=&platform=&startDate=&endDate=`) |
-| `/api/contracts` | GET, POST, PUT | Contract CRUD |
-| `/api/invoices` | GET, POST | Invoice management |
-| `/api/proposals` | GET, POST | Proposal management |
+| `/api/contracts` | GET, POST, PUT, DELETE | Contract CRUD |
+| `/api/invoices` | GET, POST, PUT, DELETE | Invoice management (pagination `?page=X&pageSize=Y`, filters `?clientId=&status=&search=`) |
+| `/api/proposals` | GET, POST, PUT, DELETE | Proposal management |
 | `/api/team` | GET, POST, PUT | Team member management |
 | `/api/leads` | GET, POST | Lead management |
 | `/api/leads/analytics` | GET | Lead analytics |
@@ -457,21 +501,25 @@ A talent pool platform connecting freelance creatives with the agency.
 
 ## Invoice & Proposal System
 
-### Invoices
-- **Admin page** (`/admin/invoices`): List view with filters; `/admin/invoice`: Single invoice creation form
-- **Component**: `src/components/admin/InvoiceFormNew.tsx` — Line items, tax calc, PDF generation
-- **PDF**: `src/lib/admin/pdf.ts` — jsPDF-based invoice PDF generator
-- **Numbering**: `src/lib/admin/invoice-numbering.ts` — Auto-incrementing `FM-INV-XXXX`
-- **Company info**: Read from `COMPANY_PAN`, `COMPANY_MSME`, `COMPANY_ADDRESS` env vars (NOT hardcoded)
-- **API**: `GET/POST /api/invoices`
+### Invoices (GST-Compliant)
+- **Admin pages**: `/admin/invoices` (list with filters, pagination), `/admin/invoice` (creation form)
+- **Component**: `src/components/admin/InvoiceFormNew.tsx` — Line items, multi-currency, GST split, SAC codes, live preview, PDF generation
+- **PDF**: `src/lib/admin/pdf-simple.ts` — jsPDF-based invoice PDF generator with SAC column, CGST/SGST/IGST breakdown, multi-currency support
+- **Numbering**: `src/lib/admin/invoice-numbering.ts` — API-backed `FM{counter}/{year}` format (e.g., `FM164/2025`), Supabase persistence via `invoice_sequences` table, localStorage fallback
+- **Sequence API**: `GET/POST /api/admin/invoice-sequence` — GET previews next number, POST atomically increments
+- **Company info**: Read from `COMPANY_PAN`, `COMPANY_MSME`, `COMPANY_ADDRESS` env vars (NOT hardcoded). GSTIN: `23BQNPM3447F1ZT` (Bhopal, MP, state code 23)
+- **GST logic**: `InvoiceUtils.calculateGST()` in `types.ts` — same-state → CGST+SGST (split 50/50), different-state → IGST (full rate), international → no GST
+- **Multi-currency**: INR, USD, GBP, AED, EUR — `CURRENCY_OPTIONS` in `types.ts`, auto-switch to USD for international clients
+- **SAC codes**: Service Accounting Codes on line items, auto-filled from `AGENCY_SERVICES` in `types.ts`
+- **API**: `GET/POST/PUT/DELETE /api/invoices`
 
 ### Proposals
 - **Admin page** (`/admin/proposals`): List + creation
 - **Component**: `src/components/admin/ProposalFormNew.tsx` — Multi-section proposal builder
 - **PDF**: `src/lib/admin/proposal-pdf-generator.ts` — Proposal PDF output
-- **Numbering**: `src/lib/admin/proposal-numbering.ts` — Auto-incrementing `FM-PROP-XXXX`
+- **Numbering**: `src/lib/admin/proposal-numbering.ts` — Auto-incrementing `PM{counter}/{year}` format (e.g., `PM164/2025`), localStorage-based
 - **Storage**: `src/lib/admin/proposal-storage.ts` — Proposal persistence
-- **API**: `GET/POST /api/proposals`
+- **API**: `GET/POST/PUT/DELETE /api/proposals`
 
 ---
 
@@ -558,6 +606,47 @@ Client contract management integrated into both admin dashboard and client porta
 - `src/app/api/contracts/route.ts` — Admin contract CRUD
 - `src/app/api/client-portal/[clientId]/contracts/route.ts` — Client-side contract API
 - `src/app/client/[clientId]/contracts/page.tsx` — Client portal contracts page
+
+---
+
+## Outgoing Webhooks
+
+Event-driven webhook system for integrating with external services.
+
+### Key Files
+- `src/lib/webhooks/deliver.ts` — Webhook delivery engine (HTTP POST with retry)
+- `src/lib/webhooks/processor.ts` — Event processor (matches events to registered webhooks)
+- `src/lib/webhooks/verify.ts` — HMAC signature verification for webhook payloads
+- `src/app/api/admin/webhooks/route.ts` — Webhook CRUD API
+
+### How It Works
+1. Admin registers a webhook URL with a secret and list of event types in `/admin/settings`
+2. When an event occurs (e.g., invoice created, client updated), the processor matches it to registered webhooks
+3. Payload is signed with HMAC using the webhook's secret and delivered via HTTP POST
+4. Delivery logs stored in `outgoing_webhook_deliveries` table
+
+---
+
+## Web Scraping (Contact Discovery)
+
+Automated web scraping for discovering potential contacts/leads.
+
+### Admin Pages
+- `/admin/scraped-contacts` — Scraped contacts dashboard (analytics, filters, table, bulk actions)
+- `/admin/scraped-contacts/scrape-jobs` — Scrape job management (create, edit, execute, view runs)
+
+### Key Files
+- `src/hooks/admin/useScrapedContacts.ts` — React Query hook for scraped contacts
+- `src/hooks/admin/useScrapeJobs.ts` — React Query hook for scrape jobs
+- `src/components/admin/scraped-contacts/` — 7 UI components (table, filters, analytics, etc.)
+- `src/components/admin/scrape-jobs/` — 9 UI components (job list, config, run history, etc.)
+
+### API Routes
+- `GET/POST/PUT/DELETE /api/admin/scraped-contacts` — Contact CRUD
+- `GET/POST/PUT/DELETE /api/admin/scrape-jobs` — Job CRUD
+- `GET/POST /api/admin/scrape-jobs/config` — Job configuration
+- `POST /api/admin/scrape-jobs/execute` — Execute a scrape job
+- `GET /api/admin/scrape-jobs/runs` — Job run history
 
 ---
 
@@ -889,7 +978,7 @@ GOOGLE_SHEETS_SPREADSHEET_ID=...
 
 `src/lib/validations/schemas.ts` — shared between API routes (server validation) and forms (client validation).
 
-Key schemas: `createClientSchema`, `updateClientSchema`, `createProjectSchema`, `createContentSchema`, `createTeamMemberSchema`, `createInvoiceSchema`, `createProposalSchema`, `createUserSchema`, `contactFormSchema`, `getStartedFormSchema`, `talentApplicationSchema`
+Key schemas: `createClientSchema`, `updateClientSchema`, `createProjectSchema`, `createContentSchema`, `createTeamMemberSchema`, `createInvoiceSchema`, `createProposalSchema`, `createUserSchema`, `createLeadSchema`, `submitTalentApplicationSchema`, `createContractSchema`, `createDiscoverySchema`, `uploadDocumentSchema`, `contractActionSchema`, `proposalActionSchema`
 
 Usage in API routes:
 ```ts
@@ -906,22 +995,40 @@ if (!body.success) return NextResponse.json({ error: body.error.flatten() }, { s
 |-----------|------|---------|
 | `AddClientModal` | `admin/AddClientModal.tsx` | Modal for creating new clients |
 | `AddLeadModal` | `admin/AddLeadModal.tsx` | Modal for adding leads manually |
-| `InvoiceFormNew` | `admin/InvoiceFormNew.tsx` | Invoice creation with line items + PDF |
+| `InvoiceFormNew` | `admin/InvoiceFormNew.tsx` | Invoice creation with line items, GST split, multi-currency, SAC codes + PDF |
 | `ProposalFormNew` | `admin/ProposalFormNew.tsx` | Proposal builder with sections + PDF |
 | `ProposalDashboard` | `admin/ProposalDashboard.tsx` | Proposal list with filters |
 | `CommandPalette` | `admin/CommandPalette.tsx` | Cmd+K quick navigation |
 | `CommunicationHub` | `admin/CommunicationHub.tsx` | Client communication dashboard |
 | `ClientDashboard` | `admin/ClientDashboard.tsx` | Individual client dashboard |
-| `ClientProfile` | `admin/ClientProfile.tsx` | Client profile editor |
+| `ClientPortalLink` | `admin/ClientPortalLink.tsx` | Client portal link generator |
 | `DocumentManager` | `admin/DocumentManager.tsx` | Document upload/management |
+| `FilterBar` | `admin/FilterBar.tsx` | Reusable filter bar for admin lists |
 | `GrowthEngine` | `admin/GrowthEngine.tsx` | Growth metrics dashboard |
+| `Pagination` | `admin/Pagination.tsx` | Reusable pagination component |
 | `AdminSystem` | `admin/AdminSystem.tsx` | System health diagnostics |
 | `AdminErrorBoundary` | `admin/AdminErrorBoundary.tsx` | Error boundary for admin pages |
+| `SectionErrorBoundary` | `admin/SectionErrorBoundary.tsx` | Error boundary for dashboard sections |
 | `ConfirmDialog` | `admin/ConfirmDialog.tsx` | Confirmation modal dialog (delete, destructive actions) |
 | `ContractsTab` | `admin/ContractsTab.tsx` | Contract management UI for client detail page |
+| `SkillSelector` | `admin/SkillSelector.tsx` | Skill selection component for team members |
+| `TeamMemberSelect` | `admin/TeamMemberSelect.tsx` | Team member dropdown selector |
+| `UploadModal` | `admin/UploadModal.tsx` | File upload modal |
+| `UserFormModal` | `admin/UserFormModal.tsx` | User creation/editing modal |
 | `PublishButton` | `admin/social/PublishButton.tsx` | Social media publish button for content items |
 | `SocialAccountsPanel` | `admin/social/SocialAccountsPanel.tsx` | Connected social accounts manager |
 | `SocialPublishStatus` | `admin/social/SocialPublishStatus.tsx` | Publish status indicator on content list |
+
+### Component Subdirectories
+| Directory | Purpose |
+|-----------|---------|
+| `admin/client-detail/` | Client detail page sections (11 sub-components) |
+| `admin/creativeminds/` | Talent pool management UI (6 sub-components) |
+| `admin/discovery/` | Discovery wizard section forms (4 sub-components) |
+| `admin/leads/` | Lead pipeline management UI (6 sub-components) |
+| `admin/scrape-jobs/` | Scrape job management UI (9 sub-components) |
+| `admin/scraped-contacts/` | Scraped contacts UI (7 sub-components: table, filters, analytics, etc.) |
+| `admin/social/` | Social publishing UI (5 sub-components) |
 
 ---
 
