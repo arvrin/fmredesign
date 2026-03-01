@@ -723,10 +723,20 @@ export class InvoiceUtils {
         if (remaining >= 100000) {
           const lakhs = Math.floor(remaining / 100000);
           result += convertHundreds(lakhs) + ' Lakh ';
-          const remainingThousands = remaining % 100000;
-          if (remainingThousands > 0) {
-            result += convertHundreds(remainingThousands) + ' ';
+          const remAfterLakh = remaining % 100000;
+          if (remAfterLakh >= 1000) {
+            const thousands = Math.floor(remAfterLakh / 1000);
+            result += convertHundreds(thousands) + ' Thousand ';
+            const rem = remAfterLakh % 1000;
+            if (rem > 0) result += convertHundreds(rem) + ' ';
+          } else if (remAfterLakh > 0) {
+            result += convertHundreds(remAfterLakh) + ' ';
           }
+        } else if (remaining >= 1000) {
+          const thousands = Math.floor(remaining / 1000);
+          result += convertHundreds(thousands) + ' Thousand ';
+          const rem = remaining % 1000;
+          if (rem > 0) result += convertHundreds(rem) + ' ';
         } else {
           result += convertHundreds(remaining) + ' ';
         }
@@ -735,6 +745,18 @@ export class InvoiceUtils {
       const lakhs = Math.floor(rupees / 100000);
       result += convertHundreds(lakhs) + ' Lakh ';
       const remaining = rupees % 100000;
+      if (remaining >= 1000) {
+        const thousands = Math.floor(remaining / 1000);
+        result += convertHundreds(thousands) + ' Thousand ';
+        const rem = remaining % 1000;
+        if (rem > 0) result += convertHundreds(rem) + ' ';
+      } else if (remaining > 0) {
+        result += convertHundreds(remaining) + ' ';
+      }
+    } else if (rupees >= 1000) { // Thousands
+      const thousands = Math.floor(rupees / 1000);
+      result += convertHundreds(thousands) + ' Thousand ';
+      const remaining = rupees % 1000;
       if (remaining > 0) {
         result += convertHundreds(remaining) + ' ';
       }

@@ -126,14 +126,18 @@ export class SimplePDFGenerator {
     return invoice.currency || 'INR';
   }
 
+  /** PDF-safe currency symbol (jsPDF helvetica doesn't support ₹) */
   private getCurrencySymbol(invoice: Invoice): string {
-    return InvoiceUtils.getCurrencySymbol(this.getCurrency(invoice));
+    const currency = this.getCurrency(invoice);
+    if (currency === 'INR') return 'Rs.';
+    return InvoiceUtils.getCurrencySymbol(currency);
   }
 
   private formatAmount(amount: number, invoice: Invoice): string {
     const currency = this.getCurrency(invoice);
-    const opt = CURRENCY_OPTIONS.find(c => c.value === currency) || CURRENCY_OPTIONS[0];
-    return `${opt.symbol}${amount.toLocaleString(opt.locale)}`;
+    const symbol = currency === 'INR' ? 'Rs.' : (CURRENCY_OPTIONS.find(c => c.value === currency) || CURRENCY_OPTIONS[0]).symbol;
+    const locale = (CURRENCY_OPTIONS.find(c => c.value === currency) || CURRENCY_OPTIONS[0]).locale;
+    return `${symbol}${amount.toLocaleString(locale)}`;
   }
 
   private getGSTType(invoice: Invoice): 'intra' | 'inter' | 'export' {
@@ -155,7 +159,6 @@ export class SimplePDFGenerator {
     }
 
     this.addHeader(invoice);
-    this.addCompanyAddress();
     this.addInvoiceMeta(invoice);
     this.addClientAndDates(invoice);
     this.addItemsTable(invoice);
@@ -246,22 +249,10 @@ export class SimplePDFGenerator {
     this.doc.text('FM', x + w / 2, y + h / 2 + 2, { align: 'center' });
   }
 
-  // ---- Company address (below logo area) -----------------------------------
-
-  private addCompanyAddress(): void {
-    const y = 40;
-    this.doc.setFont('helvetica', 'normal');
-    this.doc.setFontSize(7);
-    this.doc.setTextColor(...GREY);
-    const addressLine = `${DEFAULT_COMPANY_INFO.address}, ${DEFAULT_COMPANY_INFO.city}, ${DEFAULT_COMPANY_INFO.state} - ${DEFAULT_COMPANY_INFO.zipCode}`;
-    const lines = this.doc.splitTextToSize(addressLine, CONTENT_W);
-    this.doc.text(lines, MARGIN_L, y);
-  }
-
   // ---- Invoice meta line --------------------------------------------------
 
   private addInvoiceMeta(invoice: Invoice): void {
-    const y = 48;
+    const y = 46;
 
     // Thin magenta decorative line
     this.doc.setDrawColor(...MAGENTA);
@@ -288,7 +279,7 @@ export class SimplePDFGenerator {
   // ---- Client info & dates ------------------------------------------------
 
   private addClientAndDates(invoice: Invoice): void {
-    const startY = 70;
+    const startY = 66;
 
     // ---- Left column: Bill To ----
     this.doc.setFont('helvetica', 'bold');
@@ -385,7 +376,7 @@ export class SimplePDFGenerator {
   // ---- Items table --------------------------------------------------------
 
   private addItemsTable(invoice: Invoice): void {
-    const startY = 104;
+    const startY = 100;
     const sym = this.getCurrencySymbol(invoice);
 
     // Check if any line item has a SAC code
@@ -410,18 +401,20 @@ export class SimplePDFGenerator {
     // Column widths differ based on whether SAC codes are present
     const columnStyles: Record<string, Partial<{ cellWidth: number; halign: 'left' | 'center' | 'right'; fontStyle: 'bold' | 'normal' | 'italic' }>> = {};
     if (hasSAC) {
+      // Total: 10+64+18+14+32+32 = 170 = CONTENT_W
       columnStyles['0'] = { cellWidth: 10, halign: 'center' };
-      columnStyles['1'] = { cellWidth: 72 };
+      columnStyles['1'] = { cellWidth: 64 };
       columnStyles['2'] = { cellWidth: 18, halign: 'center' };
-      columnStyles['3'] = { cellWidth: 15, halign: 'center' };
-      columnStyles['4'] = { cellWidth: 27, halign: 'right' };
-      columnStyles['5'] = { cellWidth: 28, halign: 'right', fontStyle: 'bold' };
+      columnStyles['3'] = { cellWidth: 14, halign: 'center' };
+      columnStyles['4'] = { cellWidth: 32, halign: 'right' };
+      columnStyles['5'] = { cellWidth: 32, halign: 'right', fontStyle: 'bold' };
     } else {
+      // Total: 10+82+14+32+32 = 170 = CONTENT_W
       columnStyles['0'] = { cellWidth: 10, halign: 'center' };
-      columnStyles['1'] = { cellWidth: 90 };
-      columnStyles['2'] = { cellWidth: 15, halign: 'center' };
-      columnStyles['3'] = { cellWidth: 27, halign: 'right' };
-      columnStyles['4'] = { cellWidth: 28, halign: 'right', fontStyle: 'bold' };
+      columnStyles['1'] = { cellWidth: 82 };
+      columnStyles['2'] = { cellWidth: 14, halign: 'center' };
+      columnStyles['3'] = { cellWidth: 32, halign: 'right' };
+      columnStyles['4'] = { cellWidth: 32, halign: 'right', fontStyle: 'bold' };
     }
 
     autoTable(this.doc, {
@@ -686,23 +679,23 @@ export class SimplePDFGenerator {
       this.doc.setLineWidth(0.3);
       this.doc.line(MARGIN_L, PAGE_H - 28, PAGE_W - MARGIN_R, PAGE_H - 28);
 
-      // Left: Registration details
+      // Left: Registration details (stacked)
       this.doc.setFontSize(7);
       this.doc.setTextColor(...GREY);
       this.doc.setFont('helvetica', 'normal');
       this.doc.text(`GSTIN: ${gstin}`, MARGIN_L, PAGE_H - 24);
       if (DEFAULT_COMPANY_INFO.taxId) {
-        this.doc.text(`PAN: ${DEFAULT_COMPANY_INFO.taxId.substring(2, 12)}`, MARGIN_L, PAGE_H - 20);
+        this.doc.text(`PAN: ${DEFAULT_COMPANY_INFO.taxId.substring(2, 12)}`, MARGIN_L, PAGE_H - 20.5);
       }
       if (DEFAULT_COMPANY_INFO.msmeUdyamNumber) {
-        this.doc.text(`MSME: ${DEFAULT_COMPANY_INFO.msmeUdyamNumber}`, MARGIN_L, PAGE_H - 16);
+        this.doc.text(`MSME: ${DEFAULT_COMPANY_INFO.msmeUdyamNumber}`, MARGIN_L, PAGE_H - 17);
       }
 
-      // Center: Thank you
+      // Center: Thank you (positioned to not overlap with left registration lines)
       this.doc.setFont('helvetica', 'italic');
       this.doc.setFontSize(8);
       this.doc.setTextColor(...DARK);
-      this.doc.text('Thank you for your business!', PAGE_W / 2, PAGE_H - 20, { align: 'center' });
+      this.doc.text('Thank you for your business!', PAGE_W / 2, PAGE_H - 17, { align: 'center' });
 
       // Right: Website
       this.doc.setFont('helvetica', 'normal');
@@ -713,12 +706,12 @@ export class SimplePDFGenerator {
       // Page number with magenta dot separator
       this.doc.setFontSize(8);
       this.doc.setTextColor(...GREY);
-      this.doc.text(`${i}`, PAGE_W / 2 - 3, PAGE_H - 14, { align: 'right' });
+      this.doc.text(`${i}`, PAGE_W / 2 - 3, PAGE_H - 12, { align: 'right' });
       // Magenta dot
       this.doc.setFillColor(...MAGENTA);
-      this.doc.circle(PAGE_W / 2, PAGE_H - 14.8, 0.6, 'F');
+      this.doc.circle(PAGE_W / 2, PAGE_H - 12.8, 0.6, 'F');
       this.doc.setTextColor(...GREY);
-      this.doc.text(`${pageCount}`, PAGE_W / 2 + 3, PAGE_H - 14, { align: 'left' });
+      this.doc.text(`${pageCount}`, PAGE_W / 2 + 3, PAGE_H - 12, { align: 'left' });
 
       // Bottom bars: thin magenta + deep purple (mirror header)
       this.doc.setFillColor(...MAGENTA);
