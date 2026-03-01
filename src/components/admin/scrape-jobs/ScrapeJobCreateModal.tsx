@@ -1,11 +1,13 @@
 'use client';
 
-import { useState } from 'react';
-import { X } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { X, AlertTriangle } from 'lucide-react';
 import { DashboardButton } from '@/design-system';
 import {
   SOURCE_PLATFORM_OPTIONS,
   SCHEDULE_TYPE_OPTIONS,
+  GOOGLE_MAPS_COUNTRIES,
+  GOOGLE_MAPS_MAX_RESULTS,
 } from '@/lib/admin/scrape-job-types';
 import type { ScrapeSourcePlatform, ScrapeScheduleType } from '@/lib/admin/scrape-job-types';
 
@@ -33,6 +35,30 @@ export function ScrapeJobCreateModal({ isOpen, onClose, onCreate }: ScrapeJobCre
   // Google Maps params
   const [gmQuery, setGmQuery] = useState('');
   const [gmLocation, setGmLocation] = useState('');
+  const [gmCountry, setGmCountry] = useState('India');
+  const [gmCountryCustom, setGmCountryCustom] = useState('');
+  const [gmMaxPages, setGmMaxPages] = useState(1);
+  const [queryWarning, setQueryWarning] = useState('');
+  const [locationWarning, setLocationWarning] = useState('');
+
+  // Warn on instruction-like queries
+  useEffect(() => {
+    const instructionWords = /\b(only|best|top|most|just|first|cheapest|expensive)\b/i;
+    if (gmQuery && instructionWords.test(gmQuery)) {
+      setQueryWarning('Tip: Use a simple search term (e.g., "restaurants"). Avoid instructions like "only 30" — the API doesn\'t understand them.');
+    } else {
+      setQueryWarning('');
+    }
+  }, [gmQuery]);
+
+  // Warn on multi-city location
+  useEffect(() => {
+    if (gmLocation && gmLocation.includes(',')) {
+      setLocationWarning('Enter one city per job. Use the Rotation tab for multi-city scraping.');
+    } else {
+      setLocationWarning('');
+    }
+  }, [gmLocation]);
 
   if (!isOpen) return null;
 
@@ -47,7 +73,14 @@ export function ScrapeJobCreateModal({ isOpen, onClose, onCreate }: ScrapeJobCre
         params = { country: bniCountry };
         if (bniCategoryId) params.category_id = parseInt(bniCategoryId, 10);
       } else if (sourcePlatform === 'google_maps') {
-        params = { query: gmQuery, location: gmLocation };
+        if (!gmQuery.trim() || !gmLocation.trim()) return;
+        const country = gmCountry === 'Other' ? gmCountryCustom.trim() : gmCountry;
+        params = {
+          query: gmQuery.trim(),
+          location: gmLocation.trim(),
+          country: country || 'India',
+          max_pages: gmMaxPages,
+        };
       }
 
       await onCreate({ name, sourcePlatform, params, scheduleType });
@@ -57,6 +90,9 @@ export function ScrapeJobCreateModal({ isOpen, onClose, onCreate }: ScrapeJobCre
       setBniCategoryId('');
       setGmQuery('');
       setGmLocation('');
+      setGmCountry('India');
+      setGmCountryCustom('');
+      setGmMaxPages(1);
     } finally {
       setSubmitting(false);
     }
@@ -146,22 +182,68 @@ export function ScrapeJobCreateModal({ isOpen, onClose, onCreate }: ScrapeJobCre
                   type="text"
                   value={gmQuery}
                   onChange={(e) => setGmQuery(e.target.value)}
-                  placeholder="e.g., digital marketing agencies"
+                  placeholder="e.g., luxury restaurants, web development agencies"
                   className="w-full px-3 py-2 rounded-lg bg-white border border-fm-neutral-200 text-fm-neutral-900 placeholder-fm-neutral-400 text-sm focus:outline-none focus:border-fm-magenta-600"
                   required
                 />
+                {queryWarning && (
+                  <div className="flex items-start gap-1.5 mt-1.5 text-xs text-amber-600">
+                    <AlertTriangle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+                    <span>{queryWarning}</span>
+                  </div>
+                )}
               </div>
               <div>
-                <label className="block text-sm font-medium text-fm-neutral-600 mb-1.5">
-                  City / Area <span className="text-fm-neutral-400">(optional — appended to query)</span>
-                </label>
+                <label className="block text-sm font-medium text-fm-neutral-600 mb-1.5">City / Area</label>
                 <input
                   type="text"
                   value={gmLocation}
                   onChange={(e) => setGmLocation(e.target.value)}
-                  placeholder="e.g., Mumbai, Pune, Delhi"
+                  placeholder="e.g., Mumbai"
                   className="w-full px-3 py-2 rounded-lg bg-white border border-fm-neutral-200 text-fm-neutral-900 placeholder-fm-neutral-400 text-sm focus:outline-none focus:border-fm-magenta-600"
+                  required
                 />
+                {locationWarning && (
+                  <div className="flex items-start gap-1.5 mt-1.5 text-xs text-amber-600">
+                    <AlertTriangle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+                    <span>{locationWarning}</span>
+                  </div>
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-fm-neutral-600 mb-1.5">Country</label>
+                <select
+                  value={gmCountry}
+                  onChange={(e) => setGmCountry(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg bg-white border border-fm-neutral-200 text-fm-neutral-900 text-sm focus:outline-none focus:border-fm-magenta-600"
+                >
+                  {GOOGLE_MAPS_COUNTRIES.map((c) => (
+                    <option key={c} value={c} className="bg-white">{c}</option>
+                  ))}
+                  <option value="Other" className="bg-white">Other</option>
+                </select>
+                {gmCountry === 'Other' && (
+                  <input
+                    type="text"
+                    value={gmCountryCustom}
+                    onChange={(e) => setGmCountryCustom(e.target.value)}
+                    placeholder="Enter country name"
+                    className="w-full mt-2 px-3 py-2 rounded-lg bg-white border border-fm-neutral-200 text-fm-neutral-900 placeholder-fm-neutral-400 text-sm focus:outline-none focus:border-fm-magenta-600"
+                    required
+                  />
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-fm-neutral-600 mb-1.5">Max Results</label>
+                <select
+                  value={gmMaxPages}
+                  onChange={(e) => setGmMaxPages(parseInt(e.target.value, 10))}
+                  className="w-full px-3 py-2 rounded-lg bg-white border border-fm-neutral-200 text-fm-neutral-900 text-sm focus:outline-none focus:border-fm-magenta-600"
+                >
+                  {GOOGLE_MAPS_MAX_RESULTS.map((opt) => (
+                    <option key={opt.value} value={opt.value} className="bg-white">{opt.label}</option>
+                  ))}
+                </select>
               </div>
             </div>
           )}
@@ -195,7 +277,16 @@ export function ScrapeJobCreateModal({ isOpen, onClose, onCreate }: ScrapeJobCre
             <DashboardButton variant="secondary" size="sm" onClick={onClose} type="button">
               Cancel
             </DashboardButton>
-            <DashboardButton variant="primary" size="sm" type="submit" disabled={submitting || !name.trim()}>
+            <DashboardButton
+              variant="primary"
+              size="sm"
+              type="submit"
+              disabled={
+                submitting ||
+                !name.trim() ||
+                (sourcePlatform === 'google_maps' && (!gmQuery.trim() || !gmLocation.trim()))
+              }
+            >
               {submitting ? 'Creating...' : 'Create Job'}
             </DashboardButton>
           </div>

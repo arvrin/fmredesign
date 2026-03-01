@@ -6,7 +6,7 @@
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { adminToast } from '@/lib/admin/toast';
 import type {
   ScrapeJob,
@@ -55,6 +55,7 @@ export interface UseScrapeJobsReturn {
   deleteJob: (id: string) => Promise<void>;
   triggerJob: (id: string) => Promise<void>;
   updateSourceConfig: (id: string, config: Record<string, unknown>) => Promise<void>;
+  cancelRun: (runId: string) => Promise<void>;
   updateRotationConfig: (id: string | null, data: Record<string, unknown>) => Promise<void>;
   deleteRotationConfig: (id: string) => Promise<void>;
 }
@@ -70,6 +71,14 @@ export function useScrapeJobs(): UseScrapeJobsReturn {
   const [activeTab, setActiveTab] = useState<ScrapeJobTab>('jobs');
   const [selectedJob, setSelectedJob] = useState<ScrapeJob | null>(null);
   const [showCreateJob, setShowCreateJob] = useState(false);
+  const pollRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Cleanup polling on unmount
+  useEffect(() => {
+    return () => {
+      if (pollRef.current) clearInterval(pollRef.current);
+    };
+  }, []);
 
   const loadJobs = useCallback(async () => {
     try {
@@ -206,8 +215,46 @@ export function useScrapeJobs(): UseScrapeJobsReturn {
     }
   }, []);
 
+  const cancelRun = useCallback(async (runId: string) => {
+    try {
+      const res = await fetch('/api/admin/scrape-jobs/runs', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ runId, action: 'cancel' }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        adminToast.success('Run cancelled');
+        await loadRuns();
+      } else {
+        adminToast.error(json.error || 'Failed to cancel run');
+      }
+    } catch {
+      adminToast.error('Failed to cancel run');
+    }
+  }, [loadRuns]);
+
   const triggerJob = useCallback(async (id: string) => {
     try {
+      // Pre-validation: check for existing pending/running runs
+      const hasPending = runs.some(
+        (r) => r.jobId === id && (r.status === 'pending' || r.status === 'running')
+      );
+      if (hasPending) {
+        adminToast.error('This job already has a pending or running run. Cancel it first.');
+        return;
+      }
+
+      // Pre-validation: check API key for google_maps
+      const job = jobs.find((j) => j.id === id);
+      if (job?.sourcePlatform === 'google_maps') {
+        const gmConfig = sourceConfigs.find((sc) => sc.sourcePlatform === 'google_maps');
+        if (!gmConfig || !gmConfig.isValid) {
+          adminToast.error('Google Maps API key not configured. Go to Settings tab.');
+          return;
+        }
+      }
+
       // Step 1: Create pending run
       const response = await fetch('/api/admin/scrape-jobs', {
         method: 'PUT',
@@ -231,11 +278,22 @@ export function useScrapeJobs(): UseScrapeJobsReturn {
       } else {
         adminToast.error(execJson.error || 'Failed to start scraper');
       }
+
+      // Auto-refresh: poll every 5s for 2 minutes
+      if (pollRef.current) clearInterval(pollRef.current);
+      pollRef.current = setInterval(async () => {
+        await loadRuns();
+        await loadJobs();
+      }, 5000);
+      setTimeout(() => {
+        if (pollRef.current) clearInterval(pollRef.current);
+        pollRef.current = null;
+      }, 120000);
     } catch (error) {
       console.error('Error triggering job:', error);
       adminToast.error('Failed to trigger run');
     }
-  }, [loadRuns]);
+  }, [loadRuns, loadJobs, runs, jobs, sourceConfigs]);
 
   const updateSourceConfig = useCallback(async (id: string, config: Record<string, unknown>) => {
     try {
@@ -319,6 +377,7 @@ export function useScrapeJobs(): UseScrapeJobsReturn {
     updateJob,
     deleteJob,
     triggerJob,
+    cancelRun,
     updateSourceConfig,
     updateRotationConfig,
     deleteRotationConfig,

@@ -98,6 +98,18 @@ export const SCHEDULE_TYPE_OPTIONS: { value: ScrapeScheduleType; label: string }
   { value: 'rotation', label: 'Rotation' },
 ];
 
+export const GOOGLE_MAPS_COUNTRIES = [
+  'India', 'UAE', 'United States', 'United Kingdom',
+  'Australia', 'Philippines', 'Singapore', 'Canada',
+  'Germany', 'France',
+];
+
+export const GOOGLE_MAPS_MAX_RESULTS = [
+  { value: 1, label: '~20 results (1 page)' },
+  { value: 2, label: '~40 results (2 pages)' },
+  { value: 3, label: '~60 results (3 pages)' },
+];
+
 export const RUN_STATUS_OPTIONS: { value: ScrapeRunStatus; label: string; color: string }[] = [
   { value: 'pending', label: 'Pending', color: 'bg-yellow-100 text-yellow-800' },
   { value: 'running', label: 'Running', color: 'bg-blue-100 text-blue-800' },

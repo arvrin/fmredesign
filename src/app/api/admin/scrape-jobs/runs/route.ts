@@ -81,3 +81,40 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
+export async function PUT(request: NextRequest) {
+  const authError = await requireAdminAuth(request);
+  if (authError) return authError;
+
+  try {
+    const body = await request.json();
+    const { runId, action } = body;
+
+    if (action === 'cancel') {
+      const supabase = getSupabaseAdmin();
+      const { error } = await supabase
+        .from('scrape_job_runs')
+        .update({
+          status: 'cancelled',
+          error_message: 'Cancelled by admin',
+          completed_at: new Date().toISOString(),
+        })
+        .eq('id', runId)
+        .in('status', ['pending', 'running']);
+
+      if (error) throw error;
+      return NextResponse.json({ success: true, message: 'Run cancelled' });
+    }
+
+    return NextResponse.json(
+      { success: false, error: 'Unknown action' },
+      { status: 400 }
+    );
+  } catch (error) {
+    console.error('Error updating scrape job run:', error);
+    return NextResponse.json(
+      { success: false, error: 'Failed to update run' },
+      { status: 500 }
+    );
+  }
+}

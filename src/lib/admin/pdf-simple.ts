@@ -155,6 +155,7 @@ export class SimplePDFGenerator {
     }
 
     this.addHeader(invoice);
+    this.addCompanyAddress();
     this.addInvoiceMeta(invoice);
     this.addClientAndDates(invoice);
     this.addItemsTable(invoice);
@@ -217,9 +218,9 @@ export class SimplePDFGenerator {
     const contactX = PAGE_W - MARGIN_R;
     const gstin = invoice.companyGstin || COMPANY_GSTIN;
     const contactItems = [
-      'freakingmindsdigital@gmail.com',
-      '+91 98332 57659',
-      'www.freakingminds.in',
+      DEFAULT_COMPANY_INFO.email,
+      DEFAULT_COMPANY_INFO.phone,
+      DEFAULT_COMPANY_INFO.website || 'www.freakingminds.in',
       `GSTIN: ${gstin}`,
     ];
 
@@ -245,10 +246,22 @@ export class SimplePDFGenerator {
     this.doc.text('FM', x + w / 2, y + h / 2 + 2, { align: 'center' });
   }
 
+  // ---- Company address (below logo area) -----------------------------------
+
+  private addCompanyAddress(): void {
+    const y = 40;
+    this.doc.setFont('helvetica', 'normal');
+    this.doc.setFontSize(7);
+    this.doc.setTextColor(...GREY);
+    const addressLine = `${DEFAULT_COMPANY_INFO.address}, ${DEFAULT_COMPANY_INFO.city}, ${DEFAULT_COMPANY_INFO.state} - ${DEFAULT_COMPANY_INFO.zipCode}`;
+    const lines = this.doc.splitTextToSize(addressLine, CONTENT_W);
+    this.doc.text(lines, MARGIN_L, y);
+  }
+
   // ---- Invoice meta line --------------------------------------------------
 
   private addInvoiceMeta(invoice: Invoice): void {
-    const y = 46;
+    const y = 48;
 
     // Thin magenta decorative line
     this.doc.setDrawColor(...MAGENTA);
@@ -275,7 +288,7 @@ export class SimplePDFGenerator {
   // ---- Client info & dates ------------------------------------------------
 
   private addClientAndDates(invoice: Invoice): void {
-    const startY = 66;
+    const startY = 70;
 
     // ---- Left column: Bill To ----
     this.doc.setFont('helvetica', 'bold');
@@ -372,17 +385,44 @@ export class SimplePDFGenerator {
   // ---- Items table --------------------------------------------------------
 
   private addItemsTable(invoice: Invoice): void {
-    const startY = 100;
+    const startY = 104;
     const sym = this.getCurrencySymbol(invoice);
 
-    const headers = ['Description', 'SAC', 'Qty', `Rate (${sym})`, `Amount (${sym})`];
-    const data = invoice.lineItems.map(item => [
-      item.description,
-      item.sacCode || '\u2014',
-      item.quantity.toString(),
-      this.formatAmount(item.rate, invoice),
-      this.formatAmount(item.amount, invoice),
-    ]);
+    // Check if any line item has a SAC code
+    const hasSAC = invoice.lineItems.some(item => item.sacCode);
+
+    const headers = hasSAC
+      ? ['#', 'Description', 'SAC', 'Qty', `Rate (${sym})`, `Amount (${sym})`]
+      : ['#', 'Description', 'Qty', `Rate (${sym})`, `Amount (${sym})`];
+
+    const data = invoice.lineItems.map((item, idx) => {
+      const row = [
+        (idx + 1).toString(),
+        item.description,
+        ...(hasSAC ? [item.sacCode || '\u2014'] : []),
+        item.quantity.toString(),
+        this.formatAmount(item.rate, invoice),
+        this.formatAmount(item.amount, invoice),
+      ];
+      return row;
+    });
+
+    // Column widths differ based on whether SAC codes are present
+    const columnStyles: Record<string, Partial<{ cellWidth: number; halign: 'left' | 'center' | 'right'; fontStyle: 'bold' | 'normal' | 'italic' }>> = {};
+    if (hasSAC) {
+      columnStyles['0'] = { cellWidth: 10, halign: 'center' };
+      columnStyles['1'] = { cellWidth: 72 };
+      columnStyles['2'] = { cellWidth: 18, halign: 'center' };
+      columnStyles['3'] = { cellWidth: 15, halign: 'center' };
+      columnStyles['4'] = { cellWidth: 27, halign: 'right' };
+      columnStyles['5'] = { cellWidth: 28, halign: 'right', fontStyle: 'bold' };
+    } else {
+      columnStyles['0'] = { cellWidth: 10, halign: 'center' };
+      columnStyles['1'] = { cellWidth: 90 };
+      columnStyles['2'] = { cellWidth: 15, halign: 'center' };
+      columnStyles['3'] = { cellWidth: 27, halign: 'right' };
+      columnStyles['4'] = { cellWidth: 28, halign: 'right', fontStyle: 'bold' };
+    }
 
     autoTable(this.doc, {
       head: [headers],
@@ -402,17 +442,11 @@ export class SimplePDFGenerator {
         fontStyle: 'bold',
         fontSize: 9,
       },
-      columnStyles: {
-        0: { cellWidth: 65 },
-        1: { cellWidth: 20, halign: 'center' },
-        2: { cellWidth: 15, halign: 'center' },
-        3: { cellWidth: 35, halign: 'right' },
-        4: { cellWidth: 35, halign: 'right', fontStyle: 'bold' },
-      },
+      columnStyles,
       alternateRowStyles: {
         fillColor: MAGENTA_TINT,
       },
-      // Left magenta accent border on every row
+      // Left magenta accent border on first column of every row
       didDrawCell: (data) => {
         if (data.section === 'body' && data.column.index === 0) {
           this.doc.setFillColor(...MAGENTA);
@@ -482,7 +516,7 @@ export class SimplePDFGenerator {
     this.doc.line(labelX, currentY, rightEdge, currentY);
 
     // ---- Total ribbon: full-width magenta band ----
-    const ribbonY = currentY + 3;
+    const ribbonY = currentY + 5;
     const ribbonH = 10;
     this.doc.setFillColor(...MAGENTA);
     this.doc.rect(MARGIN_L, ribbonY, CONTENT_W, ribbonH, 'F');
@@ -562,7 +596,7 @@ export class SimplePDFGenerator {
     }
 
     const hasSwift = !!bankInfo.swiftCode;
-    const boxH = hasSwift ? 24 : 18;
+    const boxH = hasSwift ? 28 : 22;
 
     // Section label
     this.doc.setFont('helvetica', 'bold');
@@ -656,20 +690,25 @@ export class SimplePDFGenerator {
       this.doc.setFontSize(7);
       this.doc.setTextColor(...GREY);
       this.doc.setFont('helvetica', 'normal');
-      this.doc.text(`GSTIN: ${gstin}`, MARGIN_L, PAGE_H - 23);
-      this.doc.text(`MSME: ${DEFAULT_COMPANY_INFO.msmeUdyamNumber || ''}`, MARGIN_L, PAGE_H - 19);
+      this.doc.text(`GSTIN: ${gstin}`, MARGIN_L, PAGE_H - 24);
+      if (DEFAULT_COMPANY_INFO.taxId) {
+        this.doc.text(`PAN: ${DEFAULT_COMPANY_INFO.taxId.substring(2, 12)}`, MARGIN_L, PAGE_H - 20);
+      }
+      if (DEFAULT_COMPANY_INFO.msmeUdyamNumber) {
+        this.doc.text(`MSME: ${DEFAULT_COMPANY_INFO.msmeUdyamNumber}`, MARGIN_L, PAGE_H - 16);
+      }
 
       // Center: Thank you
       this.doc.setFont('helvetica', 'italic');
       this.doc.setFontSize(8);
       this.doc.setTextColor(...DARK);
-      this.doc.text('Thank you for your business!', PAGE_W / 2, PAGE_H - 21, { align: 'center' });
+      this.doc.text('Thank you for your business!', PAGE_W / 2, PAGE_H - 20, { align: 'center' });
 
       // Right: Website
       this.doc.setFont('helvetica', 'normal');
       this.doc.setFontSize(7);
       this.doc.setTextColor(...GREY);
-      this.doc.text('www.freakingminds.in', PAGE_W - MARGIN_R, PAGE_H - 23, { align: 'right' });
+      this.doc.text(DEFAULT_COMPANY_INFO.website || 'www.freakingminds.in', PAGE_W - MARGIN_R, PAGE_H - 24, { align: 'right' });
 
       // Page number with magenta dot separator
       this.doc.setFontSize(8);
