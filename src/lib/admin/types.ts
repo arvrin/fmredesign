@@ -6,6 +6,7 @@
 export interface InvoiceLineItem {
   id: string;
   description: string;
+  sacCode?: string;
   quantity: number;
   rate: number;
   amount: number;
@@ -24,6 +25,8 @@ export interface InvoiceClient {
   gstNumber?: string;
 }
 
+export type InvoiceCurrency = 'INR' | 'USD' | 'GBP' | 'AED' | 'EUR';
+
 export interface Invoice {
   id: string;
   invoiceNumber: string;
@@ -35,6 +38,12 @@ export interface Invoice {
   taxRate: number;
   taxAmount: number;
   total: number;
+  currency: InvoiceCurrency;
+  cgstAmount: number;
+  sgstAmount: number;
+  igstAmount: number;
+  placeOfSupply?: string;
+  companyGstin: string;
   notes?: string;
   terms?: string;
   status: 'draft' | 'sent' | 'paid' | 'overdue';
@@ -102,18 +111,18 @@ export function getBankInfoForCurrency(currency: string): BankAccountInfo {
 }
 
 // Default company info for Freaking Minds
-// Sensitive fields read from environment variables
+// Registration numbers are public (appear on invoices) — safe to hardcode
 export const DEFAULT_COMPANY_INFO: CompanyInfo = {
   name: "Freaking Minds",
-  address: process.env.COMPANY_ADDRESS || "",
+  address: "House No. 5, Maheshwari Bhawan, Near Qutbi Masjid, MP Nagar, Professors Colony",
   city: "Bhopal",
   state: "Madhya Pradesh",
   zipCode: "462002",
   phone: "+91 98332 57659",
   email: "freakingmindsdigital@gmail.com",
   website: "https://freakingminds.in",
-  taxId: process.env.COMPANY_PAN || "",
-  msmeUdyamNumber: process.env.COMPANY_MSME || "",
+  taxId: "23BQNPM3447F1ZT",
+  msmeUdyamNumber: "UDYAM-MP-10-0032670",
 };
 
 /** @deprecated Use INDIAN_BANK_INFO or INTERNATIONAL_BANK_INFO instead */
@@ -125,6 +134,7 @@ export interface AgencyService {
   name: string;
   category: 'digital_marketing' | 'web_development' | 'design' | 'content' | 'consulting' | 'advertising' | 'strategy' | 'maintenance';
   description: string;
+  sacCode: string;
   suggestedRate?: number;
   unit?: string;
 }
@@ -136,6 +146,7 @@ export const AGENCY_SERVICES: AgencyService[] = [
     name: 'Social Media Management',
     category: 'digital_marketing',
     description: 'Complete social media management including content creation, posting, and community engagement',
+    sacCode: '998365',
     suggestedRate: 25000,
     unit: 'month'
   },
@@ -144,6 +155,7 @@ export const AGENCY_SERVICES: AgencyService[] = [
     name: 'Pay-Per-Click (PPC) Advertising',
     category: 'advertising',
     description: 'Google Ads, Facebook Ads, and other paid advertising campaign management',
+    sacCode: '998365',
     suggestedRate: 35000,
     unit: 'month'
   },
@@ -152,6 +164,7 @@ export const AGENCY_SERVICES: AgencyService[] = [
     name: 'Search Engine Optimization (SEO)',
     category: 'digital_marketing',
     description: 'Complete SEO strategy, keyword research, on-page and off-page optimization',
+    sacCode: '998365',
     suggestedRate: 30000,
     unit: 'month'
   },
@@ -160,6 +173,7 @@ export const AGENCY_SERVICES: AgencyService[] = [
     name: 'Content Marketing Strategy',
     category: 'content',
     description: 'Blog writing, content strategy, and content calendar development',
+    sacCode: '998363',
     suggestedRate: 20000,
     unit: 'month'
   },
@@ -168,16 +182,18 @@ export const AGENCY_SERVICES: AgencyService[] = [
     name: 'Email Marketing Campaigns',
     category: 'digital_marketing',
     description: 'Email campaign design, automation, and performance tracking',
+    sacCode: '998365',
     suggestedRate: 15000,
     unit: 'month'
   },
-  
+
   // Web Development Services
   {
     id: 'website-development',
     name: 'Website Development',
     category: 'web_development',
     description: 'Custom website development using modern technologies',
+    sacCode: '998314',
     suggestedRate: 75000,
     unit: 'project'
   },
@@ -186,6 +202,7 @@ export const AGENCY_SERVICES: AgencyService[] = [
     name: 'E-commerce Website Development',
     category: 'web_development',
     description: 'Complete e-commerce solution with payment gateway integration',
+    sacCode: '998314',
     suggestedRate: 125000,
     unit: 'project'
   },
@@ -194,6 +211,7 @@ export const AGENCY_SERVICES: AgencyService[] = [
     name: 'Mobile App Development',
     category: 'web_development',
     description: 'iOS and Android app development',
+    sacCode: '998314',
     suggestedRate: 150000,
     unit: 'project'
   },
@@ -202,16 +220,18 @@ export const AGENCY_SERVICES: AgencyService[] = [
     name: 'Website Redesign',
     category: 'web_development',
     description: 'Complete website redesign and modernization',
+    sacCode: '998314',
     suggestedRate: 50000,
     unit: 'project'
   },
-  
+
   // Design Services
   {
     id: 'brand-identity-design',
     name: 'Brand Identity Design',
     category: 'design',
     description: 'Logo design, brand guidelines, and visual identity creation',
+    sacCode: '998396',
     suggestedRate: 45000,
     unit: 'project'
   },
@@ -220,6 +240,7 @@ export const AGENCY_SERVICES: AgencyService[] = [
     name: 'UI/UX Design',
     category: 'design',
     description: 'User interface and user experience design for web and mobile',
+    sacCode: '998396',
     suggestedRate: 40000,
     unit: 'project'
   },
@@ -228,6 +249,7 @@ export const AGENCY_SERVICES: AgencyService[] = [
     name: 'Graphic Design Services',
     category: 'design',
     description: 'Brochures, flyers, social media graphics, and marketing materials',
+    sacCode: '998396',
     suggestedRate: 15000,
     unit: 'project'
   },
@@ -236,16 +258,18 @@ export const AGENCY_SERVICES: AgencyService[] = [
     name: 'Video Production',
     category: 'content',
     description: 'Corporate videos, promotional content, and video editing',
+    sacCode: '998363',
     suggestedRate: 35000,
     unit: 'project'
   },
-  
+
   // Consulting & Strategy
   {
     id: 'digital-strategy-consulting',
     name: 'Digital Strategy Consulting',
     category: 'consulting',
     description: 'Digital transformation strategy and business consulting',
+    sacCode: '998319',
     suggestedRate: 8000,
     unit: 'hour'
   },
@@ -254,6 +278,7 @@ export const AGENCY_SERVICES: AgencyService[] = [
     name: 'Marketing Audit & Analysis',
     category: 'consulting',
     description: 'Comprehensive analysis of current marketing efforts and recommendations',
+    sacCode: '998319',
     suggestedRate: 25000,
     unit: 'project'
   },
@@ -262,16 +287,18 @@ export const AGENCY_SERVICES: AgencyService[] = [
     name: 'Brand Strategy Development',
     category: 'strategy',
     description: 'Brand positioning, messaging, and go-to-market strategy',
+    sacCode: '998319',
     suggestedRate: 35000,
     unit: 'project'
   },
-  
+
   // Maintenance & Support
   {
     id: 'website-maintenance',
     name: 'Website Maintenance',
     category: 'maintenance',
     description: 'Monthly website updates, security, and technical support',
+    sacCode: '998316',
     suggestedRate: 8000,
     unit: 'month'
   },
@@ -280,6 +307,7 @@ export const AGENCY_SERVICES: AgencyService[] = [
     name: 'Hosting & Domain Management',
     category: 'maintenance',
     description: 'Server management, domain renewal, and hosting optimization',
+    sacCode: '998316',
     suggestedRate: 5000,
     unit: 'month'
   },
@@ -288,6 +316,7 @@ export const AGENCY_SERVICES: AgencyService[] = [
     name: 'Analytics & Performance Reporting',
     category: 'consulting',
     description: 'Monthly performance reports and data analysis',
+    sacCode: '998319',
     suggestedRate: 12000,
     unit: 'month'
   }
@@ -496,6 +525,26 @@ export const SERVICE_CATEGORIES = {
   maintenance: 'Maintenance & Support'
 } as const;
 
+// Currency options for multi-currency invoicing
+export interface CurrencyOption {
+  value: InvoiceCurrency;
+  label: string;
+  symbol: string;
+  locale: string;
+}
+
+export const CURRENCY_OPTIONS: CurrencyOption[] = [
+  { value: 'INR', label: '\u20B9 INR', symbol: '\u20B9', locale: 'en-IN' },
+  { value: 'USD', label: '$ USD', symbol: '$', locale: 'en-US' },
+  { value: 'GBP', label: '\u00A3 GBP', symbol: '\u00A3', locale: 'en-GB' },
+  { value: 'AED', label: 'AED', symbol: 'AED ', locale: 'en-AE' },
+  { value: 'EUR', label: '\u20AC EUR', symbol: '\u20AC', locale: 'de-DE' },
+];
+
+// Company GST constants
+export const COMPANY_STATE = 'Madhya Pradesh';
+export const COMPANY_GSTIN = '23BQNPM3447F1ZT';
+
 // Default clients with GST numbers
 export const DEFAULT_CLIENTS: InvoiceClient[] = [
   {
@@ -578,13 +627,49 @@ export class InvoiceUtils {
   }
 
   /**
-   * Format currency
+   * Format currency (multi-currency support)
    */
-  static formatCurrency(amount: number): string {
-    return new Intl.NumberFormat('en-IN', {
+  static formatCurrency(amount: number, currency: InvoiceCurrency = 'INR'): string {
+    const opt = CURRENCY_OPTIONS.find(c => c.value === currency) || CURRENCY_OPTIONS[0];
+    return new Intl.NumberFormat(opt.locale, {
       style: 'currency',
-      currency: 'INR',
+      currency: opt.value,
     }).format(amount);
+  }
+
+  /**
+   * Get currency symbol
+   */
+  static getCurrencySymbol(currency: InvoiceCurrency = 'INR'): string {
+    const opt = CURRENCY_OPTIONS.find(c => c.value === currency) || CURRENCY_OPTIONS[0];
+    return opt.symbol;
+  }
+
+  /**
+   * Calculate GST split based on company vs client location
+   * - International client: no GST
+   * - Same state: CGST + SGST (split equally)
+   * - Different state: IGST (full rate)
+   */
+  static calculateGST(
+    subtotal: number,
+    taxRate: number,
+    companyState: string,
+    clientState: string,
+    clientCountry: string,
+  ): { cgst: number; sgst: number; igst: number; totalTax: number } {
+    // International client — no GST
+    if (clientCountry && clientCountry.toLowerCase() !== 'india') {
+      return { cgst: 0, sgst: 0, igst: 0, totalTax: 0 };
+    }
+    // Same state — CGST + SGST
+    if (clientState?.toLowerCase() === companyState.toLowerCase()) {
+      const half = Math.round((subtotal * taxRate / 200) * 100) / 100;
+      return { cgst: half, sgst: half, igst: 0, totalTax: half * 2 };
+    }
+    // Different state — IGST
+    const igst = Math.round((subtotal * taxRate / 100) * 100) / 100;
+    return { cgst: 0, sgst: 0, igst, totalTax: igst };
   }
 
   /**

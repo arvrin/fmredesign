@@ -25,7 +25,8 @@ const SELECT_COLS = [
   'client_phone', 'client_address', 'client_city', 'client_state',
   'client_country', 'client_gst_number', 'date', 'due_date', 'subtotal',
   'tax_rate', 'tax_amount', 'tax', 'total', 'status', 'line_items',
-  'notes', 'terms', 'created_at', 'updated_at',
+  'notes', 'terms', 'currency', 'cgst_amount', 'sgst_amount', 'igst_amount',
+  'place_of_supply', 'company_gstin', 'created_at', 'updated_at',
 ].join(', ');
 
 /** Transform a Supabase row (snake_case) → API response (camelCase) */
@@ -51,6 +52,12 @@ function transformInvoice(row: Record<string, unknown>) {
     taxRate: Number(row.tax_rate) || 18,
     taxAmount: Number(row.tax_amount) || Number(row.tax) || 0,
     total: Number(row.total) || 0,
+    currency: (row.currency as string) || 'INR',
+    cgstAmount: Number(row.cgst_amount) || 0,
+    sgstAmount: Number(row.sgst_amount) || 0,
+    igstAmount: Number(row.igst_amount) || 0,
+    placeOfSupply: (row.place_of_supply as string) || '',
+    companyGstin: (row.company_gstin as string) || '23BQNPM3447F1ZT',
     notes: row.notes || '',
     terms: row.terms || '',
     status: row.status || 'draft',
@@ -86,6 +93,12 @@ function buildRecord(body: Record<string, unknown>) {
     notes: (body.notes as string) || '',
     terms: (body.terms as string) || '',
     status: (body.status as string) || 'draft',
+    currency: (body.currency as string) || 'INR',
+    cgst_amount: parseFloat(String(body.cgstAmount)) || 0,
+    sgst_amount: parseFloat(String(body.sgstAmount)) || 0,
+    igst_amount: parseFloat(String(body.igstAmount)) || 0,
+    place_of_supply: (body.placeOfSupply as string) || '',
+    company_gstin: (body.companyGstin as string) || '23BQNPM3447F1ZT',
     updated_at: new Date().toISOString(),
   };
 }
@@ -226,7 +239,7 @@ export async function POST(request: NextRequest) {
       invoiceNumber: record.invoice_number,
       clientName: record.client_name,
       total: record.total,
-      currency: record.client_country?.toLowerCase() === 'india' ? 'INR' : (body.currency as string) || 'INR',
+      currency: record.currency || 'INR',
       dueDate: record.due_date,
       status: record.status,
     });

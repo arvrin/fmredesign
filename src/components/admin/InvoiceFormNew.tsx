@@ -4,11 +4,14 @@
  * 60/40 layout: form (left) + sticky live preview (right).
  * The live preview mirrors the PDF output so users see exactly
  * what the downloaded invoice will look like.
+ *
+ * GST-compliant: CGST/SGST/IGST split, SAC codes, multi-currency,
+ * persistent invoice numbering via API.
  */
 
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import {
   Plus,
@@ -25,6 +28,7 @@ import {
   Copy,
   CheckCircle2,
   Circle,
+  Globe,
 } from 'lucide-react';
 import {
   DashboardCard as Card,
@@ -39,7 +43,16 @@ import { adminToast } from '@/lib/admin/toast';
 import type { SimplePDFGenerator } from '@/lib/admin/pdf-simple';
 import { ClientService } from '@/lib/admin/client-service';
 import { InvoiceNumbering } from '@/lib/admin/invoice-numbering';
-import { AGENCY_SERVICES, SERVICE_CATEGORIES, DEFAULT_COMPANY_INFO } from '@/lib/admin/types';
+import {
+  AGENCY_SERVICES,
+  SERVICE_CATEGORIES,
+  DEFAULT_COMPANY_INFO,
+  CURRENCY_OPTIONS,
+  COMPANY_STATE,
+  COMPANY_GSTIN,
+  InvoiceUtils,
+  type InvoiceCurrency,
+} from '@/lib/admin/types';
 
 const companyInfo = DEFAULT_COMPANY_INFO;
 
@@ -51,6 +64,7 @@ interface InvoiceLineItem {
   id: string;
   serviceId?: string;
   description: string;
+  sacCode?: string;
   quantity: number;
   rate: number;
   amount: number;
@@ -80,6 +94,12 @@ interface Invoice {
   taxRate: number;
   taxAmount: number;
   total: number;
+  currency: InvoiceCurrency;
+  cgstAmount: number;
+  sgstAmount: number;
+  igstAmount: number;
+  placeOfSupply: string;
+  companyGstin: string;
   notes: string;
   terms: string;
   status: 'draft' | 'sent' | 'paid' | 'overdue';
@@ -124,6 +144,25 @@ const grouped = AGENCY_SERVICES.reduce<Record<string, typeof AGENCY_SERVICES>>(
 );
 
 // ---------------------------------------------------------------------------
+// GST display helpers
+// ---------------------------------------------------------------------------
+
+function getGSTType(
+  clientCountry: string,
+  clientState: string,
+): 'intra' | 'inter' | 'export' {
+  if (clientCountry && clientCountry.toLowerCase() !== 'india') return 'export';
+  if (clientState?.toLowerCase() === COMPANY_STATE.toLowerCase()) return 'intra';
+  return 'inter';
+}
+
+function getGSTLabel(type: 'intra' | 'inter' | 'export', taxRate: number): string {
+  if (type === 'export') return 'No GST (Export)';
+  if (type === 'intra') return `CGST ${taxRate / 2}% + SGST ${taxRate / 2}%`;
+  return `IGST ${taxRate}%`;
+}
+
+// ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
@@ -135,7 +174,7 @@ export function InvoiceFormNew() {
     const invoiceDate = new Date();
     return {
       id: `inv-${Date.now()}`,
-      invoiceNumber: InvoiceNumbering.getInvoiceNumberForDate(invoiceDate),
+      invoiceNumber: '',
       date: invoiceDate.toISOString().split('T')[0],
       dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
         .toISOString()
@@ -156,6 +195,7 @@ export function InvoiceFormNew() {
           id: `item-${Date.now()}`,
           serviceId: '',
           description: '',
+          sacCode: '',
           quantity: 1,
           rate: 0,
           amount: 0,
@@ -165,10 +205,16 @@ export function InvoiceFormNew() {
       taxRate: 18,
       taxAmount: 0,
       total: 0,
+      currency: 'INR',
+      cgstAmount: 0,
+      sgstAmount: 0,
+      igstAmount: 0,
+      placeOfSupply: '',
+      companyGstin: COMPANY_GSTIN,
       notes:
         'Thank you for choosing Freaking Minds for your digital marketing needs.',
       terms:
-        'Payment is due within 30 days of invoice date. Find details below -\n\nBank A/C: 50200046586390\nBank IFSC: HDFC0000062\nBranch - Arera Colony\n\nLate payments may incur additional charges.',
+        'Payment is due within 30 days of invoice date. Late payments may incur additional charges.',
       status: 'draft',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -176,6 +222,7 @@ export function InvoiceFormNew() {
   });
 
   const [clients, setClients] = useState<InvoiceClient[]>([]);
+  const [nextPreview, setNextPreview] = useState('');
   const pdfGeneratorRef = useRef<SimplePDFGenerator | null>(null);
   const getPdfGenerator = async () => {
     if (!pdfGeneratorRef.current) {
@@ -185,6 +232,29 @@ export function InvoiceFormNew() {
     return pdfGeneratorRef.current;
   };
   const steps = getStepState(invoice);
+
+  // ---- Load initial invoice number from API ----
+  useEffect(() => {
+    const loadInvoiceNumber = async () => {
+      try {
+        const num = await InvoiceNumbering.previewNextInvoiceNumber();
+        setInvoice(prev => {
+          if (!prev.invoiceNumber) return { ...prev, invoiceNumber: num };
+          return prev;
+        });
+        setNextPreview(num);
+      } catch {
+        // Use a local fallback
+        const fallback = `FM164/${new Date().getFullYear()}`;
+        setInvoice(prev => {
+          if (!prev.invoiceNumber) return { ...prev, invoiceNumber: fallback };
+          return prev;
+        });
+        setNextPreview(fallback);
+      }
+    };
+    loadInvoiceNumber();
+  }, []);
 
   // ---- Load clients ----
   const loadClients = async () => {
@@ -211,23 +281,24 @@ export function InvoiceFormNew() {
         const result = await res.json();
         if (result.success && result.data) {
           const src = result.data;
-          const invoiceDate = new Date();
           setInvoice(prev => ({
             ...prev,
             id: `inv-${Date.now()}`,
-            invoiceNumber: InvoiceNumbering.getInvoiceNumberForDate(invoiceDate),
-            date: invoiceDate.toISOString().split('T')[0],
+            // Keep the invoice number that was already loaded from API
+            date: new Date().toISOString().split('T')[0],
             dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
             client: src.client || prev.client,
-            lineItems: (src.lineItems || []).map((item: any, idx: number) => ({
+            lineItems: (src.lineItems || []).map((item: Record<string, unknown>, idx: number) => ({
               id: `item-dup-${Date.now()}-${idx}`,
-              serviceId: item.serviceId || '',
-              description: item.description || '',
-              quantity: item.quantity || 1,
-              rate: item.rate || 0,
-              amount: item.amount || 0,
+              serviceId: (item.serviceId as string) || '',
+              description: (item.description as string) || '',
+              sacCode: (item.sacCode as string) || '',
+              quantity: (item.quantity as number) || 1,
+              rate: (item.rate as number) || 0,
+              amount: (item.amount as number) || 0,
             })),
             taxRate: src.taxRate ?? prev.taxRate,
+            currency: src.currency ?? prev.currency,
             notes: src.notes ?? prev.notes,
             terms: src.terms ?? prev.terms,
             status: 'draft',
@@ -243,17 +314,31 @@ export function InvoiceFormNew() {
     loadDuplicate();
   }, [duplicateId]);
 
-  // ---- Recalculate totals ----
-  useEffect(() => {
+  // ---- Recalculate totals with GST split ----
+  const recalcTotals = useCallback(() => {
     const subtotal = invoice.lineItems.reduce((s, i) => s + i.amount, 0);
-    const taxAmount = (subtotal * invoice.taxRate) / 100;
+    const gst = InvoiceUtils.calculateGST(
+      subtotal,
+      invoice.taxRate,
+      COMPANY_STATE,
+      invoice.placeOfSupply || invoice.client.state || '',
+      invoice.client.country || 'India',
+    );
+
     setInvoice(prev => ({
       ...prev,
       subtotal,
-      taxAmount,
-      total: subtotal + taxAmount,
+      cgstAmount: gst.cgst,
+      sgstAmount: gst.sgst,
+      igstAmount: gst.igst,
+      taxAmount: gst.totalTax,
+      total: subtotal + gst.totalTax,
     }));
-  }, [invoice.lineItems, invoice.taxRate]);
+  }, [invoice.lineItems, invoice.taxRate, invoice.placeOfSupply, invoice.client.state, invoice.client.country]);
+
+  useEffect(() => {
+    recalcTotals();
+  }, [recalcTotals]);
 
   // ---- Line item helpers ----
   const addLineItem = () =>
@@ -265,6 +350,7 @@ export function InvoiceFormNew() {
           id: `item-${Date.now()}`,
           serviceId: '',
           description: '',
+          sacCode: '',
           quantity: 1,
           rate: 0,
           amount: 0,
@@ -318,6 +404,7 @@ export function InvoiceFormNew() {
           ...item,
           serviceId,
           description: service.description,
+          sacCode: service.sacCode,
           rate,
           amount: item.quantity * rate,
         };
@@ -327,16 +414,29 @@ export function InvoiceFormNew() {
 
   const selectClient = (clientId: string) => {
     const c = clients.find(cl => cl.id === clientId);
-    if (c) setInvoice(prev => ({ ...prev, client: c }));
+    if (!c) return;
+
+    const isInternational = c.country && c.country.toLowerCase() !== 'india';
+    const newCurrency: InvoiceCurrency = isInternational ? 'USD' : 'INR';
+
+    setInvoice(prev => ({
+      ...prev,
+      client: c,
+      placeOfSupply: c.state || '',
+      currency: newCurrency,
+    }));
   };
 
   // ---- Save / Preview / Download ----
-  const handleSave = () => {
+  const handleSave = async () => {
     try {
-      if (!invoice.id) invoice.id = `invoice-${Date.now()}`;
-      if (!invoice.invoiceNumber || invoice.invoiceNumber.startsWith('INV-'))
-        invoice.invoiceNumber = InvoiceNumbering.getNextInvoiceNumber();
-      saveToAPI(invoice);
+      // Get a confirmed invoice number from API
+      if (!invoice.invoiceNumber || invoice.invoiceNumber === nextPreview) {
+        const num = await InvoiceNumbering.getNextInvoiceNumber();
+        invoice.invoiceNumber = num;
+        setInvoice(prev => ({ ...prev, invoiceNumber: num }));
+      }
+      await saveToAPI(invoice);
       adminToast.success('Invoice saved successfully!');
     } catch {
       adminToast.error('Error saving invoice. Please try again.');
@@ -392,13 +492,22 @@ export function InvoiceFormNew() {
   };
 
   // ---- Format helpers ----
-  const fmt = (n: number) => `₹${n.toLocaleString('en-IN')}`;
+  const currencyOpt = CURRENCY_OPTIONS.find(c => c.value === invoice.currency) || CURRENCY_OPTIONS[0];
+  const fmt = (n: number) =>
+    new Intl.NumberFormat(currencyOpt.locale, {
+      style: 'currency',
+      currency: currencyOpt.value,
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    }).format(n);
   const fmtDate = (d: string) =>
     new Date(d).toLocaleDateString('en-IN', {
       day: '2-digit',
       month: 'short',
       year: 'numeric',
     });
+
+  const gstType = getGSTType(invoice.client.country, invoice.placeOfSupply || invoice.client.state);
 
   // ---- Shared input classes ----
   const inputCls =
@@ -472,9 +581,11 @@ export function InvoiceFormNew() {
                       Draft &middot; Created{' '}
                       {new Date().toLocaleDateString()}
                     </p>
-                    <p className="text-xs text-fm-neutral-500">
-                      Next auto: {InvoiceNumbering.previewNextInvoiceNumber()}
-                    </p>
+                    {nextPreview && (
+                      <p className="text-xs text-fm-neutral-500">
+                        Next auto: {nextPreview}
+                      </p>
+                    )}
                   </div>
                   <Badge
                     variant="secondary"
@@ -565,7 +676,7 @@ export function InvoiceFormNew() {
             </CardContent>
           </Card>
 
-          {/* Invoice dates */}
+          {/* Invoice dates + currency */}
           <Card variant="admin">
             <CardHeader>
               <div className="flex items-center gap-2">
@@ -576,7 +687,7 @@ export function InvoiceFormNew() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">
                     Invoice Date
@@ -602,6 +713,28 @@ export function InvoiceFormNew() {
                     }
                     className={inputCls}
                   />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">
+                    <Globe className="w-3.5 h-3.5 inline mr-1" />
+                    Currency
+                  </label>
+                  <select
+                    value={invoice.currency}
+                    onChange={e =>
+                      setInvoice(p => ({
+                        ...p,
+                        currency: e.target.value as InvoiceCurrency,
+                      }))
+                    }
+                    className={selectCls}
+                  >
+                    {CURRENCY_OPTIONS.map(c => (
+                      <option key={c.value} value={c.value}>
+                        {c.label}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
             </CardContent>
@@ -635,7 +768,7 @@ export function InvoiceFormNew() {
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              {invoice.lineItems.map((item, index) => (
+              {invoice.lineItems.map((item) => (
                 <div
                   key={item.id}
                   className="p-4 rounded-lg bg-white border-l-[3px] border-l-fm-magenta-500 border border-fm-neutral-200 shadow-sm"
@@ -660,8 +793,8 @@ export function InvoiceFormNew() {
                           <optgroup key={cat} label={cat}>
                             {services.map(s => (
                               <option key={s.id} value={s.id}>
-                                {s.name} — ₹
-                                {s.suggestedRate?.toLocaleString('en-IN')}/{s.unit}
+                                {s.name} — {currencyOpt.symbol}
+                                {s.suggestedRate?.toLocaleString(currencyOpt.locale)}/{s.unit}
                               </option>
                             ))}
                           </optgroup>
@@ -669,7 +802,7 @@ export function InvoiceFormNew() {
                       </select>
                     </div>
 
-                    {/* Description */}
+                    {/* Description + SAC code badge */}
                     <div>
                       <label className="block text-xs font-medium text-fm-neutral-600 mb-1">
                         Description
@@ -683,6 +816,35 @@ export function InvoiceFormNew() {
                         placeholder="Describe the service or product..."
                         className={`${textareaCls} resize-none`}
                       />
+                      {/* SAC code display */}
+                      <div className="flex items-center gap-2 mt-1">
+                        {item.sacCode ? (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
+                            SAC: {item.sacCode}
+                          </span>
+                        ) : (
+                          <input
+                            type="text"
+                            value=""
+                            onChange={e =>
+                              updateLineItem(item.id, 'sacCode', e.target.value)
+                            }
+                            placeholder="SAC code (optional)"
+                            className="px-2 py-0.5 text-xs border border-fm-neutral-200 rounded w-36"
+                          />
+                        )}
+                        {item.sacCode && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              updateLineItem(item.id, 'sacCode', '')
+                            }
+                            className="text-xs text-fm-neutral-400 hover:text-fm-neutral-600"
+                          >
+                            clear
+                          </button>
+                        )}
+                      </div>
                     </div>
 
                     {/* Qty / Rate / Amount / Delete */}
@@ -707,7 +869,7 @@ export function InvoiceFormNew() {
                       </div>
                       <div>
                         <label className="block text-xs font-medium text-fm-neutral-600 mb-1">
-                          Rate (₹)
+                          Rate ({currencyOpt.symbol})
                         </label>
                         <input
                           type="number"
@@ -802,7 +964,11 @@ export function InvoiceFormNew() {
             <MetricCard
               title="Total Amount"
               value={fmt(invoice.total)}
-              subtitle={`Inc. ${fmt(invoice.taxAmount)} tax (${invoice.taxRate}% GST)`}
+              subtitle={
+                gstType === 'export'
+                  ? 'No GST (Export)'
+                  : `Inc. ${fmt(invoice.taxAmount)} tax`
+              }
               icon={<CreditCard className="w-6 h-6" />}
               variant="admin"
             />
@@ -813,27 +979,79 @@ export function InvoiceFormNew() {
             <CardHeader>
               <CardTitle>Tax Settings</CardTitle>
             </CardHeader>
-            <CardContent>
-              <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">
-                Tax Rate (%)
-              </label>
-              <input
-                type="number"
-                min="0"
-                max="100"
-                step="0.1"
-                value={invoice.taxRate}
-                onChange={e =>
-                  setInvoice(p => ({
-                    ...p,
-                    taxRate: parseFloat(e.target.value) || 0,
-                  }))
-                }
-                className={inputCls}
-              />
-              <p className="text-xs text-fm-neutral-500 mt-1">
-                Tax Amount: {fmt(invoice.taxAmount)}
-              </p>
+            <CardContent className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">
+                  GST Rate (%)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.1"
+                  value={invoice.taxRate}
+                  onChange={e =>
+                    setInvoice(p => ({
+                      ...p,
+                      taxRate: parseFloat(e.target.value) || 0,
+                    }))
+                  }
+                  className={inputCls}
+                />
+              </div>
+
+              {/* Place of Supply */}
+              <div>
+                <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">
+                  Place of Supply
+                </label>
+                <input
+                  type="text"
+                  value={invoice.placeOfSupply}
+                  onChange={e =>
+                    setInvoice(p => ({ ...p, placeOfSupply: e.target.value }))
+                  }
+                  placeholder={invoice.client.state || 'Client state'}
+                  className={inputCls}
+                />
+              </div>
+
+              {/* GST breakdown */}
+              <div className="p-3 rounded-lg bg-fm-neutral-50 border border-fm-neutral-200 text-sm space-y-1">
+                <div className="flex justify-between text-fm-neutral-600">
+                  <span>Type</span>
+                  <span className="font-medium text-fm-neutral-900">
+                    {getGSTLabel(gstType, invoice.taxRate)}
+                  </span>
+                </div>
+                {gstType === 'intra' && (
+                  <>
+                    <div className="flex justify-between text-fm-neutral-600">
+                      <span>CGST ({invoice.taxRate / 2}%)</span>
+                      <span>{fmt(invoice.cgstAmount)}</span>
+                    </div>
+                    <div className="flex justify-between text-fm-neutral-600">
+                      <span>SGST ({invoice.taxRate / 2}%)</span>
+                      <span>{fmt(invoice.sgstAmount)}</span>
+                    </div>
+                  </>
+                )}
+                {gstType === 'inter' && (
+                  <div className="flex justify-between text-fm-neutral-600">
+                    <span>IGST ({invoice.taxRate}%)</span>
+                    <span>{fmt(invoice.igstAmount)}</span>
+                  </div>
+                )}
+                {gstType === 'export' && (
+                  <p className="text-xs text-fm-neutral-500 italic">
+                    No GST applicable for international clients
+                  </p>
+                )}
+                <div className="flex justify-between font-medium text-fm-neutral-900 pt-1 border-t border-fm-neutral-200">
+                  <span>Total Tax</span>
+                  <span>{fmt(invoice.taxAmount)}</span>
+                </div>
+              </div>
             </CardContent>
           </Card>
 
@@ -847,7 +1065,12 @@ export function InvoiceFormNew() {
                 </p>
               </CardHeader>
               <CardContent className="p-3">
-                <InvoicePreview invoice={invoice} fmt={fmt} fmtDate={fmtDate} />
+                <InvoicePreview
+                  invoice={invoice}
+                  fmt={fmt}
+                  fmtDate={fmtDate}
+                  gstType={gstType}
+                />
               </CardContent>
             </Card>
           </div>
@@ -905,7 +1128,7 @@ function InfoField({
 }
 
 /** Format client address into a single string */
-function formatAddress(client: InvoiceClient): string {
+function formatAddress(client: { address: string; city: string; state: string; zipCode: string; country: string }): string {
   const parts: string[] = [];
   if (client.address) parts.push(client.address);
   const cityState = [client.city, client.state].filter(Boolean).join(', ');
@@ -923,10 +1146,12 @@ function InvoicePreview({
   invoice,
   fmt,
   fmtDate,
+  gstType,
 }: {
   invoice: Invoice;
   fmt: (n: number) => string;
   fmtDate: (d: string) => string;
+  gstType: 'intra' | 'inter' | 'export';
 }) {
   return (
     <div
@@ -969,7 +1194,7 @@ function InvoicePreview({
       <div className="px-4 py-1.5 flex justify-between items-baseline">
         <p className="font-bold text-[14px] text-fm-neutral-900">INVOICE</p>
         <p className="font-bold text-[11px]" style={{ color: '#c9325d' }}>
-          #{invoice.invoiceNumber}
+          #{invoice.invoiceNumber || '—'}
         </p>
       </div>
       <div className="mx-4 border-t border-fm-neutral-200" />
@@ -999,6 +1224,11 @@ function InvoicePreview({
                   GST: {invoice.client.gstNumber}
                 </p>
               )}
+              {(invoice.placeOfSupply || invoice.client.state) && (
+                <p className="text-fm-neutral-500 text-[7px]">
+                  Place of Supply: {invoice.placeOfSupply || invoice.client.state}
+                </p>
+              )}
             </>
           ) : (
             <p className="text-fm-neutral-400 italic">No client selected</p>
@@ -1026,7 +1256,7 @@ function InvoicePreview({
         </div>
       </div>
 
-      {/* ---- Items table ---- */}
+      {/* ---- Items table (with SAC column) ---- */}
       <div className="px-4 pt-2">
         <table className="w-full">
           <thead>
@@ -1037,6 +1267,7 @@ function InvoicePreview({
               <th className="text-left py-1 px-1.5 font-semibold">
                 Description
               </th>
+              <th className="text-left py-1 px-1 font-semibold w-12">SAC</th>
               <th className="text-center py-1 px-1 font-semibold w-8">Qty</th>
               <th className="text-right py-1 px-1 font-semibold w-14">Rate</th>
               <th className="text-right py-1 px-1.5 font-semibold w-16">
@@ -1061,6 +1292,9 @@ function InvoicePreview({
                     </span>
                   )}
                 </td>
+                <td className="py-1 px-1 text-[7px] text-fm-neutral-500">
+                  {item.sacCode || '\u2014'}
+                </td>
                 <td className="text-center py-1 px-1">{item.quantity}</td>
                 <td className="text-right py-1 px-1">{fmt(item.rate)}</td>
                 <td className="text-right py-1 px-1.5 font-semibold">
@@ -1072,7 +1306,7 @@ function InvoicePreview({
         </table>
       </div>
 
-      {/* ---- Totals ---- */}
+      {/* ---- Totals with GST split ---- */}
       <div className="px-4 pt-2">
         <div className="flex justify-end text-[9px] mb-0.5">
           <span className="text-fm-neutral-500 mr-4">Subtotal</span>
@@ -1080,14 +1314,46 @@ function InvoicePreview({
             {fmt(invoice.subtotal)}
           </span>
         </div>
-        <div className="flex justify-end text-[9px] mb-1">
-          <span className="text-fm-neutral-500 mr-4">
-            GST ({invoice.taxRate}%)
-          </span>
-          <span className="font-medium text-fm-neutral-900 w-16 text-right">
-            {fmt(invoice.taxAmount)}
-          </span>
-        </div>
+        {gstType === 'intra' && (
+          <>
+            <div className="flex justify-end text-[9px] mb-0.5">
+              <span className="text-fm-neutral-500 mr-4">
+                CGST ({invoice.taxRate / 2}%)
+              </span>
+              <span className="font-medium text-fm-neutral-900 w-16 text-right">
+                {fmt(invoice.cgstAmount)}
+              </span>
+            </div>
+            <div className="flex justify-end text-[9px] mb-1">
+              <span className="text-fm-neutral-500 mr-4">
+                SGST ({invoice.taxRate / 2}%)
+              </span>
+              <span className="font-medium text-fm-neutral-900 w-16 text-right">
+                {fmt(invoice.sgstAmount)}
+              </span>
+            </div>
+          </>
+        )}
+        {gstType === 'inter' && (
+          <div className="flex justify-end text-[9px] mb-1">
+            <span className="text-fm-neutral-500 mr-4">
+              IGST ({invoice.taxRate}%)
+            </span>
+            <span className="font-medium text-fm-neutral-900 w-16 text-right">
+              {fmt(invoice.igstAmount)}
+            </span>
+          </div>
+        )}
+        {gstType === 'export' && (
+          <div className="flex justify-end text-[9px] mb-1">
+            <span className="text-fm-neutral-500 mr-4 italic">
+              No GST (Export)
+            </span>
+            <span className="font-medium text-fm-neutral-900 w-16 text-right">
+              {fmt(0)}
+            </span>
+          </div>
+        )}
 
         {/* Magenta total ribbon */}
         <div
@@ -1103,7 +1369,7 @@ function InvoicePreview({
       <div className="px-4 pt-2 pb-1">
         <div className="border-t border-fm-neutral-200 pt-1">
           <p className="text-[7px] text-fm-neutral-500">
-            GST: {companyInfo.taxId} &middot; MSME: {companyInfo.msmeUdyamNumber}
+            GSTIN: {companyInfo.taxId} &middot; MSME: {companyInfo.msmeUdyamNumber}
           </p>
           <p className="text-[8px] italic text-fm-neutral-600 mt-0.5">
             Thank you for your business!

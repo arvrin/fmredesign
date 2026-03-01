@@ -22,6 +22,9 @@ Object.defineProperty(globalThis, 'localStorage', {
   writable: true,
 });
 
+// Mock fetch to simulate API failures (tests localStorage fallback)
+vi.stubGlobal('fetch', vi.fn(() => Promise.reject(new Error('No API in tests'))));
+
 import { InvoiceNumbering } from '../invoice-numbering';
 
 describe('InvoiceNumbering', () => {
@@ -29,6 +32,8 @@ describe('InvoiceNumbering', () => {
     mockLocalStorage.clear();
     Object.keys(localStorageData).forEach(key => delete localStorageData[key]);
     vi.clearAllMocks();
+    // Re-mock fetch for each test
+    vi.stubGlobal('fetch', vi.fn(() => Promise.reject(new Error('No API in tests'))));
   });
 
   describe('isValidFormat', () => {
@@ -47,61 +52,68 @@ describe('InvoiceNumbering', () => {
     });
   });
 
-  describe('getNextInvoiceNumber', () => {
-    it('generates FM164/{year} on first call', () => {
+  describe('getNextInvoiceNumber (localStorage fallback)', () => {
+    it('generates FM1/{year} on first call with empty localStorage', async () => {
       const currentYear = new Date().getFullYear();
-      const result = InvoiceNumbering.getNextInvoiceNumber();
+      const result = await InvoiceNumbering.getNextInvoiceNumber();
+      expect(result).toBe(`FM1/${currentYear}`);
+    });
+
+    it('increments counter on subsequent calls', async () => {
+      const currentYear = new Date().getFullYear();
+      const first = await InvoiceNumbering.getNextInvoiceNumber();
+      const second = await InvoiceNumbering.getNextInvoiceNumber();
+      expect(first).toBe(`FM1/${currentYear}`);
+      expect(second).toBe(`FM2/${currentYear}`);
+    });
+
+    it('continues from stored counter', async () => {
+      const currentYear = new Date().getFullYear();
+      localStorageData['fm_invoice_counter'] = '163';
+      localStorageData['fm_invoice_year'] = currentYear.toString();
+
+      const result = await InvoiceNumbering.getNextInvoiceNumber();
       expect(result).toBe(`FM164/${currentYear}`);
     });
-
-    it('increments counter on subsequent calls', () => {
-      const currentYear = new Date().getFullYear();
-      const first = InvoiceNumbering.getNextInvoiceNumber();
-      const second = InvoiceNumbering.getNextInvoiceNumber();
-      expect(first).toBe(`FM164/${currentYear}`);
-      expect(second).toBe(`FM165/${currentYear}`);
-    });
   });
 
-  describe('getCurrentCounter', () => {
-    it('returns default counter on fresh state', () => {
-      const result = InvoiceNumbering.getCurrentCounter();
-      expect(result.counter).toBe(163);
-    });
-
-    it('reflects state after getNextInvoiceNumber', () => {
-      InvoiceNumbering.getNextInvoiceNumber(); // increments to 164
-      const result = InvoiceNumbering.getCurrentCounter();
-      expect(result.counter).toBe(164);
-    });
-  });
-
-  describe('resetCounter', () => {
-    it('resets counter to specified value', () => {
-      InvoiceNumbering.resetCounter(200);
-      // resetCounter stores newCounter - 1, so next is 200
-      const next = InvoiceNumbering.getNextInvoiceNumber();
+  describe('previewNextInvoiceNumber (localStorage fallback)', () => {
+    it('shows next number without incrementing', async () => {
       const currentYear = new Date().getFullYear();
-      expect(next).toBe(`FM200/${currentYear}`);
-    });
+      localStorageData['fm_invoice_counter'] = '163';
+      localStorageData['fm_invoice_year'] = currentYear.toString();
 
-    it('resets counter to specified value and year', () => {
-      InvoiceNumbering.resetCounter(300, 2027);
-      const counter = InvoiceNumbering.getCurrentCounter();
-      expect(counter.counter).toBe(299); // stored as 299, next will be 300
-      expect(counter.year).toBe(2027);
-    });
-  });
-
-  describe('previewNextInvoiceNumber', () => {
-    it('shows next number without incrementing', () => {
-      const preview = InvoiceNumbering.previewNextInvoiceNumber();
-      const currentYear = new Date().getFullYear();
+      const preview = await InvoiceNumbering.previewNextInvoiceNumber();
       expect(preview).toBe(`FM164/${currentYear}`);
 
       // Call again — should still be the same (not incremented)
-      const preview2 = InvoiceNumbering.previewNextInvoiceNumber();
+      const preview2 = await InvoiceNumbering.previewNextInvoiceNumber();
       expect(preview2).toBe(`FM164/${currentYear}`);
+    });
+  });
+
+  describe('getNextInvoiceNumber (API success)', () => {
+    it('uses API response when available', async () => {
+      vi.stubGlobal('fetch', vi.fn(() =>
+        Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({
+            success: true,
+            data: {
+              invoiceNumber: 'FM200/2026',
+              counter: 200,
+              year: 2026,
+            },
+          }),
+        }),
+      ));
+
+      const result = await InvoiceNumbering.getNextInvoiceNumber();
+      expect(result).toBe('FM200/2026');
+
+      // Check localStorage was synced
+      expect(localStorageData['fm_invoice_counter']).toBe('200');
+      expect(localStorageData['fm_invoice_year']).toBe('2026');
     });
   });
 

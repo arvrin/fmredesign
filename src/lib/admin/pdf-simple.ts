@@ -4,13 +4,25 @@
  * Two-tone header (deep purple + magenta accent), editorial layout,
  * branded table, magenta total ribbon, improved footer.
  *
+ * GST-compliant: CGST/SGST/IGST split, SAC column, multi-currency,
+ * GSTIN display, Place of Supply.
+ *
  * jsPDF constraints: no CSS gradients or glass-morphism — achieved via
  * colour fills, lines, typography hierarchy, and spatial composition.
  */
 
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { DEFAULT_COMPANY_INFO, getBankInfoForClient, type BankAccountInfo } from './types';
+import {
+  DEFAULT_COMPANY_INFO,
+  COMPANY_GSTIN,
+  COMPANY_STATE,
+  CURRENCY_OPTIONS,
+  InvoiceUtils,
+  getBankInfoForClient,
+  type BankAccountInfo,
+  type InvoiceCurrency,
+} from './types';
 
 // ---------------------------------------------------------------------------
 // Brand constants
@@ -59,6 +71,7 @@ interface Invoice {
   };
   lineItems: Array<{
     description: string;
+    sacCode?: string;
     quantity: number;
     rate: number;
     amount: number;
@@ -67,6 +80,12 @@ interface Invoice {
   taxRate: number;
   taxAmount: number;
   total: number;
+  currency?: InvoiceCurrency;
+  cgstAmount?: number;
+  sgstAmount?: number;
+  igstAmount?: number;
+  placeOfSupply?: string;
+  companyGstin?: string;
   notes: string;
   terms: string;
 }
@@ -101,6 +120,30 @@ export class SimplePDFGenerator {
     }
   }
 
+  // ---- Currency helpers ---------------------------------------------------
+
+  private getCurrency(invoice: Invoice): InvoiceCurrency {
+    return invoice.currency || 'INR';
+  }
+
+  private getCurrencySymbol(invoice: Invoice): string {
+    return InvoiceUtils.getCurrencySymbol(this.getCurrency(invoice));
+  }
+
+  private formatAmount(amount: number, invoice: Invoice): string {
+    const currency = this.getCurrency(invoice);
+    const opt = CURRENCY_OPTIONS.find(c => c.value === currency) || CURRENCY_OPTIONS[0];
+    return `${opt.symbol}${amount.toLocaleString(opt.locale)}`;
+  }
+
+  private getGSTType(invoice: Invoice): 'intra' | 'inter' | 'export' {
+    const country = invoice.client.country;
+    if (country && country.toLowerCase() !== 'india') return 'export';
+    const clientState = invoice.placeOfSupply || invoice.client.state || '';
+    if (clientState.toLowerCase() === COMPANY_STATE.toLowerCase()) return 'intra';
+    return 'inter';
+  }
+
   // ---- Public API ---------------------------------------------------------
 
   async generateInvoice(invoice: Invoice): Promise<string> {
@@ -111,13 +154,13 @@ export class SimplePDFGenerator {
       await new Promise(r => setTimeout(r, 150));
     }
 
-    this.addHeader();
+    this.addHeader(invoice);
     this.addInvoiceMeta(invoice);
     this.addClientAndDates(invoice);
     this.addItemsTable(invoice);
     this.addTotals(invoice);
     this.addNotesTermsBank(invoice);
-    this.addFooter();
+    this.addFooter(invoice);
 
     return this.doc.output('datauristring');
   }
@@ -129,7 +172,7 @@ export class SimplePDFGenerator {
 
   // ---- Header -------------------------------------------------------------
 
-  private addHeader(): void {
+  private addHeader(invoice: Invoice): void {
     // Deep purple band across top
     this.doc.setFillColor(...PURPLE);
     this.doc.rect(0, 0, PAGE_W, 12, 'F');
@@ -172,11 +215,12 @@ export class SimplePDFGenerator {
 
     // Contact info — right-aligned with magenta bullet dots
     const contactX = PAGE_W - MARGIN_R;
+    const gstin = invoice.companyGstin || COMPANY_GSTIN;
     const contactItems = [
       'freakingmindsdigital@gmail.com',
       '+91 98332 57659',
       'www.freakingminds.in',
-      'Bhopal, India',
+      `GSTIN: ${gstin}`,
     ];
 
     this.doc.setFont('helvetica', 'normal');
@@ -287,6 +331,16 @@ export class SimplePDFGenerator {
       this.doc.setFontSize(8);
       this.doc.setTextColor(...DARK);
       this.doc.text(`GST: ${invoice.client.gstNumber}`, MARGIN_L, yPos);
+      yPos += 4;
+    }
+
+    // Place of Supply
+    const placeOfSupply = invoice.placeOfSupply || invoice.client.state;
+    if (placeOfSupply) {
+      this.doc.setFont('helvetica', 'normal');
+      this.doc.setFontSize(8);
+      this.doc.setTextColor(...GREY);
+      this.doc.text(`Place of Supply: ${placeOfSupply}`, MARGIN_L, yPos);
     }
 
     // ---- Right column: Dates ----
@@ -319,13 +373,15 @@ export class SimplePDFGenerator {
 
   private addItemsTable(invoice: Invoice): void {
     const startY = 100;
+    const sym = this.getCurrencySymbol(invoice);
 
-    const headers = ['Description', 'Qty', 'Rate (Rs)', 'Amount (Rs)'];
+    const headers = ['Description', 'SAC', 'Qty', `Rate (${sym})`, `Amount (${sym})`];
     const data = invoice.lineItems.map(item => [
       item.description,
+      item.sacCode || '\u2014',
       item.quantity.toString(),
-      `Rs ${item.rate.toLocaleString('en-IN')}`,
-      `Rs ${item.amount.toLocaleString('en-IN')}`,
+      this.formatAmount(item.rate, invoice),
+      this.formatAmount(item.amount, invoice),
     ]);
 
     autoTable(this.doc, {
@@ -347,10 +403,11 @@ export class SimplePDFGenerator {
         fontSize: 9,
       },
       columnStyles: {
-        0: { cellWidth: 80 },
+        0: { cellWidth: 65 },
         1: { cellWidth: 20, halign: 'center' },
-        2: { cellWidth: 35, halign: 'right' },
-        3: { cellWidth: 35, halign: 'right', fontStyle: 'bold' },
+        2: { cellWidth: 15, halign: 'center' },
+        3: { cellWidth: 35, halign: 'right' },
+        4: { cellWidth: 35, halign: 'right', fontStyle: 'bold' },
       },
       alternateRowStyles: {
         fillColor: MAGENTA_TINT,
@@ -379,6 +436,7 @@ export class SimplePDFGenerator {
     const y = this.tableEndY + 8;
     const rightEdge = PAGE_W - MARGIN_R;
     const labelX = 130;
+    const gstType = this.getGSTType(invoice);
 
     // Subtotal
     this.doc.setFont('helvetica', 'normal');
@@ -386,21 +444,45 @@ export class SimplePDFGenerator {
     this.doc.setTextColor(...GREY);
     this.doc.text('Subtotal', labelX, y);
     this.doc.setTextColor(...DARK);
-    this.doc.text(`Rs ${invoice.subtotal.toLocaleString('en-IN')}`, rightEdge, y, { align: 'right' });
+    this.doc.text(this.formatAmount(invoice.subtotal, invoice), rightEdge, y, { align: 'right' });
 
-    // Tax
-    this.doc.setTextColor(...GREY);
-    this.doc.text(`GST (${invoice.taxRate}%)`, labelX, y + 6);
-    this.doc.setTextColor(...DARK);
-    this.doc.text(`Rs ${invoice.taxAmount.toLocaleString('en-IN')}`, rightEdge, y + 6, { align: 'right' });
+    let currentY = y + 6;
+
+    // Tax lines based on GST type
+    if (gstType === 'intra') {
+      const halfRate = invoice.taxRate / 2;
+      const cgst = invoice.cgstAmount ?? invoice.taxAmount / 2;
+      const sgst = invoice.sgstAmount ?? invoice.taxAmount / 2;
+
+      this.doc.setTextColor(...GREY);
+      this.doc.text(`CGST (${halfRate}%)`, labelX, currentY);
+      this.doc.setTextColor(...DARK);
+      this.doc.text(this.formatAmount(cgst, invoice), rightEdge, currentY, { align: 'right' });
+      currentY += 6;
+
+      this.doc.setTextColor(...GREY);
+      this.doc.text(`SGST (${halfRate}%)`, labelX, currentY);
+      this.doc.setTextColor(...DARK);
+      this.doc.text(this.formatAmount(sgst, invoice), rightEdge, currentY, { align: 'right' });
+      currentY += 6;
+    } else if (gstType === 'inter') {
+      const igst = invoice.igstAmount ?? invoice.taxAmount;
+
+      this.doc.setTextColor(...GREY);
+      this.doc.text(`IGST (${invoice.taxRate}%)`, labelX, currentY);
+      this.doc.setTextColor(...DARK);
+      this.doc.text(this.formatAmount(igst, invoice), rightEdge, currentY, { align: 'right' });
+      currentY += 6;
+    }
+    // For 'export', no tax lines
 
     // Divider
     this.doc.setDrawColor(...LIGHT_GREY);
     this.doc.setLineWidth(0.3);
-    this.doc.line(labelX, y + 10, rightEdge, y + 10);
+    this.doc.line(labelX, currentY, rightEdge, currentY);
 
     // ---- Total ribbon: full-width magenta band ----
-    const ribbonY = y + 13;
+    const ribbonY = currentY + 3;
     const ribbonH = 10;
     this.doc.setFillColor(...MAGENTA);
     this.doc.rect(MARGIN_L, ribbonY, CONTENT_W, ribbonH, 'F');
@@ -409,16 +491,19 @@ export class SimplePDFGenerator {
     this.doc.setFontSize(13);
     this.doc.setTextColor(...WHITE);
     this.doc.text('TOTAL', MARGIN_L + 4, ribbonY + 7);
-    this.doc.text(`Rs ${invoice.total.toLocaleString('en-IN')}`, rightEdge - 4, ribbonY + 7, { align: 'right' });
+    this.doc.text(this.formatAmount(invoice.total, invoice), rightEdge - 4, ribbonY + 7, { align: 'right' });
 
-    // Amount in words below ribbon
+    // Amount in words below ribbon (only for INR)
     const wordsY = ribbonY + ribbonH + 5;
-    this.doc.setFont('helvetica', 'italic');
-    this.doc.setFontSize(8);
-    this.doc.setTextColor(...GREY);
-    const amountWords = this.numberToWords(invoice.total);
-    if (amountWords) {
-      this.doc.text(amountWords, MARGIN_L, wordsY);
+    const currency = this.getCurrency(invoice);
+    if (currency === 'INR') {
+      this.doc.setFont('helvetica', 'italic');
+      this.doc.setFontSize(8);
+      this.doc.setTextColor(...GREY);
+      const amountWords = InvoiceUtils.numberToWords(invoice.total);
+      if (amountWords) {
+        this.doc.text(amountWords, MARGIN_L, wordsY);
+      }
     }
 
     this.tableEndY = wordsY + 4;
@@ -554,8 +639,10 @@ export class SimplePDFGenerator {
 
   // ---- Footer (all pages) -------------------------------------------------
 
-  private addFooter(): void {
+  private addFooter(invoice: Invoice): void {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const pageCount = (this.doc as any).internal.getNumberOfPages() as number;
+    const gstin = invoice.companyGstin || COMPANY_GSTIN;
 
     for (let i = 1; i <= pageCount; i++) {
       this.doc.setPage(i);
@@ -569,7 +656,7 @@ export class SimplePDFGenerator {
       this.doc.setFontSize(7);
       this.doc.setTextColor(...GREY);
       this.doc.setFont('helvetica', 'normal');
-      this.doc.text(`GST: ${DEFAULT_COMPANY_INFO.taxId || ''}`, MARGIN_L, PAGE_H - 23);
+      this.doc.text(`GSTIN: ${gstin}`, MARGIN_L, PAGE_H - 23);
       this.doc.text(`MSME: ${DEFAULT_COMPANY_INFO.msmeUdyamNumber || ''}`, MARGIN_L, PAGE_H - 19);
 
       // Center: Thank you
@@ -611,72 +698,5 @@ export class SimplePDFGenerator {
       month: 'short',
       year: 'numeric',
     });
-  }
-
-  private numberToWords(amount: number): string {
-    const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
-    const teens = ['Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
-    const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
-
-    /** Convert 0–999 to words */
-    function convertHundreds(num: number): string {
-      let result = '';
-      if (num >= 100) {
-        result += ones[Math.floor(num / 100)] + ' Hundred ';
-        num %= 100;
-      }
-      if (num >= 20) {
-        result += tens[Math.floor(num / 10)];
-        if (num % 10 !== 0) result += ' ' + ones[num % 10];
-      } else if (num >= 10) {
-        result += teens[num - 10];
-      } else if (num > 0) {
-        result += ones[num];
-      }
-      return result.trim();
-    }
-
-    /**
-     * Convert any positive integer to Indian-style words.
-     * Indian numbering: Crore (10^7), Lakh (10^5), Thousand (10^3), Hundred…
-     */
-    function convertIndian(num: number): string {
-      if (num === 0) return '';
-      let result = '';
-
-      // Crores (≥ 1,00,00,000)
-      if (num >= 10000000) {
-        result += convertHundreds(Math.floor(num / 10000000)) + ' Crore ';
-        num %= 10000000;
-      }
-      // Lakhs (≥ 1,00,000)
-      if (num >= 100000) {
-        result += convertHundreds(Math.floor(num / 100000)) + ' Lakh ';
-        num %= 100000;
-      }
-      // Thousands (≥ 1,000)
-      if (num >= 1000) {
-        result += convertHundreds(Math.floor(num / 1000)) + ' Thousand ';
-        num %= 1000;
-      }
-      // Hundreds and below
-      if (num > 0) {
-        result += convertHundreds(num) + ' ';
-      }
-
-      return result.trim();
-    }
-
-    if (amount === 0) return 'Zero Rupees Only';
-
-    const rupees = Math.floor(amount);
-    const paise = Math.round((amount - rupees) * 100);
-    let result = convertIndian(rupees) + ' Rupees';
-
-    if (paise > 0) {
-      result += ' and ' + convertHundreds(paise) + ' Paise';
-    }
-
-    return result.trim() + ' Only';
   }
 }
