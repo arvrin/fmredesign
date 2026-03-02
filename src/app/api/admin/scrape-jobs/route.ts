@@ -5,8 +5,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
-import { requireAdminAuth } from '@/lib/admin-auth-middleware';
-import { logAuditEvent, getAuditUser, getClientIP } from '@/lib/admin/audit-log';
+import { requirePermission } from '@/lib/admin-auth-middleware';
+import { logAuditEvent, getClientIP } from '@/lib/admin/audit-log';
 import type { ScrapeSourcePlatform, ScrapeScheduleType } from '@/lib/admin/scrape-job-types';
 
 function transformJob(row: Record<string, unknown>) {
@@ -46,8 +46,8 @@ function transformRun(row: Record<string, unknown>) {
 
 // GET /api/admin/scrape-jobs — List jobs with latest run info + stats
 export async function GET(request: NextRequest) {
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+  const auth = await requirePermission(request, 'content.read');
+  if ('error' in auth) return auth.error;
 
   try {
     const supabase = getSupabaseAdmin();
@@ -117,8 +117,8 @@ export async function GET(request: NextRequest) {
 
 // POST /api/admin/scrape-jobs — Create a new job
 export async function POST(request: NextRequest) {
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+  const auth = await requirePermission(request, 'content.write');
+  if ('error' in auth) return auth.error;
 
   try {
     const body = await request.json();
@@ -153,9 +153,9 @@ export async function POST(request: NextRequest) {
 
     if (error) throw error;
 
-    const auditUser = getAuditUser(request);
     await logAuditEvent({
-      ...auditUser,
+      user_id: auth.user.id,
+      user_name: auth.user.name,
       action: 'create',
       resource_type: 'scrape_job',
       resource_id: data.id as string,
@@ -178,8 +178,8 @@ export async function POST(request: NextRequest) {
 
 // PUT /api/admin/scrape-jobs — Update job OR trigger a run
 export async function PUT(request: NextRequest) {
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+  const auth = await requirePermission(request, 'content.write');
+  if ('error' in auth) return auth.error;
 
   try {
     const body = await request.json();
@@ -218,9 +218,9 @@ export async function PUT(request: NextRequest) {
 
       if (runErr) throw runErr;
 
-      const auditUser = getAuditUser(request);
       await logAuditEvent({
-        ...auditUser,
+        user_id: auth.user.id,
+        user_name: auth.user.name,
         action: 'update',
         resource_type: 'scrape_job',
         resource_id: id,
@@ -254,9 +254,9 @@ export async function PUT(request: NextRequest) {
 
     if (error) throw error;
 
-    const auditUser = getAuditUser(request);
     await logAuditEvent({
-      ...auditUser,
+      user_id: auth.user.id,
+      user_name: auth.user.name,
       action: 'update',
       resource_type: 'scrape_job',
       resource_id: id,
@@ -276,8 +276,8 @@ export async function PUT(request: NextRequest) {
 
 // DELETE /api/admin/scrape-jobs
 export async function DELETE(request: NextRequest) {
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+  const auth = await requirePermission(request, 'content.delete');
+  if ('error' in auth) return auth.error;
 
   try {
     const { searchParams } = new URL(request.url);
@@ -291,9 +291,9 @@ export async function DELETE(request: NextRequest) {
     const { error } = await supabase.from('scrape_jobs').delete().eq('id', id);
     if (error) throw error;
 
-    const auditUser = getAuditUser(request);
     await logAuditEvent({
-      ...auditUser,
+      user_id: auth.user.id,
+      user_name: auth.user.name,
       action: 'delete',
       resource_type: 'scrape_job',
       resource_id: id,

@@ -5,8 +5,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
-import { requireAdminAuth } from '@/lib/admin-auth-middleware';
-import { logAuditEvent, getAuditUser, getClientIP } from '@/lib/admin/audit-log';
+import { requirePermission } from '@/lib/admin-auth-middleware';
+import { logAuditEvent, getClientIP } from '@/lib/admin/audit-log';
 
 function slugify(name: string): string {
   return name
@@ -35,8 +35,8 @@ async function uniqueSlug(base: string): Promise<string> {
 }
 
 export async function POST(request: NextRequest) {
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+  const auth = await requirePermission(request, 'clients.write');
+  if ('error' in auth) return auth.error;
 
   try {
     const { leadId } = await request.json();
@@ -110,10 +110,10 @@ export async function POST(request: NextRequest) {
 
     if (updateError) throw updateError;
 
-    // Fire-and-forget audit log
-    const auditUser = getAuditUser(request);
+    // Audit log
     await logAuditEvent({
-      ...auditUser,
+      user_id: auth.user.id,
+      user_name: auth.user.name,
       action: 'create',
       resource_type: 'client',
       resource_id: clientId,

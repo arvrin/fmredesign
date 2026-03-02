@@ -7,7 +7,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
-import { requireAdminAuth } from '@/lib/admin-auth-middleware';
+import { requirePermission } from '@/lib/admin-auth-middleware';
 
 const ALLOWED_TYPES = [
   'application/pdf',
@@ -25,8 +25,8 @@ const BUCKET = 'team-documents';
 
 // POST /api/team/documents — upload a document
 export async function POST(request: NextRequest) {
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+  const auth = await requirePermission(request, 'users.write');
+  if ('error' in auth) return auth.error;
 
   try {
     const formData = await request.formData();
@@ -117,8 +117,8 @@ export async function POST(request: NextRequest) {
 
 // DELETE /api/team/documents?memberId=xxx&docId=xxx
 export async function DELETE(request: NextRequest) {
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+  const auth = await requirePermission(request, 'users.delete');
+  if ('error' in auth) return auth.error;
 
   try {
     const { searchParams } = request.nextUrl;

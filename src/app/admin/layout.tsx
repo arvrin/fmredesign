@@ -46,8 +46,46 @@ import {
   Target,
   MessageSquare,
   Database,
+  ClipboardList,
 } from 'lucide-react';
 import React from 'react';
+
+/* ── Permission requirements per nav href ── */
+const NAV_PERMISSIONS: Record<string, string> = {
+  '/admin': '',                           // Dashboard — all roles
+  '/admin/my-work': '',                   // My Work — all roles
+  '/admin/clients': 'clients.read',
+  '/admin/projects': 'projects.read',
+  '/admin/content': 'content.read',
+  '/admin/invoices': 'finance.read',
+  '/admin/proposals': 'finance.read',
+  '/admin/leads': 'clients.read',
+  '/admin/scraped-contacts': 'content.read',
+  '/admin/support': 'clients.read',
+  '/admin/team': 'users.read',
+  '/admin/discovery': 'clients.read',
+  '/admin/creativeminds': 'clients.read',
+  '/admin/users': 'users.read',
+  '/admin/audit': 'settings.read',
+  '/admin/system': 'settings.read',
+  '/admin/settings': 'settings.read',
+};
+
+/** Filter navigation groups based on current user's permissions */
+function filterNavigation(
+  groups: NavigationGroup[],
+  hasPermission: (p: string) => boolean
+): NavigationGroup[] {
+  return groups
+    .map(group => ({
+      ...group,
+      items: group.items.filter(item => {
+        const required = NAV_PERMISSIONS[item.href];
+        return required === '' || required === undefined || hasPermission(required);
+      }),
+    }))
+    .filter(group => group.items.length > 0);
+}
 
 /* ── Navigation configuration ── */
 const adminNavigation: NavigationGroup[] = [
@@ -55,6 +93,7 @@ const adminNavigation: NavigationGroup[] = [
     title: 'Main',
     items: [
       { label: 'Dashboard', href: '/admin', icon: <LayoutDashboard className="w-5 h-5" /> },
+      { label: 'My Work', href: '/admin/my-work', icon: <ClipboardList className="w-5 h-5" /> },
       { label: 'Clients', href: '/admin/clients', icon: <Users className="w-5 h-5" /> },
       { label: 'Projects', href: '/admin/projects', icon: <Briefcase className="w-5 h-5" /> },
     ],
@@ -118,7 +157,7 @@ function AdminBreadcrumbs() {
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { isAuthenticated, loading, currentUser, logout } = useAdminAuth();
+  const { isAuthenticated, loading, currentUser, logout, hasPermission } = useAdminAuth();
   const [commandOpen, setCommandOpen] = useState(false);
 
   // Notification state
@@ -237,7 +276,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     <>
       <DashboardLayout
         variant="admin"
-        navigation={adminNavigation}
+        navigation={filterNavigation(adminNavigation, hasPermission)}
         user={user}
         onLogout={handleLogout}
         onCommandPalette={handleCommandPalette}

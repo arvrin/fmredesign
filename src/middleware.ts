@@ -10,8 +10,10 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const ADMIN_SESSION_COOKIE = 'fm-admin-session';
 const CLIENT_SESSION_COOKIE = 'fm_client_session';
+const TALENT_SESSION_COOKIE = 'fm_talent_session';
 const MAX_SESSION_AGE_MS = 24 * 60 * 60 * 1000; // 24 hours
 const CLIENT_SESSION_DURATION_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+const TALENT_SESSION_DURATION_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 /**
  * HMAC-SHA256 using Web Crypto API (Edge Runtime compatible).
@@ -61,6 +63,36 @@ async function isValidAdminSession(token: string, adminPassword: string): Promis
     return true;
   } catch {
     return false;
+  }
+}
+
+/**
+ * Validate HMAC-signed talent session cookie (Edge Runtime compatible).
+ * Same format as client session: base64payload.hmac_hex_signature
+ */
+async function getValidTalentSession(
+  cookieValue: string,
+  signingSecret: string
+): Promise<{ talentId: string; slug: string; expires: number } | null> {
+  const dotIndex = cookieValue.lastIndexOf('.');
+  if (dotIndex === -1) return null;
+
+  const payload = cookieValue.substring(0, dotIndex);
+  const signature = cookieValue.substring(dotIndex + 1);
+
+  try {
+    const expectedSignature = await hmacSha256(signingSecret, payload);
+    if (!constantTimeEqual(signature, expectedSignature)) return null;
+
+    const json = atob(payload);
+    const data = JSON.parse(json);
+
+    if (!data.talentId || !data.expires) return null;
+    if (Date.now() > data.expires) return null;
+
+    return { talentId: data.talentId, slug: data.slug, expires: data.expires };
+  } catch {
+    return null;
   }
 }
 
@@ -186,9 +218,69 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  /* ── Talent portal routes ── */
+  if (pathname.startsWith('/creativeminds/portal')) {
+    // Allow login page
+    if (pathname === '/creativeminds/login' || pathname === '/creativeminds/login/') {
+      return NextResponse.next();
+    }
+
+    const signingSecret = process.env.TALENT_SESSION_SECRET || process.env.ADMIN_PASSWORD;
+    if (!signingSecret) {
+      return NextResponse.redirect(new URL('/creativeminds/login', request.url));
+    }
+
+    const cookieValue = request.cookies.get(TALENT_SESSION_COOKIE)?.value;
+    if (!cookieValue) {
+      return NextResponse.redirect(new URL('/creativeminds/login', request.url));
+    }
+
+    const session = await getValidTalentSession(cookieValue, signingSecret);
+    if (!session) {
+      return NextResponse.redirect(new URL('/creativeminds/login?error=session_expired', request.url));
+    }
+
+    // Cross-talent prevention: /creativeminds/portal/<slug>/...
+    const segments = pathname.split('/');
+    const urlSlug = segments[3]; // /creativeminds/portal/<slug>/...
+    if (urlSlug && session.slug !== urlSlug) {
+      return NextResponse.redirect(new URL(`/creativeminds/portal/${session.slug}`, request.url));
+    }
+
+    // Sliding expiry: extend cookie if < 85% of duration remaining
+    const timeRemaining = session.expires - Date.now();
+    if (timeRemaining < TALENT_SESSION_DURATION_MS * 0.85) {
+      const newExpires = Date.now() + TALENT_SESSION_DURATION_MS;
+
+      const dotIndex = cookieValue.lastIndexOf('.');
+      const originalPayload = cookieValue.substring(0, dotIndex);
+      try {
+        const payloadJson = JSON.parse(atob(originalPayload));
+        payloadJson.expires = newExpires;
+        const newPayloadB64 = btoa(JSON.stringify(payloadJson));
+        const newSignature = await hmacSha256(signingSecret, newPayloadB64);
+        const newCookie = `${newPayloadB64}.${newSignature}`;
+
+        const response = NextResponse.next();
+        response.cookies.set(TALENT_SESSION_COOKIE, newCookie, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          path: '/',
+          maxAge: TALENT_SESSION_DURATION_MS / 1000,
+        });
+        return response;
+      } catch {
+        return NextResponse.next();
+      }
+    }
+
+    return NextResponse.next();
+  }
+
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/client/:path*'],
+  matcher: ['/admin/:path*', '/client/:path*', '/creativeminds/portal/:path*'],
 };

@@ -5,9 +5,9 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
-import { requireAdminAuth } from '@/lib/admin-auth-middleware';
+import { requireAdminAuth, requirePermission } from '@/lib/admin-auth-middleware';
 import { createDiscoverySchema, updateDiscoverySchema, validateBody } from '@/lib/validations/schemas';
-import { logAuditEvent, getAuditUser, getClientIP } from '@/lib/admin/audit-log';
+import { logAuditEvent, getClientIP } from '@/lib/admin/audit-log';
 
 export async function GET(request: NextRequest) {
   const authError = await requireAdminAuth(request);
@@ -63,8 +63,8 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+  const auth = await requirePermission(request, 'clients.write');
+  if ('error' in auth) return auth.error;
 
   try {
     const rawBody = await request.json();
@@ -101,10 +101,10 @@ export async function POST(request: NextRequest) {
 
     if (error) throw error;
 
-    // Fire-and-forget audit log
-    const auditUser = getAuditUser(request);
+    // Audit log
     await logAuditEvent({
-      ...auditUser,
+      user_id: auth.user.id,
+      user_name: auth.user.name,
       action: 'create',
       resource_type: 'discovery_session',
       resource_id: session.id,
@@ -126,8 +126,8 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+  const auth = await requirePermission(request, 'clients.write');
+  if ('error' in auth) return auth.error;
 
   try {
     const rawBody = await request.json();
@@ -172,10 +172,10 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // Fire-and-forget audit log
-    const auditUser = getAuditUser(request);
+    // Audit log
     await logAuditEvent({
-      ...auditUser,
+      user_id: auth.user.id,
+      user_name: auth.user.name,
       action: 'update',
       resource_type: 'discovery_session',
       resource_id: sessionId,
@@ -197,8 +197,8 @@ export async function PUT(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+  const auth = await requirePermission(request, 'clients.delete');
+  if ('error' in auth) return auth.error;
 
   try {
     const { searchParams } = new URL(request.url);
@@ -219,10 +219,10 @@ export async function DELETE(request: NextRequest) {
 
     if (error) throw error;
 
-    // Fire-and-forget audit log
-    const auditUser = getAuditUser(request);
+    // Audit log
     await logAuditEvent({
-      ...auditUser,
+      user_id: auth.user.id,
+      user_name: auth.user.name,
       action: 'delete',
       resource_type: 'discovery_session',
       resource_id: sessionId,

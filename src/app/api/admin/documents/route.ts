@@ -325,7 +325,7 @@ export async function PUT(request: NextRequest) {
 
 // ── DELETE ────────────────────────────────────────────────
 export async function DELETE(request: NextRequest) {
-  const auth = await requirePermission(request, 'clients.write');
+  const auth = await requirePermission(request, 'clients.delete');
   if ('error' in auth) return auth.error;
 
   const { searchParams } = request.nextUrl;

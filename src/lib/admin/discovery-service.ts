@@ -473,7 +473,7 @@ export class DiscoveryService {
 **Type:** ${session.projectOverview.projectType}
 **Completion:** ${analytics.completionRate.toFixed(1)}%
 **Complexity:** ${analytics.projectComplexity}
-**Estimated Budget:** ₹${analytics.estimatedBudget.toLocaleString()}
+**Estimated Budget:** ₹${analytics.estimatedBudget.toLocaleString('en-IN')}
 
 ## Project Overview
 ${session.projectOverview.projectDescription}
@@ -491,11 +491,11 @@ ${analytics.talentRequirements.map(req =>
 ${analytics.skillsRequired.map(skill => `- ${skill}`).join('\n')}
 
 ## Budget Breakdown
-**Total Budget:** ₹${session.budgetResources.totalBudget.amount.toLocaleString()}
+**Total Budget:** ₹${session.budgetResources.totalBudget.amount.toLocaleString('en-IN')}
 **Flexibility:** ${session.budgetResources.totalBudget.flexibility}
 
 ${session.budgetResources.budgetBreakdown.map(budget => 
-  `- ${budget.category}: ₹${budget.allocation.toLocaleString()} (${budget.priority} priority)`
+  `- ${budget.category}: ₹${budget.allocation.toLocaleString('en-IN')} (${budget.priority} priority)`
 ).join('\n')}
 
 ## Timeline Assessment

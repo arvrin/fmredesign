@@ -115,7 +115,12 @@ export async function POST(request: NextRequest) {
 
       // Set signed user identity cookie for RBAC enforcement
       const userPayload = Buffer.from(
-        JSON.stringify({ userId: user.id, role: user.role, name: user.name })
+        JSON.stringify({
+          userId: user.id,
+          role: user.role,
+          name: user.name,
+          teamMemberId: userRow.team_member_id || null,
+        })
       ).toString('base64');
       const userSignature = createHmac('sha256', adminPassword)
         .update(userPayload)

@@ -9,6 +9,7 @@ export default function robots(): MetadataRoute.Robots {
         disallow: [
           '/admin/',
           '/client/',
+          '/creativeminds/portal/',
           '/diagnostic',
           '/wehave',
           '/showcase/',

@@ -8,10 +8,11 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import bcrypt from 'bcryptjs';
 import { getSupabaseAdmin } from '@/lib/supabase';
-import { requireAdminAuth } from '@/lib/admin-auth-middleware';
+import { requireAdminAuth, requirePermission } from '@/lib/admin-auth-middleware';
 import { rateLimit, getClientIp } from '@/lib/rate-limiter';
-import { logAuditEvent, getAuditUser, getClientIP } from '@/lib/admin/audit-log';
+import { logAuditEvent, getClientIP } from '@/lib/admin/audit-log';
 import { submitTalentApplicationSchema, validateBody } from '@/lib/validations/schemas';
 import {
   notifyTeam, notifyRecipient,
@@ -318,8 +319,8 @@ export async function GET(request: NextRequest) {
 // ---------------------------------------------------------------------------
 
 export async function PUT(request: NextRequest) {
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+  const auth = await requirePermission(request, 'clients.write');
+  if ('error' in auth) return auth.error;
 
   try {
     const body = await request.json();
@@ -386,11 +387,23 @@ export async function PUT(request: NextRequest) {
       const fullName = (personalInfo.fullName as string) || '';
       profileSlug = generateProfileSlug(fullName);
 
-      const profileRecord = {
+      // Generate temporary portal password
+      const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+      const tempPassword = Array.from({ length: 12 }, () =>
+        chars[Math.floor(Math.random() * chars.length)]
+      ).join('');
+      const hashedPassword = await bcrypt.hash(tempPassword, 12);
+      const portalEmail = personalInfo.email
+        ? (personalInfo.email as string).trim().toLowerCase()
+        : null;
+
+      const profileRecord: Record<string, unknown> = {
         id: crypto.randomUUID(),
         application_id: id,
         profile_slug: profileSlug,
         email: personalInfo.email || null,
+        portal_email: portalEmail,
+        portal_password: hashedPassword,
         personal_info: updatedApp.personal_info,
         professional_details: updatedApp.professional_details,
         portfolio_links: updatedApp.portfolio_links,
@@ -426,10 +439,10 @@ export async function PUT(request: NextRequest) {
       }
     }
 
-    // Fire-and-forget audit log
-    const auditUser = getAuditUser(request);
+    // Audit log
     await logAuditEvent({
-      ...auditUser,
+      user_id: auth.user.id,
+      user_name: auth.user.name,
       action: status === 'approved' ? 'approve' : status === 'rejected' ? 'reject' : 'update',
       resource_type: 'talent_application',
       resource_id: id,

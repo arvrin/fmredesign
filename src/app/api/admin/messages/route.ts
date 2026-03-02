@@ -11,8 +11,8 @@ import { requireAdminAuth, requirePermission } from '@/lib/admin-auth-middleware
 import { notifyClient } from '@/lib/notifications';
 
 export async function GET(request: NextRequest) {
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+  const auth = await requirePermission(request, 'clients.read');
+  if ('error' in auth) return auth.error;
 
   try {
     const { searchParams } = request.nextUrl;

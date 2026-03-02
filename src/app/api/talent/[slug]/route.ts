@@ -1,14 +1,13 @@
 /**
  * Talent Profile API (slug-based access)
  *
- * GET  /api/talent/[slug] - Fetch a talent's public profile by slug
- * PUT  /api/talent/[slug] - Update allowed profile fields (self-service)
- *
- * The slug acts as the access token -- no admin auth required.
+ * GET  /api/talent/[slug] - Fetch a talent's public profile by slug (public)
+ * PUT  /api/talent/[slug] - Update allowed profile fields (requires auth)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
+import { requireTalentAuth } from '@/lib/talent-session';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -107,7 +106,7 @@ export async function GET(
 }
 
 // ---------------------------------------------------------------------------
-// PUT - Update allowed profile fields (self-service via slug)
+// PUT - Update allowed profile fields (requires talent auth)
 // ---------------------------------------------------------------------------
 
 export async function PUT(
@@ -123,6 +122,10 @@ export async function PUT(
         { status: 400 }
       );
     }
+
+    // Require authenticated talent session with matching slug
+    const authError = await requireTalentAuth(request, slug);
+    if (authError) return authError;
 
     const supabase = getSupabaseAdmin();
 

@@ -64,9 +64,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: validation.error }, { status: 400 });
     }
     const body = rawBody;
-    const { name, email, mobileNumber, role, notes } = body;
+    const { name, email, mobileNumber, role, notes, teamMemberId } = body;
 
-    const newUser = {
+    const newUser: Record<string, unknown> = {
       id: `user-${Date.now()}`,
       mobile_number: normalizeMobileNumber(mobileNumber),
       name,
@@ -77,6 +77,7 @@ export async function POST(request: NextRequest) {
       created_by: 'admin',
       notes: notes || '',
     };
+    if (teamMemberId) newUser.team_member_id = teamMemberId;
 
     const supabase = getSupabaseAdmin();
     const { error } = await supabase.from('authorized_users').insert(newUser);
@@ -89,8 +90,8 @@ export async function POST(request: NextRequest) {
       user_name: auth.user.name,
       action: 'create',
       resource_type: 'user',
-      resource_id: newUser.id,
-      details: { name: newUser.name, role: newUser.role },
+      resource_id: newUser.id as string,
+      details: { name: newUser.name as string, role: newUser.role as string },
       ip_address: getClientIP(request),
     });
 
@@ -126,7 +127,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ success: false, error: validation.error }, { status: 400 });
     }
     const body = rawBody;
-    const { id, name, email, mobileNumber, role, status, notes } = body;
+    const { id, name, email, mobileNumber, role, status, notes, teamMemberId } = body;
 
     const updates: Record<string, any> = {};
     if (name) updates.name = name;
@@ -138,6 +139,7 @@ export async function PUT(request: NextRequest) {
     }
     if (status) updates.status = status;
     if (notes !== undefined) updates.notes = notes;
+    if (teamMemberId !== undefined) updates.team_member_id = teamMemberId || null;
 
     const supabase = getSupabaseAdmin();
     const { error } = await supabase

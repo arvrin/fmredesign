@@ -321,8 +321,8 @@ export async function POST(request: NextRequest) {
 
 // DELETE /api/leads - Delete lead
 export async function DELETE(request: NextRequest) {
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+  const auth = await requirePermission(request, 'clients.delete');
+  if ('error' in auth) return auth.error;
 
   try {
     const { searchParams } = new URL(request.url);
@@ -337,10 +337,10 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Failed to delete lead' }, { status: 500 });
     }
 
-    // Fire-and-forget audit log (uses header-based user identity — requireAdminAuth has no user object)
-    const auditUser = getAuditUser(request);
+    // Audit log
     await logAuditEvent({
-      ...auditUser,
+      user_id: auth.user.id,
+      user_name: auth.user.name,
       action: 'delete',
       resource_type: 'lead',
       resource_id: id,

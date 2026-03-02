@@ -5,8 +5,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
-import { requireAdminAuth } from '@/lib/admin-auth-middleware';
-import { logAuditEvent, getAuditUser, getClientIP } from '@/lib/admin/audit-log';
+import { requirePermission } from '@/lib/admin-auth-middleware';
+import { logAuditEvent, getClientIP } from '@/lib/admin/audit-log';
 import type { ScrapedContactStatus, SourcePlatform } from '@/lib/admin/scraped-contact-types';
 
 // snake_case row → camelCase contact
@@ -46,8 +46,8 @@ function transformRow(row: Record<string, unknown>) {
 
 // GET /api/admin/scraped-contacts
 export async function GET(request: NextRequest) {
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+  const auth = await requirePermission(request, 'content.read');
+  if ('error' in auth) return auth.error;
 
   try {
     const searchParams = request.nextUrl.searchParams;
@@ -140,8 +140,8 @@ export async function GET(request: NextRequest) {
 
 // POST /api/admin/scraped-contacts — Bulk import
 export async function POST(request: NextRequest) {
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+  const auth = await requirePermission(request, 'content.write');
+  if ('error' in auth) return auth.error;
 
   try {
     const body = await request.json();
@@ -217,9 +217,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Audit log
-    const auditUser = getAuditUser(request);
     await logAuditEvent({
-      ...auditUser,
+      user_id: auth.user.id,
+      user_name: auth.user.name,
       action: 'create',
       resource_type: 'scraped_contact',
       resource_id: 'bulk_import',
@@ -243,8 +243,8 @@ export async function POST(request: NextRequest) {
 
 // PUT /api/admin/scraped-contacts — Update contact
 export async function PUT(request: NextRequest) {
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+  const auth = await requirePermission(request, 'content.write');
+  if ('error' in auth) return auth.error;
 
   try {
     const body = await request.json();
@@ -276,9 +276,9 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Contact not found' }, { status: 404 });
     }
 
-    const auditUser = getAuditUser(request);
     await logAuditEvent({
-      ...auditUser,
+      user_id: auth.user.id,
+      user_name: auth.user.name,
       action: 'update',
       resource_type: 'scraped_contact',
       resource_id: id,
@@ -302,8 +302,8 @@ export async function PUT(request: NextRequest) {
 
 // DELETE /api/admin/scraped-contacts
 export async function DELETE(request: NextRequest) {
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+  const auth = await requirePermission(request, 'content.delete');
+  if ('error' in auth) return auth.error;
 
   try {
     const { searchParams } = new URL(request.url);
@@ -319,9 +319,9 @@ export async function DELETE(request: NextRequest) {
 
     if (error) throw error;
 
-    const auditUser = getAuditUser(request);
     await logAuditEvent({
-      ...auditUser,
+      user_id: auth.user.id,
+      user_name: auth.user.name,
       action: 'delete',
       resource_type: 'scraped_contact',
       resource_id: idList.join(','),
