@@ -74,8 +74,6 @@ export async function POST(request: NextRequest) {
       sessionId,
       clientId: client.id,
       slug: client.slug,
-      email: client.email,
-      clientName: client.name,
       expires: Date.now() + 7 * 24 * 60 * 60 * 1000,
     };
 

@@ -7,7 +7,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAdminAuth } from '@/lib/admin-auth-middleware';
+import { requirePermission } from '@/lib/admin-auth-middleware';
 import { getSupabaseAdmin } from '@/lib/supabase';
 
 // Vercel: increase timeout for Google Drive operations
@@ -30,8 +30,8 @@ import type { DocumentCategory } from '@/lib/document-types';
 
 // ── GET ──────────────────────────────────────────────────
 export async function GET(request: NextRequest) {
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+  const auth = await requirePermission(request, 'clients.read');
+  if ('error' in auth) return auth.error;
 
   const { searchParams } = request.nextUrl;
   const clientId = searchParams.get('clientId');
@@ -93,8 +93,8 @@ export async function GET(request: NextRequest) {
 
 // ── POST (Upload) ────────────────────────────────────────
 export async function POST(request: NextRequest) {
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+  const auth = await requirePermission(request, 'clients.write');
+  if ('error' in auth) return auth.error;
 
   try {
     const formData = await request.formData();
@@ -272,8 +272,8 @@ export async function POST(request: NextRequest) {
 
 // ── PUT (Update metadata) ────────────────────────────────
 export async function PUT(request: NextRequest) {
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+  const auth = await requirePermission(request, 'clients.write');
+  if ('error' in auth) return auth.error;
 
   try {
     const body = await request.json();
@@ -325,8 +325,8 @@ export async function PUT(request: NextRequest) {
 
 // ── DELETE ────────────────────────────────────────────────
 export async function DELETE(request: NextRequest) {
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+  const auth = await requirePermission(request, 'clients.write');
+  if ('error' in auth) return auth.error;
 
   const { searchParams } = request.nextUrl;
   const id = searchParams.get('id');

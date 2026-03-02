@@ -53,7 +53,7 @@ describe('requireAdminAuth', () => {
     expect(result).toBeNull();
   });
 
-  it('returns null for valid token in x-admin-token header', async () => {
+  it('returns 401 for token in x-admin-token header (removed)', async () => {
     const { requireAdminAuth } = await import('../admin-auth-middleware');
     const token = createValidToken(TEST_ADMIN_PASSWORD);
     const request = new NextRequest('http://localhost/api/admin/test', {
@@ -63,7 +63,8 @@ describe('requireAdminAuth', () => {
     });
 
     const result = await requireAdminAuth(request);
-    expect(result).toBeNull();
+    expect(result).not.toBeNull();
+    expect(result!.status).toBe(401);
   });
 
   it('returns 401 when no token is provided', async () => {

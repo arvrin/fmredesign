@@ -8,8 +8,9 @@ const SESSION_DURATION_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 /** Secret for HMAC signing client session cookies */
 function getSigningSecret(): string {
-  // Use ADMIN_PASSWORD as the signing key (always available)
-  return process.env.ADMIN_PASSWORD || 'fallback-dev-secret';
+  const secret = process.env.CLIENT_SESSION_SECRET || process.env.ADMIN_PASSWORD;
+  if (!secret) throw new Error('CLIENT_SESSION_SECRET or ADMIN_PASSWORD must be set');
+  return secret;
 }
 
 /** Create HMAC signature for cookie payload */
@@ -21,8 +22,6 @@ export interface SessionData {
   sessionId: string;
   clientId: string;
   slug: string;
-  email: string;
-  clientName: string;
   expires: number; // unix ms
 }
 
@@ -82,8 +81,6 @@ export async function validateSession(sessionId: string): Promise<SessionData | 
     sessionId: data.id,
     clientId: data.client_id,
     slug,
-    email: data.email,
-    clientName: data.client_name,
     expires: expiresAt,
   };
 }

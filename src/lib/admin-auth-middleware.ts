@@ -37,8 +37,7 @@ export interface AuthenticatedUser {
  * Returns null if valid, or a 401 NextResponse if invalid.
  */
 export async function requireAdminAuth(request: NextRequest): Promise<NextResponse | null> {
-  const sessionToken = request.cookies.get(ADMIN_SESSION_COOKIE)?.value
-    || request.headers.get('x-admin-token');
+  const sessionToken = request.cookies.get(ADMIN_SESSION_COOKIE)?.value;
 
   if (!sessionToken) {
     // Fallback: try API key auth
@@ -287,46 +286,3 @@ export async function requirePermission(
   }
 }
 
-// -----------------------------------------------------------------------
-// requireAuth — legacy fallback (admin session OR mobile token)
-// -----------------------------------------------------------------------
-
-/**
- * Check if a request is from an authorized mobile user.
- * Falls back to admin auth if no mobile user session.
- */
-export async function requireAuth(request: NextRequest): Promise<NextResponse | null> {
-  // First check admin session
-  const adminResult = await requireAdminAuth(request);
-  if (!adminResult) return null;
-
-  // Check mobile user session
-  const mobileToken = request.headers.get('x-mobile-token');
-  if (!mobileToken) {
-    return adminResult;
-  }
-
-  try {
-    const supabase = getSupabaseAdmin();
-    const { data: user, error } = await supabase
-      .from('authorized_users')
-      .select('id, status')
-      .eq('id', mobileToken)
-      .eq('status', 'active')
-      .single();
-
-    if (error || !user) {
-      return NextResponse.json(
-        { success: false, error: 'Invalid mobile session' },
-        { status: 401 }
-      );
-    }
-
-    return null;
-  } catch {
-    return NextResponse.json(
-      { success: false, error: 'Authentication failed' },
-      { status: 401 }
-    );
-  }
-}

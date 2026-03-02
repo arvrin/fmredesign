@@ -11,6 +11,7 @@ import { NextRequest, NextResponse } from 'next/server';
 const ADMIN_SESSION_COOKIE = 'fm-admin-session';
 const CLIENT_SESSION_COOKIE = 'fm_client_session';
 const MAX_SESSION_AGE_MS = 24 * 60 * 60 * 1000; // 24 hours
+const CLIENT_SESSION_DURATION_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 /**
  * HMAC-SHA256 using Web Crypto API (Edge Runtime compatible).
@@ -124,7 +125,7 @@ export async function middleware(request: NextRequest) {
       return NextResponse.next();
     }
 
-    const signingSecret = process.env.ADMIN_PASSWORD;
+    const signingSecret = process.env.CLIENT_SESSION_SECRET || process.env.ADMIN_PASSWORD;
     if (!signingSecret) {
       return NextResponse.redirect(new URL('/client/login', request.url));
     }
@@ -136,7 +137,7 @@ export async function middleware(request: NextRequest) {
 
     const session = await getValidClientSession(cookieValue, signingSecret);
     if (!session) {
-      return NextResponse.redirect(new URL('/client/login', request.url));
+      return NextResponse.redirect(new URL('/client/login?error=session_expired', request.url));
     }
 
     // Extract clientId from URL: /client/[clientId]/...
@@ -149,6 +150,36 @@ export async function middleware(request: NextRequest) {
       if (session.clientId !== urlClientId && session.slug !== urlClientId) {
         // Client is trying to access another client's portal
         return NextResponse.redirect(new URL(`/client/${session.slug}`, request.url));
+      }
+    }
+
+    // Sliding expiry: extend session if less than 85% of duration remaining (~1 day old)
+    const timeRemaining = session.expires - Date.now();
+    if (timeRemaining < CLIENT_SESSION_DURATION_MS * 0.85) {
+      const newExpires = Date.now() + CLIENT_SESSION_DURATION_MS;
+
+      // Re-read the original payload JSON, update expires, re-encode and re-sign
+      const dotIndex = cookieValue.lastIndexOf('.');
+      const originalPayload = cookieValue.substring(0, dotIndex);
+      try {
+        const payloadJson = JSON.parse(atob(originalPayload));
+        payloadJson.expires = newExpires;
+        const newPayloadB64 = btoa(JSON.stringify(payloadJson));
+        const newSignature = await hmacSha256(signingSecret, newPayloadB64);
+        const newCookie = `${newPayloadB64}.${newSignature}`;
+
+        const response = NextResponse.next();
+        response.cookies.set(CLIENT_SESSION_COOKIE, newCookie, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          path: '/',
+          maxAge: CLIENT_SESSION_DURATION_MS / 1000,
+        });
+        return response;
+      } catch {
+        // If refresh fails, continue without extending
+        return NextResponse.next();
       }
     }
 

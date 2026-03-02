@@ -7,11 +7,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { spawn } from 'child_process';
 import path from 'path';
-import { requireAdminAuth } from '@/lib/admin-auth-middleware';
+import { requirePermission } from '@/lib/admin-auth-middleware';
 
 export async function POST(request: NextRequest) {
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+  const auth = await requirePermission(request, 'content.write');
+  if ('error' in auth) return auth.error;
 
   try {
     const scriptsDir = path.resolve(process.cwd(), '..', 'scripts', 'lead-scraper');

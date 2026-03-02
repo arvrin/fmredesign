@@ -22,6 +22,7 @@ import {
   Save,
   CheckCircle2,
   AlertCircle,
+  Lock,
 } from 'lucide-react';
 import { useClientPortal } from '@/lib/client-portal/context';
 
@@ -29,7 +30,13 @@ export default function ClientSettingsPage() {
   const { profile, clientId, refreshProfile } = useClientPortal();
 
   const [saving, setSaving] = useState(false);
+  const [savingPassword, setSavingPassword] = useState(false);
   const [alert, setAlert] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
 
   // Form state — starts empty, populated by API fetch below
   const [form, setForm] = useState({
@@ -78,6 +85,41 @@ export default function ClientSettingsPage() {
   const handleChange = (field: string, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
     setAlert(null);
+  };
+
+  const handlePasswordChange = async () => {
+    if (!passwordForm.currentPassword || !passwordForm.newPassword || !passwordForm.confirmPassword) {
+      setAlert({ type: 'error', message: 'Please fill in all password fields.' });
+      return;
+    }
+    if (passwordForm.newPassword.length < 8) {
+      setAlert({ type: 'error', message: 'New password must be at least 8 characters.' });
+      return;
+    }
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setAlert({ type: 'error', message: 'New passwords do not match.' });
+      return;
+    }
+    try {
+      setSavingPassword(true);
+      setAlert(null);
+      const res = await fetch(`/api/client-portal/${clientId}/password`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          currentPassword: passwordForm.currentPassword,
+          newPassword: passwordForm.newPassword,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Failed to change password');
+      setAlert({ type: 'success', message: 'Password changed successfully.' });
+      setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    } catch (err: any) {
+      setAlert({ type: 'error', message: err.message || 'Failed to change password.' });
+    } finally {
+      setSavingPassword(false);
+    }
   };
 
   const handleSave = async () => {
@@ -282,6 +324,51 @@ export default function ClientSettingsPage() {
                   hint="Paste a direct URL to your company logo"
                 />
               </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Change Password */}
+        <Card variant="client" hover glow>
+          <CardHeader>
+            <div className="flex items-center space-x-3">
+              <IconBox>
+                <Lock className="w-5 h-5" />
+              </IconBox>
+              <div>
+                <CardTitle className="text-xl">Change Password</CardTitle>
+                <CardDescription>Update your portal login password</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Input
+              label="Current Password"
+              type="password"
+              value={passwordForm.currentPassword}
+              onChange={(e) => setPasswordForm((prev) => ({ ...prev, currentPassword: e.target.value }))}
+              leftIcon={<Lock className="w-4 h-4" />}
+            />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Input
+                label="New Password"
+                type="password"
+                value={passwordForm.newPassword}
+                onChange={(e) => setPasswordForm((prev) => ({ ...prev, newPassword: e.target.value }))}
+                hint="Minimum 8 characters"
+              />
+              <Input
+                label="Confirm New Password"
+                type="password"
+                value={passwordForm.confirmPassword}
+                onChange={(e) => setPasswordForm((prev) => ({ ...prev, confirmPassword: e.target.value }))}
+              />
+            </div>
+            <div className="flex justify-end">
+              <Button variant="client" onClick={handlePasswordChange} disabled={savingPassword}>
+                <Lock className="w-4 h-4" />
+                {savingPassword ? 'Changing...' : 'Change Password'}
+              </Button>
             </div>
           </CardContent>
         </Card>

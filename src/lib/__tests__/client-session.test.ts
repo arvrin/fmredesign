@@ -46,8 +46,6 @@ describe('setSessionCookie', () => {
       sessionId: 'sess-123',
       clientId: 'client-456',
       slug: 'acme',
-      email: 'test@acme.com',
-      clientName: 'Acme Corp',
       expires: Date.now() + 7 * 24 * 60 * 60 * 1000,
     };
 
@@ -63,8 +61,6 @@ describe('setSessionCookie', () => {
       sessionId: 'sess-123',
       clientId: 'client-456',
       slug: 'acme',
-      email: 'test@acme.com',
-      clientName: 'Acme Corp',
       expires: Date.now() + 7 * 24 * 60 * 60 * 1000,
     };
 
@@ -96,8 +92,6 @@ describe('getSessionFromCookie', () => {
       sessionId: 'sess-123',
       clientId: 'client-456',
       slug: 'acme',
-      email: 'test@acme.com',
-      clientName: 'Acme Corp',
       expires: Date.now() + 1000 * 60 * 60, // 1 hour from now
     };
 
@@ -108,7 +102,6 @@ describe('getSessionFromCookie', () => {
     expect(result!.sessionId).toBe('sess-123');
     expect(result!.clientId).toBe('client-456');
     expect(result!.slug).toBe('acme');
-    expect(result!.email).toBe('test@acme.com');
   });
 
   it('returns null when cookie is missing', () => {
@@ -121,8 +114,6 @@ describe('getSessionFromCookie', () => {
       sessionId: 'sess-expired',
       clientId: 'client-456',
       slug: 'acme',
-      email: 'test@acme.com',
-      clientName: 'Acme Corp',
       expires: Date.now() - 1000, // already expired
     };
 
@@ -135,8 +126,6 @@ describe('getSessionFromCookie', () => {
       sessionId: 'sess-tamper',
       clientId: 'client-456',
       slug: 'acme',
-      email: 'test@acme.com',
-      clientName: 'Acme Corp',
       expires: Date.now() + 1000 * 60 * 60,
     };
 

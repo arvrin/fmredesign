@@ -5,15 +5,15 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
-import { requireAdminAuth } from '@/lib/admin-auth-middleware';
+import { requirePermission } from '@/lib/admin-auth-middleware';
 
 const SETTINGS_ID = 'global';
 const VALID_SECTIONS = ['profile', 'general', 'notifications', 'security', 'privacy', 'appearance', 'integrations'] as const;
 
 // GET /api/admin/settings — fetch all settings
 export async function GET(request: NextRequest) {
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+  const auth = await requirePermission(request, 'settings.read');
+  if ('error' in auth) return auth.error;
 
   try {
     const supabase = getSupabaseAdmin();
@@ -59,8 +59,8 @@ export async function GET(request: NextRequest) {
 
 // PUT /api/admin/settings — update a single section
 export async function PUT(request: NextRequest) {
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+  const auth = await requirePermission(request, 'settings.write');
+  if ('error' in auth) return auth.error;
 
   try {
     const body = await request.json();
