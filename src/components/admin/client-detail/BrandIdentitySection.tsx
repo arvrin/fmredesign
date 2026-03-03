@@ -33,7 +33,7 @@ export function BrandIdentitySection({
   onUpdate,
 }: BrandIdentitySectionProps) {
   const [isEditing, setIsEditing] = useState(false);
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(true);
   const [logoPreview, setLogoPreview] = useState<string | null>(
     clientData.logoUrl || null
   );

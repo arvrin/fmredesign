@@ -138,8 +138,6 @@ export default function ContentCalendarPage() {
     }
   }, [viewMode, fetchCalendarContent]);
 
-  // AI Generate — disabled (no backend endpoint yet; use n8n workflow)
-
   // Build API URL from filter state and fetch content
   const fetchContent = useCallback(async () => {
     try {

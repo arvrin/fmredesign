@@ -24,6 +24,8 @@ const ContentTab = dynamic(() => import('@/components/admin/client-detail/Conten
 const SupportTab = dynamic(() => import('@/components/admin/client-detail/SupportTab').then(m => ({ default: m.SupportTab })), { loading: TabSkeleton });
 const DocumentsTab = dynamic(() => import('@/components/admin/client-detail/DocumentsTab').then(m => ({ default: m.DocumentsTab })), { loading: TabSkeleton });
 const ContentStrategyTab = dynamic(() => import('@/components/admin/clients/ContentStrategyTab').then(m => ({ default: m.ContentStrategyTab })), { loading: TabSkeleton });
+const GrowthEngine = dynamic(() => import('@/components/admin/GrowthEngine').then(m => ({ default: m.GrowthEngine })), { loading: TabSkeleton });
+const CommunicationHub = dynamic(() => import('@/components/admin/CommunicationHub').then(m => ({ default: m.CommunicationHub })), { loading: TabSkeleton });
 
 // ────────────────────────────────────────────────────────────
 // Helpers
@@ -139,6 +141,8 @@ export default function AdminClientDetail() {
               <TabsTrigger value="communication" className="text-xs sm:text-sm">Comms</TabsTrigger>
               <TabsTrigger value="support" className="text-xs sm:text-sm">Support</TabsTrigger>
               <TabsTrigger value="strategy" className="text-xs sm:text-sm">Strategy</TabsTrigger>
+              <TabsTrigger value="growth" className="text-xs sm:text-sm">Growth</TabsTrigger>
+              <TabsTrigger value="messages" className="text-xs sm:text-sm">Messages</TabsTrigger>
             </TabsList>
             {/* Right fade hint for scrollable tabs on mobile */}
             <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white to-transparent pointer-events-none sm:hidden" />
@@ -225,6 +229,18 @@ export default function AdminClientDetail() {
           <TabsContent value="strategy" className="space-y-6">
             <SectionErrorBoundary section="Content Strategy">
               <ContentStrategyTab clientId={clientId} />
+            </SectionErrorBoundary>
+          </TabsContent>
+
+          <TabsContent value="growth" className="space-y-6">
+            <SectionErrorBoundary section="Growth Engine">
+              <GrowthEngine clientId={clientId} />
+            </SectionErrorBoundary>
+          </TabsContent>
+
+          <TabsContent value="messages" className="space-y-6">
+            <SectionErrorBoundary section="Communication Hub">
+              <CommunicationHub clientId={clientId} />
             </SectionErrorBoundary>
           </TabsContent>
         </Tabs>

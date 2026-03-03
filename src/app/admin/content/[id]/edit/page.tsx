@@ -6,7 +6,7 @@
 
 import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Save, Loader2, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, AlertCircle, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import { DashboardButton, DashboardCard, CardContent, CardHeader, CardTitle } from '@/design-system';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
@@ -23,6 +23,9 @@ export default function EditContentPage({ params }: { params: Promise<{ id: stri
   const [item, setItem] = useState<ContentItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [refining, setRefining] = useState(false);
+  const [refineInstruction, setRefineInstruction] = useState('');
+  const [showRefine, setShowRefine] = useState(false);
 
   useEffect(() => {
     fetch(`/api/content?id=${id}`)
@@ -77,6 +80,40 @@ export default function EditContentPage({ params }: { params: Promise<{ id: stri
       adminToast.error('Failed to save content');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleRefine = async () => {
+    if (!item || !refineInstruction.trim()) return;
+    setRefining(true);
+    try {
+      const res = await fetch('/api/admin/content/refine', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          clientId: item.clientId,
+          contentId: item.id,
+          instruction: refineInstruction.trim(),
+        }),
+      });
+      const result = await res.json();
+      if (result.success && result.data) {
+        setItem(prev => prev ? {
+          ...prev,
+          title: result.data.title || prev.title,
+          content: result.data.content || prev.content,
+          hashtags: result.data.hashtags || prev.hashtags,
+        } : null);
+        adminToast.success('Content refined by AI');
+        setRefineInstruction('');
+        setShowRefine(false);
+      } else {
+        adminToast.error(result.error || 'Refinement failed');
+      }
+    } catch {
+      adminToast.error('Failed to refine content');
+    } finally {
+      setRefining(false);
     }
   };
 
@@ -143,7 +180,37 @@ export default function EditContentPage({ params }: { params: Promise<{ id: stri
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Content / Caption</label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-sm font-medium text-fm-neutral-900">Content / Caption</label>
+              <DashboardButton
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowRefine(!showRefine)}
+              >
+                <Sparkles className="w-3.5 h-3.5 mr-1" />
+                AI Refine
+              </DashboardButton>
+            </div>
+            {showRefine && (
+              <div className="mb-3 flex gap-2">
+                <input
+                  type="text"
+                  value={refineInstruction}
+                  onChange={(e) => setRefineInstruction(e.target.value)}
+                  placeholder="e.g. Make it shorter, Add emojis, Translate to Hindi..."
+                  className="flex-1 h-10 px-3 text-sm bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700"
+                  onKeyDown={(e) => { if (e.key === 'Enter') handleRefine(); }}
+                />
+                <DashboardButton
+                  variant="primary"
+                  size="sm"
+                  onClick={handleRefine}
+                  disabled={refining || !refineInstruction.trim()}
+                >
+                  {refining ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Refine'}
+                </DashboardButton>
+              </div>
+            )}
             <textarea
               value={item.content || ''}
               onChange={(e) => updateField('content', e.target.value)}
