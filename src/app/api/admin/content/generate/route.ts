@@ -1,18 +1,21 @@
 /**
  * AI Content Generation API
- * Triggers n8n workflows to generate draft content via Gemini AI.
- * Returns 202 immediately — content appears in 1-2 minutes.
+ * Direct in-app LLM content generation (replaces n8n fire-and-forget).
+ * Synchronous — returns generated content in the response.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/admin-auth-middleware';
 import { getSupabaseAdmin } from '@/lib/supabase';
-import { getClientIP } from '@/lib/admin/audit-log';
+import { logAuditEvent, getClientIP } from '@/lib/admin/audit-log';
+import { ProjectUtils } from '@/lib/admin/project-types';
+import type { Platform, ContentType } from '@/lib/admin/project-types';
+import { generateCalendar } from '@/lib/ai/generators/calendar';
+import { generateSinglePost } from '@/lib/ai/generators/single-post';
+import { getDefaultConfig } from '@/lib/ai/providers';
 
-const WEBHOOK_URLS: Record<string, string | undefined> = {
-  monthly_calendar: process.env.N8N_WEBHOOK_MONTHLY_CONTENT,
-  holiday_event: process.env.N8N_WEBHOOK_HOLIDAY_CONTENT,
-};
+// Extend timeout for LLM calls (Vercel)
+export const maxDuration = 60;
 
 export async function POST(request: NextRequest) {
   const auth = await requirePermission(request, 'content.write');
@@ -20,79 +23,187 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { workflow_type, client_id } = body as {
-      workflow_type?: string;
-      client_id?: string;
+    const { mode, clientId, options } = body as {
+      mode?: 'monthly' | 'weekly' | 'single';
+      clientId?: string;
+      options?: {
+        startDate?: string;
+        endDate?: string;
+        platforms?: Platform[];
+        postsPerWeek?: number;
+        platform?: Platform;
+        type?: ContentType;
+        topic?: string;
+        pillar?: string;
+        scheduledDate?: string;
+      };
     };
 
-    if (!workflow_type || !WEBHOOK_URLS[workflow_type]) {
+    if (!mode || !['monthly', 'weekly', 'single'].includes(mode)) {
       return NextResponse.json(
-        {
-          success: false,
-          error: `Invalid workflow_type. Must be one of: ${Object.keys(WEBHOOK_URLS).join(', ')}`,
-        },
+        { success: false, error: 'Invalid mode. Must be: monthly, weekly, or single' },
         { status: 400 }
       );
     }
 
-    const webhookUrl = WEBHOOK_URLS[workflow_type];
-    if (!webhookUrl) {
+    if (!clientId) {
       return NextResponse.json(
-        {
-          success: false,
-          error: `n8n webhook URL not configured for ${workflow_type}. Set the environment variable.`,
-        },
-        { status: 503 }
+        { success: false, error: 'clientId is required' },
+        { status: 400 }
       );
     }
 
-    // Fire-and-forget: trigger n8n webhook with 5s timeout
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 5000);
+    const batchId = `batch-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const config = getDefaultConfig();
 
-    try {
-      await fetch(webhookUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ client_id: client_id || null }),
-        signal: controller.signal,
+    if (mode === 'single') {
+      // Single post generation
+      const platform = options?.platform || 'instagram';
+      const type = options?.type || 'post';
+
+      const generated = await generateSinglePost(clientId, {
+        platform,
+        type,
+        topic: options?.topic,
+        pillar: options?.pillar,
+        scheduledDate: options?.scheduledDate,
       });
-    } catch {
-      // Timeout or network error is expected for fire-and-forget
-      // n8n will still process the webhook
-    } finally {
-      clearTimeout(timeout);
-    }
 
-    // Log to audit
-    try {
+      // Insert into content_calendar
       const supabase = getSupabaseAdmin();
-      await supabase.from('admin_audit_log').insert({
-        user_id: 'system-admin',
-        user_name: 'System Admin',
+      const record = {
+        id: ProjectUtils.generateContentId(),
+        client_id: clientId,
+        project_id: '',
+        title: generated.title,
+        description: generated.visualDirection || '',
+        content: generated.content,
+        type: generated.type,
+        platform: generated.platform,
+        scheduled_date: generated.scheduledDate,
+        status: 'draft',
+        hashtags: generated.hashtags || [],
+        mentions: generated.mentions || [],
+        tags: [],
+        files: [],
+        ai_generated: true,
+        ai_generation_batch_id: batchId,
+        generation_source: 'single',
+        content_pillar: generated.contentPillar || null,
+        generation_metadata: {
+          model: config.model,
+          provider: config.provider,
+          promptVersion: '1.0',
+          generatedAt: new Date().toISOString(),
+          batchId,
+          mode: 'single',
+        },
+      };
+
+      const { error: insertError } = await supabase
+        .from('content_calendar')
+        .insert(record);
+
+      if (insertError) throw insertError;
+
+      // Audit log
+      logAuditEvent({
+        user_id: auth.user.id,
+        user_name: auth.user.name,
         action: 'ai_generate',
         resource_type: 'content',
-        resource_id: workflow_type,
-        details: { workflow_type, client_id: client_id || 'all' },
+        resource_id: record.id,
+        details: { mode, clientId, batchId, model: config.model },
         ip_address: getClientIP(request),
       });
-    } catch {
-      // Non-critical — don't fail the request
+
+      return NextResponse.json({
+        success: true,
+        items: [generated],
+        batchId,
+        strategy: `Generated a single ${generated.type} for ${generated.platform}`,
+      });
     }
 
-    return NextResponse.json(
-      {
-        success: true,
-        message: 'Content generation started. Drafts will appear in 1-2 minutes.',
-        workflow_type,
-        client_id: client_id || 'all',
+    // Monthly or weekly calendar generation
+    const startDate =
+      options?.startDate || new Date().toISOString().split('T')[0];
+
+    const generated = await generateCalendar(clientId, {
+      mode,
+      startDate,
+      endDate: options?.endDate,
+      platforms: options?.platforms,
+      postsPerWeek: options?.postsPerWeek,
+    });
+
+    // Insert all generated items into content_calendar
+    const supabase = getSupabaseAdmin();
+    const records = generated.items.map((item) => ({
+      id: ProjectUtils.generateContentId(),
+      client_id: clientId,
+      project_id: '',
+      title: item.title,
+      description: item.visualDirection || '',
+      content: item.content,
+      type: item.type,
+      platform: item.platform,
+      scheduled_date: item.scheduledDate,
+      status: 'draft',
+      hashtags: item.hashtags || [],
+      mentions: item.mentions || [],
+      tags: [],
+      files: [],
+      ai_generated: true,
+      ai_generation_batch_id: batchId,
+      generation_source: mode,
+      content_pillar: item.contentPillar || null,
+      generation_metadata: {
+        model: config.model,
+        provider: config.provider,
+        promptVersion: '1.0',
+        generatedAt: new Date().toISOString(),
+        batchId,
+        mode,
       },
-      { status: 202 }
-    );
+    }));
+
+    const { error: insertError } = await supabase
+      .from('content_calendar')
+      .insert(records);
+
+    if (insertError) throw insertError;
+
+    // Audit log
+    logAuditEvent({
+      user_id: auth.user.id,
+      user_name: auth.user.name,
+      action: 'ai_generate',
+      resource_type: 'content',
+      resource_id: batchId,
+      details: {
+        mode,
+        clientId,
+        batchId,
+        itemCount: generated.items.length,
+        model: config.model,
+      },
+      ip_address: getClientIP(request),
+    });
+
+    return NextResponse.json({
+      success: true,
+      items: generated.items,
+      batchId,
+      strategy: generated.strategy,
+      pillarBreakdown: generated.pillarBreakdown,
+    });
   } catch (error) {
-    console.error('Error triggering content generation:', error);
+    console.error('Error generating content:', error);
+    const message =
+      error instanceof Error ? error.message : 'Failed to generate content';
     return NextResponse.json(
-      { success: false, error: 'Failed to trigger content generation' },
+      { success: false, error: message },
       { status: 500 }
     );
   }

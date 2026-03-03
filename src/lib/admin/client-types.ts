@@ -49,6 +49,12 @@ export interface ClientProfile {
   tagline?: string;
   brandGuidelinesUrl?: string;
 
+  // Content Strategy (AI generation)
+  contentPillars?: import('@/lib/ai/context/types').ContentPillar[];
+  contentEvents?: import('@/lib/ai/context/types').ContentEvent[];
+  contentPreferences?: import('@/lib/ai/context/types').ContentPreferences;
+  competitorSocialUrls?: string[];
+
   // Metadata
   onboardedAt: string;
   lastActivity: string;

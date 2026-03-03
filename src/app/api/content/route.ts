@@ -57,6 +57,8 @@ export async function GET(request: NextRequest) {
         aiGenerated: data.ai_generated || false,
         aiGenerationBatchId: data.ai_generation_batch_id || null,
         generationSource: data.generation_source || null,
+        contentPillar: data.content_pillar || null,
+        generationMetadata: data.generation_metadata || null,
         createdAt: data.created_at,
         updatedAt: data.updated_at,
       };
@@ -160,6 +162,8 @@ export async function GET(request: NextRequest) {
       aiGenerated: item.ai_generated || false,
       aiGenerationBatchId: item.ai_generation_batch_id || null,
       generationSource: item.generation_source || null,
+      contentPillar: item.content_pillar || null,
+      generationMetadata: item.generation_metadata || null,
       createdAt: item.created_at,
       updatedAt: item.updated_at,
     }));
@@ -310,6 +314,7 @@ export async function PUT(request: NextRequest) {
     if (body.tags !== undefined) updates.tags = body.tags;
     if (body.files !== undefined) updates.files = body.files;
     if (body.engagement !== undefined) updates.engagement = body.engagement;
+    if (body.contentPillar !== undefined) updates.content_pillar = body.contentPillar;
 
     // Handle status changes
     if (body.status === 'approved') updates.approved_at = new Date().toISOString();

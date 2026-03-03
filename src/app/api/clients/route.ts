@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
     if (id) {
       const { data, error } = await supabase
         .from('clients')
-        .select('id, name, email, phone, address, city, state, zip_code, country, gst_number, industry, company_size, website, status, health, account_manager, contract_type, contract_value, contract_start_date, contract_end_date, billing_cycle, services, created_at, updated_at, total_value, tags, notes, brand_name, parent_client_id, is_brand_group, logo_url, brand_colors, brand_fonts, tagline, brand_guidelines_url')
+        .select('id, name, email, phone, address, city, state, zip_code, country, gst_number, industry, company_size, website, status, health, account_manager, contract_type, contract_value, contract_start_date, contract_end_date, billing_cycle, services, created_at, updated_at, total_value, tags, notes, brand_name, parent_client_id, is_brand_group, logo_url, brand_colors, brand_fonts, tagline, brand_guidelines_url, content_pillars, content_events, content_preferences, competitor_social_urls')
         .eq('id', id)
         .single();
 
@@ -94,12 +94,16 @@ export async function GET(request: NextRequest) {
         brandFonts: data.brand_fonts,
         tagline: data.tagline,
         brandGuidelinesUrl: data.brand_guidelines_url,
+        contentPillars: data.content_pillars || [],
+        contentEvents: data.content_events || [],
+        contentPreferences: data.content_preferences || null,
+        competitorSocialUrls: data.competitor_social_urls || [],
       };
 
       return NextResponse.json({ success: true, data: formatted });
     }
 
-    const selectCols = 'id, name, email, phone, address, city, state, zip_code, country, gst_number, industry, company_size, website, status, health, account_manager, contract_type, contract_value, contract_start_date, contract_end_date, billing_cycle, services, created_at, updated_at, total_value, tags, notes, brand_name, parent_client_id, is_brand_group, logo_url, brand_colors, brand_fonts, tagline, brand_guidelines_url';
+    const selectCols = 'id, name, email, phone, address, city, state, zip_code, country, gst_number, industry, company_size, website, status, health, account_manager, contract_type, contract_value, contract_start_date, contract_end_date, billing_cycle, services, created_at, updated_at, total_value, tags, notes, brand_name, parent_client_id, is_brand_group, logo_url, brand_colors, brand_fonts, tagline, brand_guidelines_url, content_pillars, content_events, content_preferences, competitor_social_urls';
 
     // Pagination: only active when `page` param is provided (backwards compat)
     const pageParam = searchParams.get('page');
@@ -174,6 +178,10 @@ export async function GET(request: NextRequest) {
       brandFonts: c.brand_fonts,
       tagline: c.tagline,
       brandGuidelinesUrl: c.brand_guidelines_url,
+      contentPillars: c.content_pillars || [],
+      contentEvents: c.content_events || [],
+      contentPreferences: c.content_preferences || null,
+      competitorSocialUrls: c.competitor_social_urls || [],
     }));
 
     const body: Record<string, unknown> = {
@@ -398,6 +406,10 @@ export async function PUT(request: NextRequest) {
     if (formData.brandFonts !== undefined) updates.brand_fonts = Array.isArray(formData.brandFonts) ? formData.brandFonts : null;
     if (formData.tagline !== undefined) updates.tagline = formData.tagline || null;
     if (formData.brandGuidelinesUrl !== undefined) updates.brand_guidelines_url = formData.brandGuidelinesUrl || null;
+    if (formData.contentPillars !== undefined) updates.content_pillars = formData.contentPillars;
+    if (formData.contentEvents !== undefined) updates.content_events = formData.contentEvents;
+    if (formData.contentPreferences !== undefined) updates.content_preferences = formData.contentPreferences;
+    if (formData.competitorSocialUrls !== undefined) updates.competitor_social_urls = formData.competitorSocialUrls;
     if (formData.portalPassword !== undefined) {
       updates.portal_password = formData.portalPassword
         ? await bcrypt.hash(formData.portalPassword, 12)

@@ -5,7 +5,8 @@ export type AuditAction =
   | 'login' | 'logout'
   | 'export' | 'import'
   | 'approve' | 'reject'
-  | 'publish';
+  | 'publish'
+  | 'ai_generate' | 'ai_refine';
 
 export interface AuditEntry {
   id?: string;

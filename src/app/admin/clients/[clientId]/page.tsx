@@ -23,6 +23,7 @@ const CommunicationTab = dynamic(() => import('@/components/admin/client-detail/
 const ContentTab = dynamic(() => import('@/components/admin/client-detail/ContentTab').then(m => ({ default: m.ContentTab })), { loading: TabSkeleton });
 const SupportTab = dynamic(() => import('@/components/admin/client-detail/SupportTab').then(m => ({ default: m.SupportTab })), { loading: TabSkeleton });
 const DocumentsTab = dynamic(() => import('@/components/admin/client-detail/DocumentsTab').then(m => ({ default: m.DocumentsTab })), { loading: TabSkeleton });
+const ContentStrategyTab = dynamic(() => import('@/components/admin/clients/ContentStrategyTab').then(m => ({ default: m.ContentStrategyTab })), { loading: TabSkeleton });
 
 // ────────────────────────────────────────────────────────────
 // Helpers
@@ -137,6 +138,7 @@ export default function AdminClientDetail() {
               <TabsTrigger value="team" className="text-xs sm:text-sm">Team</TabsTrigger>
               <TabsTrigger value="communication" className="text-xs sm:text-sm">Comms</TabsTrigger>
               <TabsTrigger value="support" className="text-xs sm:text-sm">Support</TabsTrigger>
+              <TabsTrigger value="strategy" className="text-xs sm:text-sm">Strategy</TabsTrigger>
             </TabsList>
             {/* Right fade hint for scrollable tabs on mobile */}
             <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white to-transparent pointer-events-none sm:hidden" />
@@ -217,6 +219,12 @@ export default function AdminClientDetail() {
           <TabsContent value="support" className="space-y-6">
             <SectionErrorBoundary section="Support">
               <SupportTab clientId={clientId} />
+            </SectionErrorBoundary>
+          </TabsContent>
+
+          <TabsContent value="strategy" className="space-y-6">
+            <SectionErrorBoundary section="Content Strategy">
+              <ContentStrategyTab clientId={clientId} />
             </SectionErrorBoundary>
           </TabsContent>
         </Tabs>

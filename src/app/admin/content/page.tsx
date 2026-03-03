@@ -32,6 +32,7 @@ import {
 } from 'lucide-react';
 import { adminToast } from '@/lib/admin/toast';
 import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
+import { ContentGenerationModal } from '@/components/admin/content/ContentGenerationModal';
 import {
   DashboardButton,
   DashboardCard,
@@ -73,6 +74,7 @@ export default function ContentCalendarPage() {
   const [clients, setClients] = useState<{ id: string; name: string }[]>([]);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'grouped' | 'flat' | 'calendar'>('grouped');
+  const [showGenerateModal, setShowGenerateModal] = useState(false);
   const [expandedClients, setExpandedClients] = useState<Set<string>>(new Set());
 
   // Calendar view state
@@ -337,8 +339,7 @@ export default function ContentCalendarPage() {
             <DashboardButton
               variant="secondary"
               size="sm"
-              disabled
-              title="Use n8n workflow for AI generation"
+              onClick={() => setShowGenerateModal(true)}
             >
               <Sparkles className="h-4 w-4" />
               AI Generate
@@ -642,6 +643,11 @@ export default function ContentCalendarPage() {
                                     AI Draft
                                   </span>
                                 )}
+                                {(content as any).contentPillar && (
+                                  <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-indigo-100 text-indigo-700">
+                                    {(content as any).contentPillar}
+                                  </span>
+                                )}
                               </div>
 
                               <p className="text-fm-neutral-600 mb-4 line-clamp-2">{content.description}</p>
@@ -865,6 +871,16 @@ export default function ContentCalendarPage() {
           setDeleteConfirm(null);
         }}
         onCancel={() => setDeleteConfirm(null)}
+      />
+
+      <ContentGenerationModal
+        open={showGenerateModal}
+        onClose={() => setShowGenerateModal(false)}
+        onGenerated={() => {
+          fetchContent();
+          adminToast.success('AI content generated — check drafts');
+        }}
+        clients={clients}
       />
 
     </div>

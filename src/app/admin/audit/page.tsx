@@ -20,6 +20,7 @@ import {
   Globe,
   Search,
   Send,
+  Sparkles,
 } from 'lucide-react';
 import {
   DashboardButton,
@@ -49,6 +50,8 @@ const ACTION_ICONS: Record<AuditAction, React.ReactNode> = {
   approve: <CheckCircle className="w-3.5 h-3.5" />,
   reject: <XCircle className="w-3.5 h-3.5" />,
   publish: <Send className="w-3.5 h-3.5" />,
+  ai_generate: <Sparkles className="w-3.5 h-3.5" />,
+  ai_refine: <Sparkles className="w-3.5 h-3.5" />,
 };
 
 const ACTION_COLORS: Record<AuditAction, string> = {
@@ -62,6 +65,8 @@ const ACTION_COLORS: Record<AuditAction, string> = {
   approve: 'bg-green-100 text-green-700',
   reject: 'bg-red-100 text-red-700',
   publish: 'bg-emerald-100 text-emerald-700',
+  ai_generate: 'bg-violet-100 text-violet-700',
+  ai_refine: 'bg-violet-100 text-violet-700',
 };
 
 const RESOURCE_TYPES = ['all', 'client', 'project', 'content', 'user', 'invoice', 'proposal'] as const;

@@ -154,6 +154,15 @@ export interface ContentItem {
   aiGenerated?: boolean;
   aiGenerationBatchId?: string;
   generationSource?: string;
+  contentPillar?: string;
+  generationMetadata?: {
+    model: string;
+    provider: string;
+    promptVersion: string;
+    generatedAt: string;
+    batchId: string;
+    mode: 'monthly' | 'weekly' | 'single';
+  };
 
   // Performance (post-publication)
   engagement?: {
