@@ -42,6 +42,43 @@ export interface ClientProfile {
   createdAt: string;
 }
 
+/**
+ * Transform flat API response from /api/clients into the nested ClientProfile shape.
+ */
+function transformToProfile(raw: Record<string, any>): ClientProfile {
+  return {
+    id: raw.id || '',
+    name: raw.name || '',
+    logo: raw.logoUrl || raw.logo || '',
+    industry: raw.industry || 'other',
+    website: raw.website || '',
+    description: raw.description || '',
+    status: raw.status || 'active',
+    health: raw.health || 'good',
+    primaryContact: raw.primaryContact || {
+      name: raw.name || '',
+      email: raw.email || '',
+      phone: raw.phone || '',
+      role: 'Primary Contact',
+    },
+    additionalContacts: raw.additionalContacts || [],
+    headquarters: raw.headquarters || {
+      city: raw.city || '',
+      state: raw.state || '',
+      country: raw.country || 'India',
+    },
+    contractDetails: raw.contractDetails || {
+      value: parseFloat(raw.contractValue || raw.totalValue || '0'),
+      currency: raw.currency || 'INR',
+      startDate: raw.contractStartDate || '',
+      endDate: raw.contractEndDate || undefined,
+    },
+    accountManager: raw.accountManager || 'Account Manager',
+    createdAt: raw.createdAt || new Date().toISOString(),
+    ...raw,
+  };
+}
+
 export interface AssignedTeamMember {
   id: string;
   name: string;
@@ -189,7 +226,7 @@ export function useClientDetail(clientId: string): UseClientDetailReturn {
       const response = await fetch(`/api/clients?id=${clientId}`);
       if (response.ok) {
         const data = await response.json();
-        setClientProfile(data.data);
+        setClientProfile(transformToProfile(data.data));
       }
     } catch (err) {
       console.error('Error refreshing client profile:', err);
@@ -214,7 +251,7 @@ export function useClientDetail(clientId: string): UseClientDetailReturn {
         }
 
         const data = await response.json();
-        setClientProfile(data.data);
+        setClientProfile(transformToProfile(data.data));
 
         await loadTeamData();
       } catch (err) {
