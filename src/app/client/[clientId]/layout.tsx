@@ -46,6 +46,10 @@ export default function ClientDashboardLayout({
       setLoading(true);
       const res = await fetch(`/api/client-portal/${slug}/profile`);
       if (!res.ok) {
+        if (res.status === 401 || res.status === 403) {
+          router.push('/client/login?error=session_expired');
+          return;
+        }
         if (res.status === 404) {
           setError('Client not found. Please check your link.');
           return;
