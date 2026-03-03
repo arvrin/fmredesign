@@ -186,7 +186,7 @@ export function useClientDetail(clientId: string): UseClientDetailReturn {
   const refreshProfile = useCallback(async () => {
     if (!clientId) return;
     try {
-      const response = await fetch(`/api/client-portal/${clientId}/profile`);
+      const response = await fetch(`/api/clients?id=${clientId}`);
       if (response.ok) {
         const data = await response.json();
         setClientProfile(data.data);
@@ -204,7 +204,7 @@ export function useClientDetail(clientId: string): UseClientDetailReturn {
       try {
         setLoading(true);
 
-        const response = await fetch(`/api/client-portal/${clientId}/profile`);
+        const response = await fetch(`/api/clients?id=${clientId}`);
         if (!response.ok) {
           if (response.status === 404) {
             setError('Client not found');
