@@ -36,11 +36,10 @@ import {
   ThumbsUp
 } from 'lucide-react';
 import { Button } from '@/design-system/components/primitives/Button';
-import { ClientProfile } from '@/lib/admin/client-types';
-import { ClientService } from '@/lib/admin/client-service';
 
 interface GrowthEngineProps {
   clientId?: string;
+  clientName?: string;
 }
 
 interface GrowthOpportunity {
@@ -82,8 +81,7 @@ interface GrowthInsight {
   timestamp: string;
 }
 
-export function GrowthEngine({ clientId }: GrowthEngineProps) {
-  const [client, setClient] = useState<ClientProfile | null>(null);
+export function GrowthEngine({ clientId, clientName }: GrowthEngineProps) {
   const [opportunities, setOpportunities] = useState<GrowthOpportunity[]>([]);
   const [metrics, setMetrics] = useState<GrowthMetric[]>([]);
   const [insights, setInsights] = useState<GrowthInsight[]>([]);
@@ -97,13 +95,6 @@ export function GrowthEngine({ clientId }: GrowthEngineProps) {
   }, [clientId, selectedTimeframe]);
 
   const loadData = async () => {
-    // Load client data
-    if (clientId) {
-      const clientData = await ClientService.getClientById(clientId);
-      setClient(clientData);
-    }
-
-    // Fetch real metrics from API
     if (clientId) {
       try {
         setLoading(true);
@@ -188,7 +179,7 @@ export function GrowthEngine({ clientId }: GrowthEngineProps) {
           <div>
             <h2 className="text-xl sm:text-2xl font-bold text-fm-neutral-900">Growth & Opportunities Engine</h2>
             <p className="text-fm-neutral-600 mt-1">
-              {client ? `AI-powered growth insights for ${client.name}` : 'Intelligent business growth recommendations'}
+              {clientName ? `AI-powered growth insights for ${clientName}` : 'Intelligent business growth recommendations'}
             </p>
           </div>
 

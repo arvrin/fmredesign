@@ -131,18 +131,23 @@ export default function AdminClientDetail() {
           {/* Scrollable tab bar with fade hints on mobile */}
           <div className="relative">
             <TabsList className="w-full sm:w-fit">
+              {/* Core Work */}
               <TabsTrigger value="overview" className="text-xs sm:text-sm">Overview</TabsTrigger>
-              <TabsTrigger value="portal" className="text-xs sm:text-sm">Portal</TabsTrigger>
               <TabsTrigger value="projects" className="text-xs sm:text-sm">Projects</TabsTrigger>
               <TabsTrigger value="content" className="text-xs sm:text-sm">Content</TabsTrigger>
-              <TabsTrigger value="contracts" className="text-xs sm:text-sm">Contracts</TabsTrigger>
-              <TabsTrigger value="documents" className="text-xs sm:text-sm">Documents</TabsTrigger>
-              <TabsTrigger value="team" className="text-xs sm:text-sm">Team</TabsTrigger>
-              <TabsTrigger value="communication" className="text-xs sm:text-sm">Comms</TabsTrigger>
-              <TabsTrigger value="support" className="text-xs sm:text-sm">Support</TabsTrigger>
+              {/* Strategy & Analytics */}
               <TabsTrigger value="strategy" className="text-xs sm:text-sm">Strategy</TabsTrigger>
               <TabsTrigger value="growth" className="text-xs sm:text-sm">Growth</TabsTrigger>
+              {/* Business */}
+              <TabsTrigger value="contracts" className="text-xs sm:text-sm">Contracts</TabsTrigger>
+              <TabsTrigger value="documents" className="text-xs sm:text-sm">Documents</TabsTrigger>
+              {/* People & Communication */}
+              <TabsTrigger value="team" className="text-xs sm:text-sm">Team</TabsTrigger>
               <TabsTrigger value="messages" className="text-xs sm:text-sm">Messages</TabsTrigger>
+              <TabsTrigger value="communication" className="text-xs sm:text-sm">Activity</TabsTrigger>
+              <TabsTrigger value="support" className="text-xs sm:text-sm">Support</TabsTrigger>
+              {/* Admin */}
+              <TabsTrigger value="portal" className="text-xs sm:text-sm">Portal</TabsTrigger>
             </TabsList>
             {/* Right fade hint for scrollable tabs on mobile */}
             <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white to-transparent pointer-events-none sm:hidden" />
@@ -234,7 +239,7 @@ export default function AdminClientDetail() {
 
           <TabsContent value="growth" className="space-y-6">
             <SectionErrorBoundary section="Growth Engine">
-              <GrowthEngine clientId={clientId} />
+              <GrowthEngine clientId={clientId} clientName={clientProfile.name} />
             </SectionErrorBoundary>
           </TabsContent>
 
