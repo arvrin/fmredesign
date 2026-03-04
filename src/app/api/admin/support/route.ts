@@ -2,7 +2,9 @@
  * Admin Support Tickets API
  * GET  — list all tickets across all clients (with client name); fetch replies with ?ticketId=X&replies=true
  * PUT  — update ticket status / assigned_to
- * POST — send an admin reply to a ticket
+ * POST — send an admin reply to a ticket OR create a new ticket on behalf of a client
+ *        { ticketId, message }                              → reply to existing ticket
+ *        { clientId, title, description, priority?, category? } → create new ticket
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -217,8 +219,75 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { ticketId, message } = body;
+    const { ticketId, message, clientId, title, description, priority, category } = body;
 
+    // ── Branch: Create a new ticket on behalf of a client ──
+    if (clientId && !ticketId) {
+      if (!title?.trim() || !description?.trim()) {
+        return NextResponse.json(
+          { success: false, error: 'Title and description are required' },
+          { status: 400 }
+        );
+      }
+
+      const { data: newTicket, error: insertErr } = await supabaseAdmin
+        .from('support_tickets')
+        .insert({
+          client_id: clientId,
+          title: title.trim(),
+          description: description.trim(),
+          priority: priority || 'medium',
+          category: category || 'general',
+          status: 'open',
+          assigned_to: auth.user.name,
+        })
+        .select()
+        .single();
+
+      if (insertErr) {
+        console.error('Create ticket error:', insertErr);
+        return NextResponse.json(
+          { success: false, error: 'Failed to create ticket' },
+          { status: 500 }
+        );
+      }
+
+      // Notify client in-app
+      notifyClient(clientId, {
+        type: 'ticket_status_updated',
+        title: 'New support ticket created',
+        message: newTicket.title,
+        actionUrl: `/client/${clientId}/support`,
+      });
+
+      // Audit log
+      await logAuditEvent({
+        user_id: auth.user.id,
+        user_name: auth.user.name,
+        action: 'create',
+        resource_type: 'support_ticket',
+        resource_id: newTicket.id,
+        details: { clientId, title: newTicket.title, priority: newTicket.priority, category: newTicket.category },
+        ip_address: getClientIP(request),
+      });
+
+      return NextResponse.json({
+        success: true,
+        data: {
+          id: newTicket.id,
+          clientId: newTicket.client_id,
+          title: newTicket.title,
+          description: newTicket.description,
+          status: newTicket.status,
+          priority: newTicket.priority,
+          category: newTicket.category,
+          assignedTo: newTicket.assigned_to,
+          createdAt: newTicket.created_at,
+        },
+      });
+    }
+
+    // ── Branch: Reply to an existing ticket ──
     if (!ticketId || !message?.trim()) {
       return NextResponse.json(
         { success: false, error: 'Ticket ID and message are required' },
@@ -299,9 +368,9 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error sending reply:', error);
+    console.error('Error in POST /api/admin/support:', error);
     return NextResponse.json(
-      { success: false, error: 'Failed to send reply' },
+      { success: false, error: 'Failed to process request' },
       { status: 500 }
     );
   }

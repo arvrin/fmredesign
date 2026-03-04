@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { DashboardCard as Card, CardContent, CardHeader, CardTitle } from '@/design-system';
 import type { ClientProfile } from '@/hooks/admin/useClientDetail';
 import {
@@ -10,17 +11,79 @@ import {
   Globe,
   Users,
   TrendingUp,
+  Receipt,
+  PenSquare,
+  FolderPlus,
+  LifeBuoy,
+  MessageSquare,
 } from 'lucide-react';
 import { BrandIdentitySection } from './BrandIdentitySection';
 
 interface OverviewTabProps {
   clientProfile: ClientProfile;
   onProfileUpdate?: () => void;
+  onTabChange?: (tab: string) => void;
 }
 
-export function OverviewTab({ clientProfile, onProfileUpdate }: OverviewTabProps) {
+export function OverviewTab({ clientProfile, onProfileUpdate, onTabChange }: OverviewTabProps) {
+  const router = useRouter();
+
+  const quickActions = [
+    {
+      label: 'Generate Invoice',
+      icon: Receipt,
+      onClick: () =>
+        router.push(
+          `/admin/invoice?clientId=${clientProfile.id}&clientName=${encodeURIComponent(clientProfile.name)}`
+        ),
+    },
+    {
+      label: 'Create Content',
+      icon: PenSquare,
+      onClick: () => router.push(`/admin/content/new?clientId=${clientProfile.id}`),
+    },
+    {
+      label: 'New Project',
+      icon: FolderPlus,
+      onClick: () => router.push(`/admin/projects/new?clientId=${clientProfile.id}`),
+    },
+    {
+      label: 'Raise Ticket',
+      icon: LifeBuoy,
+      onClick: () => onTabChange?.('support'),
+    },
+    {
+      label: 'Send Message',
+      icon: MessageSquare,
+      onClick: () => onTabChange?.('messages'),
+    },
+  ];
+
   return (
     <div className="space-y-4 sm:space-y-6">
+      {/* Quick Actions */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm font-semibold text-fm-neutral-500 uppercase tracking-wider">
+            Quick Actions
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-2">
+            {quickActions.map((action) => (
+              <button
+                key={action.label}
+                onClick={action.onClick}
+                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-fm-neutral-700 bg-fm-neutral-50 border border-fm-neutral-200 rounded-lg hover:bg-fm-magenta-50 hover:text-fm-magenta-700 hover:border-fm-magenta-200 transition-colors"
+              >
+                <action.icon className="w-4 h-4" />
+                {action.label}
+              </button>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Client Information */}
         <Card>

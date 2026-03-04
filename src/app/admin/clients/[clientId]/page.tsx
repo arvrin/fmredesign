@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useParams, useRouter } from 'next/navigation';
 import { DashboardButton } from '@/design-system';
@@ -75,6 +76,8 @@ export default function AdminClientDetail() {
     activityLoading,
   } = useClientDetail(clientId);
 
+  const [activeTab, setActiveTab] = useState('overview');
+
   // ── Loading state ──
   if (loading) {
     return (
@@ -127,7 +130,7 @@ export default function AdminClientDetail() {
       />
 
       <div>
-        <Tabs defaultValue="overview" className="space-y-4 sm:space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
           {/* Scrollable tab bar with fade hints on mobile */}
           <div className="relative">
             <TabsList className="w-full sm:w-fit">
@@ -155,7 +158,7 @@ export default function AdminClientDetail() {
 
           <TabsContent value="overview" className="space-y-6">
             <SectionErrorBoundary section="Overview">
-              <OverviewTab clientProfile={clientProfile} onProfileUpdate={refreshProfile} />
+              <OverviewTab clientProfile={clientProfile} onProfileUpdate={refreshProfile} onTabChange={setActiveTab} />
             </SectionErrorBoundary>
           </TabsContent>
 
