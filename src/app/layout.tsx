@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { Playfair_Display, Plus_Jakarta_Sans, Instrument_Serif } from "next/font/google";
 import "./globals.css";
 import { ConditionalLayout } from "@/components/layout/ConditionalLayout";
@@ -195,6 +196,12 @@ export default function RootLayout({
         </QueryProvider>
         <WebVitals />
         <CookieConsent />
+        <Script
+          src="https://agentworks-production.up.railway.app/api/v1/widget/embed.js"
+          data-widget-key="rwTAE7bSICAHEtgao2oHlHuR-5a_usXWAO9xR-P1Y9Q"
+          data-api-url="https://agentworks-production.up.railway.app/api/v1"
+          strategy="lazyOnload"
+        />
       </body>
     </html>
   );
