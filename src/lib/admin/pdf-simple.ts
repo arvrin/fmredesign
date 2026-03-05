@@ -171,7 +171,12 @@ export class SimplePDFGenerator {
 
   async downloadPDF(invoice: Invoice): Promise<void> {
     await this.generateInvoice(invoice);
-    this.doc.save(`FreakingMinds-Invoice-${invoice.invoiceNumber}.pdf`);
+    const d = new Date(invoice.date);
+    const month = d.toLocaleString('en-US', { month: 'long' });
+    const year = d.getFullYear();
+    const invoiceNum = invoice.invoiceNumber.replace(/[/\\]/g, '-');
+    const brandName = invoice.client.name.replace(/[^a-zA-Z0-9 ]/g, '').replace(/\s+/g, '-');
+    this.doc.save(`${invoiceNum}-${brandName}-${month}-${year}.pdf`);
   }
 
   // ---- Header -------------------------------------------------------------

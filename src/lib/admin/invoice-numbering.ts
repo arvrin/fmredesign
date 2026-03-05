@@ -92,11 +92,11 @@ export class InvoiceNumbering {
   }
 
   private static getNextFromLocalStorage(): string {
-    if (typeof window === 'undefined') return 'FM164/2026';
+    if (typeof window === 'undefined') return 'FM191/2026';
 
     const currentYear = new Date().getFullYear();
     const storedYear = parseInt(localStorage.getItem(INVOICE_YEAR_KEY) || '0');
-    let counter = parseInt(localStorage.getItem(INVOICE_COUNTER_KEY) || '163');
+    let counter = parseInt(localStorage.getItem(INVOICE_COUNTER_KEY) || '190');
 
     if (storedYear !== currentYear) {
       counter = 0;
@@ -110,11 +110,11 @@ export class InvoiceNumbering {
   }
 
   private static previewFromLocalStorage(): string {
-    if (typeof window === 'undefined') return 'FM164/2026';
+    if (typeof window === 'undefined') return 'FM191/2026';
 
     const currentYear = new Date().getFullYear();
     const storedYear = parseInt(localStorage.getItem(INVOICE_YEAR_KEY) || '0');
-    let counter = parseInt(localStorage.getItem(INVOICE_COUNTER_KEY) || '163');
+    let counter = parseInt(localStorage.getItem(INVOICE_COUNTER_KEY) || '190');
 
     if (storedYear !== currentYear) {
       counter = 0;
