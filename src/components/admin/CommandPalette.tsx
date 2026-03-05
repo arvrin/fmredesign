@@ -24,6 +24,7 @@ import {
   UserCog,
   Presentation,
   Plus,
+  Building2,
 } from 'lucide-react';
 
 const pages = [
@@ -49,6 +50,12 @@ const quickActions = [
   { label: 'Add Team Member', href: '/admin/team/new', icon: Plus, group: 'Quick Actions' },
 ];
 
+interface Client {
+  id: string;
+  name: string;
+  slug?: string;
+}
+
 interface CommandPaletteProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -56,6 +63,26 @@ interface CommandPaletteProps {
 
 export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   const router = useRouter();
+  const [clients, setClients] = useState<Client[]>([]);
+
+  // Fetch clients when palette opens
+  useEffect(() => {
+    if (!open) return;
+    fetch('/api/clients')
+      .then((r) => r.json())
+      .then((res) => {
+        if (res.success) {
+          setClients(
+            (res.data || []).map((c: any) => ({
+              id: c.id,
+              name: c.name,
+              slug: c.slug,
+            }))
+          );
+        }
+      })
+      .catch(() => {});
+  }, [open]);
 
   const navigate = useCallback(
     (href: string) => {
@@ -67,7 +94,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
 
   return (
     <CommandDialog open={open} onOpenChange={onOpenChange}>
-      <CommandInput placeholder="Search pages, actions..." />
+      <CommandInput placeholder="Search pages, actions, clients..." />
       <CommandList>
         <CommandEmpty>No results found.</CommandEmpty>
 
@@ -104,6 +131,24 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
             );
           })}
         </CommandGroup>
+
+        {clients.length > 0 && (
+          <>
+            <CommandSeparator />
+            <CommandGroup heading="Clients">
+              {clients.map((client) => (
+                <CommandItem
+                  key={client.id}
+                  value={`client ${client.name}`}
+                  onSelect={() => navigate(`/admin/clients/${client.id}`)}
+                >
+                  <Building2 className="mr-2 h-4 w-4 text-emerald-600" />
+                  {client.name}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </>
+        )}
       </CommandList>
     </CommandDialog>
   );

@@ -5,6 +5,8 @@ import { Search } from 'lucide-react';
 import { DashboardCard as Card, CardContent } from '@/design-system';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/select-native';
+import { SavedViewsDropdown } from '@/components/admin/SavedViewsDropdown';
+import type { SavedView } from '@/hooks/useAdminFilters';
 
 interface FilterOption {
   value: string;
@@ -26,6 +28,12 @@ interface AdminFilterBarProps {
   filters?: FilterConfig[];
   actions?: React.ReactNode;
   className?: string;
+  /** Saved views integration */
+  savedViews?: SavedView[];
+  hasActiveFilters?: boolean;
+  onSaveView?: (name: string) => void;
+  onLoadView?: (id: string) => void;
+  onDeleteView?: (id: string) => void;
 }
 
 export function AdminFilterBar({
@@ -35,6 +43,11 @@ export function AdminFilterBar({
   filters = [],
   actions,
   className,
+  savedViews,
+  hasActiveFilters,
+  onSaveView,
+  onLoadView,
+  onDeleteView,
 }: AdminFilterBarProps) {
   return (
     <Card variant="admin" className={className}>
@@ -65,6 +78,15 @@ export function AdminFilterBar({
               ))}
             </Select>
           ))}
+          {savedViews && onSaveView && onLoadView && onDeleteView && (
+            <SavedViewsDropdown
+              views={savedViews}
+              hasActiveFilters={hasActiveFilters ?? false}
+              onSave={onSaveView}
+              onLoad={onLoadView}
+              onDelete={onDeleteView}
+            />
+          )}
           {actions}
         </div>
       </CardContent>

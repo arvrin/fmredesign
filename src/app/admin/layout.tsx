@@ -8,15 +8,20 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useEffect, useState, useCallback, Suspense } from 'react';
+import { useEffect, useState, useCallback, useMemo, Suspense } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAdminAuth, AdminAuth } from '@/lib/admin/auth';
 import { DashboardLayout, type NavigationGroup } from '@/design-system';
 import { AdminErrorBoundary } from '@/components/admin/AdminErrorBoundary';
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 
 // Lazy-load CommandPalette — only rendered on Cmd+K, not on every page load
 const CommandPalette = dynamic(
   () => import('@/components/admin/CommandPalette').then(m => ({ default: m.CommandPalette })),
+  { ssr: false }
+);
+const KeyboardShortcutsHelp = dynamic(
+  () => import('@/components/admin/KeyboardShortcutsHelp').then(m => ({ default: m.KeyboardShortcutsHelp })),
   { ssr: false }
 );
 import { ToastProvider } from '@/components/ui/toast-provider';
@@ -159,6 +164,23 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const pathname = usePathname();
   const { isAuthenticated, loading, currentUser, logout, hasPermission, checkSession } = useAdminAuth();
   const [commandOpen, setCommandOpen] = useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
+
+  // Context-aware "new" action
+  const handleNew = useCallback(() => {
+    if (pathname?.startsWith('/admin/content')) router.push('/admin/content/new');
+    else if (pathname?.startsWith('/admin/projects')) router.push('/admin/projects/new');
+    else if (pathname?.startsWith('/admin/team')) router.push('/admin/team/new');
+    else if (pathname?.startsWith('/admin/discovery')) router.push('/admin/discovery/new');
+    else router.push('/admin/projects/new');
+  }, [pathname, router]);
+
+  const shortcutConfig = useMemo(() => ({
+    onHelp: () => setShortcutsOpen(true),
+    onNew: handleNew,
+  }), [handleNew]);
+
+  const { pendingKey } = useKeyboardShortcuts(shortcutConfig);
 
   // Notification state
   const [notifications, setNotifications] = useState<
@@ -308,6 +330,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </DashboardLayout>
 
       <CommandPalette open={commandOpen} onOpenChange={setCommandOpen} />
+      <KeyboardShortcutsHelp open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
+
+      {/* Pending key indicator */}
+      {pendingKey && (
+        <div
+          className="fixed bottom-24 md:bottom-8 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-fm-neutral-900 text-white text-sm font-mono rounded-lg shadow-lg"
+          style={{ zIndex: 100 }}
+        >
+          {pendingKey}...
+        </div>
+      )}
+
       <ToastProvider />
     </>
   );

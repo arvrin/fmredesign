@@ -1,6 +1,6 @@
 /**
  * FreakingMinds Admin Command Center
- * Dashboard home with metrics, quick actions, and activity feed.
+ * "Today" view — consolidated dashboard with urgency-driven sections.
  */
 
 'use client';
@@ -13,48 +13,41 @@ import {
   Users,
   DollarSign,
   Calendar,
-  Plus,
-  ArrowRight,
   Briefcase,
-  AlertCircle,
-  Eye,
 } from 'lucide-react';
 import { InvoiceUtils } from '@/lib/admin/types';
-import { MetricCard, MetricCardSkeleton, DashboardButton } from '@/design-system';
+import { MetricCard, MetricCardSkeleton } from '@/design-system';
 import { PageHeader } from '@/components/ui/page-header';
-import { EmptyState } from '@/components/ui/empty-state';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ProgressBar } from '@/components/ui/progress-bar';
 import { cn } from '@/lib/utils';
 import { adminToast } from '@/lib/admin/toast';
 
-/* ── Types ── */
-interface DashboardInvoice {
-  id: string;
-  invoiceNumber: string;
-  clientId: string;
-  clientName: string;
-  date: string;
-  dueDate: string;
-  subtotal: number;
-  tax: number;
-  total: number;
-  status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled' | 'partial';
-  createdAt: string;
-  lineItems: unknown[];
-  notes: string;
-}
+import { TodaySection } from '@/components/admin/dashboard/TodaySection';
+import { OverdueItems } from '@/components/admin/dashboard/OverdueItems';
+import { PendingApprovals } from '@/components/admin/dashboard/PendingApprovals';
+import { TodayContent } from '@/components/admin/dashboard/TodayContent';
+import { ProjectPulse } from '@/components/admin/dashboard/ProjectPulse';
 
-interface DashboardStats {
-  totalInvoices: number;
-  totalClients: number;
-  totalRevenue: number;
-  pendingInvoices: number;
-  totalProjects: number;
-  activeProjects: number;
-  totalContent: number;
-  scheduledContent: number;
+/* ── Types ── */
+interface TodayData {
+  stats: {
+    totalClients: number;
+    totalRevenue: number;
+    activeProjects: number;
+    scheduledContent: number;
+  };
+  overdue: {
+    content: any[];
+    projects: any[];
+  };
+  pendingApprovals: {
+    talentApplications: any[];
+    contentReview: any[];
+  };
+  todayContent: any[];
+  activeProjects: any[];
+  recentInvoices: any[];
 }
 
 /* ── Greeting helper ── */
@@ -65,174 +58,89 @@ function getGreeting() {
   return 'Good evening';
 }
 
-/* ── Skeleton cards ── */
+/* ── Skeleton ── */
 function DashboardSkeleton() {
   return (
     <div className="space-y-4 sm:space-y-8">
-      {/* Header skeleton */}
       <div className="space-y-2">
         <Skeleton className="h-8 w-64" />
         <Skeleton className="h-5 w-96" />
       </div>
-
-      {/* Metric skeletons */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
         {[...Array(4)].map((_, i) => (
           <MetricCardSkeleton key={i} />
         ))}
       </div>
-
-      {/* Quick actions skeleton */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
         {[...Array(4)].map((_, i) => (
           <Skeleton key={i} className="h-24 rounded-xl" />
         ))}
       </div>
-
-      {/* Activity skeleton */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-        <div className="space-y-3">
-          <Skeleton className="h-6 w-40" />
-          {[...Array(3)].map((_, i) => (
-            <Skeleton key={i} className="h-16 rounded-xl" />
-          ))}
-        </div>
-        <div className="space-y-3">
-          <Skeleton className="h-6 w-40" />
-          {[...Array(3)].map((_, i) => (
-            <Skeleton key={i} className="h-16 rounded-xl" />
-          ))}
-        </div>
+      <div className="space-y-4">
+        {[...Array(3)].map((_, i) => (
+          <Skeleton key={i} className="h-32 rounded-xl" />
+        ))}
       </div>
     </div>
   );
 }
 
+/* ── Quick Action type ── */
+const quickActions = [
+  { title: 'New Project', href: '/admin/projects/new', icon: Briefcase, color: 'bg-fm-magenta-50 text-fm-magenta-700', action: 'project' },
+  { title: 'Schedule Content', href: '/admin/content/new', icon: Calendar, color: 'bg-violet-50 text-violet-700', action: 'content' },
+  { title: 'Create Invoice', href: '/admin/invoice', icon: FileText, color: 'bg-sky-50 text-sky-700', action: 'invoice' },
+  { title: 'Add Client', href: '/admin/clients', icon: Users, color: 'bg-emerald-50 text-emerald-700', action: 'client' },
+];
+
 /* ── Main dashboard ── */
 export default function AdminDashboard() {
   const router = useRouter();
-  const [stats, setStats] = useState<DashboardStats>({
-    totalInvoices: 0,
-    totalClients: 0,
-    totalRevenue: 0,
-    pendingInvoices: 0,
-    totalProjects: 0,
-    activeProjects: 0,
-    totalContent: 0,
-    scheduledContent: 0,
-  });
-  const [recentInvoices, setRecentInvoices] = useState<DashboardInvoice[]>([]);
-  const [recentProjects, setRecentProjects] = useState<any[]>([]);
-  const [upcomingContent, setUpcomingContent] = useState<any[]>([]);
+  const [data, setData] = useState<TodayData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    loadDashboardData();
+    const loadData = async () => {
+      try {
+        const res = await fetch('/api/admin/today');
+        const json = await res.json();
+        if (json.success) {
+          setData(json.data);
+        } else {
+          adminToast.error('Failed to load dashboard data');
+        }
+      } catch (error) {
+        console.error('Error loading dashboard:', error);
+        adminToast.error('Failed to load dashboard data');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadData();
   }, []);
 
-  const loadDashboardData = async () => {
-    try {
-      // Optimized: fetch only upcoming 7 days of content instead of all content
-      const now = new Date();
-      const sevenDaysLater = new Date();
-      sevenDaysLater.setDate(now.getDate() + 7);
-      const todayStr = now.toISOString().split('T')[0];
-      const sevenDaysStr = sevenDaysLater.toISOString().split('T')[0];
+  if (isLoading || !data) return <DashboardSkeleton />;
 
-      const [invoicesResponse, clientsResponse, projectsResponse, contentResponse, contentCountResponse] =
-        await Promise.all([
-          fetch('/api/invoices').catch(() => ({ json: () => Promise.resolve({ success: false, data: [] }) })),
-          fetch('/api/clients').catch(() => ({ json: () => Promise.resolve({ success: false, data: [] }) })),
-          fetch('/api/projects').catch(() => ({ json: () => Promise.resolve({ success: false, data: [] }) })),
-          fetch(`/api/content?startDate=${todayStr}&endDate=${sevenDaysStr}&status=approved,scheduled&sortBy=scheduledDate&sortDirection=asc`).catch(() => ({ json: () => Promise.resolve({ success: false, data: [] }) })),
-          fetch('/api/content?pageSize=1').catch(() => ({ json: () => Promise.resolve({ success: false, data: [], pagination: { totalItems: 0 } }) })),
-        ]);
-
-      const invoicesResult = await invoicesResponse.json();
-      const clientsResult = await clientsResponse.json();
-      const projectsResult = await projectsResponse.json();
-      const contentResult = await contentResponse.json();
-      const contentCountResult = await contentCountResponse.json();
-
-      const invoices: DashboardInvoice[] = invoicesResult.success ? invoicesResult.data : [];
-      const clients = clientsResult.success ? clientsResult.data : [];
-      const projects = projectsResult.success ? projectsResult.data : [];
-      // Already filtered to next 7 days, approved/scheduled by API
-      const upcomingContentItems = contentResult.success ? contentResult.data : [];
-      const totalContentCount = contentCountResult.pagination?.totalItems ?? contentCountResult.total ?? 0;
-
-      const totalRevenue = invoices
-        .filter((inv) => inv.status === 'paid')
-        .reduce((sum, inv) => sum + (Number(inv.total) || 0), 0);
-
-      const pendingInvoices = invoices.filter(
-        (inv) => inv.status === 'sent' || inv.status === 'overdue'
-      ).length;
-
-      const activeProjects = projects.filter((p: any) => p.status === 'active').length;
-
-      setStats({
-        totalInvoices: invoices.length,
-        totalClients: clients.length,
-        totalRevenue,
-        pendingInvoices,
-        totalProjects: projects.length,
-        activeProjects,
-        totalContent: totalContentCount,
-        scheduledContent: upcomingContentItems.length,
-      });
-
-      setRecentInvoices(
-        invoices
-          .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-          .slice(0, 5)
-      );
-
-      setRecentProjects(
-        projects
-          .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-          .slice(0, 5)
-      );
-
-      // Already sorted by scheduledDate asc from API
-      setUpcomingContent(upcomingContentItems.slice(0, 5));
-    } catch (error) {
-      console.error('Error loading dashboard data:', error);
-      adminToast.error('Failed to load dashboard data');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const quickActions = [
-    { title: 'New Project', href: '/admin/projects/new', icon: Briefcase, color: 'bg-fm-magenta-50 text-fm-magenta-700' },
-    { title: 'Schedule Content', href: '/admin/content/new', icon: Calendar, color: 'bg-violet-50 text-violet-700' },
-    { title: 'Create Invoice', href: '/admin/invoice', icon: FileText, color: 'bg-sky-50 text-sky-700' },
-    { title: 'Add Client', href: '/admin/clients', icon: Users, color: 'bg-emerald-50 text-emerald-700' },
-  ];
-
-  if (isLoading) return <DashboardSkeleton />;
+  const { stats, overdue, pendingApprovals, todayContent, activeProjects, recentInvoices } = data;
+  const hasOverdue = overdue.content.length > 0 || overdue.projects.length > 0;
+  const hasPending = pendingApprovals.talentApplications.length > 0 || pendingApprovals.contentReview.length > 0;
 
   return (
     <div className="space-y-5 sm:space-y-8">
       {/* Header */}
       <PageHeader
-        title={`${getGreeting()}`}
-        description="Your business operations at a glance — real-time insights and control."
+        title={getGreeting()}
+        description="Your day at a glance — what needs attention right now."
       />
 
-      {/* Key Metrics — 2×2 on mobile, 3-col on tablet, 4-col on desktop */}
+      {/* Key Metrics */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
         <MetricCard
           title="Clients"
           value={stats.totalClients}
           subtitle="Active relationships"
           icon={<Users className="w-6 h-6" />}
-          change={{
-            value: stats.totalClients,
-            type: stats.totalClients > 0 ? 'increase' : 'neutral',
-            period: 'total',
-          }}
+          change={{ value: stats.totalClients, type: stats.totalClients > 0 ? 'increase' : 'neutral', period: 'total' }}
           variant="admin"
         />
         <MetricCard
@@ -241,40 +149,26 @@ export default function AdminDashboard() {
           subtitle="Total collected"
           icon={<DollarSign className="w-6 h-6" />}
           formatter={(val) => InvoiceUtils.formatCurrency(Number(val))}
-          change={{
-            value: stats.pendingInvoices,
-            type: stats.pendingInvoices > 0 ? 'decrease' : 'neutral',
-            period: stats.pendingInvoices > 0 ? `${stats.pendingInvoices} pending` : 'all collected',
-          }}
           variant="admin"
         />
         <MetricCard
-          title="Projects"
-          value={stats.totalProjects}
-          subtitle={`${stats.activeProjects} active`}
+          title="Active Projects"
+          value={stats.activeProjects}
+          subtitle="In progress"
           icon={<Briefcase className="w-6 h-6" />}
-          change={{
-            value: stats.activeProjects,
-            type: stats.activeProjects > 0 ? 'increase' : 'neutral',
-            period: 'active now',
-          }}
+          change={{ value: stats.activeProjects, type: stats.activeProjects > 0 ? 'increase' : 'neutral', period: 'active now' }}
           variant="admin"
         />
         <MetricCard
-          title="Upcoming Content"
+          title="Today's Content"
           value={stats.scheduledContent}
-          subtitle="Next 7 days"
+          subtitle="Scheduled for today"
           icon={<Calendar className="w-6 h-6" />}
-          change={{
-            value: stats.totalContent,
-            type: stats.scheduledContent > 0 ? 'increase' : 'neutral',
-            period: `${stats.totalContent} total items`,
-          }}
           variant="admin"
         />
       </div>
 
-      {/* Quick Actions — clean grid */}
+      {/* Quick Actions */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
         {quickActions.map((action) => {
           const Icon = action.icon;
@@ -295,137 +189,73 @@ export default function AdminDashboard() {
         })}
       </div>
 
-      {/* Activity — two columns */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-        {/* Recent Invoices */}
-        <section className="rounded-xl border border-fm-neutral-200 bg-white">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between px-4 sm:px-5 py-3 sm:py-4 border-b border-fm-neutral-100">
-            <h2 className="text-sm font-semibold text-fm-neutral-900">Recent Invoices</h2>
-            <Link href="/admin/invoice" className="text-xs font-medium text-fm-magenta-700 hover:text-fm-magenta-800 flex items-center gap-1">
-              View all <ArrowRight className="w-3 h-3" />
-            </Link>
-          </div>
+      {/* Overdue Items */}
+      {hasOverdue && (
+        <TodaySection
+          title="Overdue"
+          count={overdue.content.length + overdue.projects.length}
+          variant="danger"
+          viewAllHref="/admin/content"
+        >
+          <OverdueItems content={overdue.content} projects={overdue.projects} />
+        </TodaySection>
+      )}
 
-          {recentInvoices.length === 0 ? (
-            <EmptyState
-              icon={<FileText className="w-6 h-6" />}
-              title="No invoices yet"
-              description="Create your first invoice to start tracking revenue."
-              action={
-                <DashboardButton variant="primary" size="sm" onClick={() => router.push('/admin/invoice')}>
-                  <Plus className="w-4 h-4" /> Create Invoice
-                </DashboardButton>
-              }
-              className="py-10"
-            />
-          ) : (
-            <div className="divide-y divide-fm-neutral-100">
-              {recentInvoices.map((invoice) => (
-                <div key={invoice.id} className="flex items-center justify-between px-4 sm:px-5 py-3 sm:py-3.5 hover:bg-fm-neutral-50/50 transition-colors">
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2.5 flex-wrap">
-                      <span className="text-sm font-medium text-fm-neutral-900">{invoice.invoiceNumber}</span>
-                      <StatusBadge status={invoice.status} />
-                    </div>
-                    <p className="text-xs text-fm-neutral-500 mt-0.5 truncate">
-                      {invoice.clientName} &middot; {InvoiceUtils.formatDate(invoice.date)}
-                    </p>
-                  </div>
-                  <span className="text-sm font-semibold text-fm-neutral-900 shrink-0 ml-4" style={{ fontVariantNumeric: 'tabular-nums' }}>
-                    {InvoiceUtils.formatCurrency(invoice.total)}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
+      {/* Pending Approvals */}
+      {hasPending && (
+        <TodaySection
+          title="Pending Approvals"
+          count={pendingApprovals.contentReview.length + pendingApprovals.talentApplications.length}
+          variant="warning"
+          viewAllHref="/admin/content"
+        >
+          <PendingApprovals
+            talentApplications={pendingApprovals.talentApplications}
+            contentReview={pendingApprovals.contentReview}
+          />
+        </TodaySection>
+      )}
 
-        {/* Active Projects */}
-        <section className="rounded-xl border border-fm-neutral-200 bg-white">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between px-4 sm:px-5 py-3 sm:py-4 border-b border-fm-neutral-100">
-            <h2 className="text-sm font-semibold text-fm-neutral-900">Active Projects</h2>
-            <Link href="/admin/projects" className="text-xs font-medium text-fm-magenta-700 hover:text-fm-magenta-800 flex items-center gap-1">
-              View all <ArrowRight className="w-3 h-3" />
-            </Link>
-          </div>
+      {/* Today's Content */}
+      {todayContent.length > 0 && (
+        <TodaySection title="Today's Content" count={todayContent.length} viewAllHref="/admin/content">
+          <TodayContent items={todayContent} />
+        </TodaySection>
+      )}
 
-          {recentProjects.length === 0 ? (
-            <EmptyState
-              icon={<Briefcase className="w-6 h-6" />}
-              title="No projects yet"
-              description="Create your first project to get started."
-              action={
-                <DashboardButton variant="primary" size="sm" onClick={() => router.push('/admin/projects/new')}>
-                  <Plus className="w-4 h-4" /> Create Project
-                </DashboardButton>
-              }
-              className="py-10"
-            />
-          ) : (
-            <div className="divide-y divide-fm-neutral-100">
-              {recentProjects.map((project) => (
-                <div key={project.id} className="flex items-center justify-between px-4 sm:px-5 py-3 sm:py-3.5 hover:bg-fm-neutral-50/50 transition-colors">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div
-                      className={cn(
-                        'w-2.5 h-2.5 rounded-full shrink-0',
-                        project.status === 'active' ? 'bg-emerald-500' :
-                        project.status === 'completed' ? 'bg-blue-500' :
-                        project.status === 'planning' ? 'bg-amber-500' :
-                        'bg-fm-neutral-300'
-                      )}
-                    />
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-fm-neutral-900 truncate">{project.name}</p>
-                      <p className="text-xs text-fm-neutral-500 capitalize">
-                        {project.type?.replace('_', ' ')} &middot; {project.status}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-right shrink-0 ml-4">
-                    <p className="text-xs text-fm-neutral-500">
-                      {project.endDate ? new Date(project.endDate).toLocaleDateString() : 'No deadline'}
-                    </p>
-                    <ProgressBar value={project.progress || 0} size="sm" className="w-16 mt-1.5" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
-      </div>
+      {/* Project Pulse */}
+      {activeProjects.length > 0 && (
+        <TodaySection title="Project Pulse" count={activeProjects.length} viewAllHref="/admin/projects">
+          <ProjectPulse projects={activeProjects} />
+        </TodaySection>
+      )}
 
-      {/* Upcoming Content */}
-      {upcomingContent.length > 0 && (
-        <section className="rounded-xl border border-fm-neutral-200 bg-white">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between px-4 sm:px-5 py-3 sm:py-4 border-b border-fm-neutral-100">
-            <h2 className="text-sm font-semibold text-fm-neutral-900">Upcoming Content</h2>
-            <Link href="/admin/content" className="text-xs font-medium text-fm-magenta-700 hover:text-fm-magenta-800 flex items-center gap-1">
-              Calendar <ArrowRight className="w-3 h-3" />
-            </Link>
-          </div>
+      {/* Recent Invoices */}
+      {recentInvoices.length > 0 && (
+        <TodaySection title="Recent Invoices" viewAllHref="/admin/invoices">
           <div className="divide-y divide-fm-neutral-100">
-            {upcomingContent.map((item) => (
-              <div key={item.id} className="flex items-center justify-between px-4 sm:px-5 py-3 sm:py-3.5 hover:bg-fm-neutral-50/50 transition-colors">
+            {recentInvoices.map((invoice: any) => (
+              <Link
+                key={invoice.id}
+                href={`/admin/invoices`}
+                className="flex items-center justify-between px-4 sm:px-5 py-3 hover:bg-fm-neutral-50/50 transition-colors"
+              >
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-fm-neutral-900 truncate">{item.title}</p>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <StatusBadge status={item.status} />
-                    <span className="text-xs text-fm-neutral-500 capitalize">{item.platform} &middot; {item.type}</span>
+                  <div className="flex items-center gap-2.5 flex-wrap">
+                    <span className="text-sm font-medium text-fm-neutral-900">{invoice.invoiceNumber}</span>
+                    <StatusBadge status={invoice.status} />
                   </div>
-                </div>
-                <div className="text-right shrink-0 ml-4">
-                  <p className="text-xs font-medium text-fm-neutral-700" style={{ fontVariantNumeric: 'tabular-nums' }}>
-                    {new Date(item.scheduledDate).toLocaleDateString()}
-                  </p>
-                  <p className="text-xs text-fm-neutral-400" style={{ fontVariantNumeric: 'tabular-nums' }}>
-                    {new Date(item.scheduledDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  <p className="text-xs text-fm-neutral-500 mt-0.5">
+                    Due: {invoice.dueDate ? new Date(invoice.dueDate).toLocaleDateString() : 'N/A'}
                   </p>
                 </div>
-              </div>
+                <span className="text-sm font-semibold text-fm-neutral-900 shrink-0 ml-4" style={{ fontVariantNumeric: 'tabular-nums' }}>
+                  {InvoiceUtils.formatCurrency(Number(invoice.total) || 0)}
+                </span>
+              </Link>
             ))}
           </div>
-        </section>
+        </TodaySection>
       )}
     </div>
   );

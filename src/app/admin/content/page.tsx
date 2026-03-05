@@ -54,6 +54,8 @@ import { ContentCalendar } from '@/components/content-calendar';
 import type { CalendarContentItem } from '@/components/content-calendar';
 import { getPlatformColor } from '@/lib/admin/format-helpers';
 import type { ContentItem, ContentStatus, ContentType, Platform } from '@/lib/admin/project-types';
+import { KanbanBoard } from '@/components/admin/content/KanbanBoard';
+import { Kanban } from 'lucide-react';
 
 const PAGE_SIZE = 25;
 
@@ -73,7 +75,7 @@ export default function ContentCalendarPage() {
   const [projects, setProjects] = useState<any[]>([]);
   const [clients, setClients] = useState<{ id: string; name: string }[]>([]);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<'grouped' | 'flat' | 'calendar'>('grouped');
+  const [viewMode, setViewMode] = useState<'grouped' | 'flat' | 'calendar' | 'kanban'>('grouped');
   const [showGenerateModal, setShowGenerateModal] = useState(false);
   const [expandedClients, setExpandedClients] = useState<Set<string>>(new Set());
 
@@ -429,6 +431,17 @@ export default function ContentCalendarPage() {
               <CalendarDays className="h-4 w-4" />
               Calendar
             </button>
+            <button
+              onClick={() => setViewMode('kanban')}
+              className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors ${
+                viewMode === 'kanban'
+                  ? 'bg-fm-magenta-600 text-white'
+                  : 'bg-white text-fm-neutral-600 hover:bg-fm-neutral-50'
+              }`}
+            >
+              <Kanban className="h-4 w-4" />
+              Kanban
+            </button>
           </div>
         </div>
 
@@ -513,8 +526,22 @@ export default function ContentCalendarPage() {
         />
       )}
 
-      {/* List / Grouped views (hidden in calendar mode) */}
-      {viewMode !== 'calendar' && <>
+      {/* Kanban View */}
+      {viewMode === 'kanban' && (
+        <KanbanBoard
+          items={filteredContent}
+          onStatusChange={(id, newStatus) => {
+            setContentItems((prev) =>
+              prev.map((item) =>
+                item.id === id ? { ...item, status: newStatus } : item
+              )
+            );
+          }}
+        />
+      )}
+
+      {/* List / Grouped views (hidden in calendar/kanban mode) */}
+      {viewMode !== 'calendar' && viewMode !== 'kanban' && <>
 
       {/* Expand/Collapse controls for grouped view */}
       {viewMode === 'grouped' && filteredContent.length > 0 && (
