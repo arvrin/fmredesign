@@ -484,6 +484,12 @@ export function InvoiceFormNew() {
 
   const handleDownload = async () => {
     try {
+      // Claim a permanent invoice number if not yet claimed
+      if (!invoice.invoiceNumber || invoice.invoiceNumber === nextPreview) {
+        const num = await InvoiceNumbering.getNextInvoiceNumber();
+        invoice.invoiceNumber = num;
+        setInvoice(prev => ({ ...prev, invoiceNumber: num }));
+      }
       const gen = await getPdfGenerator();
       await gen.downloadPDF(invoice);
     } catch {
