@@ -10,7 +10,7 @@
 import dynamic from 'next/dynamic';
 import { useEffect, useState, useCallback, Suspense } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { useAdminAuth } from '@/lib/admin/auth';
+import { useAdminAuth, AdminAuth } from '@/lib/admin/auth';
 import { DashboardLayout, type NavigationGroup } from '@/design-system';
 import { AdminErrorBoundary } from '@/components/admin/AdminErrorBoundary';
 
@@ -169,13 +169,26 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const isAuthRoute = pathname?.startsWith('/admin/auth');
 
   useEffect(() => {
+    let cancelled = false;
+
     if (!loading && !isAuthenticated && !isAuthRoute) {
-      router.push('/admin/auth/login');
+      // Re-verify session before redirecting — the cookie may have just been
+      // set by the login page's hook instance (separate from this layout's hook).
+      AdminAuth.validateSession().then((result) => {
+        if (cancelled) return;
+        if (result.authenticated) {
+          checkSession(); // Sync this hook's state with the valid session
+        } else {
+          router.push('/admin/auth/login');
+        }
+      });
     }
     if (!loading && isAuthenticated && pathname === '/admin/auth/login') {
       router.push('/admin');
     }
-  }, [loading, isAuthenticated, isAuthRoute, pathname, router]);
+
+    return () => { cancelled = true; };
+  }, [loading, isAuthenticated, isAuthRoute, pathname, router, checkSession]);
 
   // Notification handlers
   const fetchNotifications = useCallback(async () => {
