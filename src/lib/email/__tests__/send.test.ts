@@ -1,10 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-// Mock the resend module before imports
-const mockSend = vi.fn();
+// Mock Inngest client (sendEmail now routes through Inngest first)
+const mockInngestSend = vi.fn(() => Promise.resolve());
+vi.mock('@/lib/inngest/client', () => ({
+  inngest: { send: mockInngestSend },
+}));
+
+// Mock the resend module (fallback when Inngest fails)
+const mockResendSend = vi.fn();
 vi.mock('../resend', () => ({
   getResend: vi.fn(() => ({
-    emails: { send: mockSend },
+    emails: { send: mockResendSend },
   })),
 }));
 
@@ -25,52 +31,76 @@ import {
 describe('sendEmail', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockSend.mockResolvedValue({ id: 'test-id' });
+    mockInngestSend.mockResolvedValue(undefined);
+    mockResendSend.mockResolvedValue({ id: 'test-id' });
   });
 
-  it('calls resend.emails.send with correct params', async () => {
+  it('sends email event to Inngest', async () => {
     await sendEmail({ to: 'test@example.com', subject: 'Test', html: '<p>Hi</p>' });
 
-    expect(mockSend).toHaveBeenCalledWith({
+    expect(mockInngestSend).toHaveBeenCalledWith({
+      name: 'email/send',
+      data: {
+        to: 'test@example.com',
+        subject: 'Test',
+        html: '<p>Hi</p>',
+      },
+    });
+    // Resend should NOT be called when Inngest succeeds
+    expect(mockResendSend).not.toHaveBeenCalled();
+  });
+
+  it('falls back to Resend when Inngest fails', async () => {
+    mockInngestSend.mockRejectedValueOnce(new Error('Inngest down'));
+
+    await sendEmail({ to: 'test@example.com', subject: 'Fallback', html: '<p>x</p>' });
+
+    expect(mockResendSend).toHaveBeenCalledWith({
       from: 'FreakingMinds <notifications@freakingminds.in>',
       to: 'test@example.com',
-      subject: 'Test',
-      html: '<p>Hi</p>',
+      subject: 'Fallback',
+      html: '<p>x</p>',
     });
   });
 
-  it('does not throw when Resend API fails', async () => {
-    mockSend.mockRejectedValue(new Error('API Error'));
+  it('does not throw when both Inngest and Resend fail', async () => {
+    mockInngestSend.mockRejectedValueOnce(new Error('Inngest down'));
+    mockResendSend.mockRejectedValueOnce(new Error('Resend down'));
 
     await expect(
       sendEmail({ to: 'test@example.com', subject: 'Fail', html: '<p>x</p>' })
     ).resolves.toBeUndefined();
   });
 
-  it('does not throw when getResend returns null', async () => {
+  it('does not throw when getResend returns null (fallback path)', async () => {
+    mockInngestSend.mockRejectedValueOnce(new Error('Inngest down'));
     vi.mocked(getResend).mockReturnValueOnce(null);
 
     await expect(
       sendEmail({ to: 'test@example.com', subject: 'No key', html: '<p>x</p>' })
     ).resolves.toBeUndefined();
-
-    expect(mockSend).not.toHaveBeenCalled();
   });
 });
 
 describe('notifyTeam', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockSend.mockResolvedValue({ id: 'test-id' });
+    mockInngestSend.mockResolvedValue(undefined);
   });
 
-  it('sends to NOTIFICATION_EMAIL or fallback', () => {
+  it('sends to NOTIFICATION_EMAIL or fallback via Inngest', async () => {
     notifyTeam('Subject', '<p>Body</p>');
 
-    expect(mockSend).toHaveBeenCalledWith(
+    // notifyTeam calls sendEmail which is async, give it a tick
+    await new Promise((r) => setTimeout(r, 50));
+
+    expect(mockInngestSend).toHaveBeenCalledWith(
       expect.objectContaining({
-        subject: 'Subject',
-        html: '<p>Body</p>',
+        name: 'email/send',
+        data: expect.objectContaining({
+          subject: 'Subject',
+          html: '<p>Body</p>',
+        }),
       })
     );
   });

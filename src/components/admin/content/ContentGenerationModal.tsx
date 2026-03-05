@@ -19,7 +19,6 @@ import {
   Zap,
 } from 'lucide-react';
 import { DashboardButton } from '@/design-system';
-import { adminToast } from '@/lib/admin/toast';
 import type { Platform, ContentType } from '@/lib/admin/project-types';
 
 interface ContentGenerationModalProps {
@@ -64,8 +63,7 @@ export function ContentGenerationModal({
 
   // Generation state
   const [generating, setGenerating] = useState(false);
-  const [generatedCount, setGeneratedCount] = useState(0);
-  const [generatedStrategy, setGeneratedStrategy] = useState('');
+  const [generatedBatchId, setGeneratedBatchId] = useState('');
   const [error, setError] = useState('');
 
   // Reset on open
@@ -75,8 +73,7 @@ export function ContentGenerationModal({
       setSelectedClient('');
       setMode('monthly');
       setError('');
-      setGeneratedCount(0);
-      setGeneratedStrategy('');
+      setGeneratedBatchId('');
     }
   }, [open]);
 
@@ -133,10 +130,10 @@ export function ContentGenerationModal({
       const data = await res.json();
 
       if (data.success) {
-        setGeneratedCount(data.items?.length || 0);
-        setGeneratedStrategy(data.strategy || '');
+        setGeneratedBatchId(data.batchId || '');
         setStep('done');
-        onGenerated();
+        // Refresh parent after a delay to allow Inngest to process
+        setTimeout(() => onGenerated(), 5000);
       } else {
         setError(data.error || 'Generation failed');
         setStep('configure');
@@ -192,7 +189,7 @@ export function ContentGenerationModal({
                 {step === 'configure' && 'Configure generation'}
                 {step === 'context' && 'Review client context'}
                 {step === 'generating' && 'Generating content...'}
-                {step === 'done' && 'Generation complete'}
+                {step === 'done' && 'Generation queued'}
               </p>
             </div>
           </div>
@@ -462,41 +459,39 @@ export function ContentGenerationModal({
             </div>
           )}
 
-          {/* Step 5: Generating */}
+          {/* Step 5: Generating (queuing) */}
           {step === 'generating' && (
             <div className="flex flex-col items-center py-12 gap-4">
               <div className="w-16 h-16 rounded-full bg-violet-100 flex items-center justify-center">
                 <Loader2 className="w-8 h-8 text-violet-600 animate-spin" />
               </div>
               <div className="text-lg font-semibold text-fm-neutral-900">
-                Generating content...
+                Queuing content generation...
               </div>
               <div className="text-sm text-fm-neutral-500">
-                This may take 15-30 seconds. The AI is crafting your{' '}
-                {mode === 'single' ? 'post' : `${mode} calendar`}.
+                Setting up your {mode === 'single' ? 'post' : `${mode} calendar`} generation.
               </div>
             </div>
           )}
 
-          {/* Step 6: Done */}
+          {/* Step 6: Done (queued) */}
           {step === 'done' && (
             <div className="flex flex-col items-center py-8 gap-4">
               <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
                 <CheckCircle className="w-8 h-8 text-green-600" />
               </div>
               <div className="text-lg font-semibold text-fm-neutral-900">
-                {generatedCount} {generatedCount === 1 ? 'post' : 'posts'}{' '}
-                generated!
+                Content generation queued
               </div>
-              {generatedStrategy && (
-                <div className="text-sm text-fm-neutral-600 bg-fm-neutral-50 px-4 py-3 rounded-lg max-w-md">
-                  <span className="font-medium">Strategy:</span>{' '}
-                  {generatedStrategy}
+              <div className="text-sm text-fm-neutral-600 bg-blue-50 px-4 py-3 rounded-lg max-w-md border border-blue-200">
+                <span className="font-medium text-blue-700">Processing in background</span>
+                <span className="text-blue-600"> — the AI is generating your {mode === 'single' ? 'post' : `${mode} calendar`}. New drafts will appear in the content calendar shortly.</span>
+              </div>
+              {generatedBatchId && (
+                <div className="text-xs text-fm-neutral-400 font-mono">
+                  Batch: {generatedBatchId}
                 </div>
               )}
-              <div className="text-sm text-fm-neutral-500">
-                All items have been added as drafts to the content calendar.
-              </div>
             </div>
           )}
         </div>

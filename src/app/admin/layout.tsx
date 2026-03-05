@@ -157,7 +157,7 @@ function AdminBreadcrumbs() {
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { isAuthenticated, loading, currentUser, logout, hasPermission } = useAdminAuth();
+  const { isAuthenticated, loading, currentUser, logout, hasPermission, checkSession } = useAdminAuth();
   const [commandOpen, setCommandOpen] = useState(false);
 
   // Notification state

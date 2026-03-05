@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
     if (error) throw error;
 
     return NextResponse.json({ success: true, data });
-  } catch (err) {
+  } catch {
     return NextResponse.json(
       { success: false, error: 'Failed to fetch API keys' },
       { status: 500 }
@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
       data: { ...data, key },
       message: 'API key created. Copy the key now — it will not be shown again.',
     });
-  } catch (err) {
+  } catch {
     return NextResponse.json(
       { success: false, error: 'Failed to create API key' },
       { status: 500 }
@@ -133,7 +133,7 @@ export async function PUT(request: NextRequest) {
     });
 
     return NextResponse.json({ success: true, data });
-  } catch (err) {
+  } catch {
     return NextResponse.json(
       { success: false, error: 'Failed to update API key' },
       { status: 500 }
@@ -175,7 +175,7 @@ export async function DELETE(request: NextRequest) {
     });
 
     return NextResponse.json({ success: true });
-  } catch (err) {
+  } catch {
     return NextResponse.json(
       { success: false, error: 'Failed to delete API key' },
       { status: 500 }

@@ -29,6 +29,10 @@ const envSchema = z.object({
   // Meta Graph API (social media publishing — optional)
   META_TOKEN_SECRET: z.string().min(32).optional(),
 
+  // Inngest (durable job queue — optional for development)
+  INNGEST_EVENT_KEY: z.string().optional(),
+  INNGEST_SIGNING_KEY: z.string().optional(),
+
   // n8n webhook URLs (AI content generation — optional)
   N8N_WEBHOOK_MONTHLY_CONTENT: z.string().url().optional(),
   N8N_WEBHOOK_HOLIDAY_CONTENT: z.string().url().optional(),

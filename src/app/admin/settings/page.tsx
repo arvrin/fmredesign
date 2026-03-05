@@ -47,7 +47,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { SocialAccountsPanel } from '@/components/admin/social/SocialAccountsPanel';
 import { cn } from '@/lib/utils';
 import { PERMISSIONS } from '@/lib/admin/permissions';
-import { ALL_EVENT_TYPES } from '@/lib/events/emitter';
+import { ALL_EVENT_TYPES } from '@/lib/events/types';
 
 interface AdminSettings {
   profile: {

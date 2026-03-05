@@ -22,7 +22,8 @@ export interface AuditEntry {
 
 /**
  * Log an admin action to the audit trail.
- * Fires and forgets — never blocks the main response.
+ * Sends event to Inngest for durable processing with retries.
+ * Falls back to direct insert if Inngest is unreachable (compliance-critical).
  *
  * Callers must supply user_id and user_name directly from the
  * authenticated user object returned by requirePermission().
@@ -30,22 +31,38 @@ export interface AuditEntry {
  */
 export async function logAuditEvent(entry: Omit<AuditEntry, 'id' | 'created_at'>): Promise<void> {
   try {
-    const supabase = getSupabaseAdmin();
-    const { error } = await supabase.from('admin_audit_log').insert({
-      user_id: entry.user_id,
-      user_name: entry.user_name,
-      action: entry.action,
-      resource_type: entry.resource_type,
-      resource_id: entry.resource_id || null,
-      details: entry.details || null,
-      ip_address: entry.ip_address || null,
+    const { inngest } = await import('@/lib/inngest/client');
+    await inngest.send({
+      name: 'audit/log',
+      data: {
+        user_id: entry.user_id,
+        user_name: entry.user_name,
+        action: entry.action,
+        resource_type: entry.resource_type,
+        resource_id: entry.resource_id,
+        details: entry.details,
+        ip_address: entry.ip_address,
+      },
     });
-    if (error) {
-      console.error('Audit log insert failed:', error.message, error.details);
+  } catch {
+    // Fallback: direct insert if Inngest is unreachable (compliance-critical)
+    try {
+      const supabase = getSupabaseAdmin();
+      const { error } = await supabase.from('admin_audit_log').insert({
+        user_id: entry.user_id,
+        user_name: entry.user_name,
+        action: entry.action,
+        resource_type: entry.resource_type,
+        resource_id: entry.resource_id || null,
+        details: entry.details || null,
+        ip_address: entry.ip_address || null,
+      });
+      if (error) {
+        console.error('Audit log fallback insert failed:', error.message, error.details);
+      }
+    } catch (fallbackError) {
+      console.error('Audit log error (both Inngest and fallback failed):', fallbackError);
     }
-  } catch (error) {
-    // Never let audit logging break the main flow
-    console.error('Audit log error:', error);
   }
 }
 

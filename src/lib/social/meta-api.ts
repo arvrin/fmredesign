@@ -4,7 +4,7 @@
  * No third-party SDK — raw fetch calls only.
  */
 
-import type { MetaPageInfo, PublishResult, SocialPlatform } from './types';
+import type { MetaPageInfo, PublishResult } from './types';
 
 const GRAPH_BASE = 'https://graph.facebook.com/v21.0';
 

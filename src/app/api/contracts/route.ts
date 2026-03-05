@@ -14,7 +14,7 @@ import { createContractSchema, updateContractSchema, validateBody } from '@/lib/
 import { logAuditEvent, getClientIP } from '@/lib/admin/audit-log';
 import { transformContract } from '@/lib/admin/contract-types';
 import { notifyTeam, contractCreatedEmail, contractStatusEmail } from '@/lib/email/send';
-import { notifyClient, notifyAdmins } from '@/lib/notifications';
+import { notifyClient } from '@/lib/notifications';
 
 export async function GET(request: NextRequest) {
   const authError = await requireAdminAuth(request);

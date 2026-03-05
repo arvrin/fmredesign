@@ -1,10 +1,10 @@
 /**
  * In-app notification system.
- * Fire-and-forget helper to insert notifications into Supabase.
+ * Sends notification events to Inngest for durable processing.
  * Never throws — errors are logged silently.
  */
 
-import { getSupabaseAdmin } from '@/lib/supabase';
+// Inngest is imported dynamically to avoid bundling Node.js modules in client code
 
 // ---------------------------------------------------------------------------
 // Types
@@ -73,26 +73,27 @@ interface CreateOpts {
   metadata?: Record<string, unknown>;
 }
 
-export function createNotification(opts: CreateOpts): void {
-  // Fire-and-forget — don't await, don't throw
-  Promise.resolve().then(async () => {
-    try {
-      const supabase = getSupabaseAdmin();
-      await supabase.from('notifications').insert({
-        recipient_type: opts.recipientType,
-        recipient_id: opts.recipientId || null,
-        client_id: opts.clientId || null,
+export async function createNotification(opts: CreateOpts): Promise<void> {
+  try {
+    // Dynamic import to avoid bundling Inngest in client-side code
+    const { inngest } = await import('@/lib/inngest/client');
+    await inngest.send({
+      name: 'notification/send',
+      data: {
+        recipientType: opts.recipientType,
+        recipientId: opts.recipientId,
+        clientId: opts.clientId,
         type: opts.type,
         title: opts.title,
-        message: opts.message || '',
-        priority: opts.priority || 'normal',
-        action_url: opts.actionUrl || null,
-        metadata: opts.metadata || {},
-      });
-    } catch (err) {
-      console.error('Failed to create notification:', err);
-    }
-  });
+        message: opts.message,
+        priority: opts.priority,
+        actionUrl: opts.actionUrl,
+        metadata: opts.metadata,
+      },
+    });
+  } catch (err) {
+    console.error('Failed to send notification event:', err);
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -100,16 +101,16 @@ export function createNotification(opts: CreateOpts): void {
 // ---------------------------------------------------------------------------
 
 /** Notify all admins (recipientType=admin, no specific recipientId) */
-export function notifyAdmins(opts: Omit<CreateOpts, 'recipientType'>): void {
-  createNotification({ ...opts, recipientType: 'admin' });
+export function notifyAdmins(opts: Omit<CreateOpts, 'recipientType'>): Promise<void> {
+  return createNotification({ ...opts, recipientType: 'admin' });
 }
 
 /** Notify a specific client */
 export function notifyClient(
   clientId: string,
   opts: Omit<CreateOpts, 'recipientType' | 'clientId'>
-): void {
-  createNotification({ ...opts, recipientType: 'client', clientId });
+): Promise<void> {
+  return createNotification({ ...opts, recipientType: 'client', clientId });
 }
 
 // ---------------------------------------------------------------------------

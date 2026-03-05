@@ -1,17 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-// Mock Supabase before import
-const mockInsert = vi.fn(() => Promise.resolve({ data: null, error: null }));
-vi.mock('@/lib/supabase', () => ({
-  getSupabaseAdmin: vi.fn(() => ({
-    from: vi.fn(() => ({
-      insert: mockInsert,
-    })),
-  })),
+// Mock Inngest client (notifications now route through Inngest)
+const mockSend = vi.fn(() => Promise.resolve());
+vi.mock('@/lib/inngest/client', () => ({
+  inngest: { send: mockSend },
 }));
 
 import { transformNotification, createNotification, notifyAdmins, notifyClient } from '../notifications';
-import type { NotificationRecord } from '../notifications';
 
 describe('transformNotification', () => {
   const mockRow: Record<string, unknown> = {
@@ -76,11 +71,11 @@ describe('transformNotification', () => {
 
 describe('createNotification', () => {
   beforeEach(() => {
-    mockInsert.mockClear();
+    mockSend.mockClear();
   });
 
-  it('inserts notification into Supabase', async () => {
-    createNotification({
+  it('sends notification event to Inngest', async () => {
+    await createNotification({
       recipientType: 'admin',
       type: 'project_created',
       title: 'New Project',
@@ -89,73 +84,66 @@ describe('createNotification', () => {
       actionUrl: '/admin/projects/123',
     });
 
-    // Fire-and-forget — give microtask a chance to run
-    await new Promise((r) => setTimeout(r, 50));
-
-    expect(mockInsert).toHaveBeenCalledWith({
-      recipient_type: 'admin',
-      recipient_id: null,
-      client_id: null,
-      type: 'project_created',
-      title: 'New Project',
-      message: 'A new project was created',
-      priority: 'high',
-      action_url: '/admin/projects/123',
-      metadata: {},
+    expect(mockSend).toHaveBeenCalledWith({
+      name: 'notification/send',
+      data: expect.objectContaining({
+        recipientType: 'admin',
+        type: 'project_created',
+        title: 'New Project',
+        message: 'A new project was created',
+        priority: 'high',
+        actionUrl: '/admin/projects/123',
+      }),
     });
   });
 
   it('uses defaults for optional fields', async () => {
-    createNotification({
+    await createNotification({
       recipientType: 'client',
       type: 'general',
       title: 'Hello',
     });
 
-    await new Promise((r) => setTimeout(r, 50));
-
-    expect(mockInsert).toHaveBeenCalledWith(
-      expect.objectContaining({
-        message: '',
-        priority: 'normal',
-        action_url: null,
-        metadata: {},
-      })
-    );
+    expect(mockSend).toHaveBeenCalledWith({
+      name: 'notification/send',
+      data: expect.objectContaining({
+        recipientType: 'client',
+        type: 'general',
+        title: 'Hello',
+      }),
+    });
   });
 
-  it('does not throw on Supabase error', async () => {
-    mockInsert.mockRejectedValueOnce(new Error('DB error'));
+  it('does not throw on Inngest error', async () => {
+    mockSend.mockRejectedValueOnce(new Error('Inngest error'));
 
-    // Should not throw
-    expect(() => {
+    await expect(
       createNotification({
         recipientType: 'admin',
         type: 'general',
         title: 'Test',
-      });
-    }).not.toThrow();
-
-    await new Promise((r) => setTimeout(r, 50));
+      })
+    ).resolves.toBeUndefined();
   });
 });
 
 describe('notifyAdmins', () => {
   beforeEach(() => {
-    mockInsert.mockClear();
+    mockSend.mockClear();
   });
 
-  it('calls createNotification with recipientType=admin', async () => {
-    notifyAdmins({
+  it('sends with recipientType=admin', async () => {
+    await notifyAdmins({
       type: 'invoice_created',
       title: 'Invoice Ready',
     });
 
-    await new Promise((r) => setTimeout(r, 50));
-
-    expect(mockInsert).toHaveBeenCalledWith(
+    expect(mockSend).toHaveBeenCalledWith(
       expect.objectContaining({
-        recipient_type: 'admin',
+        name: 'notification/send',
+        data: expect.objectContaining({
+          recipientType: 'admin',
+        }),
       })
     );
   });
@@ -163,21 +151,22 @@ describe('notifyAdmins', () => {
 
 describe('notifyClient', () => {
   beforeEach(() => {
-    mockInsert.mockClear();
+    mockSend.mockClear();
   });
 
-  it('calls createNotification with recipientType=client and clientId', async () => {
-    notifyClient('client-789', {
+  it('sends with recipientType=client and clientId', async () => {
+    await notifyClient('client-789', {
       type: 'contract_sent',
       title: 'Contract Ready',
     });
 
-    await new Promise((r) => setTimeout(r, 50));
-
-    expect(mockInsert).toHaveBeenCalledWith(
+    expect(mockSend).toHaveBeenCalledWith(
       expect.objectContaining({
-        recipient_type: 'client',
-        client_id: 'client-789',
+        name: 'notification/send',
+        data: expect.objectContaining({
+          recipientType: 'client',
+          clientId: 'client-789',
+        }),
       })
     );
   });

@@ -8,7 +8,7 @@ function getNotificationEmail(): string {
 }
 
 // ---------------------------------------------------------------------------
-// Core sender — fire-and-forget, never throws
+// Core sender — routes through Inngest for durable delivery
 // ---------------------------------------------------------------------------
 
 interface SendEmailOpts {
@@ -19,17 +19,29 @@ interface SendEmailOpts {
 
 export async function sendEmail(opts: SendEmailOpts): Promise<void> {
   try {
-    const resend = getResend();
-    if (!resend) return;
-
-    await resend.emails.send({
-      from: FROM,
-      to: opts.to,
-      subject: opts.subject,
-      html: opts.html,
+    const { inngest } = await import('@/lib/inngest/client');
+    await inngest.send({
+      name: 'email/send',
+      data: {
+        to: opts.to,
+        subject: opts.subject,
+        html: opts.html,
+      },
     });
-  } catch (err) {
-    console.error('Email send failed:', err);
+  } catch {
+    // Fallback: direct send if Inngest is unreachable
+    try {
+      const resend = getResend();
+      if (!resend) return;
+      await resend.emails.send({
+        from: FROM,
+        to: opts.to,
+        subject: opts.subject,
+        html: opts.html,
+      });
+    } catch (fallbackErr) {
+      console.error('Email send failed (both Inngest and fallback):', fallbackErr);
+    }
   }
 }
 
@@ -43,12 +55,14 @@ export function notifyRecipient(to: string, subject: string, html: string): void
   sendEmail({ to, subject, html });
 }
 
+// Re-export getResend for use by Inngest email functions
+export { FROM };
+
 // ---------------------------------------------------------------------------
 // Shared styles
 // ---------------------------------------------------------------------------
 
 const BRAND_MAGENTA = '#c9325d';
-const BRAND_DARK = '#1a0a12';
 const HEADING_COLOR = '#0f0f0f';
 const TEXT_COLOR = '#404040';
 const MUTED_COLOR = '#888888';

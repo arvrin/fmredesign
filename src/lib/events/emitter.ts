@@ -1,53 +1,21 @@
 /**
  * Typed event bus for the FreakingMinds platform.
- * Allows decoupled event-driven communication between modules.
- * Subscribers are registered on import and fire asynchronously.
+ * Routes events through Inngest for durable, cross-deploy processing.
+ * The EventEmitter is kept for backward compatibility but Inngest handles fan-out.
+ *
+ * NOTE: Type definitions are in ./types.ts so they can be imported in client
+ * components without pulling in server-only dependencies.
  */
 
 import { EventEmitter } from 'events';
+import type { EventType, EventPayload } from './types';
+
+// Re-export types so existing imports from emitter.ts continue to work
+export { ALL_EVENT_TYPES } from './types';
+export type { EventType, EventPayload } from './types';
 
 // ---------------------------------------------------------------------------
-// Event type definitions
-// ---------------------------------------------------------------------------
-
-export interface EventPayload {
-  entityId: string;
-  actor: { id: string; name: string };
-  timestamp: string;
-  data?: Record<string, unknown>;
-}
-
-export const ALL_EVENT_TYPES = [
-  'proposal.sent',
-  'proposal.approved',
-  'proposal.declined',
-  'invoice.sent',
-  'invoice.paid',
-  'invoice.overdue',
-  'content.published',
-  'content.approved',
-  'content.revision_requested',
-  'contract.sent',
-  'contract.signed',
-  'contract.rejected',
-  'client.created',
-  'client.updated',
-  'project.created',
-  'project.completed',
-  'project.status_changed',
-  'document.shared',
-  'ticket.created',
-  'ticket.resolved',
-  'team.member_added',
-  'lead.created',
-  'lead.converted',
-  'lead.status_changed',
-] as const;
-
-export type EventType = (typeof ALL_EVENT_TYPES)[number];
-
-// ---------------------------------------------------------------------------
-// Singleton event bus
+// Singleton event bus (kept for backward compatibility)
 // ---------------------------------------------------------------------------
 
 class AppEventBus extends EventEmitter {
@@ -56,35 +24,43 @@ class AppEventBus extends EventEmitter {
     this.setMaxListeners(50);
   }
 
-  /**
-   * Emit a typed platform event.
-   * All subscribers receive the event asynchronously (fire-and-forget).
-   */
   emitEvent(type: EventType, payload: EventPayload): void {
-    // Emit both specific event and wildcard '*' for catch-all subscribers
     this.emit(type, type, payload);
     this.emit('*', type, payload);
   }
 
-  /**
-   * Subscribe to a specific event type.
-   */
   onEvent(type: EventType | '*', handler: (eventType: EventType, payload: EventPayload) => void): void {
     this.on(type, handler);
   }
 }
 
-// Singleton instance
 export const eventBus = new AppEventBus();
 
 /**
  * Convenience function for emitting events from API routes.
- * Fire-and-forget — never throws.
+ * Routes through Inngest for durable fan-out (notifications, audit, webhooks).
+ * Falls back to local EventEmitter if Inngest is unreachable.
  */
-export function emitEvent(type: EventType, payload: EventPayload): void {
+export async function emitEvent(type: EventType, payload: EventPayload): Promise<void> {
   try {
-    eventBus.emitEvent(type, payload);
+    // Dynamic import to avoid bundling Inngest in client-side code
+    const { inngest } = await import('@/lib/inngest/client');
+    await inngest.send({
+      name: 'platform/event',
+      data: {
+        eventType: type,
+        entityId: payload.entityId,
+        actor: payload.actor,
+        timestamp: payload.timestamp,
+        data: payload.data,
+      },
+    });
   } catch (err) {
-    console.error(`Event bus error (${type}):`, err);
+    console.error(`Inngest event failed (${type}), falling back to local emitter:`, err);
+    try {
+      eventBus.emitEvent(type, payload);
+    } catch (localErr) {
+      console.error(`Event bus fallback error (${type}):`, localErr);
+    }
   }
 }

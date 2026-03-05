@@ -31,6 +31,7 @@ export function PublishButton({
 }: PublishButtonProps) {
   const [publishing, setPublishing] = useState(false);
   const [error, setError] = useState(publishError || '');
+  const [queued, setQueued] = useState(false);
 
   // Only render for supported platforms
   if (platform !== 'instagram' && platform !== 'facebook') {
@@ -76,7 +77,9 @@ export function PublishButton({
       const result = await res.json();
 
       if (result.success) {
-        onPublished();
+        setQueued(true);
+        // Refresh parent after a short delay to allow Inngest to process
+        setTimeout(() => onPublished(), 3000);
       } else {
         setError(result.error || 'Publishing failed');
       }
@@ -86,6 +89,17 @@ export function PublishButton({
       setPublishing(false);
     }
   };
+
+  if (queued) {
+    return (
+      <div className="flex items-center gap-2 text-blue-700 bg-blue-50 px-3 py-2 rounded-lg border border-blue-200">
+        <Loader2 className="h-4 w-4 animate-spin shrink-0" />
+        <span className="text-sm font-medium">
+          Publishing to {platform}... This page will refresh shortly.
+        </span>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-3">
@@ -99,7 +113,7 @@ export function PublishButton({
         {publishing ? (
           <>
             <Loader2 className="h-4 w-4 animate-spin" />
-            Publishing...
+            Queuing...
           </>
         ) : (
           <>
@@ -118,3 +132,4 @@ export function PublishButton({
     </div>
   );
 }
+

@@ -25,6 +25,7 @@ FreakingMinds is a digital marketing agency platform built with Next.js 15 and T
 - **PDF**: jsPDF + jspdf-autotable (invoice/proposal PDF generation)
 - **Email**: Resend 6.x (transactional email — optional, graceful degradation if key not set)
 - **Social**: Meta Graph API v21.0 (Facebook/Instagram publishing — optional)
+- **Background Jobs**: Inngest 3.x (durable job queue — retries, step functions, observability)
 - **Auth**: bcryptjs (password hashing), HMAC-SHA256 (session signing)
 - **Legacy**: Google Sheets API (leads/discovery forms only)
 
@@ -653,14 +654,14 @@ Automated web scraping for discovering potential contacts/leads.
 ## Notification & Email System
 
 ### In-App Notifications (`src/lib/notifications.ts`)
-- `createNotification()` — create a notification record in `notifications` table
+- `createNotification()` — sends `notification/send` event to Inngest
 - `notifyAdmins()` — notify all admin users
 - `notifyClient(clientId, options)` — notify a specific client
-- Fire-and-forget pattern (never throws, logs errors silently)
+- Routed through Inngest for durable delivery with retries
 - 17 notification types: contract, project, content, invoice, ticket, document, proposal, team-member, general
 
 ### Email Notifications (`src/lib/email/`)
-- `send.ts` — core email sender using Resend API
+- `send.ts` — routes through Inngest; falls back to direct Resend if Inngest unreachable
 - `resend.ts` — Resend client initialization
 - `notifyTeam()` — send to team email (`NOTIFICATION_EMAIL`)
 - `notifyRecipient()` — send to specific email address
@@ -670,6 +671,59 @@ Automated web scraping for discovering potential contacts/leads.
 ### Environment
 - `RESEND_API_KEY` (optional) — Resend API key for sending emails
 - `NOTIFICATION_EMAIL` (optional) — team email address for notifications
+
+---
+
+## Inngest — Durable Background Jobs
+
+All fire-and-forget async patterns (notifications, emails, audit logs, webhooks, social publishing, AI generation) are routed through [Inngest](https://www.inngest.com) for durable execution with retries and observability.
+
+### Architecture
+```
+src/lib/inngest/
+  client.ts              # Inngest client singleton (typed event schemas)
+  events.ts              # Event type definitions (TypeScript)
+  index.ts               # Function registry (allFunctions array for serve())
+  functions/
+    audit.ts             # audit/log — 5 retries (compliance-critical)
+    notifications.ts     # notification/send + notification/send-bulk (batch of 10)
+    emails.ts            # email/send (throttle 10/s) + email/send-template (2-step)
+    webhooks.ts          # webhook/deliver (fan-out per webhook, independent retries)
+    social.ts            # social/publish (5-step: fetch → publish → update DB → audit)
+    ai-content.ts        # ai/generate-content (3-step: LLM → insert → audit)
+    platform-events.ts   # platform/event (replaces EventEmitter fan-out)
+
+src/app/api/inngest/
+  route.ts               # serve() handler — GET/POST/PUT
+```
+
+### How It Works
+1. Existing functions (`createNotification`, `sendEmail`, `logAuditEvent`, `emitEvent`) use **dynamic `import()`** to send Inngest events — avoids bundling Node.js-only code in client components
+2. Inngest receives events and invokes functions via `POST /api/inngest`
+3. Each function uses `step.run()` for independently retried, checkpointed operations
+4. On Vercel free plan (10s timeout), each step gets its own 10s window
+
+### Adapter Pattern (zero call-site changes)
+| Adapter | Event | Fallback |
+|---------|-------|----------|
+| `logAuditEvent()` | `audit/log` | Direct DB insert if Inngest unreachable |
+| `createNotification()` | `notification/send` | Logs error only |
+| `sendEmail()` | `email/send` | Direct Resend call if Inngest unreachable |
+| `emitEvent()` | `platform/event` | Local EventEmitter if Inngest unreachable |
+| `deliverToSubscribers()` | `webhook/deliver` | Direct HTTP delivery if Inngest unreachable |
+
+### Async APIs
+These endpoints return `{ status: 'queued' }` immediately — processing happens in Inngest:
+- `POST /api/admin/social/publish` → `social/publish` function (5-step)
+- `POST /api/admin/content/generate` → `ai/generate-content` function (3-step)
+
+### Environment Variables
+- `INNGEST_EVENT_KEY` (optional for dev) — Inngest API key for production
+- `INNGEST_SIGNING_KEY` (optional for dev) — Webhook signature verification for production
+- **Local dev**: Run `npx inngest-cli@latest dev` — no keys needed, dashboard at http://localhost:8288
+
+### Important: Dynamic Imports
+Inngest uses `node:async_hooks` which cannot be bundled for client-side. All adapter files use `import('@/lib/inngest/client')` (dynamic import) instead of top-level `import`. Event type constants are in `src/lib/events/types.ts` (client-safe) — import from there in client components, NOT from `emitter.ts`.
 
 ---
 
@@ -924,6 +978,10 @@ NOTIFICATION_EMAIL=team@freakingminds.com
 
 # Social media publishing (optional — Meta Graph API)
 META_TOKEN_SECRET=minimum-32-character-secret-key-here
+
+# Inngest (durable background jobs — optional for local dev)
+INNGEST_EVENT_KEY=...          # From inngest.com dashboard (production only)
+INNGEST_SIGNING_KEY=...        # From inngest.com dashboard (production only)
 
 # Google Sheets (legacy — leads/discovery only)
 GOOGLE_SHEETS_PRIVATE_KEY=...

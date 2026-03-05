@@ -5,7 +5,6 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
-import type { ProjectInput, Project } from '@/lib/admin/project-types';
 import { ProjectUtils } from '@/lib/admin/project-types';
 import { requireAdminAuth, requirePermission } from '@/lib/admin-auth-middleware';
 import { createProjectSchema, updateProjectSchema, validateBody } from '@/lib/validations/schemas';

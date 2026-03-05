@@ -9,8 +9,6 @@ type WebhookHandler = (eventType: string, payload: Record<string, unknown>) => P
 
 const handlers: Record<string, WebhookHandler> = {
   stripe: handleStripeEvent,
-  github: handleGitHubEvent,
-  generic: handleGenericEvent,
 };
 
 /**
@@ -87,10 +85,3 @@ async function handleStripeEvent(eventType: string, payload: Record<string, unkn
   }
 }
 
-async function handleGitHubEvent(_eventType: string, _payload: Record<string, unknown>): Promise<void> {
-  // Placeholder for GitHub webhook handling (e.g., deployment notifications)
-}
-
-async function handleGenericEvent(_eventType: string, _payload: Record<string, unknown>): Promise<void> {
-  // Generic webhooks are logged but not processed further
-}
