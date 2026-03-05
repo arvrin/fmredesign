@@ -8,6 +8,14 @@ const nextConfig: NextConfig = {
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     minimumCacheTTL: 60 * 60 * 24 * 30, // 30 days
   },
+  async redirects() {
+    return [
+      // Legacy URLs from previous website (Google-indexed)
+      { source: '/career', destination: '/creativeminds', permanent: true },
+      { source: '/connect', destination: '/contact', permanent: true },
+      { source: '/know-us', destination: '/about', permanent: true },
+    ];
+  },
 };
 
 export default nextConfig;
