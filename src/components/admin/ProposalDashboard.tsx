@@ -190,7 +190,12 @@ export function ProposalDashboard({ onCreateNew, onEditProposal }: ProposalDashb
     }
   };
 
-  const formatCurrency = (amount: number) => `₹${amount.toLocaleString('en-IN')}`;
+  const formatCurrency = (amount: number, currency?: string) => {
+    const sym: Record<string, string> = { INR: 'Rs.', USD: '$', GBP: '\u00A3', AED: 'AED ', EUR: '\u20AC' };
+    const loc: Record<string, string> = { INR: 'en-IN', USD: 'en-US', GBP: 'en-GB', AED: 'en-AE', EUR: 'de-DE' };
+    const c = currency || 'INR';
+    return `${sym[c] || 'Rs.'}${amount.toLocaleString(loc[c] || 'en-IN')}`;
+  };
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -335,7 +340,7 @@ export function ProposalDashboard({ onCreateNew, onEditProposal }: ProposalDashb
                       </span>
                       <span className="flex items-center gap-1">
                         <DollarSign className="w-4 h-4" />
-                        {formatCurrency(proposal.investment.total)}
+                        {formatCurrency(proposal.investment.total, proposal.investment?.currency)}
                       </span>
                       {proposal.validUntil && (
                         <span className="flex items-center gap-1">

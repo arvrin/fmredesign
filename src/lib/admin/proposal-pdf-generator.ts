@@ -1,564 +1,727 @@
 /**
- * Proposal PDF Generator - FreakingMinds Brand Aligned
- * Professional proposal templates with dynamic content and branding
+ * Proposal PDF Generator — V2 Brand Design
+ *
+ * Matches the invoice PDF design language from pdf-simple.ts:
+ * Two-tone header (deep purple + magenta accent), branded tables,
+ * magenta total ribbon, multi-currency, proper client data.
+ *
+ * jsPDF constraints: no CSS gradients — achieved via colour fills,
+ * lines, typography hierarchy, and spatial composition.
  */
 
 import jsPDF from 'jspdf';
-import { Proposal, ServicePackage } from './proposal-types';
+import autoTable from 'jspdf-autotable';
+import type { Proposal, ServicePackage } from './proposal-types';
+import type { InvoiceClient } from './types';
+import {
+  DEFAULT_COMPANY_INFO,
+  CURRENCY_OPTIONS,
+  InvoiceUtils,
+  type InvoiceCurrency,
+} from './types';
+
+// ---------------------------------------------------------------------------
+// Brand constants (same as pdf-simple.ts)
+// ---------------------------------------------------------------------------
+
+const PURPLE: [number, number, number] = [74, 25, 66];
+const MAGENTA: [number, number, number] = [201, 50, 93];
+const DARK: [number, number, number] = [15, 15, 15];
+const GREY: [number, number, number] = [100, 100, 100];
+const LIGHT_GREY: [number, number, number] = [229, 229, 229];
+const MAGENTA_TINT: [number, number, number] = [252, 245, 248];
+const WHITE: [number, number, number] = [255, 255, 255];
+
+const BLUE: [number, number, number] = [30, 64, 175];
+const GREEN: [number, number, number] = [5, 150, 105];
+
+const PAGE_W = 210;
+const PAGE_H = 297;
+const MARGIN_L = 20;
+const MARGIN_R = 20;
+const CONTENT_W = PAGE_W - MARGIN_L - MARGIN_R;
+
+// ---------------------------------------------------------------------------
+// Generator
+// ---------------------------------------------------------------------------
 
 export class ProposalPDFGenerator {
-  private doc: jsPDF;
-  private pageHeight: number;
-  private pageWidth: number;
-  private currentY: number;
-  private leftMargin: number;
-  private rightMargin: number;
-  private brandColors: any;
+  private doc!: jsPDF;
+  private currentY = 0;
+  private logoDataUri: string | null = null;
 
   constructor() {
-    this.doc = new jsPDF('p', 'pt', 'a4');
-    this.pageHeight = this.doc.internal.pageSize.height;
-    this.pageWidth = this.doc.internal.pageSize.width;
-    this.currentY = 60;
-    this.leftMargin = 60;
-    this.rightMargin = 60;
-    
-    // FreakingMinds Brand Colors (matching your website)
-    this.brandColors = {
-      primary: '#B3296A', // fm-magenta-600
-      secondary: '#FF855D', // fm-orange-400
-      accent: '#1E40AF', // fm-blue-700
-      dark: '#1F2937', // fm-neutral-800
-      light: '#F9FAFB', // fm-neutral-50
-      success: '#059669', // Green
-      text: '#374151', // fm-neutral-700
-      textLight: '#6B7280' // fm-neutral-500
-    };
+    this.doc = new jsPDF('portrait', 'mm', 'a4');
+    this.loadLogo();
   }
 
-  private hexToRgb(hex: string): { r: number; g: number; b: number } {
-    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result ? {
-      r: parseInt(result[1], 16),
-      g: parseInt(result[2], 16),
-      b: parseInt(result[3], 16)
-    } : { r: 0, g: 0, b: 0 };
+  private async loadLogo(): Promise<void> {
+    try {
+      const response = await fetch('/logo.png');
+      const blob = await response.blob();
+      const reader = new FileReader();
+      reader.onload = () => {
+        this.logoDataUri = reader.result as string;
+      };
+      reader.readAsDataURL(blob);
+    } catch {
+      this.logoDataUri = null;
+    }
   }
 
-  private setColor(color: string): void {
-    const rgb = this.hexToRgb(color);
-    this.doc.setTextColor(rgb.r, rgb.g, rgb.b);
+  // ---- Currency helpers ---------------------------------------------------
+
+  private getCurrency(proposal: Proposal): InvoiceCurrency {
+    return proposal.investment?.currency || 'INR';
   }
 
-  private setFillColor(color: string): void {
-    const rgb = this.hexToRgb(color);
-    this.doc.setFillColor(rgb.r, rgb.g, rgb.b);
+  private getCurrencySymbol(proposal: Proposal): string {
+    const currency = this.getCurrency(proposal);
+    if (currency === 'INR') return 'Rs.';
+    return InvoiceUtils.getCurrencySymbol(currency);
   }
 
-  private checkPageBreak(additionalHeight: number = 50): void {
-    if (this.currentY + additionalHeight > this.pageHeight - 80) {
+  private formatAmount(amount: number, proposal: Proposal): string {
+    const currency = this.getCurrency(proposal);
+    const sym =
+      currency === 'INR'
+        ? 'Rs.'
+        : (CURRENCY_OPTIONS.find((c) => c.value === currency) || CURRENCY_OPTIONS[0]).symbol;
+    const locale = (CURRENCY_OPTIONS.find((c) => c.value === currency) || CURRENCY_OPTIONS[0])
+      .locale;
+    return `${sym}${amount.toLocaleString(locale)}`;
+  }
+
+  private formatDate(dateString: string): string {
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-IN', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      });
+    } catch {
+      return dateString;
+    }
+  }
+
+  // ---- Page break helper --------------------------------------------------
+
+  private checkPageBreak(needed: number = 20): void {
+    if (this.currentY + needed > PAGE_H - 30) {
       this.doc.addPage();
-      this.currentY = 60;
-      this.addPageNumber();
+      this.currentY = 20;
     }
   }
 
-  private addPageNumber(): void {
-    const pageNum = this.doc.getCurrentPageInfo().pageNumber;
-    if (pageNum > 1) {
-      this.doc.setFont('helvetica', 'normal');
-      this.doc.setFontSize(10);
-      this.setColor(this.brandColors.textLight);
-      this.doc.text(
-        `Page ${pageNum}`,
-        this.pageWidth - 80,
-        this.pageHeight - 30
-      );
+  // ---- Public API ---------------------------------------------------------
+
+  async generateProposal(
+    proposal: Proposal,
+    clients?: InvoiceClient[],
+  ): Promise<string> {
+    this.doc = new jsPDF('portrait', 'mm', 'a4');
+
+    if (!this.logoDataUri) {
+      await this.loadLogo();
+      await new Promise((r) => setTimeout(r, 150));
     }
+
+    this.addCoverHeader(proposal);
+    this.addClientInfo(proposal, clients);
+    this.addExecutiveSummary(proposal);
+    this.addProblemStatement(proposal);
+    this.addProposedSolution(proposal);
+    this.addServiceTable(proposal);
+    this.addInvestmentSummary(proposal);
+    this.addTimeline(proposal);
+    this.addWhyFreakingMinds(proposal);
+    this.addNextSteps(proposal);
+    this.addTerms(proposal);
+    this.addFooterAllPages(proposal);
+
+    return this.doc.output('datauristring');
   }
 
-  private addBrandHeader(proposal: Proposal): void {
-    // Background gradient effect
-    this.setFillColor(this.brandColors.light);
-    this.doc.rect(0, 0, this.pageWidth, 120, 'F');
-    
-    // FreakingMinds Logo Area
+  async downloadProposal(
+    proposal: Proposal,
+    clients?: InvoiceClient[],
+  ): Promise<void> {
+    await this.generateProposal(proposal, clients);
+
+    const clientName =
+      proposal.client.prospectInfo?.company ||
+      proposal.client.prospectInfo?.name ||
+      'Client';
+    const num = proposal.proposalNumber.replace(/[/\\]/g, '-');
+    const brand = clientName.replace(/[^a-zA-Z0-9 ]/g, '').replace(/\s+/g, '-');
+    this.doc.save(`${num}-${brand}.pdf`);
+  }
+
+  // ---- 1. Cover Page Header -----------------------------------------------
+
+  private addCoverHeader(proposal: Proposal): void {
+    // Deep purple band
+    this.doc.setFillColor(...PURPLE);
+    this.doc.rect(0, 0, PAGE_W, 12, 'F');
+
+    // Thin magenta accent
+    this.doc.setFillColor(...MAGENTA);
+    this.doc.rect(0, 12, PAGE_W, 2, 'F');
+
+    // Logo
+    const logoX = MARGIN_L;
+    const logoY = 20;
+    const logoW = 28;
+    const logoH = 17;
+
+    if (this.logoDataUri) {
+      try {
+        this.doc.setFillColor(...WHITE);
+        this.doc.roundedRect(logoX - 1, logoY - 1, logoW + 2, logoH + 2, 2, 2, 'F');
+        this.doc.addImage(this.logoDataUri, 'PNG', logoX, logoY, logoW, logoH, undefined, 'FAST');
+      } catch {
+        this.addFallbackLogo(logoX, logoY, logoW, logoH);
+      }
+    } else {
+      this.addFallbackLogo(logoX, logoY, logoW, logoH);
+    }
+
+    // Company name
+    const textX = logoX + logoW + 6;
     this.doc.setFont('helvetica', 'bold');
-    this.doc.setFontSize(28);
-    this.setColor(this.brandColors.primary);
-    this.doc.text('FREAKING MINDS', this.leftMargin, 50);
-    
+    this.doc.setFontSize(22);
+    this.doc.setTextColor(...DARK);
+    this.doc.text('FREAKING MINDS', textX, 28);
+
+    // Tagline
     this.doc.setFont('helvetica', 'normal');
-    this.doc.setFontSize(12);
-    this.setColor(this.brandColors.textLight);
-    this.doc.text('Creative Marketing Agency', this.leftMargin, 70);
-    
-    // Proposal Title and Number
+    this.doc.setFontSize(8);
+    this.doc.setTextColor(...MAGENTA);
+    this.doc.text('C R E A T I V E   M A R K E T I N G   A G E N C Y', textX, 34);
+
+    // Right side: proposal number + date
+    const rightX = PAGE_W - MARGIN_R;
+
     this.doc.setFont('helvetica', 'bold');
-    this.doc.setFontSize(24);
-    this.setColor(this.brandColors.dark);
-    this.doc.text('MARKETING PROPOSAL', this.pageWidth - 300, 45, { align: 'right' });
-    
-    this.doc.setFont('helvetica', 'normal');
+    this.doc.setFontSize(20);
+    this.doc.setTextColor(...DARK);
+    this.doc.text('PROPOSAL', rightX, 24, { align: 'right' });
+
     this.doc.setFontSize(14);
-    this.setColor(this.brandColors.text);
-    this.doc.text(`Proposal #${proposal.proposalNumber}`, this.pageWidth - 300, 65, { align: 'right' });
-    this.doc.text(`Date: ${new Date().toLocaleDateString('en-IN')}`, this.pageWidth - 300, 85, { align: 'right' });
+    this.doc.setTextColor(...MAGENTA);
+    this.doc.text(`#${proposal.proposalNumber}`, rightX, 31, { align: 'right' });
+
+    this.doc.setFont('helvetica', 'normal');
+    this.doc.setFontSize(9);
+    this.doc.setTextColor(...GREY);
+    this.doc.text(this.formatDate(proposal.createdAt || new Date().toISOString()), rightX, 37, {
+      align: 'right',
+    });
 
     // Decorative line
-    this.setFillColor(this.brandColors.primary);
-    this.doc.rect(this.leftMargin, 100, this.pageWidth - 120, 3, 'F');
-    
-    this.currentY = 140;
+    this.doc.setDrawColor(...MAGENTA);
+    this.doc.setLineWidth(0.4);
+    this.doc.line(MARGIN_L, 44, PAGE_W - MARGIN_R, 44);
+
+    this.currentY = 52;
   }
 
-  private addClientInfo(proposal: Proposal): void {
-    this.checkPageBreak(120);
-    
-    // Section Header
-    this.addSectionHeader('Prepared For');
-    
+  private addFallbackLogo(x: number, y: number, w: number, h: number): void {
+    this.doc.setFillColor(...PURPLE);
+    this.doc.roundedRect(x, y, w, h, 2, 2, 'F');
+    this.doc.setTextColor(...WHITE);
+    this.doc.setFontSize(14);
+    this.doc.setFont('helvetica', 'bold');
+    this.doc.text('FM', x + w / 2, y + h / 2 + 2, { align: 'center' });
+  }
+
+  // ---- 2. Client Info -----------------------------------------------------
+
+  private addClientInfo(proposal: Proposal, clients?: InvoiceClient[]): void {
+    // "PREPARED FOR" label
+    this.doc.setFont('helvetica', 'bold');
+    this.doc.setFontSize(8);
+    this.doc.setTextColor(...MAGENTA);
+    this.doc.text('P R E P A R E D   F O R', MARGIN_L, this.currentY);
+
+    this.doc.setDrawColor(...MAGENTA);
+    this.doc.setLineWidth(0.5);
+    this.doc.line(MARGIN_L, this.currentY + 1.5, MARGIN_L + 35, this.currentY + 1.5);
+
+    this.currentY += 7;
+
     let clientName = '';
     let clientEmail = '';
     let clientCompany = '';
-    
-    if (proposal.client.isExisting && proposal.client.clientId) {
-      // Would need to fetch client data here
-      clientName = 'Existing Client';
-      clientEmail = 'client@example.com';
-      clientCompany = 'Client Company';
-    } else if (proposal.client.prospectInfo) {
-      clientName = proposal.client.prospectInfo.name;
-      clientEmail = proposal.client.prospectInfo.email;
-      clientCompany = proposal.client.prospectInfo.company;
+    let clientIndustry = '';
+
+    if (proposal.client.isExisting && proposal.client.clientId && clients) {
+      const client = clients.find((c) => c.id === proposal.client.clientId);
+      if (client) {
+        clientCompany = client.name;
+        clientName = client.name;
+        clientEmail = client.email || '';
+      }
     }
 
-    this.doc.setFont('helvetica', 'bold');
-    this.doc.setFontSize(16);
-    this.setColor(this.brandColors.dark);
-    this.doc.text(clientCompany, this.leftMargin, this.currentY);
-    this.currentY += 25;
+    if (!clientCompany && proposal.client.prospectInfo) {
+      const info = proposal.client.prospectInfo;
+      clientCompany = info.company;
+      clientName = info.name;
+      clientEmail = info.email;
+      clientIndustry = info.industry;
+    }
 
-    this.doc.setFont('helvetica', 'normal');
+    // Company name
+    this.doc.setFont('helvetica', 'bold');
     this.doc.setFontSize(12);
-    this.setColor(this.brandColors.text);
-    this.doc.text(clientName, this.leftMargin, this.currentY);
-    this.currentY += 20;
-    this.doc.text(clientEmail, this.leftMargin, this.currentY);
-    this.currentY += 35;
+    this.doc.setTextColor(...DARK);
+    this.doc.text(clientCompany || 'Client', MARGIN_L, this.currentY);
+    this.currentY += 5;
+
+    // Contact details
+    this.doc.setFont('helvetica', 'normal');
+    this.doc.setFontSize(9);
+    this.doc.setTextColor(...GREY);
+    if (clientName && clientName !== clientCompany) {
+      this.doc.text(clientName, MARGIN_L, this.currentY);
+      this.currentY += 4;
+    }
+    if (clientEmail) {
+      this.doc.text(clientEmail, MARGIN_L, this.currentY);
+      this.currentY += 4;
+    }
+    if (clientIndustry) {
+      this.doc.text(`Industry: ${clientIndustry}`, MARGIN_L, this.currentY);
+      this.currentY += 4;
+    }
+
+    // Right side: validity
+    const rightX = PAGE_W - MARGIN_R;
+    this.doc.setFont('helvetica', 'bold');
+    this.doc.setFontSize(8);
+    this.doc.setTextColor(...MAGENTA);
+    this.doc.text('V A L I D   U N T I L', rightX - 50, this.currentY - 12);
+    this.doc.setFont('helvetica', 'normal');
+    this.doc.setFontSize(11);
+    this.doc.setTextColor(...DARK);
+    this.doc.text(this.formatDate(proposal.validUntil), rightX - 50, this.currentY - 7);
+
+    // Separator
+    this.currentY += 4;
+    this.doc.setDrawColor(...LIGHT_GREY);
+    this.doc.setLineWidth(0.3);
+    this.doc.line(MARGIN_L, this.currentY, PAGE_W - MARGIN_R, this.currentY);
+
+    this.currentY += 8;
   }
 
-  private addSectionHeader(title: string): void {
-    this.checkPageBreak(60);
-    
-    // Background for section header
-    this.setFillColor(this.brandColors.primary);
-    this.doc.rect(this.leftMargin - 10, this.currentY - 25, this.pageWidth - 100, 35, 'F');
-    
-    this.doc.setFont('helvetica', 'bold');
-    this.doc.setFontSize(16);
-    this.doc.setTextColor(255, 255, 255); // White text
-    this.doc.text(title, this.leftMargin, this.currentY - 5);
-    
-    this.currentY += 25;
-  }
+  // ---- 3. Executive Summary -----------------------------------------------
 
   private addExecutiveSummary(proposal: Proposal): void {
     if (!proposal.executiveSummary) return;
-    
     this.addSectionHeader('Executive Summary');
-    
-    this.doc.setFont('helvetica', 'normal');
-    this.doc.setFontSize(11);
-    this.setColor(this.brandColors.text);
-    
-    const lines = this.doc.splitTextToSize(
-      proposal.executiveSummary,
-      this.pageWidth - 120
-    );
-    
-    lines.forEach((line: string) => {
-      this.checkPageBreak();
-      this.doc.text(line, this.leftMargin, this.currentY);
-      this.currentY += 15;
-    });
-    
-    this.currentY += 20;
+    this.addBodyText(proposal.executiveSummary);
   }
+
+  // ---- 4. Problem Statement -----------------------------------------------
 
   private addProblemStatement(proposal: Proposal): void {
     if (!proposal.problemStatement) return;
-    
     this.addSectionHeader('Current Challenges & Opportunities');
-    
-    // Add icon-like bullet points
-    this.doc.setFont('helvetica', 'normal');
-    this.doc.setFontSize(11);
-    this.setColor(this.brandColors.text);
-    
-    const lines = this.doc.splitTextToSize(
-      proposal.problemStatement,
-      this.pageWidth - 140
-    );
-    
-    lines.forEach((line: string) => {
-      this.checkPageBreak();
-      
-      // Add bullet point
-      this.setFillColor(this.brandColors.primary);
-      this.doc.circle(this.leftMargin + 5, this.currentY - 5, 3, 'F');
-      
-      this.doc.text(line, this.leftMargin + 20, this.currentY);
-      this.currentY += 15;
+
+    const points = proposal.problemStatement.split('\n').filter((l) => l.trim());
+    points.forEach((point) => {
+      this.checkPageBreak(8);
+      // Magenta bullet circle
+      this.doc.setFillColor(...MAGENTA);
+      this.doc.circle(MARGIN_L + 3, this.currentY - 1.2, 1.5, 'F');
+
+      this.doc.setFont('helvetica', 'normal');
+      this.doc.setFontSize(9.5);
+      this.doc.setTextColor(...DARK);
+      const lines = this.doc.splitTextToSize(point.replace(/^[•\-\*]\s*/, ''), CONTENT_W - 12);
+      this.doc.text(lines, MARGIN_L + 8, this.currentY);
+      this.currentY += lines.length * 4.5 + 2;
     });
-    
-    this.currentY += 20;
+
+    this.currentY += 4;
   }
+
+  // ---- 5. Proposed Solution -----------------------------------------------
 
   private addProposedSolution(proposal: Proposal): void {
+    if (!proposal.proposedSolution) return;
     this.addSectionHeader('Our Strategic Solution');
-    
-    if (proposal.proposedSolution) {
-      this.doc.setFont('helvetica', 'normal');
-      this.doc.setFontSize(11);
-      this.setColor(this.brandColors.text);
-      
-      const lines = this.doc.splitTextToSize(
-        proposal.proposedSolution,
-        this.pageWidth - 120
+    this.addBodyText(proposal.proposedSolution);
+  }
+
+  // ---- 6. Service Packages Table ------------------------------------------
+
+  private addServiceTable(proposal: Proposal): void {
+    const packages = proposal.servicePackages;
+    if (!packages || packages.length === 0) return;
+
+    this.checkPageBreak(30);
+    this.addSectionHeader('Service Packages');
+
+    const sym = this.getCurrencySymbol(proposal);
+
+    const headers = ['#', 'Service', 'Duration', `Price (${sym})`];
+
+    const data = packages.map((pkg: ServicePackage, idx: number) => {
+      const pkgInvestment = proposal.investment?.packages?.find(
+        (p) => p.packageId === pkg.id,
       );
-      
-      lines.forEach((line: string) => {
-        this.checkPageBreak();
-        this.doc.text(line, this.leftMargin, this.currentY);
-        this.currentY += 15;
+      const price = pkgInvestment?.price ?? pkg.basePrice;
+      const duration = pkg.duration
+        ? `${pkg.duration} ${pkg.billingType === 'monthly' ? 'months' : 'hours'}`
+        : pkg.billingType === 'project'
+          ? 'One-time'
+          : 'Ongoing';
+
+      return [
+        (idx + 1).toString(),
+        `${pkg.name}\n${pkg.description}`,
+        duration,
+        this.formatAmount(price, proposal),
+      ];
+    });
+
+    // Custom services
+    if (proposal.customServices && proposal.customServices.length > 0) {
+      proposal.customServices.forEach((svc, idx) => {
+        data.push([
+          (packages.length + idx + 1).toString(),
+          `${svc.name}\n${svc.description}`,
+          svc.timeline || 'As agreed',
+          this.formatAmount(svc.price, proposal),
+        ]);
       });
-      
-      this.currentY += 20;
     }
 
-    // Add service packages with enhanced formatting
-    proposal.servicePackages.forEach((pkg, index) => {
-      this.addServicePackage(pkg, index + 1);
+    autoTable(this.doc, {
+      head: [headers],
+      body: data,
+      startY: this.currentY,
+      margin: { left: MARGIN_L, right: MARGIN_R },
+      styles: {
+        fontSize: 9,
+        cellPadding: 3.5,
+        textColor: DARK,
+        lineColor: LIGHT_GREY,
+        lineWidth: 0.3,
+      },
+      headStyles: {
+        fillColor: PURPLE,
+        textColor: WHITE,
+        fontStyle: 'bold',
+        fontSize: 9,
+      },
+      columnStyles: {
+        0: { cellWidth: 10, halign: 'center' },
+        1: { cellWidth: 100 },
+        2: { cellWidth: 28, halign: 'center' },
+        3: { cellWidth: 32, halign: 'right', fontStyle: 'bold' },
+      },
+      alternateRowStyles: {
+        fillColor: MAGENTA_TINT,
+      },
+      // Magenta left accent border
+      didDrawCell: (cellData) => {
+        if (cellData.section === 'body' && cellData.column.index === 0) {
+          this.doc.setFillColor(...MAGENTA);
+          this.doc.rect(cellData.cell.x, cellData.cell.y, 0.8, cellData.cell.height, 'F');
+        }
+      },
+      didDrawPage: (pageData) => {
+        this.currentY = pageData.cursor?.y || this.currentY + 40;
+      },
     });
+
+    this.currentY += 6;
   }
 
-  private addServicePackage(pkg: ServicePackage, index: number): void {
-    this.checkPageBreak(120);
-    
-    // Package header with colored background
-    this.setFillColor(this.brandColors.light);
-    this.doc.rect(this.leftMargin - 10, this.currentY - 20, this.pageWidth - 100, 40, 'F');
-    
-    // Package number badge
-    this.setFillColor(this.brandColors.primary);
-    this.doc.circle(this.leftMargin + 15, this.currentY - 5, 12, 'F');
-    this.doc.setFont('helvetica', 'bold');
-    this.doc.setFontSize(12);
-    this.doc.setTextColor(255, 255, 255);
-    this.doc.text(index.toString(), this.leftMargin + 12, this.currentY - 1);
-    
-    // Package name
-    this.doc.setFont('helvetica', 'bold');
-    this.doc.setFontSize(14);
-    this.setColor(this.brandColors.dark);
-    this.doc.text(pkg.name, this.leftMargin + 35, this.currentY - 5);
-    
-    // Package price
-    this.doc.setFont('helvetica', 'bold');
-    this.doc.setFontSize(12);
-    this.setColor(this.brandColors.primary);
-    const priceText = `₹${pkg.basePrice.toLocaleString('en-IN')}${pkg.billingType === 'monthly' ? '/month' : ''}`;
-    this.doc.text(priceText, this.pageWidth - 120, this.currentY - 5, { align: 'right' });
-    
-    this.currentY += 25;
-    
-    // Package description
-    this.doc.setFont('helvetica', 'normal');
-    this.doc.setFontSize(10);
-    this.setColor(this.brandColors.text);
-    const descLines = this.doc.splitTextToSize(pkg.description, this.pageWidth - 120);
-    descLines.forEach((line: string) => {
-      this.checkPageBreak();
-      this.doc.text(line, this.leftMargin, this.currentY);
-      this.currentY += 12;
-    });
-    
-    this.currentY += 10;
-    
-    // Deliverables
-    this.doc.setFont('helvetica', 'bold');
-    this.doc.setFontSize(10);
-    this.setColor(this.brandColors.dark);
-    this.doc.text('Key Deliverables:', this.leftMargin, this.currentY);
-    this.currentY += 15;
-    
-    pkg.deliverables.forEach(deliverable => {
-      this.checkPageBreak();
-      
-      // Check mark
-      this.setColor(this.brandColors.success);
-      this.doc.text('✓', this.leftMargin + 10, this.currentY);
-      
-      this.doc.setFont('helvetica', 'normal');
-      this.doc.setFontSize(9);
-      this.setColor(this.brandColors.text);
-      this.doc.text(deliverable, this.leftMargin + 25, this.currentY);
-      this.currentY += 12;
-    });
-    
-    this.currentY += 20;
-  }
+  // ---- 7. Investment Summary ----------------------------------------------
 
   private addInvestmentSummary(proposal: Proposal): void {
-    this.addSectionHeader('Investment Summary');
-    
-    // Investment table background
-    this.setFillColor(this.brandColors.light);
-    this.doc.rect(this.leftMargin - 10, this.currentY - 10, this.pageWidth - 100, 120, 'F');
-    
-    this.currentY += 10;
-    
-    // Table headers
-    this.doc.setFont('helvetica', 'bold');
-    this.doc.setFontSize(11);
-    this.setColor(this.brandColors.dark);
-    this.doc.text('Service Package', this.leftMargin, this.currentY);
-    this.doc.text('Investment', this.pageWidth - 150, this.currentY, { align: 'right' });
-    
-    this.currentY += 20;
-    
-    // Line under headers
-    this.setFillColor(this.brandColors.primary);
-    this.doc.rect(this.leftMargin - 5, this.currentY - 10, this.pageWidth - 110, 1, 'F');
-    
-    // Package prices
+    if (!proposal.investment) return;
+
+    this.checkPageBreak(40);
+
+    const rightEdge = PAGE_W - MARGIN_R;
+    const labelX = 130;
+
+    // Subtotal
     this.doc.setFont('helvetica', 'normal');
     this.doc.setFontSize(10);
-    
-    proposal.investment.packages.forEach(pkg => {
-      this.checkPageBreak();
-      const packageInfo = proposal.servicePackages.find(p => p.id === pkg.packageId);
-      if (packageInfo) {
-        this.setColor(this.brandColors.text);
-        this.doc.text(packageInfo.name, this.leftMargin, this.currentY);
-        this.doc.text(`₹${pkg.price.toLocaleString('en-IN')}`, this.pageWidth - 150, this.currentY, { align: 'right' });
-        this.currentY += 15;
-      }
-    });
-    
-    // Subtotal
-    this.setFillColor(this.brandColors.textLight);
-    this.doc.rect(this.leftMargin - 5, this.currentY, this.pageWidth - 110, 0.5, 'F');
-    this.currentY += 15;
-    
-    this.doc.setFont('helvetica', 'normal');
-    this.doc.setFontSize(11);
-    this.setColor(this.brandColors.text);
-    this.doc.text('Subtotal:', this.leftMargin, this.currentY);
-    this.doc.text(`₹${proposal.investment.subtotal.toLocaleString('en-IN')}`, this.pageWidth - 150, this.currentY, { align: 'right' });
-    this.currentY += 15;
-    
-    // Discount (if any)
+    this.doc.setTextColor(...GREY);
+    this.doc.text('Subtotal', labelX, this.currentY);
+    this.doc.setTextColor(...DARK);
+    this.doc.text(
+      this.formatAmount(proposal.investment.subtotal, proposal),
+      rightEdge,
+      this.currentY,
+      { align: 'right' },
+    );
+    this.currentY += 6;
+
+    // Discount
     if (proposal.investment.discount > 0) {
-      this.setColor(this.brandColors.success);
-      this.doc.text(`Discount (${proposal.investment.discountReason}):`, this.leftMargin, this.currentY);
-      this.doc.text(`-₹${proposal.investment.discount.toLocaleString('en-IN')}`, this.pageWidth - 150, this.currentY, { align: 'right' });
-      this.currentY += 15;
+      this.doc.setTextColor(...GREEN);
+      const reason = proposal.investment.discountReason
+        ? ` (${proposal.investment.discountReason})`
+        : '';
+      this.doc.text(`Discount${reason}`, labelX, this.currentY);
+      this.doc.text(
+        `-${this.formatAmount(proposal.investment.discount, proposal)}`,
+        rightEdge,
+        this.currentY,
+        { align: 'right' },
+      );
+      this.currentY += 6;
     }
-    
-    // Total
-    this.setFillColor(this.brandColors.primary);
-    this.doc.rect(this.leftMargin - 5, this.currentY, this.pageWidth - 110, 1, 'F');
-    this.currentY += 20;
-    
+
+    // Divider
+    this.doc.setDrawColor(...LIGHT_GREY);
+    this.doc.setLineWidth(0.3);
+    this.doc.line(labelX, this.currentY, rightEdge, this.currentY);
+
+    // Magenta total ribbon
+    const ribbonY = this.currentY + 3;
+    const ribbonH = 10;
+    this.doc.setFillColor(...MAGENTA);
+    this.doc.rect(MARGIN_L, ribbonY, CONTENT_W, ribbonH, 'F');
+
     this.doc.setFont('helvetica', 'bold');
-    this.doc.setFontSize(14);
-    this.setColor(this.brandColors.primary);
-    this.doc.text('Total Investment:', this.leftMargin, this.currentY);
-    this.doc.text(`₹${proposal.investment.total.toLocaleString('en-IN')}`, this.pageWidth - 150, this.currentY, { align: 'right' });
-    
-    this.currentY += 40;
+    this.doc.setFontSize(13);
+    this.doc.setTextColor(...WHITE);
+    this.doc.text('TOTAL INVESTMENT', MARGIN_L + 4, ribbonY + 7);
+    this.doc.text(
+      this.formatAmount(proposal.investment.total, proposal),
+      rightEdge - 4,
+      ribbonY + 7,
+      { align: 'right' },
+    );
+
+    this.currentY = ribbonY + ribbonH + 5;
+
+    // Payment terms
+    if (proposal.investment.paymentTerms) {
+      this.doc.setFont('helvetica', 'normal');
+      this.doc.setFontSize(8);
+      this.doc.setTextColor(...GREY);
+      const termsLabel: Record<string, string> = {
+        monthly: 'Monthly billing',
+        quarterly: 'Quarterly billing',
+        '50-50': '50% advance, 50% on completion',
+        'milestone-based': 'Milestone-based payments',
+        upfront: 'Full payment upfront',
+      };
+      this.doc.text(
+        `Payment Terms: ${termsLabel[proposal.investment.paymentTerms] || proposal.investment.paymentTerms}`,
+        MARGIN_L,
+        this.currentY,
+      );
+      this.currentY += 6;
+    }
+
+    this.currentY += 4;
   }
 
+  // ---- 8. Timeline --------------------------------------------------------
+
   private addTimeline(proposal: Proposal): void {
+    if (
+      !proposal.timeline ||
+      (!proposal.timeline.kickoff && proposal.timeline.milestones.length === 0)
+    )
+      return;
+
+    this.checkPageBreak(30);
     this.addSectionHeader('Project Timeline');
-    
-    this.doc.setFont('helvetica', 'normal');
-    this.doc.setFontSize(11);
-    this.setColor(this.brandColors.text);
-    
+
     // Kickoff
-    this.checkPageBreak();
-    this.setFillColor(this.brandColors.accent);
-    this.doc.circle(this.leftMargin + 8, this.currentY - 5, 4, 'F');
-    this.doc.setFont('helvetica', 'bold');
-    this.doc.text('Project Kickoff:', this.leftMargin + 20, this.currentY);
-    this.doc.setFont('helvetica', 'normal');
-    this.doc.text(new Date(proposal.timeline.kickoff).toLocaleDateString('en-IN'), this.leftMargin + 120, this.currentY);
-    this.currentY += 20;
-    
-    // Milestones
-    proposal.timeline.milestones.forEach(milestone => {
-      this.checkPageBreak();
-      this.setFillColor(this.brandColors.secondary);
-      this.doc.circle(this.leftMargin + 8, this.currentY - 5, 4, 'F');
+    if (proposal.timeline.kickoff) {
+      this.checkPageBreak(8);
+      this.doc.setFillColor(...BLUE);
+      this.doc.circle(MARGIN_L + 3, this.currentY - 1, 2, 'F');
       this.doc.setFont('helvetica', 'bold');
-      this.doc.text(milestone.name + ':', this.leftMargin + 20, this.currentY);
+      this.doc.setFontSize(9.5);
+      this.doc.setTextColor(...DARK);
+      this.doc.text('Kickoff', MARGIN_L + 8, this.currentY);
       this.doc.setFont('helvetica', 'normal');
-      this.doc.text(new Date(milestone.deadline).toLocaleDateString('en-IN'), this.leftMargin + 200, this.currentY);
-      this.currentY += 20;
+      this.doc.setTextColor(...GREY);
+      this.doc.text(this.formatDate(proposal.timeline.kickoff), MARGIN_L + 50, this.currentY);
+      this.currentY += 7;
+    }
+
+    // Milestones
+    proposal.timeline.milestones.forEach((m) => {
+      this.checkPageBreak(10);
+      this.doc.setFillColor(...MAGENTA);
+      this.doc.circle(MARGIN_L + 3, this.currentY - 1, 2, 'F');
+      this.doc.setFont('helvetica', 'bold');
+      this.doc.setFontSize(9.5);
+      this.doc.setTextColor(...DARK);
+      this.doc.text(m.name, MARGIN_L + 8, this.currentY);
+      this.doc.setFont('helvetica', 'normal');
+      this.doc.setTextColor(...GREY);
+      this.doc.text(this.formatDate(m.deadline), MARGIN_L + 80, this.currentY);
+      this.currentY += 4;
+
+      if (m.deliverables.length > 0) {
+        this.doc.setFontSize(8);
+        this.doc.setTextColor(...GREY);
+        this.doc.text(m.deliverables.join(', '), MARGIN_L + 8, this.currentY);
+        this.currentY += 4;
+      }
+      this.currentY += 2;
     });
-    
+
     // Completion
-    this.checkPageBreak();
-    this.setFillColor(this.brandColors.success);
-    this.doc.circle(this.leftMargin + 8, this.currentY - 5, 4, 'F');
-    this.doc.setFont('helvetica', 'bold');
-    this.doc.text('Project Completion:', this.leftMargin + 20, this.currentY);
-    this.doc.setFont('helvetica', 'normal');
-    this.doc.text(new Date(proposal.timeline.completion).toLocaleDateString('en-IN'), this.leftMargin + 140, this.currentY);
-    
-    this.currentY += 40;
+    if (proposal.timeline.completion) {
+      this.checkPageBreak(8);
+      this.doc.setFillColor(...GREEN);
+      this.doc.circle(MARGIN_L + 3, this.currentY - 1, 2, 'F');
+      this.doc.setFont('helvetica', 'bold');
+      this.doc.setFontSize(9.5);
+      this.doc.setTextColor(...DARK);
+      this.doc.text('Completion', MARGIN_L + 8, this.currentY);
+      this.doc.setFont('helvetica', 'normal');
+      this.doc.setTextColor(...GREY);
+      this.doc.text(this.formatDate(proposal.timeline.completion), MARGIN_L + 50, this.currentY);
+      this.currentY += 7;
+    }
+
+    this.currentY += 4;
   }
+
+  // ---- 9. Why Freaking Minds ----------------------------------------------
 
   private addWhyFreakingMinds(proposal: Proposal): void {
     if (!proposal.whyFreakingMinds) return;
-    
     this.addSectionHeader('Why Choose Freaking Minds?');
-    
-    this.doc.setFont('helvetica', 'normal');
-    this.doc.setFontSize(11);
-    this.setColor(this.brandColors.text);
-    
-    const lines = this.doc.splitTextToSize(
-      proposal.whyFreakingMinds,
-      this.pageWidth - 120
-    );
-    
-    lines.forEach((line: string) => {
-      this.checkPageBreak();
-      this.doc.text(line, this.leftMargin, this.currentY);
-      this.currentY += 15;
-    });
-    
-    this.currentY += 20;
+    this.addBodyText(proposal.whyFreakingMinds);
   }
+
+  // ---- 10. Next Steps -----------------------------------------------------
 
   private addNextSteps(proposal: Proposal): void {
     if (!proposal.nextSteps) return;
-    
     this.addSectionHeader('Next Steps');
-    
-    this.doc.setFont('helvetica', 'normal');
-    this.doc.setFontSize(11);
-    this.setColor(this.brandColors.text);
-    
-    const lines = this.doc.splitTextToSize(
-      proposal.nextSteps,
-      this.pageWidth - 120
-    );
-    
-    lines.forEach((line: string) => {
-      this.checkPageBreak();
-      this.doc.text(line, this.leftMargin, this.currentY);
-      this.currentY += 15;
-    });
-    
-    this.currentY += 20;
+    this.addBodyText(proposal.nextSteps);
   }
 
-  private addFooter(proposal: Proposal): void {
-    // Contact information footer
-    this.currentY = this.pageHeight - 150;
-    
-    this.setFillColor(this.brandColors.dark);
-    this.doc.rect(0, this.currentY - 20, this.pageWidth, 100, 'F');
-    
+  // ---- 11. Terms & Conditions ---------------------------------------------
+
+  private addTerms(proposal: Proposal): void {
+    if (!proposal.termsAndConditions) return;
+    this.addSectionHeader('Terms & Conditions');
+    this.addBodyText(proposal.termsAndConditions);
+  }
+
+  // ---- Footer (all pages) -------------------------------------------------
+
+  private addFooterAllPages(proposal: Proposal): void {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const pageCount = (this.doc as any).internal.getNumberOfPages() as number;
+
+    for (let i = 1; i <= pageCount; i++) {
+      this.doc.setPage(i);
+
+      // Thin grey separator
+      this.doc.setDrawColor(...LIGHT_GREY);
+      this.doc.setLineWidth(0.3);
+      this.doc.line(MARGIN_L, PAGE_H - 28, PAGE_W - MARGIN_R, PAGE_H - 28);
+
+      // Left: Registration info
+      this.doc.setFontSize(7);
+      this.doc.setTextColor(...GREY);
+      this.doc.setFont('helvetica', 'normal');
+      if (DEFAULT_COMPANY_INFO.taxId) {
+        this.doc.text(`GSTIN: ${DEFAULT_COMPANY_INFO.taxId}`, MARGIN_L, PAGE_H - 24);
+      }
+      if (DEFAULT_COMPANY_INFO.taxId) {
+        this.doc.text(
+          `PAN: ${DEFAULT_COMPANY_INFO.taxId.substring(2, 12)}`,
+          MARGIN_L,
+          PAGE_H - 20.5,
+        );
+      }
+      if (DEFAULT_COMPANY_INFO.msmeUdyamNumber) {
+        this.doc.text(`MSME: ${DEFAULT_COMPANY_INFO.msmeUdyamNumber}`, MARGIN_L, PAGE_H - 17);
+      }
+
+      // Center: Thank you
+      this.doc.setFont('helvetica', 'italic');
+      this.doc.setFontSize(8);
+      this.doc.setTextColor(...DARK);
+      this.doc.text(
+        'Thank you for considering Freaking Minds!',
+        PAGE_W / 2,
+        PAGE_H - 17,
+        { align: 'center' },
+      );
+
+      // Right: Website
+      this.doc.setFont('helvetica', 'normal');
+      this.doc.setFontSize(7);
+      this.doc.setTextColor(...GREY);
+      this.doc.text(
+        DEFAULT_COMPANY_INFO.website || 'www.freakingminds.in',
+        PAGE_W - MARGIN_R,
+        PAGE_H - 24,
+        { align: 'right' },
+      );
+
+      // Page numbers: i . count
+      this.doc.setFontSize(8);
+      this.doc.setTextColor(...GREY);
+      this.doc.text(`${i}`, PAGE_W / 2 - 3, PAGE_H - 12, { align: 'right' });
+      this.doc.setFillColor(...MAGENTA);
+      this.doc.circle(PAGE_W / 2, PAGE_H - 12.8, 0.6, 'F');
+      this.doc.setTextColor(...GREY);
+      this.doc.text(`${pageCount}`, PAGE_W / 2 + 3, PAGE_H - 12, { align: 'left' });
+
+      // Bottom bars (mirror header)
+      this.doc.setFillColor(...MAGENTA);
+      this.doc.rect(0, PAGE_H - 7, PAGE_W, 2, 'F');
+      this.doc.setFillColor(...PURPLE);
+      this.doc.rect(0, PAGE_H - 5, PAGE_W, 5, 'F');
+    }
+  }
+
+  // ---- Shared helpers -----------------------------------------------------
+
+  private addSectionHeader(title: string): void {
+    this.checkPageBreak(14);
+
+    // Magenta background band
+    this.doc.setFillColor(...MAGENTA);
+    this.doc.rect(MARGIN_L, this.currentY - 4.5, CONTENT_W, 8, 'F');
+
     this.doc.setFont('helvetica', 'bold');
-    this.doc.setFontSize(16);
-    this.doc.setTextColor(255, 255, 255);
-    this.doc.text('FREAKING MINDS', this.leftMargin, this.currentY + 10);
-    
+    this.doc.setFontSize(11);
+    this.doc.setTextColor(...WHITE);
+    this.doc.text(title.toUpperCase(), MARGIN_L + 3, this.currentY + 0.5);
+
+    this.currentY += 10;
+  }
+
+  private addBodyText(text: string): void {
     this.doc.setFont('helvetica', 'normal');
-    this.doc.setFontSize(10);
-    this.doc.setTextColor(200, 200, 200);
-    this.doc.text('Creative Marketing Agency • India', this.leftMargin, this.currentY + 30);
-    this.doc.text('Email: freakingmindsdigital@gmail.com • Phone: +91 98332 57659', this.leftMargin, this.currentY + 45);
-    this.doc.text('Website: www.freakingminds.in', this.leftMargin, this.currentY + 60);
-    
-    // Valid until notice
-    this.doc.setFont('helvetica', 'italic');
-    this.doc.setFontSize(9);
-    this.doc.text(
-      `This proposal is valid until ${new Date(proposal.validUntil).toLocaleDateString('en-IN')}`,
-      this.pageWidth - 200,
-      this.currentY + 45,
-      { align: 'right' }
-    );
-  }
+    this.doc.setFontSize(9.5);
+    this.doc.setTextColor(...DARK);
 
-  public async generateProposal(proposal: Proposal, template: 'professional' | 'creative' | 'technical' | 'startup' = 'professional'): Promise<string> {
-    try {
-      // Reset document
-      this.doc = new jsPDF('p', 'pt', 'a4');
-      this.currentY = 60;
-      
-      // Add content based on template
-      this.addBrandHeader(proposal);
-      this.addClientInfo(proposal);
-      
-      if (proposal.executiveSummary) {
-        this.addExecutiveSummary(proposal);
-      }
-      
-      if (proposal.problemStatement) {
-        this.addProblemStatement(proposal);
-      }
-      
-      this.addProposedSolution(proposal);
-      this.addInvestmentSummary(proposal);
-      
-      if (proposal.timeline.milestones.length > 0) {
-        this.addTimeline(proposal);
-      }
-      
-      this.addWhyFreakingMinds(proposal);
-      this.addNextSteps(proposal);
-      
-      // Add page numbers to all pages except first
-      const totalPages = this.doc.getNumberOfPages();
-      for (let i = 2; i <= totalPages; i++) {
-        this.doc.setPage(i);
-        this.addPageNumber();
-      }
-      
-      // Add footer to last page
-      this.doc.setPage(totalPages);
-      this.addFooter(proposal);
-      
-      // Return as data URI
-      return this.doc.output('datauristring');
-      
-    } catch (error) {
-      console.error('Error generating proposal PDF:', error);
-      throw new Error('Failed to generate proposal PDF');
-    }
-  }
+    const lines = this.doc.splitTextToSize(text, CONTENT_W);
+    lines.forEach((line: string) => {
+      this.checkPageBreak(5);
+      this.doc.text(line, MARGIN_L, this.currentY);
+      this.currentY += 4.5;
+    });
 
-  public async downloadProposal(proposal: Proposal, template: 'professional' | 'creative' | 'technical' | 'startup' = 'professional'): Promise<void> {
-    try {
-      await this.generateProposal(proposal, template);
-      
-      const clientName = proposal.client.prospectInfo?.company || 
-                        proposal.client.prospectInfo?.name || 
-                        'Client';
-      const filename = `FreakingMinds_Proposal_${proposal.proposalNumber}_${clientName.replace(/\s+/g, '_')}.pdf`;
-      
-      this.doc.save(filename);
-    } catch (error) {
-      console.error('Error downloading proposal PDF:', error);
-      throw new Error('Failed to download proposal PDF');
-    }
+    this.currentY += 4;
   }
 }

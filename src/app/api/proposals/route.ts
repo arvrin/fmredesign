@@ -70,6 +70,9 @@ export async function GET(request: NextRequest) {
       approvedAt: row.approved_at,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
+      currency: row.currency || 'INR',
+      discoveryId: row.discovery_id || null,
+      version: row.version || 1,
     }));
 
     // Calculate stats
@@ -118,24 +121,38 @@ export async function POST(request: NextRequest) {
     const body = rawBody;
     const supabase = getSupabaseAdmin();
 
-    // Generate proposal number if not provided
+    // Generate proposal number via proposal_sequences table (same pattern as invoices)
     let proposalNumber = body.proposalNumber;
     if (!proposalNumber) {
-      const year = new Date().getFullYear();
-      // Get highest existing number for this year
-      const { data: existing } = await supabase
-        .from('proposals')
-        .select('proposal_number')
-        .like('proposal_number', `PM%/${year}`)
-        .order('proposal_number', { ascending: false })
-        .limit(1);
+      const now = new Date();
+      const currentYear = now.getFullYear();
 
-      let counter = 163;
-      if (existing && existing.length > 0) {
-        const match = existing[0].proposal_number.match(/^PM(\d+)\//);
-        if (match) counter = parseInt(match[1]);
+      const { data: seq, error: seqErr } = await supabase
+        .from('proposal_sequences')
+        .select('prefix, current_counter, current_year')
+        .eq('id', 'default')
+        .single();
+
+      if (seqErr) throw seqErr;
+
+      let newCounter: number;
+      if (seq.current_year !== currentYear) {
+        newCounter = 1;
+      } else {
+        newCounter = seq.current_counter + 1;
       }
-      proposalNumber = `PM${counter + 1}/${year}`;
+
+      const { error: updateErr } = await supabase
+        .from('proposal_sequences')
+        .update({
+          current_counter: newCounter,
+          current_year: currentYear,
+          updated_at: now.toISOString(),
+        })
+        .eq('id', 'default');
+
+      if (updateErr) throw updateErr;
+      proposalNumber = `${seq.prefix}${newCounter}/${currentYear}`;
     }
 
     const id = body.id || `prop-${Date.now()}`;
@@ -168,6 +185,9 @@ export async function POST(request: NextRequest) {
       sent_at: body.sentAt || null,
       viewed_at: body.viewedAt || null,
       approved_at: body.approvedAt || null,
+      currency: body.investment?.currency || 'INR',
+      discovery_id: body.discoveryId || null,
+      version: body.version || 1,
     };
 
     const { error } = await supabase.from('proposals').upsert(record);
@@ -232,9 +252,47 @@ export async function PUT(request: NextRequest) {
     const { id, status, ...rest } = rawBody;
 
     const supabase = getSupabaseAdmin();
-    const updates: Record<string, any> = { updated_at: new Date().toISOString() };
+
+    // Fetch current proposal for status transition validation and version increment
+    const { data: current, error: fetchErr } = await supabase
+      .from('proposals')
+      .select('status, version')
+      .eq('id', id)
+      .single();
+
+    if (fetchErr || !current) {
+      return NextResponse.json(
+        { success: false, error: 'Proposal not found' },
+        { status: 404 }
+      );
+    }
+
+    const updates: Record<string, any> = {
+      updated_at: new Date().toISOString(),
+      version: (current.version || 1) + 1,
+    };
 
     if (status) {
+      // Validate status transitions
+      const validTransitions: Record<string, string[]> = {
+        draft: ['sent'],
+        sent: ['viewed', 'approved', 'declined', 'expired'],
+        viewed: ['approved', 'declined', 'expired'],
+        approved: ['converted'],
+        declined: ['draft'],
+        expired: ['draft'],
+        converted: [],
+        edit_requested: ['draft', 'sent'],
+      };
+
+      const allowed = validTransitions[current.status] || [];
+      if (status !== current.status && !allowed.includes(status)) {
+        return NextResponse.json(
+          { success: false, error: `Cannot transition from '${current.status}' to '${status}'` },
+          { status: 400 }
+        );
+      }
+
       updates.status = status;
       if (status === 'sent') updates.sent_at = new Date().toISOString();
       if (status === 'viewed') updates.viewed_at = new Date().toISOString();
@@ -244,6 +302,8 @@ export async function PUT(request: NextRequest) {
     // Map any additional camelCase fields to snake_case
     if (rest.title) updates.title = rest.title;
     if (rest.proposalType) updates.proposal_type = rest.proposalType;
+    if (rest.currency) updates.currency = rest.currency;
+    if (rest.discoveryId !== undefined) updates.discovery_id = rest.discoveryId || null;
 
     const { error } = await supabase
       .from('proposals')

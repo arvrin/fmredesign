@@ -1,74 +1,86 @@
 /**
- * Professional Proposal Generator - FreakingMinds
- * Comprehensive proposal creation system for digital marketing services
+ * Professional Proposal Generator — V2 Rewrite
+ *
+ * 60/40 layout matching InvoiceFormNew:
+ *   Left (3/5)  — Form cards (template, client, details, content, packages, timeline, pricing)
+ *   Right (2/5) — Sticky live preview + pricing summary
+ *
+ * Supabase-backed numbering, multi-currency, template picker, live preview.
  */
 
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { 
-  Plus, 
-  Trash2, 
-  Download, 
-  Save, 
-  Eye, 
+import { useState, useEffect, useRef, useCallback } from 'react';
+import {
+  Plus,
+  Trash2,
+  Download,
+  Save,
+  Eye,
   Calculator,
   User,
   Calendar,
   FileText,
   CreditCard,
   RefreshCw,
-  Building,
+  CheckCircle2,
+  Circle,
+  Layers,
+  Clock,
+  ChevronDown,
+  ChevronUp,
   Target,
   Lightbulb,
-  CheckCircle,
-  Clock,
-  DollarSign
+  Globe,
 } from 'lucide-react';
-import { 
+import {
   DashboardCard as Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
   DashboardButton as Button,
-  MetricCard
+  MetricCard,
 } from '@/design-system';
 import { Badge } from '@/components/ui/Badge';
 import { adminToast } from '@/lib/admin/toast';
 import { ClientService } from '@/lib/admin/client-service';
 import { ProposalNumbering } from '@/lib/admin/proposal-numbering';
 import type { ProposalPDFGenerator } from '@/lib/admin/proposal-pdf-generator';
-import { 
-  Proposal, 
-  ProspectClient, 
-  ServicePackage, 
-  DIGITAL_MARKETING_PACKAGES, 
+import {
+  type Proposal,
+  type ProspectClient,
+  type ServicePackage,
+  type PricingStructure,
+  type ProjectTimeline,
+  type ProposalTemplate,
+  DIGITAL_MARKETING_PACKAGES,
   PRICING_MODIFIERS,
   DEFAULT_PROPOSAL_CONTENT,
-  PricingStructure,
-  ProjectTimeline
+  PROPOSAL_TEMPLATES,
 } from '@/lib/admin/proposal-types';
+import {
+  CURRENCY_OPTIONS,
+  type InvoiceCurrency,
+  type InvoiceClient,
+} from '@/lib/admin/types';
+
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
 
 interface SelectedPackage {
   package: ServicePackage;
   variant?: string;
   quantity: number;
   customPrice?: number;
-  notes?: string;
 }
 
-interface InvoiceClient {
+interface CustomService {
   id: string;
   name: string;
-  email: string;
-  phone?: string;
-  address?: string;
-  city?: string;
-  state?: string;
-  zipCode?: string;
-  country?: string;
-  gstNumber?: string;
+  description: string;
+  price: number;
+  timeline: string;
 }
 
 interface ProposalFormNewProps {
@@ -76,37 +88,89 @@ interface ProposalFormNewProps {
   onSaveSuccess?: () => void;
 }
 
+// ---------------------------------------------------------------------------
+// Steps
+// ---------------------------------------------------------------------------
+
+const STEPS = [
+  { id: 'client' as const, label: 'Client' },
+  { id: 'services' as const, label: 'Services' },
+  { id: 'content' as const, label: 'Content' },
+  { id: 'review' as const, label: 'Review' },
+];
+
+function getStepState(
+  proposal: Proposal,
+  selectedPackages: SelectedPackage[],
+): Record<string, boolean> {
+  return {
+    client: !!(
+      (proposal.client.isExisting && proposal.client.clientId) ||
+      (!proposal.client.isExisting && proposal.client.prospectInfo?.company)
+    ),
+    services: selectedPackages.length > 0,
+    content: !!(proposal.executiveSummary || proposal.proposedSolution),
+    review:
+      !!proposal.title &&
+      selectedPackages.length > 0 &&
+      !!(
+        (proposal.client.isExisting && proposal.client.clientId) ||
+        proposal.client.prospectInfo?.company
+      ),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Shared CSS
+// ---------------------------------------------------------------------------
+
+const inputCls =
+  'w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md ' +
+  'focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 ' +
+  'transition-all duration-200 hover:border-fm-magenta-400';
+
+const selectCls =
+  'w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md ' +
+  'focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 ' +
+  'transition-all duration-200 hover:border-fm-magenta-400 appearance-none';
+
+const textareaCls =
+  'w-full px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md ' +
+  'focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 ' +
+  'transition-all duration-200 hover:border-fm-magenta-400';
+
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
+
 export function ProposalFormNew({ initialProposal, onSaveSuccess }: ProposalFormNewProps) {
+  // ---- State ---------------------------------------------------------------
+
   const [proposal, setProposal] = useState<Proposal>(() => {
-    if (initialProposal) {
-      return initialProposal;
-    }
-    
+    if (initialProposal) return initialProposal;
     return {
       id: `prop-${Date.now()}`,
-      proposalNumber: ProposalNumbering.getNextProposalNumber(),
-      title: 'Digital Marketing Proposal',
-      client: {
-        isExisting: true,
-        clientId: '',
-        prospectInfo: undefined
-      },
+      proposalNumber: '',
+      title: '',
+      client: { isExisting: true, clientId: '', prospectInfo: undefined },
       servicePackages: [],
+      customServices: [],
       timeline: {
-        kickoff: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 1 week from now
+        kickoff: new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0],
         milestones: [],
-        completion: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 3 months from now
-        ongoingSupport: true
+        completion: new Date(Date.now() + 90 * 86400000).toISOString().split('T')[0],
+        ongoingSupport: true,
       },
       investment: {
         packages: [],
         subtotal: 0,
         discount: 0,
         total: 0,
-        paymentTerms: '50-50'
+        currency: 'INR',
+        paymentTerms: '50-50',
       },
       proposalType: 'retainer',
-      validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 30 days
+      validUntil: new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0],
       status: 'draft',
       executiveSummary: '',
       problemStatement: '',
@@ -118,809 +182,1313 @@ export function ProposalFormNew({ initialProposal, onSaveSuccess }: ProposalForm
       updatedAt: new Date().toISOString(),
       createdBy: 'admin',
       template: 'professional',
-      includeCaseStudies: true,
-      includeTestimonials: true
     };
   });
 
   const [clients, setClients] = useState<InvoiceClient[]>([]);
   const [selectedPackages, setSelectedPackages] = useState<SelectedPackage[]>(() => {
-    if (initialProposal && (initialProposal.servicePackages || []).length > 0) {
-      return (initialProposal.servicePackages || []).map(pkg => ({
+    if (initialProposal?.servicePackages?.length) {
+      return initialProposal.servicePackages.map((pkg) => ({
         package: pkg,
         quantity: 1,
-        variant: undefined
       }));
     }
     return [];
   });
-  const [clientSizeMultiplier, setClientSizeMultiplier] = useState<string>('medium');
-  const [urgencyMultiplier, setUrgencyMultiplier] = useState<string>('standard');
-  const [retainerDuration, setRetainerDuration] = useState<string>('6-months');
-  const [showAdvancedPricing, setShowAdvancedPricing] = useState(false);
-  const pdfGeneratorRef = useRef<ProposalPDFGenerator | null>(null);
-  const getPdfGenerator = async () => {
-    if (!pdfGeneratorRef.current) {
-      const { ProposalPDFGenerator } = await import('@/lib/admin/proposal-pdf-generator');
-      pdfGeneratorRef.current = new ProposalPDFGenerator();
-    }
-    return pdfGeneratorRef.current;
-  };
+  const [customServices, setCustomServices] = useState<CustomService[]>(
+    () => (initialProposal?.customServices || []).map((s, i) => ({ ...s, id: `cs-${i}` })),
+  );
 
-  // Load clients
+  const [clientSizeMultiplier, setClientSizeMultiplier] = useState('medium');
+  const [urgencyMultiplier, setUrgencyMultiplier] = useState('standard');
+  const [retainerDuration, setRetainerDuration] = useState('6-months');
+  const [nextPreview, setNextPreview] = useState('');
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
+  const [saving, setSaving] = useState(false);
+
+  const pdfGenRef = useRef<ProposalPDFGenerator | null>(null);
+
+  // ---- Derived --------------------------------------------------------------
+
+  const steps = getStepState(proposal, selectedPackages);
+  const currency = proposal.investment?.currency || 'INR';
+  const currencyOpt =
+    CURRENCY_OPTIONS.find((c) => c.value === currency) || CURRENCY_OPTIONS[0];
+  const fmt = (n: number) =>
+    new Intl.NumberFormat(currencyOpt.locale, {
+      style: 'currency',
+      currency: currencyOpt.value,
+      maximumFractionDigits: 0,
+    }).format(n);
+
+  // ---- Effects --------------------------------------------------------------
+
   useEffect(() => {
     const loadClients = async () => {
       try {
-        const invoiceClients = await ClientService.getInvoiceClients();
-        setClients(invoiceClients || []);
-      } catch (error) {
-        console.error('Error loading clients:', error);
+        const data = await ClientService.getInvoiceClients();
+        setClients(data || []);
+      } catch {
+        setClients([]);
       }
     };
     loadClients();
   }, []);
 
-  // Calculate pricing whenever selections change
   useEffect(() => {
-    calculateTotalPricing();
-  }, [selectedPackages, clientSizeMultiplier, urgencyMultiplier, retainerDuration]);
+    ProposalNumbering.previewNextProposalNumber().then(setNextPreview);
+  }, []);
 
-  const calculateTotalPricing = () => {
+  // Recalculate pricing
+  useEffect(() => {
+    recalculatePricing();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedPackages, customServices, clientSizeMultiplier, urgencyMultiplier, retainerDuration, currency]);
+
+  // ---- Pricing calculator ---------------------------------------------------
+
+  const recalculatePricing = useCallback(() => {
     let subtotal = 0;
-    const packages = selectedPackages.map(selected => {
-      let basePrice = selected.customPrice || selected.package.basePrice;
-      
-      // Apply variant multiplier
-      if (selected.variant && selected.package.variants) {
-        const variant = selected.package.variants.find(v => v.name === selected.variant);
-        if (variant) {
-          basePrice *= variant.priceMultiplier;
-        }
+    const pkgs = selectedPackages.map((sel) => {
+      let base = sel.customPrice ?? sel.package.basePrice;
+      if (sel.variant && sel.package.variants) {
+        const v = sel.package.variants.find((vr) => vr.name === sel.variant);
+        if (v) base *= v.priceMultiplier;
       }
-      
-      // Apply modifiers
-      basePrice *= PRICING_MODIFIERS.clientSize[clientSizeMultiplier] || 1;
-      basePrice *= PRICING_MODIFIERS.urgency[urgencyMultiplier] || 1;
-      
-      const totalPrice = basePrice * selected.quantity;
-      subtotal += totalPrice;
-      
-      return {
-        packageId: selected.package.id,
-        variant: selected.variant,
-        quantity: selected.quantity,
-        price: totalPrice
-      };
+      base *= PRICING_MODIFIERS.clientSize[clientSizeMultiplier] || 1;
+      base *= PRICING_MODIFIERS.urgency[urgencyMultiplier] || 1;
+      const total = base * sel.quantity;
+      subtotal += total;
+      return { packageId: sel.package.id, variant: sel.variant, quantity: sel.quantity, price: total };
     });
 
-    // Apply retainer discount
+    // Add custom services
+    customServices.forEach((cs) => {
+      subtotal += cs.price;
+    });
+
     let discount = 0;
     if (proposal.proposalType === 'retainer' && retainerDuration in PRICING_MODIFIERS.retainerDiscount) {
       discount = subtotal * PRICING_MODIFIERS.retainerDiscount[retainerDuration];
     }
 
-    const total = subtotal - discount;
-
-    const newInvestment: PricingStructure = {
-      packages,
+    const inv: PricingStructure = {
+      packages: pkgs,
       subtotal,
       discount,
       discountReason: discount > 0 ? `${retainerDuration.replace('-', ' ')} retainer discount` : undefined,
-      total,
-      paymentTerms: proposal.investment.paymentTerms,
-      retainerDiscount: discount > 0 ? PRICING_MODIFIERS.retainerDiscount[retainerDuration] : undefined
+      total: subtotal - discount,
+      currency: currency as InvoiceCurrency,
+      paymentTerms: proposal.investment?.paymentTerms || '50-50',
+      appliedModifiers: { clientSize: clientSizeMultiplier, urgency: urgencyMultiplier, retainerDuration },
     };
 
-    setProposal(prev => ({
+    setProposal((prev) => ({
       ...prev,
-      investment: newInvestment,
-      servicePackages: selectedPackages.map(s => s.package)
+      investment: inv,
+      servicePackages: selectedPackages.map((s) => s.package),
+      customServices: customServices.map(({ id: _id, ...rest }) => rest),
+    }));
+  }, [selectedPackages, customServices, clientSizeMultiplier, urgencyMultiplier, retainerDuration, currency, proposal.proposalType, proposal.investment?.paymentTerms]);
+
+  // ---- PDF lazy-load --------------------------------------------------------
+
+  const getPdfGen = async () => {
+    if (!pdfGenRef.current) {
+      const { ProposalPDFGenerator } = await import('@/lib/admin/proposal-pdf-generator');
+      pdfGenRef.current = new ProposalPDFGenerator();
+    }
+    return pdfGenRef.current;
+  };
+
+  // ---- Template picker ------------------------------------------------------
+
+  const applyTemplate = (tpl: ProposalTemplate) => {
+    const clientName =
+      proposal.client.prospectInfo?.company ||
+      clients.find((c) => c.id === proposal.client.clientId)?.name ||
+      'Client';
+
+    // Pre-select packages
+    const pkgs: SelectedPackage[] = tpl.defaultPackageIds
+      .map((pid) => DIGITAL_MARKETING_PACKAGES.find((p) => p.id === pid))
+      .filter(Boolean)
+      .map((pkg) => ({ package: pkg!, quantity: 1 }));
+
+    setSelectedPackages(pkgs);
+    setProposal((prev) => ({
+      ...prev,
+      title: tpl.generateTitle(clientName),
+      proposalType: tpl.proposalType,
+      investment: { ...prev.investment, currency: tpl.currency },
+      executiveSummary: tpl.defaultContent.executiveSummary,
+      problemStatement: tpl.defaultContent.problemStatement,
+      proposedSolution: tpl.defaultContent.proposedSolution,
+      whyFreakingMinds: tpl.defaultContent.whyFreakingMinds,
+      nextSteps: tpl.defaultContent.nextSteps,
+      termsAndConditions: tpl.defaultContent.termsAndConditions,
     }));
   };
 
-  const addServicePackage = (packageId: string) => {
-    const servicePackage = DIGITAL_MARKETING_PACKAGES.find(pkg => pkg.id === packageId);
-    if (servicePackage) {
-      setSelectedPackages(prev => [...prev, {
-        package: servicePackage,
-        quantity: 1
-      }]);
-    }
-  };
-
-  const removeServicePackage = (index: number) => {
-    setSelectedPackages(prev => prev.filter((_, i) => i !== index));
-  };
-
-  const updateSelectedPackage = (index: number, updates: Partial<SelectedPackage>) => {
-    setSelectedPackages(prev => prev.map((pkg, i) => 
-      i === index ? { ...pkg, ...updates } : pkg
-    ));
-  };
+  // ---- Client selection -----------------------------------------------------
 
   const selectClient = (clientId: string) => {
-    const selectedClient = clients.find(c => c.id === clientId);
-    if (selectedClient) {
-      setProposal(prev => ({
-        ...prev,
-        client: {
-          isExisting: true,
-          clientId: clientId,
-          prospectInfo: undefined
-        }
-      }));
-      
-      // Set client size based on existing client data
-      // This would be enhanced with actual client size data
-      setClientSizeMultiplier('medium'); // Default, could be determined from client data
+    const c = clients.find((cl) => cl.id === clientId);
+    if (!c) {
+      setProposal((prev) => ({ ...prev, client: { isExisting: true, clientId: '' } }));
+      return;
     }
-  };
-
-  const toggleClientType = () => {
-    setProposal(prev => ({
+    const isInternational = c.country && c.country.toLowerCase() !== 'india';
+    setProposal((prev) => ({
       ...prev,
-      client: {
-        isExisting: !prev.client.isExisting,
-        clientId: '',
-        prospectInfo: prev.client.isExisting ? {
-          name: '',
-          email: '',
-          company: '',
-          industry: '',
-          companySize: 'medium'
-        } : undefined
-      }
+      client: { isExisting: true, clientId: c.id },
+      investment: { ...prev.investment, currency: isInternational ? 'USD' : 'INR' },
     }));
   };
 
-  const updateProspectInfo = (field: keyof ProspectClient, value: string) => {
-    setProposal(prev => ({
+  // ---- Package management ---------------------------------------------------
+
+  const addPackage = (pkgId: string) => {
+    const pkg = DIGITAL_MARKETING_PACKAGES.find((p) => p.id === pkgId);
+    if (!pkg || selectedPackages.some((s) => s.package.id === pkgId)) return;
+    setSelectedPackages((prev) => [...prev, { package: pkg, quantity: 1 }]);
+  };
+
+  const removePackage = (pkgId: string) => {
+    setSelectedPackages((prev) => prev.filter((s) => s.package.id !== pkgId));
+  };
+
+  const updatePackage = (pkgId: string, field: string, value: string | number) => {
+    setSelectedPackages((prev) =>
+      prev.map((s) => (s.package.id !== pkgId ? s : { ...s, [field]: value })),
+    );
+  };
+
+  const addCustomService = () => {
+    setCustomServices((prev) => [
       ...prev,
-      client: {
-        ...prev.client,
-        prospectInfo: prev.client.prospectInfo ? {
-          ...prev.client.prospectInfo,
-          [field]: value
-        } : undefined
-      }
+      { id: `cs-${Date.now()}`, name: '', description: '', price: 0, timeline: '' },
+    ]);
+  };
+
+  const updateCustomService = (id: string, field: string, value: string | number) => {
+    setCustomServices((prev) =>
+      prev.map((s) => (s.id !== id ? s : { ...s, [field]: value })),
+    );
+  };
+
+  const removeCustomService = (id: string) => {
+    setCustomServices((prev) => prev.filter((s) => s.id !== id));
+  };
+
+  // ---- Milestone management -------------------------------------------------
+
+  const addMilestone = () => {
+    setProposal((prev) => ({
+      ...prev,
+      timeline: {
+        ...prev.timeline,
+        milestones: [
+          ...prev.timeline.milestones,
+          {
+            name: '',
+            deadline: new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0],
+            deliverables: [],
+          },
+        ],
+      },
     }));
   };
+
+  const updateMilestone = (idx: number, field: string, value: string | string[]) => {
+    setProposal((prev) => ({
+      ...prev,
+      timeline: {
+        ...prev.timeline,
+        milestones: prev.timeline.milestones.map((m, i) =>
+          i !== idx ? m : { ...m, [field]: value },
+        ),
+      },
+    }));
+  };
+
+  const removeMilestone = (idx: number) => {
+    setProposal((prev) => ({
+      ...prev,
+      timeline: {
+        ...prev.timeline,
+        milestones: prev.timeline.milestones.filter((_, i) => i !== idx),
+      },
+    }));
+  };
+
+  // ---- Section collapse toggling --------------------------------------------
+
+  const toggleSection = (key: string) => {
+    setExpandedSections((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  // ---- Handlers: Save / Preview / Download ----------------------------------
 
   const handleSave = async () => {
+    if (!proposal.title.trim()) {
+      adminToast.error('Please enter a proposal title');
+      return;
+    }
+    setSaving(true);
     try {
-      const proposalToSave = { ...proposal };
-      // Generate proposal number if not present
-      if (!proposalToSave.proposalNumber || proposalToSave.proposalNumber.startsWith('PROP-')) {
-        proposalToSave.proposalNumber = '';
+      let num = proposal.proposalNumber;
+      if (!num || num === nextPreview) {
+        num = await ProposalNumbering.getNextProposalNumber();
+        setProposal((prev) => ({ ...prev, proposalNumber: num }));
       }
 
-      const response = await fetch('/api/proposals', {
+      const body = { ...proposal, proposalNumber: num };
+      const res = await fetch('/api/proposals', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(proposalToSave),
+        body: JSON.stringify(body),
       });
-      const result = await response.json();
-
-      if (result.success) {
-        // Update local numbering if the server generated a number
-        if (result.data?.proposalNumber) {
-          ProposalNumbering.updateFromManualProposal(result.data.proposalNumber);
-        }
-        adminToast.success('Proposal saved successfully!');
-        if (onSaveSuccess) {
-          onSaveSuccess();
-        }
-      } else {
-        adminToast.error('Error saving proposal: ' + (result.error || 'Unknown error'));
-      }
-    } catch (error) {
-      console.error('Error saving proposal:', error);
-      adminToast.error('Error saving proposal. Please try again.');
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error || 'Save failed');
+      adminToast.success('Proposal saved successfully!');
+      onSaveSuccess?.();
+    } catch (err) {
+      adminToast.error('Failed to save proposal');
+      console.error(err);
+    } finally {
+      setSaving(false);
     }
   };
 
   const handlePreview = async () => {
     try {
-      // Basic validation
-      if (!proposal.client.clientId && !proposal.client.prospectInfo?.company) {
-        adminToast.error('Please select a client or add prospect information before generating preview.');
-        return;
+      const gen = await getPdfGen();
+      const uri = await gen.generateProposal(proposal, clients);
+      const win = window.open('', '_blank');
+      if (win) {
+        win.document.write(
+          `<html><body style="margin:0"><embed src="${uri}" width="100%" height="100%" type="application/pdf"/></body></html>`,
+        );
       }
-
-      if (selectedPackages.length === 0) {
-        adminToast.error('Please add at least one service package.');
-        return;
-      }
-
-      const gen = await getPdfGenerator();
-      const pdfDataUri = await gen.generateProposal(proposal, proposal.template);
-      
-      // Try different approaches for opening PDF
-      const newWindow = window.open('', '_blank');
-      if (newWindow) {
-        newWindow.document.write(`
-          <html>
-            <head>
-              <title>Proposal Preview - ${proposal.proposalNumber}</title>
-              <style>body { margin: 0; padding: 0; }</style>
-            </head>
-            <body>
-              <embed src="${pdfDataUri}" width="100%" height="100%" type="application/pdf">
-            </body>
-          </html>
-        `);
-      } else {
-        // Fallback: try direct window.open
-        window.open(pdfDataUri, '_blank');
-      }
-    } catch (error) {
-      console.error('Error generating PDF preview:', error);
-      adminToast.error(`Error generating PDF preview: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } catch {
+      adminToast.error('Failed to generate preview');
     }
   };
 
   const handleDownload = async () => {
     try {
-      // Basic validation
-      if (!proposal.client.clientId && !proposal.client.prospectInfo?.company) {
-        adminToast.error('Please select a client or add prospect information before downloading.');
-        return;
+      let num = proposal.proposalNumber;
+      if (!num || num === nextPreview) {
+        num = await ProposalNumbering.getNextProposalNumber();
+        setProposal((prev) => ({ ...prev, proposalNumber: num }));
       }
-
-      if (selectedPackages.length === 0) {
-        adminToast.error('Please add at least one service package.');
-        return;
-      }
-
-      const gen = await getPdfGenerator();
-      await gen.downloadProposal(proposal, proposal.template);
-    } catch (error) {
-      console.error('Error downloading PDF:', error);
-      adminToast.error('Error downloading PDF. Please check the console for details.');
+      const gen = await getPdfGen();
+      await gen.downloadProposal({ ...proposal, proposalNumber: num }, clients);
+    } catch {
+      adminToast.error('Failed to download PDF');
     }
   };
 
-  return (
-    <div className="max-w-7xl mx-auto">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8">
-        {/* Left Column - Proposal Form */}
-        <div className="space-y-4 sm:space-y-6">
-          {/* Header */}
-          <Card variant="admin">
-            <CardContent className="p-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
-                  <div>
-                    <div className="flex items-center space-x-2">
-                      <label className="text-sm font-medium text-fm-neutral-900">Proposal #</label>
-                      <input
-                        type="text"
-                        value={proposal.proposalNumber}
-                        onChange={(e) => {
-                          const newNumber = e.target.value;
-                          setProposal(prev => ({ ...prev, proposalNumber: newNumber }));
+  // ---- Render ---------------------------------------------------------------
 
-                          if (ProposalNumbering.isValidFormat(newNumber)) {
-                            ProposalNumbering.updateFromManualProposal(newNumber);
-                          }
-                        }}
-                        className="px-2 py-1 border border-fm-neutral-300 rounded text-sm font-semibold text-fm-neutral-900 w-32"
-                        placeholder="PM164/2025"
-                      />
-                    </div>
-                    <p className="text-sm text-fm-neutral-600">{proposal.status} • Created {new Date().toLocaleDateString()}</p>
-                    <p className="text-xs text-fm-neutral-500">Next auto: {ProposalNumbering.previewNextProposalNumber()}</p>
-                  </div>
-                  <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                    {proposal.proposalType}
-                  </Badge>
+  return (
+    <div className="max-w-[1440px] mx-auto">
+      {/* Step indicator */}
+      <div className="flex flex-wrap items-center gap-3 mb-4 sm:mb-6">
+        {STEPS.map((step, idx) => (
+          <div key={step.id} className="flex items-center gap-2">
+            {idx > 0 && <div className="w-8 h-px bg-fm-neutral-300" />}
+            <div className="flex items-center gap-1.5">
+              {steps[step.id] ? (
+                <CheckCircle2 className="w-4 h-4 text-green-500" />
+              ) : (
+                <Circle className="w-4 h-4 text-fm-neutral-400" />
+              )}
+              <span
+                className={`text-sm font-medium ${steps[step.id] ? 'text-fm-neutral-900' : 'text-fm-neutral-500'}`}
+              >
+                {step.label}
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Main 60/40 grid */}
+      <div className="grid grid-cols-1 xl:grid-cols-5 gap-4 sm:gap-8">
+        {/* LEFT COLUMN — Form cards */}
+        <div className="xl:col-span-3 space-y-4 sm:space-y-6">
+          {/* Card 1: Header */}
+          <Card variant="admin">
+            <CardContent className="pt-4 pb-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <Badge variant="outline">{nextPreview || proposal.proposalNumber || 'PM—'}</Badge>
+                  <Badge variant="default">{proposal.status}</Badge>
                 </div>
-                <div className="flex items-center flex-wrap gap-2">
+                <div className="flex items-center gap-2">
                   <Button variant="ghost" size="sm" onClick={handlePreview}>
-                    <Eye className="w-4 h-4" />
-                    <span className="hidden sm:inline">Preview</span>
+                    <Eye className="w-4 h-4 mr-1" /> Preview
                   </Button>
                   <Button variant="secondary" size="sm" onClick={handleDownload}>
-                    <Download className="w-4 h-4" />
-                    <span className="hidden sm:inline">Export PDF</span>
-                    <span className="sm:hidden">PDF</span>
+                    <Download className="w-4 h-4 mr-1" /> PDF
                   </Button>
-                  <Button variant="primary" size="sm" onClick={handleSave}>
-                    <Save className="w-4 h-4" />
-                    Save
+                  <Button variant="primary" size="sm" onClick={handleSave} disabled={saving}>
+                    <Save className="w-4 h-4 mr-1" /> {saving ? 'Saving...' : 'Save Draft'}
                   </Button>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Proposal Details */}
+          {/* Card 2: Template Picker */}
           <Card variant="admin">
             <CardHeader>
-              <div className="flex items-center space-x-2">
-                <FileText className="w-5 h-5 text-fm-magenta-600" />
-                <CardTitle>Proposal Details</CardTitle>
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-fm-magenta-100 flex items-center justify-center">
+                  <Layers className="w-4 h-4 text-fm-magenta-600" />
+                </div>
+                <CardTitle>Template</CardTitle>
               </div>
             </CardHeader>
-            <CardContent className="p-4 sm:p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">
-                  Proposal Title
-                </label>
-                <input
-                  type="text"
-                  value={proposal.title}
-                  onChange={(e) => setProposal(prev => ({ ...prev, title: e.target.value }))}
-                  className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
-                  placeholder="Digital Marketing Strategy Proposal"
-                />
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">
-                    Proposal Type
-                  </label>
-                  <select
-                    value={proposal.proposalType}
-                    onChange={(e) => setProposal(prev => ({ ...prev, proposalType: e.target.value as any }))}
-                    className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400 appearance-none"
+            <CardContent className="space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                {PROPOSAL_TEMPLATES.map((tpl) => (
+                  <button
+                    key={tpl.id}
+                    onClick={() => applyTemplate(tpl)}
+                    className="text-left p-3 rounded-lg border border-fm-neutral-200 hover:border-fm-magenta-400 hover:bg-fm-magenta-50 transition-all"
                   >
-                    <option value="retainer">Monthly Retainer</option>
-                    <option value="project">One-time Project</option>
-                    <option value="audit">Audit & Strategy</option>
-                    <option value="consultation">Consultation</option>
-                    <option value="hybrid">Hybrid Model</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">
-                    Valid Until
-                  </label>
-                  <input
-                    type="date"
-                    value={proposal.validUntil}
-                    onChange={(e) => setProposal(prev => ({ ...prev, validUntil: e.target.value }))}
-                    className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
-                  />
-                </div>
+                    <p className="text-sm font-medium text-fm-neutral-900">{tpl.label}</p>
+                    <p className="text-xs text-fm-neutral-500 mt-0.5">{tpl.description}</p>
+                  </button>
+                ))}
               </div>
             </CardContent>
           </Card>
 
-          {/* Client Information */}
+          {/* Card 3: Client Information */}
           <Card variant="admin">
             <CardHeader>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <User className="w-5 h-5 text-fm-magenta-600" />
-                  <CardTitle>Client Information</CardTitle>
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-fm-magenta-100 flex items-center justify-center">
+                  <User className="w-4 h-4 text-fm-magenta-600" />
                 </div>
-                <Button variant="ghost" size="sm" onClick={toggleClientType}>
-                  {proposal.client.isExisting ? 'New Prospect' : 'Existing Client'}
-                </Button>
+                <CardTitle>Client Information</CardTitle>
               </div>
             </CardHeader>
-            <CardContent className="p-4 sm:p-6 space-y-4">
+            <CardContent className="space-y-4">
+              {/* Toggle */}
+              <div className="flex gap-2">
+                <button
+                  onClick={() =>
+                    setProposal((prev) => ({ ...prev, client: { isExisting: true, clientId: prev.client.clientId } }))
+                  }
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                    proposal.client.isExisting
+                      ? 'bg-fm-magenta-600 text-white'
+                      : 'bg-fm-neutral-100 text-fm-neutral-700 hover:bg-fm-neutral-200'
+                  }`}
+                >
+                  Existing Client
+                </button>
+                <button
+                  onClick={() =>
+                    setProposal((prev) => ({
+                      ...prev,
+                      client: {
+                        isExisting: false,
+                        prospectInfo: prev.client.prospectInfo || {
+                          name: '',
+                          email: '',
+                          company: '',
+                          industry: '',
+                          companySize: 'small' as const,
+                        },
+                      },
+                    }))
+                  }
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                    !proposal.client.isExisting
+                      ? 'bg-fm-magenta-600 text-white'
+                      : 'bg-fm-neutral-100 text-fm-neutral-700 hover:bg-fm-neutral-200'
+                  }`}
+                >
+                  New Prospect
+                </button>
+              </div>
+
               {proposal.client.isExisting ? (
-                <div>
-                  <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">
-                    Select Existing Client
-                  </label>
-                  <select
-                    value={proposal.client.clientId || ''}
-                    onChange={(e) => selectClient(e.target.value)}
-                    className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400 appearance-none"
-                  >
-                    <option value="">Choose a client... ({clients.length} available)</option>
-                    {clients.map(client => (
-                      <option key={client.id} value={client.id}>
-                        {client.name} - {client.email}
-                      </option>
-                    ))}
-                  </select>
+                <div className="space-y-3">
+                  <div className="flex gap-2">
+                    <select
+                      className={selectCls}
+                      value={proposal.client.clientId || ''}
+                      onChange={(e) => selectClient(e.target.value)}
+                    >
+                      <option value="">Choose a client... ({clients.length} available)</option>
+                      {clients.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.name} — {c.email}
+                        </option>
+                      ))}
+                    </select>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={async () => {
+                        setClients([]);
+                        const data = await ClientService.getInvoiceClients();
+                        setClients(data || []);
+                      }}
+                    >
+                      <RefreshCw className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  {proposal.client.clientId && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 border-t border-fm-neutral-200">
+                      {(() => {
+                        const c = clients.find((cl) => cl.id === proposal.client.clientId);
+                        if (!c) return null;
+                        return (
+                          <>
+                            <InfoField label="Name" value={c.name} />
+                            <InfoField label="Email" value={c.email} />
+                            <InfoField label="Country" value={c.country} />
+                            <InfoField label="State" value={c.state} />
+                          </>
+                        );
+                      })()}
+                    </div>
+                  )}
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Company Name</label>
+                    <label className="text-xs font-medium text-fm-neutral-500 mb-1 block">Company *</label>
                     <input
-                      type="text"
+                      className={inputCls}
                       value={proposal.client.prospectInfo?.company || ''}
-                      onChange={(e) => updateProspectInfo('company', e.target.value)}
-                      className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
-                      placeholder="Company Name"
+                      onChange={(e) =>
+                        setProposal((prev) => ({
+                          ...prev,
+                          client: {
+                            ...prev.client,
+                            prospectInfo: { ...prev.client.prospectInfo!, company: e.target.value },
+                          },
+                        }))
+                      }
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Contact Name</label>
+                    <label className="text-xs font-medium text-fm-neutral-500 mb-1 block">Contact Name *</label>
                     <input
-                      type="text"
+                      className={inputCls}
                       value={proposal.client.prospectInfo?.name || ''}
-                      onChange={(e) => updateProspectInfo('name', e.target.value)}
-                      className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
-                      placeholder="Contact Person"
+                      onChange={(e) =>
+                        setProposal((prev) => ({
+                          ...prev,
+                          client: {
+                            ...prev.client,
+                            prospectInfo: { ...prev.client.prospectInfo!, name: e.target.value },
+                          },
+                        }))
+                      }
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Email</label>
+                    <label className="text-xs font-medium text-fm-neutral-500 mb-1 block">Email *</label>
                     <input
                       type="email"
+                      className={inputCls}
                       value={proposal.client.prospectInfo?.email || ''}
-                      onChange={(e) => updateProspectInfo('email', e.target.value)}
-                      className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
-                      placeholder="email@company.com"
+                      onChange={(e) =>
+                        setProposal((prev) => ({
+                          ...prev,
+                          client: {
+                            ...prev.client,
+                            prospectInfo: { ...prev.client.prospectInfo!, email: e.target.value },
+                          },
+                        }))
+                      }
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Industry</label>
+                    <label className="text-xs font-medium text-fm-neutral-500 mb-1 block">Industry</label>
                     <input
-                      type="text"
+                      className={inputCls}
                       value={proposal.client.prospectInfo?.industry || ''}
-                      onChange={(e) => updateProspectInfo('industry', e.target.value)}
-                      className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
-                      placeholder="Technology, Healthcare, etc."
+                      onChange={(e) =>
+                        setProposal((prev) => ({
+                          ...prev,
+                          client: {
+                            ...prev.client,
+                            prospectInfo: { ...prev.client.prospectInfo!, industry: e.target.value },
+                          },
+                        }))
+                      }
                     />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-fm-neutral-500 mb-1 block">Company Size</label>
+                    <select
+                      className={selectCls}
+                      value={proposal.client.prospectInfo?.companySize || 'small'}
+                      onChange={(e) =>
+                        setProposal((prev) => ({
+                          ...prev,
+                          client: {
+                            ...prev.client,
+                            prospectInfo: {
+                              ...prev.client.prospectInfo!,
+                              companySize: e.target.value as ProspectClient['companySize'],
+                            },
+                          },
+                        }))
+                      }
+                    >
+                      <option value="startup">Startup</option>
+                      <option value="small">Small</option>
+                      <option value="medium">Medium</option>
+                      <option value="large">Large</option>
+                      <option value="enterprise">Enterprise</option>
+                    </select>
                   </div>
                 </div>
               )}
             </CardContent>
           </Card>
 
-          {/* Service Packages */}
+          {/* Card 4: Proposal Details */}
           <Card variant="admin">
             <CardHeader>
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex items-center space-x-2">
-                  <Target className="w-5 h-5 text-fm-magenta-600" />
-                  <CardTitle>Service Packages</CardTitle>
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-fm-magenta-100 flex items-center justify-center">
+                  <FileText className="w-4 h-4 text-fm-magenta-600" />
                 </div>
-                <div className="relative">
+                <CardTitle>Proposal Details</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="sm:col-span-2">
+                  <label className="text-xs font-medium text-fm-neutral-500 mb-1 block">Title *</label>
+                  <input
+                    className={inputCls}
+                    value={proposal.title}
+                    onChange={(e) => setProposal((prev) => ({ ...prev, title: e.target.value }))}
+                    placeholder="e.g. Digital Marketing Retainer Proposal"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-fm-neutral-500 mb-1 block">Type</label>
                   <select
-                    onChange={(e) => {
-                      if (e.target.value) {
-                        addServicePackage(e.target.value);
-                        e.target.value = '';
-                      }
-                    }}
-                    className="px-3 py-1 text-sm bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400 appearance-none"
+                    className={selectCls}
+                    value={proposal.proposalType}
+                    onChange={(e) =>
+                      setProposal((prev) => ({
+                        ...prev,
+                        proposalType: e.target.value as Proposal['proposalType'],
+                      }))
+                    }
                   >
-                    <option value="">Add Service Package...</option>
-                    {DIGITAL_MARKETING_PACKAGES.map(pkg => (
-                      <option key={pkg.id} value={pkg.id}>
-                        {pkg.name} - ₹{pkg.basePrice.toLocaleString('en-IN')}
-                        {pkg.billingType === 'monthly' ? '/month' : ''}
+                    <option value="retainer">Retainer</option>
+                    <option value="project">Project</option>
+                    <option value="audit">Audit</option>
+                    <option value="consultation">Consultation</option>
+                    <option value="hybrid">Hybrid</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-fm-neutral-500 mb-1 block">Valid Until</label>
+                  <input
+                    type="date"
+                    className={inputCls}
+                    value={proposal.validUntil}
+                    onChange={(e) => setProposal((prev) => ({ ...prev, validUntil: e.target.value }))}
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-fm-neutral-500 mb-1 block">Currency</label>
+                  <select
+                    className={selectCls}
+                    value={currency}
+                    onChange={(e) =>
+                      setProposal((prev) => ({
+                        ...prev,
+                        investment: { ...prev.investment, currency: e.target.value as InvoiceCurrency },
+                      }))
+                    }
+                  >
+                    {CURRENCY_OPTIONS.map((c) => (
+                      <option key={c.value} value={c.value}>
+                        {c.label}
                       </option>
                     ))}
                   </select>
                 </div>
+                <div>
+                  <label className="text-xs font-medium text-fm-neutral-500 mb-1 block">Payment Terms</label>
+                  <select
+                    className={selectCls}
+                    value={proposal.investment?.paymentTerms || '50-50'}
+                    onChange={(e) =>
+                      setProposal((prev) => ({
+                        ...prev,
+                        investment: {
+                          ...prev.investment,
+                          paymentTerms: e.target.value as PricingStructure['paymentTerms'],
+                        },
+                      }))
+                    }
+                  >
+                    <option value="monthly">Monthly</option>
+                    <option value="quarterly">Quarterly</option>
+                    <option value="50-50">50% Advance / 50% on Completion</option>
+                    <option value="milestone-based">Milestone-based</option>
+                    <option value="upfront">Upfront</option>
+                  </select>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Card 5: Content Sections */}
+          <Card variant="admin">
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-fm-magenta-100 flex items-center justify-center">
+                  <Lightbulb className="w-4 h-4 text-fm-magenta-600" />
+                </div>
+                <CardTitle>Content Sections</CardTitle>
               </div>
             </CardHeader>
-            <CardContent className="p-4 sm:p-6 space-y-4">
-              {selectedPackages.map((selected, index) => (
-                <div key={index} className="p-3 sm:p-4 border border-fm-neutral-200 rounded-lg bg-fm-neutral-50">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-fm-neutral-900">{selected.package.name}</h4>
-                      <p className="text-sm text-fm-neutral-600 mt-1">{selected.package.description}</p>
-                      <Badge variant="outline" className="mt-2">
-                        {selected.package.category.replace('-', ' ')}
+            <CardContent className="space-y-2">
+              {(
+                [
+                  { key: 'executiveSummary', label: 'Executive Summary' },
+                  { key: 'problemStatement', label: 'Problem Statement' },
+                  { key: 'proposedSolution', label: 'Proposed Solution' },
+                  { key: 'whyFreakingMinds', label: 'Why Freaking Minds' },
+                  { key: 'nextSteps', label: 'Next Steps' },
+                  { key: 'termsAndConditions', label: 'Terms & Conditions' },
+                ] as const
+              ).map(({ key, label }) => (
+                <div key={key} className="border border-fm-neutral-200 rounded-lg overflow-hidden">
+                  <button
+                    onClick={() => toggleSection(key)}
+                    className="w-full flex items-center justify-between px-4 py-3 bg-fm-neutral-50 hover:bg-fm-neutral-100 transition-colors"
+                  >
+                    <span className="text-sm font-medium text-fm-neutral-900">{label}</span>
+                    <div className="flex items-center gap-2">
+                      {(proposal[key] as string)?.trim() ? (
+                        <Badge variant="outline" className="text-xs">
+                          filled
+                        </Badge>
+                      ) : null}
+                      {expandedSections[key] ? (
+                        <ChevronUp className="w-4 h-4 text-fm-neutral-400" />
+                      ) : (
+                        <ChevronDown className="w-4 h-4 text-fm-neutral-400" />
+                      )}
+                    </div>
+                  </button>
+                  {expandedSections[key] && (
+                    <div className="p-3">
+                      <textarea
+                        className={textareaCls}
+                        rows={6}
+                        value={(proposal[key] as string) || ''}
+                        onChange={(e) =>
+                          setProposal((prev) => ({ ...prev, [key]: e.target.value }))
+                        }
+                        placeholder={`Enter ${label.toLowerCase()}...`}
+                      />
+                    </div>
+                  )}
+                  {!expandedSections[key] && (proposal[key] as string)?.trim() && (
+                    <div className="px-4 py-2 text-xs text-fm-neutral-500 line-clamp-2">
+                      {(proposal[key] as string).substring(0, 120)}...
+                    </div>
+                  )}
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          {/* Card 6: Service Packages */}
+          <Card variant="admin">
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-fm-magenta-100 flex items-center justify-center">
+                  <Target className="w-4 h-4 text-fm-magenta-600" />
+                </div>
+                <CardTitle>Service Packages</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Add service dropdown */}
+              <select
+                className={selectCls}
+                value=""
+                onChange={(e) => addPackage(e.target.value)}
+              >
+                <option value="">+ Add a service package...</option>
+                {DIGITAL_MARKETING_PACKAGES.filter(
+                  (p) => !selectedPackages.some((s) => s.package.id === p.id),
+                ).map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name} — {p.category} — {fmt(p.basePrice)}
+                  </option>
+                ))}
+              </select>
+
+              {/* Selected packages */}
+              {selectedPackages.map((sel) => (
+                <div
+                  key={sel.package.id}
+                  className="p-4 rounded-lg bg-white border-l-[3px] border-l-fm-magenta-500 border border-fm-neutral-200 shadow-sm"
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <div>
+                      <p className="font-medium text-sm text-fm-neutral-900">{sel.package.name}</p>
+                      <Badge variant="outline" className="text-xs mt-1">
+                        {sel.package.category}
                       </Badge>
                     </div>
-                    <Button
-                      variant="danger-ghost"
-                      size="sm"
-                      onClick={() => removeServicePackage(index)}
-                    >
-                      <Trash2 className="w-4 h-4" />
+                    <Button variant="ghost" size="sm" onClick={() => removePackage(sel.package.id)}>
+                      <Trash2 className="w-4 h-4 text-red-500" />
                     </Button>
                   </div>
-                  
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    {selected.package.variants && selected.package.variants.length > 0 && (
+                  <p className="text-xs text-fm-neutral-500 mb-3">{sel.package.description}</p>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {sel.package.variants && sel.package.variants.length > 0 && (
                       <div>
-                        <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Variant</label>
+                        <label className="text-xs font-medium text-fm-neutral-500 mb-1 block">
+                          Variant
+                        </label>
                         <select
-                          value={selected.variant || ''}
-                          onChange={(e) => updateSelectedPackage(index, { variant: e.target.value || undefined })}
-                          className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400 appearance-none"
+                          className={selectCls}
+                          value={sel.variant || ''}
+                          onChange={(e) => updatePackage(sel.package.id, 'variant', e.target.value)}
                         >
                           <option value="">Standard</option>
-                          {selected.package.variants.map(variant => (
-                            <option key={variant.name} value={variant.name}>
-                              {variant.name} ({(variant.priceMultiplier * 100 - 100) > 0 ? '+' : ''}{Math.round((variant.priceMultiplier - 1) * 100)}%)
+                          {sel.package.variants.map((v) => (
+                            <option key={v.name} value={v.name}>
+                              {v.name} ({v.priceMultiplier}x)
                             </option>
                           ))}
                         </select>
                       </div>
                     )}
                     <div>
-                      <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Quantity</label>
+                      <label className="text-xs font-medium text-fm-neutral-500 mb-1 block">
+                        Qty
+                      </label>
                       <input
                         type="number"
-                        min="1"
-                        value={selected.quantity}
-                        onChange={(e) => updateSelectedPackage(index, { quantity: parseInt(e.target.value) || 1 })}
-                        className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
+                        min={1}
+                        className={inputCls}
+                        value={sel.quantity}
+                        onChange={(e) =>
+                          updatePackage(sel.package.id, 'quantity', parseInt(e.target.value) || 1)
+                        }
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Custom Price (Optional)</label>
+                      <label className="text-xs font-medium text-fm-neutral-500 mb-1 block">
+                        Custom Price
+                      </label>
                       <input
                         type="number"
-                        placeholder={`${selected.package.basePrice}`}
-                        value={selected.customPrice || ''}
-                        onChange={(e) => updateSelectedPackage(index, { customPrice: parseFloat(e.target.value) || undefined })}
-                        className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400"
+                        className={inputCls}
+                        placeholder={sel.package.basePrice.toString()}
+                        value={sel.customPrice ?? ''}
+                        onChange={(e) =>
+                          updatePackage(
+                            sel.package.id,
+                            'customPrice',
+                            e.target.value ? parseInt(e.target.value) : 0,
+                          )
+                        }
                       />
                     </div>
                   </div>
-                  
+
                   {/* Deliverables */}
-                  <div className="mt-3">
-                    <p className="text-sm font-medium text-fm-neutral-900 mb-1.5">Deliverables:</p>
-                    <ul className="text-sm text-fm-neutral-600 space-y-1">
-                      {(selected.package.deliverables || []).map((deliverable, i) => (
-                        <li key={i} className="flex items-center">
-                          <CheckCircle className="w-3 h-3 text-green-500 mr-2 flex-shrink-0" />
-                          {deliverable}
-                        </li>
-                      ))}
-                      {selected.variant && selected.package.variants && (
-                        (selected.package.variants || [])
-                          .find(v => v.name === selected.variant)
-                          ?.additionalDeliverables?.map((deliverable, i) => (
-                            <li key={`variant-${i}`} className="flex items-center">
-                              <CheckCircle className="w-3 h-3 text-blue-500 mr-2 flex-shrink-0" />
-                              {deliverable}
-                            </li>
-                          ))
-                      )}
-                    </ul>
+                  <div className="mt-3 flex flex-wrap gap-1">
+                    {sel.package.deliverables.slice(0, 4).map((d, i) => (
+                      <span
+                        key={i}
+                        className="text-[10px] bg-fm-neutral-50 border border-fm-neutral-200 rounded px-2 py-0.5 text-fm-neutral-600"
+                      >
+                        {d}
+                      </span>
+                    ))}
+                    {sel.package.deliverables.length > 4 && (
+                      <span className="text-[10px] text-fm-neutral-400">
+                        +{sel.package.deliverables.length - 4} more
+                      </span>
+                    )}
                   </div>
                 </div>
               ))}
-              
-              {selectedPackages.length === 0 && (
-                <div className="text-center py-8 text-fm-neutral-500">
-                  <Target className="w-12 h-12 mx-auto mb-4 text-fm-neutral-300" />
-                  <p>No service packages selected yet.</p>
-                  <p className="text-sm">Choose from our pre-built packages above.</p>
+
+              {/* Custom services */}
+              {customServices.map((cs) => (
+                <div
+                  key={cs.id}
+                  className="p-4 rounded-lg bg-white border-l-[3px] border-l-blue-500 border border-fm-neutral-200 shadow-sm"
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <Badge variant="outline" className="text-xs">Custom Service</Badge>
+                    <Button variant="ghost" size="sm" onClick={() => removeCustomService(cs.id)}>
+                      <Trash2 className="w-4 h-4 text-red-500" />
+                    </Button>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <input
+                      className={inputCls}
+                      placeholder="Service name"
+                      value={cs.name}
+                      onChange={(e) => updateCustomService(cs.id, 'name', e.target.value)}
+                    />
+                    <input
+                      type="number"
+                      className={inputCls}
+                      placeholder="Price"
+                      value={cs.price || ''}
+                      onChange={(e) => updateCustomService(cs.id, 'price', parseInt(e.target.value) || 0)}
+                    />
+                    <input
+                      className={inputCls}
+                      placeholder="Description"
+                      value={cs.description}
+                      onChange={(e) => updateCustomService(cs.id, 'description', e.target.value)}
+                    />
+                    <input
+                      className={inputCls}
+                      placeholder="Timeline"
+                      value={cs.timeline}
+                      onChange={(e) => updateCustomService(cs.id, 'timeline', e.target.value)}
+                    />
+                  </div>
                 </div>
-              )}
+              ))}
+
+              <Button variant="ghost" size="sm" onClick={addCustomService}>
+                <Plus className="w-4 h-4 mr-1" /> Add Custom Service
+              </Button>
             </CardContent>
           </Card>
 
-          {/* Pricing Modifiers */}
+          {/* Card 7: Timeline */}
+          <Card variant="admin">
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-fm-magenta-100 flex items-center justify-center">
+                  <Clock className="w-4 h-4 text-fm-magenta-600" />
+                </div>
+                <CardTitle>Timeline</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-medium text-fm-neutral-500 mb-1 block">Kickoff Date</label>
+                  <input
+                    type="date"
+                    className={inputCls}
+                    value={proposal.timeline.kickoff}
+                    onChange={(e) =>
+                      setProposal((prev) => ({
+                        ...prev,
+                        timeline: { ...prev.timeline, kickoff: e.target.value },
+                      }))
+                    }
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-fm-neutral-500 mb-1 block">Completion Date</label>
+                  <input
+                    type="date"
+                    className={inputCls}
+                    value={proposal.timeline.completion}
+                    onChange={(e) =>
+                      setProposal((prev) => ({
+                        ...prev,
+                        timeline: { ...prev.timeline, completion: e.target.value },
+                      }))
+                    }
+                  />
+                </div>
+              </div>
+
+              {/* Milestones */}
+              {proposal.timeline.milestones.map((m, idx) => (
+                <div key={idx} className="p-3 rounded-lg bg-fm-neutral-50 border border-fm-neutral-200 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-medium text-fm-neutral-500">Milestone {idx + 1}</span>
+                    <Button variant="ghost" size="sm" onClick={() => removeMilestone(idx)}>
+                      <Trash2 className="w-3 h-3 text-red-500" />
+                    </Button>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <input
+                      className={inputCls}
+                      placeholder="Milestone name"
+                      value={m.name}
+                      onChange={(e) => updateMilestone(idx, 'name', e.target.value)}
+                    />
+                    <input
+                      type="date"
+                      className={inputCls}
+                      value={m.deadline}
+                      onChange={(e) => updateMilestone(idx, 'deadline', e.target.value)}
+                    />
+                  </div>
+                  <input
+                    className={inputCls}
+                    placeholder="Deliverables (comma-separated)"
+                    value={m.deliverables.join(', ')}
+                    onChange={(e) =>
+                      updateMilestone(
+                        idx,
+                        'deliverables',
+                        e.target.value.split(',').map((s) => s.trim()),
+                      )
+                    }
+                  />
+                </div>
+              ))}
+
+              <Button variant="ghost" size="sm" onClick={addMilestone}>
+                <Plus className="w-4 h-4 mr-1" /> Add Milestone
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Card 8: Pricing Configuration */}
           {selectedPackages.length > 0 && (
             <Card variant="admin">
               <CardHeader>
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="flex items-center space-x-2">
-                    <Calculator className="w-5 h-5 text-fm-magenta-600" />
-                    <CardTitle>Pricing Configuration</CardTitle>
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-fm-magenta-100 flex items-center justify-center">
+                    <Calculator className="w-4 h-4 text-fm-magenta-600" />
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowAdvancedPricing(!showAdvancedPricing)}
-                  >
-                    {showAdvancedPricing ? 'Simple' : 'Advanced'} Pricing
-                  </Button>
+                  <CardTitle>Pricing Modifiers</CardTitle>
                 </div>
               </CardHeader>
-              <CardContent className="p-4 sm:p-6 space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
-                    <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Client Size</label>
+                    <label className="text-xs font-medium text-fm-neutral-500 mb-1 block">
+                      Client Size ({((PRICING_MODIFIERS.clientSize[clientSizeMultiplier] || 1) * 100 - 100).toFixed(0)}%)
+                    </label>
                     <select
+                      className={selectCls}
                       value={clientSizeMultiplier}
                       onChange={(e) => setClientSizeMultiplier(e.target.value)}
-                      className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400 appearance-none"
                     >
-                      <option value="startup">Startup ({Math.round(PRICING_MODIFIERS.clientSize.startup * 100 - 100)}%)</option>
-                      <option value="small">Small Business ({Math.round(PRICING_MODIFIERS.clientSize.small * 100 - 100)}%)</option>
-                      <option value="medium">Medium Business (Base Price)</option>
-                      <option value="large">Large Business (+{Math.round(PRICING_MODIFIERS.clientSize.large * 100 - 100)}%)</option>
-                      <option value="enterprise">Enterprise (+{Math.round(PRICING_MODIFIERS.clientSize.enterprise * 100 - 100)}%)</option>
+                      {Object.entries(PRICING_MODIFIERS.clientSize).map(([k, v]) => (
+                        <option key={k} value={k}>
+                          {k} ({v > 1 ? '+' : ''}{((v - 1) * 100).toFixed(0)}%)
+                        </option>
+                      ))}
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Timeline</label>
+                    <label className="text-xs font-medium text-fm-neutral-500 mb-1 block">
+                      Urgency ({((PRICING_MODIFIERS.urgency[urgencyMultiplier] || 1) * 100 - 100).toFixed(0)}%)
+                    </label>
                     <select
+                      className={selectCls}
                       value={urgencyMultiplier}
                       onChange={(e) => setUrgencyMultiplier(e.target.value)}
-                      className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400 appearance-none"
                     >
-                      <option value="standard">Standard Timeline</option>
-                      <option value="priority">Priority (+{Math.round(PRICING_MODIFIERS.urgency.priority * 100 - 100)}%)</option>
-                      <option value="rush">Rush Delivery (+{Math.round(PRICING_MODIFIERS.urgency.rush * 100 - 100)}%)</option>
+                      {Object.entries(PRICING_MODIFIERS.urgency).map(([k, v]) => (
+                        <option key={k} value={k}>
+                          {k} ({v > 1 ? '+' : ''}{((v - 1) * 100).toFixed(0)}%)
+                        </option>
+                      ))}
                     </select>
                   </div>
                   {proposal.proposalType === 'retainer' && (
                     <div>
-                      <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Retainer Period</label>
+                      <label className="text-xs font-medium text-fm-neutral-500 mb-1 block">
+                        Retainer Duration (-{((PRICING_MODIFIERS.retainerDiscount[retainerDuration] || 0) * 100).toFixed(0)}%)
+                      </label>
                       <select
+                        className={selectCls}
                         value={retainerDuration}
                         onChange={(e) => setRetainerDuration(e.target.value)}
-                        className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400 appearance-none"
                       >
-                        <option value="3-months">3 Months (-{Math.round(PRICING_MODIFIERS.retainerDiscount['3-months'] * 100)}%)</option>
-                        <option value="6-months">6 Months (-{Math.round(PRICING_MODIFIERS.retainerDiscount['6-months'] * 100)}%)</option>
-                        <option value="12-months">12 Months (-{Math.round(PRICING_MODIFIERS.retainerDiscount['12-months'] * 100)}%)</option>
-                        <option value="24-months">24 Months (-{Math.round(PRICING_MODIFIERS.retainerDiscount['24-months'] * 100)}%)</option>
+                        {Object.entries(PRICING_MODIFIERS.retainerDiscount).map(([k, v]) => (
+                          <option key={k} value={k}>
+                            {k.replace('-', ' ')} (-{(v * 100).toFixed(0)}%)
+                          </option>
+                        ))}
                       </select>
                     </div>
                   )}
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-fm-neutral-900 mb-1.5">Payment Terms</label>
-                  <select
-                    value={proposal.investment.paymentTerms}
-                    onChange={(e) => setProposal(prev => ({
-                      ...prev,
-                      investment: { ...prev.investment, paymentTerms: e.target.value as any }
-                    }))}
-                    className="w-full h-12 px-3 py-2 text-base bg-fm-neutral-50 border border-fm-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 focus:ring-offset-2 transition-all duration-200 hover:border-fm-magenta-400 appearance-none max-w-md"
-                  >
-                    <option value="50-50">50% Advance, 50% on Delivery</option>
-                    <option value="monthly">Monthly Billing (Retainer)</option>
-                    <option value="quarterly">Quarterly Billing</option>
-                    <option value="milestone-based">Milestone Based Payments</option>
-                    <option value="upfront">100% Upfront</option>
-                  </select>
                 </div>
               </CardContent>
             </Card>
           )}
         </div>
 
-        {/* Right Column - Proposal Summary & Pricing */}
-        <div className="space-y-4 sm:space-y-6">
-          {/* Pricing Summary */}
-          <div className="grid grid-cols-1 gap-4">
+        {/* RIGHT COLUMN — Preview + Summary */}
+        <div className="hidden xl:block xl:col-span-2 space-y-4 sm:space-y-6">
+          {/* Pricing summary */}
+          <div className="grid grid-cols-2 gap-4">
             <MetricCard
               title="Subtotal"
-              value={`₹${proposal.investment.subtotal.toLocaleString('en-IN')}`}
-              subtitle="Before discounts"
+              value={fmt(proposal.investment?.subtotal || 0)}
+              subtitle="Before discount"
               icon={<Calculator className="w-6 h-6" />}
               variant="admin"
             />
-            {proposal.investment.discount > 0 && (
-              <MetricCard
-                title="Discount"
-                value={`-₹${proposal.investment.discount.toLocaleString('en-IN')}`}
-                subtitle={proposal.investment.discountReason || 'Applied discount'}
-                icon={<DollarSign className="w-6 h-6" />}
-                variant="secondary"
-              />
-            )}
             <MetricCard
-              title="Total Investment"
-              value={`₹${proposal.investment.total.toLocaleString('en-IN')}`}
-              subtitle={`${proposal.proposalType === 'retainer' ? 'per month' : 'project total'}`}
+              title="Total"
+              value={fmt(proposal.investment?.total || 0)}
+              subtitle={
+                proposal.investment?.discount
+                  ? `Disc: ${fmt(proposal.investment.discount)}`
+                  : 'No discount'
+              }
               icon={<CreditCard className="w-6 h-6" />}
-              variant="success"
-              className="ring-2 ring-fm-magenta-200"
+              variant="admin"
             />
           </div>
 
-          {/* Proposal Preview */}
-          <Card variant="glass" className="hidden lg:block">
-            <CardHeader>
-              <CardTitle>Proposal Preview</CardTitle>
-              <CardDescription>Live preview of your proposal</CardDescription>
-            </CardHeader>
-            <CardContent className="p-4 sm:p-6">
-              <div className="bg-white border-2 border-fm-neutral-200 rounded-lg p-4 sm:p-6 text-sm max-h-96 overflow-y-auto">
-                {/* Header */}
-                <div className="border-b pb-4 mb-4">
-                  <div className="flex justify-between items-start">
-                    <div className="flex items-center space-x-3">
-                      <img 
-                        src="/logo.png" 
-                        alt="Freaking Minds Logo" 
-                        className="h-12 w-auto object-contain"
-                      />
-                      <div>
-                        <h3 className="text-lg font-bold text-fm-magenta-600">FREAKING MINDS</h3>
-                        <p className="text-xs text-fm-neutral-600">Digital Marketing Proposal</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <h4 className="text-lg font-bold">PROPOSAL</h4>
-                      <p className="text-fm-neutral-600">#{proposal.proposalNumber}</p>
-                    </div>
-                  </div>
-                </div>
+          {/* Live Preview */}
+          <div className="xl:sticky xl:top-4">
+            <Card variant="glass">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">Live Preview</CardTitle>
+                <p className="text-xs text-fm-neutral-500">Matches the downloaded PDF</p>
+              </CardHeader>
+              <CardContent className="p-3">
+                <ProposalPreview proposal={proposal} fmt={fmt} clients={clients} />
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
 
-                {/* Title */}
-                <h2 className="text-lg sm:text-xl font-bold text-fm-neutral-900 mb-4">{proposal.title}</h2>
-
-                {/* Client Info */}
-                {(proposal.client.clientId || proposal.client.prospectInfo?.company) && (
-                  <div className="mb-6">
-                    <h3 className="font-semibold text-fm-neutral-900 mb-2">Prepared for:</h3>
-                    {proposal.client.isExisting && proposal.client.clientId ? (
-                      <div>
-                        {(() => {
-                          const client = clients.find(c => c.id === proposal.client.clientId);
-                          return client ? (
-                            <div>
-                              <p className="font-medium">{client.name}</p>
-                              <p className="text-fm-neutral-600">{client.email}</p>
-                            </div>
-                          ) : null;
-                        })()}
-                      </div>
-                    ) : proposal.client.prospectInfo && (
-                      <div>
-                        <p className="font-medium">{proposal.client.prospectInfo.company}</p>
-                        <p className="text-fm-neutral-600">{proposal.client.prospectInfo.name}</p>
-                        <p className="text-fm-neutral-600">{proposal.client.prospectInfo.email}</p>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Services Overview */}
-                {selectedPackages.length > 0 && (
-                  <div className="mb-6">
-                    <h3 className="font-semibold text-fm-neutral-900 mb-3">Proposed Services:</h3>
-                    <div className="space-y-3">
-                      {selectedPackages.map((selected, index) => (
-                        <div key={index} className="border-l-4 border-fm-magenta-500 pl-3">
-                          <h4 className="font-medium text-fm-neutral-900">{selected.package.name}</h4>
-                          <p className="text-sm text-fm-neutral-600">{selected.package.description}</p>
-                          <div className="flex items-center mt-1 space-x-4 text-xs text-fm-neutral-500">
-                            <span className="flex items-center">
-                              <Clock className="w-3 h-3 mr-1" />
-                              {selected.package.timeline}
-                            </span>
-                            {selected.variant && (
-                              <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded">
-                                {selected.variant}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Investment Summary */}
-                <div className="bg-fm-neutral-50 rounded-lg p-4 mb-6">
-                  <h3 className="font-semibold text-fm-neutral-900 mb-3">Investment Summary:</h3>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span>Subtotal:</span>
-                      <span>₹{proposal.investment.subtotal.toLocaleString('en-IN')}</span>
-                    </div>
-                    {proposal.investment.discount > 0 && (
-                      <div className="flex justify-between text-green-600">
-                        <span>Discount ({proposal.investment.discountReason}):</span>
-                        <span>-₹{proposal.investment.discount.toLocaleString('en-IN')}</span>
-                      </div>
-                    )}
-                    <div className="flex justify-between font-bold text-base sm:text-lg border-t pt-2">
-                      <span>Total Investment:</span>
-                      <span className="text-fm-magenta-600">₹{proposal.investment.total.toLocaleString('en-IN')}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Valid Until */}
-                <div className="text-center text-sm text-fm-neutral-600 border-t pt-4">
-                  <p>This proposal is valid until: {new Date(proposal.validUntil).toLocaleDateString()}</p>
-                  <p className="mt-2 text-xs">Thank you for considering Freaking Minds for your digital marketing needs.</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+      {/* MOBILE: Fixed bottom bar */}
+      <div
+        className="fixed bottom-0 left-0 right-0 xl:hidden bg-white border-t border-fm-neutral-200 px-4 py-3"
+        style={{ zIndex: 40 }}
+      >
+        <div className="flex items-center justify-between max-w-lg mx-auto">
+          <div>
+            <p className="text-xs text-fm-neutral-500">Total Investment</p>
+            <p className="text-lg font-bold text-fm-neutral-900">{fmt(proposal.investment?.total || 0)}</p>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="ghost" size="sm" onClick={handlePreview}>
+              <Eye className="w-4 h-4" />
+            </Button>
+            <Button variant="secondary" size="sm" onClick={handleDownload}>
+              <Download className="w-4 h-4" />
+            </Button>
+            <Button variant="primary" size="sm" onClick={handleSave} disabled={saving}>
+              <Save className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
       </div>
     </div>
   );
+}
+
+// ---------------------------------------------------------------------------
+// InfoField sub-component
+// ---------------------------------------------------------------------------
+
+function InfoField({ label, value, fallback }: { label: string; value?: string; fallback?: string }) {
+  return (
+    <div>
+      <p className="text-xs font-medium text-fm-neutral-500 mb-0.5">{label}</p>
+      <p className="text-sm text-fm-neutral-900">
+        {value || <span className="text-fm-neutral-400 italic">{fallback || '\u2014'}</span>}
+      </p>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// ProposalPreview — A4-ratio HTML preview mirroring the PDF
+// ---------------------------------------------------------------------------
+
+function ProposalPreview({
+  proposal,
+  fmt,
+  clients,
+}: {
+  proposal: Proposal;
+  fmt: (n: number) => string;
+  clients: InvoiceClient[];
+}) {
+  const clientName = (() => {
+    if (proposal.client.isExisting && proposal.client.clientId) {
+      return clients.find((c) => c.id === proposal.client.clientId)?.name || 'Client';
+    }
+    return proposal.client.prospectInfo?.company || 'Client';
+  })();
+
+  return (
+    <div
+      className="bg-white rounded-lg overflow-hidden text-[10px] leading-snug shadow-inner border border-fm-neutral-200"
+      style={{ aspectRatio: '210 / 297', maxHeight: 540, overflowY: 'auto' }}
+    >
+      {/* Purple header band */}
+      <div style={{ height: 10, background: '#4a1942' }} />
+      <div style={{ height: 3, background: '#c9325d' }} />
+
+      {/* Company + proposal info */}
+      <div className="px-3 pt-2 pb-1 flex justify-between items-start">
+        <div>
+          <p className="font-bold text-[11px]" style={{ color: '#0f0f0f' }}>
+            FREAKING MINDS
+          </p>
+          <p className="text-[7px] tracking-widest" style={{ color: '#c9325d' }}>
+            CREATIVE MARKETING AGENCY
+          </p>
+        </div>
+        <div className="text-right">
+          <p className="font-bold text-[11px]" style={{ color: '#0f0f0f' }}>
+            PROPOSAL
+          </p>
+          <p className="text-[9px] font-medium" style={{ color: '#c9325d' }}>
+            #{proposal.proposalNumber || nextPreviewFallback(proposal)}
+          </p>
+        </div>
+      </div>
+
+      <div style={{ height: 1, background: '#c9325d', margin: '0 8px' }} />
+
+      {/* Client info */}
+      <div className="px-3 pt-2 pb-1">
+        <p className="text-[7px] tracking-widest font-bold" style={{ color: '#c9325d' }}>
+          PREPARED FOR
+        </p>
+        <p className="font-bold text-[9px] mt-0.5" style={{ color: '#0f0f0f' }}>
+          {clientName}
+        </p>
+      </div>
+
+      {/* Title */}
+      <div className="px-3 py-1">
+        <p className="text-[9px] font-medium" style={{ color: '#0f0f0f' }}>
+          {proposal.title || 'Untitled Proposal'}
+        </p>
+      </div>
+
+      {/* Services mini table */}
+      {(proposal.servicePackages?.length > 0 || proposal.customServices?.length) && (
+        <div className="mx-3 mt-1">
+          <div
+            className="text-[7px] font-bold px-1.5 py-0.5 text-white"
+            style={{ background: '#4a1942' }}
+          >
+            SERVICE PACKAGES
+          </div>
+          {proposal.servicePackages?.map((pkg, i) => {
+            const pkgInv = proposal.investment?.packages?.find((p) => p.packageId === pkg.id);
+            return (
+              <div
+                key={pkg.id}
+                className="flex justify-between px-1.5 py-0.5"
+                style={{ background: i % 2 === 1 ? '#fcf5f8' : 'white' }}
+              >
+                <span>{pkg.name}</span>
+                <span className="font-medium">{fmt(pkgInv?.price ?? pkg.basePrice)}</span>
+              </div>
+            );
+          })}
+          {proposal.customServices?.map((cs, i) => (
+            <div
+              key={i}
+              className="flex justify-between px-1.5 py-0.5"
+              style={{
+                background:
+                  ((proposal.servicePackages?.length || 0) + i) % 2 === 1 ? '#fcf5f8' : 'white',
+              }}
+            >
+              <span>{cs.name}</span>
+              <span className="font-medium">{fmt(cs.price)}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Total ribbon */}
+      {proposal.investment && (
+        <div className="mx-3 mt-2">
+          {proposal.investment.discount > 0 && (
+            <div className="flex justify-between px-1.5 text-[8px]" style={{ color: '#059669' }}>
+              <span>Discount</span>
+              <span>-{fmt(proposal.investment.discount)}</span>
+            </div>
+          )}
+          <div
+            className="flex justify-between px-2 py-1 text-white font-bold text-[9px] mt-0.5"
+            style={{ background: '#c9325d' }}
+          >
+            <span>TOTAL INVESTMENT</span>
+            <span>{fmt(proposal.investment.total)}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Timeline summary */}
+      {proposal.timeline?.kickoff && (
+        <div className="px-3 mt-2">
+          <p className="text-[7px] font-bold" style={{ color: '#c9325d' }}>
+            TIMELINE
+          </p>
+          <div className="flex gap-3 mt-0.5 text-[8px]">
+            <span>
+              Kickoff:{' '}
+              {new Date(proposal.timeline.kickoff).toLocaleDateString('en-IN', {
+                day: '2-digit',
+                month: 'short',
+              })}
+            </span>
+            <span>
+              End:{' '}
+              {new Date(proposal.timeline.completion).toLocaleDateString('en-IN', {
+                day: '2-digit',
+                month: 'short',
+              })}
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* Valid until */}
+      <div className="px-3 mt-2 text-[7px]" style={{ color: '#646464' }}>
+        Valid until:{' '}
+        {new Date(proposal.validUntil).toLocaleDateString('en-IN', {
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric',
+        })}
+      </div>
+
+      {/* Footer */}
+      <div className="mt-auto">
+        <div style={{ height: 3, background: '#c9325d', marginTop: 8 }} />
+        <div style={{ height: 6, background: '#4a1942' }} />
+      </div>
+    </div>
+  );
+}
+
+function nextPreviewFallback(proposal: Proposal): string {
+  return proposal.proposalNumber || 'PM—/2026';
 }

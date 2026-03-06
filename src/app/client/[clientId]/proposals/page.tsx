@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   MetricCard,
   DashboardCard as Card,
@@ -19,11 +19,14 @@ import {
   ThumbsDown,
   MessageSquare,
   Loader2,
+  Download,
+  AlertTriangle,
 } from 'lucide-react';
 import { useClientPortal } from '@/lib/client-portal/context';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { EmptyState } from '@/components/ui/empty-state';
 import { StatusBadge } from '@/components/ui/status-badge';
+import type { ProposalPDFGenerator } from '@/lib/admin/proposal-pdf-generator';
 
 interface Proposal {
   id: string;
@@ -33,16 +36,60 @@ interface Proposal {
   status: string;
   validUntil: string;
   investment: { total?: number; currency?: string; breakdown?: Array<{ item: string; amount: number }> };
+  currency?: string;
   servicePackages: Array<{ name: string; description?: string; price?: number }>;
   customServices: Array<{ name: string; description?: string; price?: number }>;
-  timeline: { duration?: string; startDate?: string; phases?: Array<{ name: string; duration: string }> };
+  timeline: { duration?: string; startDate?: string; completionDate?: string; milestones?: Array<{ name: string; date?: string; deliverables?: string[] }> };
   executiveSummary: string | null;
+  problemStatement: string | null;
   proposedSolution: string | null;
+  whyFreakingMinds: string | null;
   nextSteps: string | null;
+  termsAndConditions: string | null;
   sentAt: string | null;
   viewedAt: string | null;
   approvedAt: string | null;
   createdAt: string;
+}
+
+const CURRENCY_SYMBOLS: Record<string, string> = {
+  INR: '\u20B9',
+  USD: '$',
+  GBP: '\u00A3',
+  AED: 'AED ',
+  EUR: '\u20AC',
+};
+
+const CURRENCY_LOCALES: Record<string, string> = {
+  INR: 'en-IN',
+  USD: 'en-US',
+  GBP: 'en-GB',
+  AED: 'en-AE',
+  EUR: 'de-DE',
+};
+
+function formatCurrency(amount: number, currency?: string): string {
+  const c = currency || 'INR';
+  const symbol = CURRENCY_SYMBOLS[c] || '\u20B9';
+  const locale = CURRENCY_LOCALES[c] || 'en-IN';
+  return `${symbol}${amount.toLocaleString(locale)}`;
+}
+
+function getProposalCurrency(proposal: Proposal): string {
+  return proposal.currency || proposal.investment?.currency || 'INR';
+}
+
+function isExpiringSoon(validUntil: string): boolean {
+  if (!validUntil) return false;
+  const expiryDate = new Date(validUntil);
+  const now = new Date();
+  const daysUntilExpiry = Math.ceil((expiryDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+  return daysUntilExpiry >= 0 && daysUntilExpiry <= 7;
+}
+
+function isExpired(validUntil: string): boolean {
+  if (!validUntil) return false;
+  return new Date(validUntil) < new Date();
 }
 
 export default function ClientProposalsPage() {
@@ -53,7 +100,18 @@ export default function ClientProposalsPage() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [respondingTo, setRespondingTo] = useState<string | null>(null);
   const [feedback, setFeedback] = useState('');
-  const [submitting, setSubmitting] = useState(false);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+
+  // Lazy-load PDF generator
+  const pdfGenRef = useRef<ProposalPDFGenerator | null>(null);
+  const getPdfGen = async () => {
+    if (!pdfGenRef.current) {
+      const { ProposalPDFGenerator } = await import('@/lib/admin/proposal-pdf-generator');
+      pdfGenRef.current = new ProposalPDFGenerator();
+    }
+    return pdfGenRef.current;
+  };
 
   useEffect(() => {
     if (!clientId) return;
@@ -77,8 +135,8 @@ export default function ClientProposalsPage() {
   }, [clientId]);
 
   const handleProposalAction = async (proposalId: string, action: 'approve' | 'decline' | 'request_edit') => {
-    if (submitting) return;
-    setSubmitting(true);
+    if (actionLoading) return;
+    setActionLoading(`${proposalId}-${action}`);
     try {
       const res = await fetch(`/api/client-portal/${clientId}/proposals`, {
         method: 'PUT',
@@ -87,7 +145,6 @@ export default function ClientProposalsPage() {
       });
       if (res.ok) {
         const json = await res.json();
-        // Update local state
         setProposals((prev) =>
           prev.map((p) =>
             p.id === proposalId ? { ...p, status: json.data?.status || action } : p
@@ -99,7 +156,46 @@ export default function ClientProposalsPage() {
     } catch (err) {
       console.error('Error responding to proposal:', err);
     } finally {
-      setSubmitting(false);
+      setActionLoading(null);
+    }
+  };
+
+  const handleDownloadPdf = async (proposal: Proposal) => {
+    try {
+      setDownloadingId(proposal.id);
+      const gen = await getPdfGen();
+      // Map client portal proposal shape to admin Proposal shape for PDF generator
+      const pdfProposal = {
+        ...proposal,
+        client: { isExisting: true, clientId: clientId || '', prospectInfo: {} },
+        investment: {
+          ...proposal.investment,
+          currency: getProposalCurrency(proposal),
+        },
+      } as any;
+      const pdfDataUri = await gen.generateProposal(pdfProposal);
+
+      // Convert data URI to blob and trigger download
+      const byteString = atob(pdfDataUri.split(',')[1]);
+      const mimeString = pdfDataUri.split(',')[0].split(':')[1].split(';')[0];
+      const ab = new ArrayBuffer(byteString.length);
+      const ia = new Uint8Array(ab);
+      for (let i = 0; i < byteString.length; i++) {
+        ia[i] = byteString.charCodeAt(i);
+      }
+      const blob = new Blob([ab], { type: mimeString });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${proposal.proposalNumber || 'Proposal'}-${proposal.title.replace(/[^a-zA-Z0-9]/g, '-')}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Error downloading proposal PDF:', err);
+    } finally {
+      setDownloadingId(null);
     }
   };
 
@@ -108,7 +204,9 @@ export default function ClientProposalsPage() {
   const totalValue = proposals
     .filter((p) => p.status === 'approved' || p.status === 'converted')
     .reduce((sum, p) => sum + (p.investment?.total || 0), 0);
-  const proposalCurrency = proposals.find(p => p.investment?.currency)?.investment?.currency || 'INR';
+  const primaryCurrency = proposals.find(p => getProposalCurrency(p) !== 'INR')
+    ? getProposalCurrency(proposals.find(p => getProposalCurrency(p) !== 'INR')!)
+    : 'INR';
 
   if (loading) {
     return <LoadingSpinner />;
@@ -144,7 +242,7 @@ export default function ClientProposalsPage() {
         />
         <MetricCard
           title="Total Value"
-          value={totalValue > 0 ? (proposalCurrency === 'INR' ? `₹${totalValue.toLocaleString()}` : `${proposalCurrency} ${totalValue.toLocaleString()}`) : '—'}
+          value={totalValue > 0 ? formatCurrency(totalValue, primaryCurrency) : '\u2014'}
           subtitle="Approved proposal value"
           icon={<DollarSign className="w-6 h-6" />}
           variant="client"
@@ -162,9 +260,28 @@ export default function ClientProposalsPage() {
         <div className="space-y-3">
           {proposals.map((proposal) => {
             const isExpanded = expandedId === proposal.id;
+            const currency = getProposalCurrency(proposal);
+            const expiringSoon = proposal.validUntil && isExpiringSoon(proposal.validUntil) && (proposal.status === 'sent' || proposal.status === 'viewed');
+            const proposalExpired = proposal.validUntil && isExpired(proposal.validUntil) && (proposal.status === 'sent' || proposal.status === 'viewed');
+
             return (
               <Card key={proposal.id} variant="client" hover>
                 <CardContent className="p-4 sm:p-5">
+                  {/* Expiry Warning Banner */}
+                  {(expiringSoon || proposalExpired) && (
+                    <div className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium mb-3 ${
+                      proposalExpired
+                        ? 'bg-red-50 text-red-700'
+                        : 'bg-amber-50 text-amber-700'
+                    }`}>
+                      <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                      {proposalExpired
+                        ? 'This proposal has expired. Please contact us for an updated proposal.'
+                        : `This proposal expires on ${new Date(proposal.validUntil).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}. Please review soon.`
+                      }
+                    </div>
+                  )}
+
                   {/* Summary row */}
                   <div
                     className="flex items-center gap-3 sm:gap-4 cursor-pointer"
@@ -194,7 +311,7 @@ export default function ClientProposalsPage() {
                         <span className="capitalize">{proposal.proposalType}</span>
                         {proposal.investment?.total && (
                           <span className="font-medium text-fm-neutral-700">
-                            {(proposal.investment?.currency === 'INR' || !proposal.investment?.currency) ? '₹' : proposal.investment.currency + ' '}{proposal.investment.total.toLocaleString()}
+                            {formatCurrency(proposal.investment.total, currency)}
                           </span>
                         )}
                         {proposal.validUntil && (
@@ -220,14 +337,14 @@ export default function ClientProposalsPage() {
                       {proposal.executiveSummary && (
                         <div>
                           <h4 className="text-sm font-semibold text-fm-neutral-800 mb-1">Executive Summary</h4>
-                          <p className="text-sm text-fm-neutral-600 leading-relaxed">{proposal.executiveSummary}</p>
+                          <p className="text-sm text-fm-neutral-600 leading-relaxed whitespace-pre-line">{proposal.executiveSummary}</p>
                         </div>
                       )}
 
                       {proposal.proposedSolution && (
                         <div>
                           <h4 className="text-sm font-semibold text-fm-neutral-800 mb-1">Proposed Solution</h4>
-                          <p className="text-sm text-fm-neutral-600 leading-relaxed">{proposal.proposedSolution}</p>
+                          <p className="text-sm text-fm-neutral-600 leading-relaxed whitespace-pre-line">{proposal.proposedSolution}</p>
                         </div>
                       )}
 
@@ -245,7 +362,9 @@ export default function ClientProposalsPage() {
                                   )}
                                 </div>
                                 {pkg.price && (
-                                  <span className="text-fm-neutral-700 font-medium">{(proposal.investment?.currency === 'INR' || !proposal.investment?.currency) ? '₹' : proposal.investment?.currency + ' '}{pkg.price.toLocaleString()}</span>
+                                  <span className="text-fm-neutral-700 font-medium">
+                                    {formatCurrency(pkg.price, currency)}
+                                  </span>
                                 )}
                               </div>
                             ))}
@@ -258,11 +377,23 @@ export default function ClientProposalsPage() {
                                   )}
                                 </div>
                                 {svc.price && (
-                                  <span className="text-fm-neutral-700 font-medium">{(proposal.investment?.currency === 'INR' || !proposal.investment?.currency) ? '₹' : proposal.investment?.currency + ' '}{svc.price.toLocaleString()}</span>
+                                  <span className="text-fm-neutral-700 font-medium">
+                                    {formatCurrency(svc.price, currency)}
+                                  </span>
                                 )}
                               </div>
                             ))}
                           </div>
+                        </div>
+                      )}
+
+                      {/* Investment Total */}
+                      {proposal.investment?.total && (
+                        <div className="flex items-center justify-between p-3 bg-fm-magenta-600/5 border border-fm-magenta-600/10 rounded-lg">
+                          <span className="text-sm font-semibold text-fm-neutral-800">Total Investment</span>
+                          <span className="text-lg font-bold text-fm-magenta-600">
+                            {formatCurrency(proposal.investment.total, currency)}
+                          </span>
                         </div>
                       )}
 
@@ -278,12 +409,20 @@ export default function ClientProposalsPage() {
                       {proposal.nextSteps && (
                         <div>
                           <h4 className="text-sm font-semibold text-fm-neutral-800 mb-1">Next Steps</h4>
-                          <p className="text-sm text-fm-neutral-600 leading-relaxed">{proposal.nextSteps}</p>
+                          <p className="text-sm text-fm-neutral-600 leading-relaxed whitespace-pre-line">{proposal.nextSteps}</p>
+                        </div>
+                      )}
+
+                      {/* Terms & Conditions */}
+                      {proposal.termsAndConditions && (
+                        <div>
+                          <h4 className="text-sm font-semibold text-fm-neutral-800 mb-1">Terms & Conditions</h4>
+                          <p className="text-xs text-fm-neutral-500 leading-relaxed whitespace-pre-line">{proposal.termsAndConditions}</p>
                         </div>
                       )}
 
                       {/* Dates */}
-                      <div className="flex items-center gap-4 text-xs text-fm-neutral-500 pt-2 border-t border-fm-neutral-100">
+                      <div className="flex items-center gap-4 text-xs text-fm-neutral-500 pt-2 border-t border-fm-neutral-100 flex-wrap">
                         {proposal.sentAt && (
                           <span>Sent: {new Date(proposal.sentAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                         )}
@@ -301,63 +440,80 @@ export default function ClientProposalsPage() {
                         )}
                       </div>
 
-                      {/* Approval Actions — only for sent/viewed proposals */}
-                      {(proposal.status === 'sent' || proposal.status === 'viewed') && (
-                        <div className="pt-3 border-t border-fm-neutral-100">
-                          {respondingTo === proposal.id ? (
-                            <div className="space-y-3">
-                              <textarea
-                                value={feedback}
-                                onChange={(e) => setFeedback(e.target.value)}
-                                placeholder="Add feedback or comments (optional)..."
-                                className="w-full p-3 rounded-lg border border-fm-neutral-200 text-sm text-fm-neutral-700 placeholder-fm-neutral-400 focus:outline-none focus:ring-2 focus:ring-fm-magenta-600/30 focus:border-fm-magenta-600 resize-none"
-                                rows={3}
-                              />
-                              <div className="flex flex-wrap gap-2">
-                                <button
-                                  onClick={() => handleProposalAction(proposal.id, 'approve')}
-                                  disabled={submitting}
-                                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 transition-colors"
-                                >
-                                  {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <ThumbsUp className="w-4 h-4" />}
-                                  Approve
-                                </button>
-                                <button
-                                  onClick={() => handleProposalAction(proposal.id, 'decline')}
-                                  disabled={submitting}
-                                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold text-white bg-red-500 hover:bg-red-600 disabled:opacity-50 transition-colors"
-                                >
-                                  {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <ThumbsDown className="w-4 h-4" />}
-                                  Decline
-                                </button>
-                                <button
-                                  onClick={() => handleProposalAction(proposal.id, 'request_edit')}
-                                  disabled={submitting}
-                                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold text-fm-neutral-700 bg-fm-neutral-100 hover:bg-fm-neutral-200 disabled:opacity-50 transition-colors"
-                                >
-                                  {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <MessageSquare className="w-4 h-4" />}
-                                  Request Changes
-                                </button>
-                                <button
-                                  onClick={() => { setRespondingTo(null); setFeedback(''); }}
-                                  disabled={submitting}
-                                  className="px-4 py-2 rounded-lg text-sm text-fm-neutral-500 hover:text-fm-neutral-700 transition-colors"
-                                >
-                                  Cancel
-                                </button>
-                              </div>
-                            </div>
+                      {/* Download PDF + Approval Actions */}
+                      <div className="pt-3 border-t border-fm-neutral-100 flex flex-wrap items-center gap-2">
+                        {/* Download PDF Button */}
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleDownloadPdf(proposal); }}
+                          disabled={downloadingId === proposal.id}
+                          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold text-fm-neutral-700 bg-fm-neutral-100 hover:bg-fm-neutral-200 disabled:opacity-50 transition-colors"
+                        >
+                          {downloadingId === proposal.id ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
                           ) : (
-                            <button
-                              onClick={() => setRespondingTo(proposal.id)}
-                              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold text-white bg-fm-magenta-600 hover:bg-fm-magenta-700 transition-colors"
-                            >
-                              <MessageSquare className="w-4 h-4" />
-                              Review & Respond
-                            </button>
+                            <Download className="w-4 h-4" />
                           )}
-                        </div>
-                      )}
+                          Download PDF
+                        </button>
+
+                        {/* Approval Actions — only for sent/viewed proposals */}
+                        {(proposal.status === 'sent' || proposal.status === 'viewed') && (
+                          <>
+                            {respondingTo === proposal.id ? (
+                              <div className="w-full mt-2 space-y-3">
+                                <textarea
+                                  value={feedback}
+                                  onChange={(e) => setFeedback(e.target.value)}
+                                  placeholder="Add feedback or comments (optional)..."
+                                  className="w-full p-3 rounded-lg border border-fm-neutral-200 text-sm text-fm-neutral-700 placeholder-fm-neutral-400 focus:outline-none focus:ring-2 focus:ring-fm-magenta-600/30 focus:border-fm-magenta-600 resize-none"
+                                  rows={3}
+                                />
+                                <div className="flex flex-wrap gap-2">
+                                  <button
+                                    onClick={() => handleProposalAction(proposal.id, 'approve')}
+                                    disabled={!!actionLoading}
+                                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 transition-colors"
+                                  >
+                                    {actionLoading === `${proposal.id}-approve` ? <Loader2 className="w-4 h-4 animate-spin" /> : <ThumbsUp className="w-4 h-4" />}
+                                    Approve
+                                  </button>
+                                  <button
+                                    onClick={() => handleProposalAction(proposal.id, 'decline')}
+                                    disabled={!!actionLoading}
+                                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold text-white bg-red-500 hover:bg-red-600 disabled:opacity-50 transition-colors"
+                                  >
+                                    {actionLoading === `${proposal.id}-decline` ? <Loader2 className="w-4 h-4 animate-spin" /> : <ThumbsDown className="w-4 h-4" />}
+                                    Decline
+                                  </button>
+                                  <button
+                                    onClick={() => handleProposalAction(proposal.id, 'request_edit')}
+                                    disabled={!!actionLoading}
+                                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold text-fm-neutral-700 bg-fm-neutral-100 hover:bg-fm-neutral-200 disabled:opacity-50 transition-colors"
+                                  >
+                                    {actionLoading === `${proposal.id}-request_edit` ? <Loader2 className="w-4 h-4 animate-spin" /> : <MessageSquare className="w-4 h-4" />}
+                                    Request Changes
+                                  </button>
+                                  <button
+                                    onClick={() => { setRespondingTo(null); setFeedback(''); }}
+                                    disabled={!!actionLoading}
+                                    className="px-4 py-2 rounded-lg text-sm text-fm-neutral-500 hover:text-fm-neutral-700 transition-colors"
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => setRespondingTo(proposal.id)}
+                                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold text-white bg-fm-magenta-600 hover:bg-fm-magenta-700 transition-colors"
+                              >
+                                <MessageSquare className="w-4 h-4" />
+                                Review & Respond
+                              </button>
+                            )}
+                          </>
+                        )}
+                      </div>
                     </div>
                   )}
                 </CardContent>

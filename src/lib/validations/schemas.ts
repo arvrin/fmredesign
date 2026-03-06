@@ -200,7 +200,7 @@ export const updateInvoiceSchema = z.object({
 // ---------------------------------------------------------------------------
 
 export const createProposalSchema = z.object({
-  title: optionalString,
+  title: nonEmptyString,
   client: z.object({
     isExisting: z.boolean().optional(),
     clientId: optionalString,
@@ -210,9 +210,10 @@ export const createProposalSchema = z.object({
   customServices: z.array(z.unknown()).optional(),
   timeline: z.record(z.string(), z.unknown()).optional(),
   investment: z.record(z.string(), z.unknown()).optional(),
-  proposalType: z.enum(['project', 'retainer', 'hybrid']).optional(),
+  proposalType: z.enum(['retainer', 'project', 'audit', 'consultation', 'hybrid']),
   validUntil: optionalString,
   status: z.enum(['draft', 'sent', 'viewed', 'approved', 'declined', 'expired', 'converted', 'edit_requested']).optional(),
+  discoveryId: optionalString,
 });
 
 export const updateProposalSchema = z.object({

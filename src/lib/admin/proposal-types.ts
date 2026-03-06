@@ -3,6 +3,8 @@
  * Professional proposal system for FreakingMinds digital marketing agency
  */
 
+import type { InvoiceCurrency } from './types';
+
 export interface ProspectClient {
   name: string;
   email: string;
@@ -63,8 +65,14 @@ export interface PricingStructure {
   discount: number;
   discountReason?: string;
   total: number;
+  currency: InvoiceCurrency;
   paymentTerms: 'monthly' | 'quarterly' | '50-50' | 'milestone-based' | 'upfront';
   retainerDiscount?: number;
+  appliedModifiers?: {
+    clientSize: string;
+    urgency: string;
+    retainerDuration?: string;
+  };
 }
 
 export interface Proposal {
@@ -105,7 +113,12 @@ export interface Proposal {
   viewedAt?: string;
   approvedAt?: string;
   createdBy: string;
-  
+
+  // Linking
+  discoveryId?: string;
+  clientFeedback?: string;
+  version?: number;
+
   // Presentation
   template: 'professional' | 'creative' | 'technical' | 'startup';
   brandColors?: { primary: string; secondary: string };
@@ -372,6 +385,158 @@ export const PRICING_MODIFIERS: PricingModifier = {
     '24-months': 0.20
   }
 };
+
+// ---------------------------------------------------------------------------
+// Proposal Templates
+// ---------------------------------------------------------------------------
+
+export type ProposalTemplateId =
+  | 'retainer-indian'
+  | 'retainer-international'
+  | 'project-indian'
+  | 'project-international'
+  | 'audit';
+
+export interface ProposalTemplate {
+  id: ProposalTemplateId;
+  label: string;
+  description: string;
+  currency: InvoiceCurrency;
+  proposalType: Proposal['proposalType'];
+  defaultPackageIds: string[];
+  defaultContent: {
+    executiveSummary: string;
+    problemStatement: string;
+    proposedSolution: string;
+    whyFreakingMinds: string;
+    nextSteps: string;
+    termsAndConditions: string;
+  };
+  generateTitle: (clientName: string) => string;
+}
+
+export const PROPOSAL_TEMPLATES: ProposalTemplate[] = [
+  {
+    id: 'retainer-indian',
+    label: 'Retainer (Indian)',
+    description: 'Monthly retainer for Indian clients — INR, SEO + Social + Content',
+    currency: 'INR',
+    proposalType: 'retainer',
+    defaultPackageIds: ['seo-starter', 'social-starter', 'digital-domination'],
+    generateTitle: (clientName: string) =>
+      `Digital Marketing Retainer Proposal — ${clientName}`,
+    defaultContent: {
+      executiveSummary:
+        'We propose a comprehensive monthly digital marketing retainer to grow your brand\'s online presence, generate qualified leads, and build long-term organic growth. This proposal outlines our strategy across SEO, social media, and content marketing.',
+      problemStatement:
+        'Limited online visibility in a competitive market\nInconsistent social media presence and low engagement\nNo structured content strategy or SEO foundation\nDifficulty measuring ROI of marketing efforts',
+      proposedSolution:
+        'Our integrated approach combines search engine optimization, social media management, and strategic content marketing. Each channel reinforces the others — SEO-optimized content fuels social engagement, and social signals boost search rankings.',
+      whyFreakingMinds:
+        'Proven Track Record: 3+ years delivering results for 50+ clients across industries\nData-Driven Approach: Every decision backed by analytics and measurable outcomes\nTransparent Reporting: Monthly detailed reports with actionable insights\nDedicated Team: Assigned specialists for your account with direct communication\nLocal Expertise: Deep understanding of Indian market dynamics and consumer behavior\nROI Focused: Strategies designed to maximize your return on investment',
+      nextSteps:
+        '1. Proposal Approval: Review and approve this proposal\n2. Contract & Payment: Sign agreement and process initial payment\n3. Kickoff Meeting: Detailed project planning and timeline confirmation\n4. Access & Setup: Provide necessary access to accounts and platforms\n5. Execution Begins: Start implementing strategies within 48 hours',
+      termsAndConditions:
+        'All prices are in INR and exclude GST (18% additional)\n50% advance payment required to commence work\nRemaining payment due within 30 days of invoice\nClient to provide necessary access and materials within agreed timelines\nAdditional revisions beyond scope will be charged separately\nEither party may terminate with 30 days written notice\nAll deliverables remain property of client upon full payment\nFreaking Minds retains right to showcase work in portfolio',
+    },
+  },
+  {
+    id: 'retainer-international',
+    label: 'Retainer (International)',
+    description: 'Monthly retainer for international clients — USD, SEO + Social + Content',
+    currency: 'USD',
+    proposalType: 'retainer',
+    defaultPackageIds: ['seo-starter', 'social-starter', 'digital-domination'],
+    generateTitle: (clientName: string) =>
+      `Digital Marketing Retainer Proposal — ${clientName}`,
+    defaultContent: {
+      executiveSummary:
+        'We propose a comprehensive monthly digital marketing retainer to grow your brand\'s online presence, generate qualified leads, and build long-term organic growth across global markets.',
+      problemStatement:
+        'Limited online visibility in a competitive international market\nInconsistent social media presence and low engagement\nNo structured content strategy or SEO foundation\nDifficulty measuring ROI of marketing efforts',
+      proposedSolution:
+        'Our integrated approach combines search engine optimization, social media management, and strategic content marketing tailored for your target markets. Each channel reinforces the others for maximum impact.',
+      whyFreakingMinds:
+        'Proven Track Record: 3+ years delivering results for clients across continents\nData-Driven Approach: Every decision backed by analytics and measurable outcomes\nTransparent Reporting: Monthly detailed reports with actionable insights\nDedicated Team: Assigned specialists for your account with direct communication\nGlobal Perspective: Experience working with US, UK, Middle East, and European markets\nROI Focused: Strategies designed to maximize your return on investment',
+      nextSteps:
+        '1. Proposal Approval: Review and approve this proposal\n2. Contract & Payment: Sign agreement and process initial payment\n3. Kickoff Meeting: Detailed project planning and timeline confirmation\n4. Access & Setup: Provide necessary access to accounts and platforms\n5. Execution Begins: Start implementing strategies within 48 hours',
+      termsAndConditions:
+        'All prices are in USD\nPayment via international wire transfer or PayPal\n50% advance payment required to commence work\nRemaining payment due within 30 days of invoice\nClient to provide necessary access and materials within agreed timelines\nEither party may terminate with 30 days written notice\nAll deliverables remain property of client upon full payment',
+    },
+  },
+  {
+    id: 'project-indian',
+    label: 'Project (Indian)',
+    description: 'One-time project for Indian clients — INR, Website + Branding',
+    currency: 'INR',
+    proposalType: 'project',
+    defaultPackageIds: ['website-professional'],
+    generateTitle: (clientName: string) =>
+      `Website & Digital Presence Project — ${clientName}`,
+    defaultContent: {
+      executiveSummary:
+        'We propose a complete website development and brand identity project to establish a powerful digital presence for your business. This includes custom design, development, and brand strategy.',
+      problemStatement:
+        'Outdated or non-existent website limiting business growth\nNo cohesive brand identity across digital channels\nPoor mobile experience turning away potential customers\nLack of SEO foundation resulting in low search visibility',
+      proposedSolution:
+        'A ground-up website build with custom design, mobile-first development, SEO optimization, and brand identity guidelines. Delivered in phases with clear milestones and review checkpoints.',
+      whyFreakingMinds:
+        'Proven Track Record: 3+ years delivering results for 50+ clients across industries\nDesign Excellence: Award-caliber design that stands out from template-based competitors\nModern Technology: Latest frameworks for fast, secure, scalable websites\nComplete Package: Design + development + SEO + content — all under one roof',
+      nextSteps:
+        '1. Proposal Approval: Review and approve this proposal\n2. Contract & Payment: Sign agreement and process 50% advance\n3. Discovery Workshop: 2-hour session to align on design direction\n4. Design Phase: Wireframes and mockups for review\n5. Development: Build and launch within agreed timeline',
+      termsAndConditions:
+        'All prices are in INR and exclude GST (18% additional)\n50% advance payment required to commence work\nBalance due upon project completion and handover\n3 rounds of revisions included — additional revisions billed separately\nClient to provide content and assets within agreed timelines\nSource code and all assets transferred on full payment',
+    },
+  },
+  {
+    id: 'project-international',
+    label: 'Project (International)',
+    description: 'One-time project for international clients — USD, Website + Branding',
+    currency: 'USD',
+    proposalType: 'project',
+    defaultPackageIds: ['website-professional'],
+    generateTitle: (clientName: string) =>
+      `Website & Digital Presence Project — ${clientName}`,
+    defaultContent: {
+      executiveSummary:
+        'We propose a complete website development and brand identity project to establish a powerful digital presence for your business in the global market.',
+      problemStatement:
+        'Outdated or non-existent website limiting business growth\nNo cohesive brand identity across digital channels\nPoor mobile experience turning away potential customers\nLack of SEO foundation resulting in low search visibility',
+      proposedSolution:
+        'A ground-up website build with custom design, mobile-first development, SEO optimization, and brand identity guidelines. Delivered in phases with clear milestones.',
+      whyFreakingMinds:
+        'Proven Track Record: 3+ years delivering results for clients worldwide\nDesign Excellence: Award-caliber design that stands out\nModern Technology: Latest frameworks for fast, secure, scalable websites\nCost-Effective: World-class quality at competitive rates',
+      nextSteps:
+        '1. Proposal Approval: Review and approve this proposal\n2. Contract & Payment: Sign agreement and process 50% advance\n3. Discovery Workshop: 2-hour session to align on design direction\n4. Design Phase: Wireframes and mockups for review\n5. Development: Build and launch within agreed timeline',
+      termsAndConditions:
+        'All prices are in USD\nPayment via international wire transfer or PayPal\n50% advance payment required to commence work\nBalance due upon project completion and handover\n3 rounds of revisions included\nSource code and all assets transferred on full payment',
+    },
+  },
+  {
+    id: 'audit',
+    label: 'Marketing Audit',
+    description: 'One-time marketing audit — INR, comprehensive analysis + recommendations',
+    currency: 'INR',
+    proposalType: 'audit',
+    defaultPackageIds: [],
+    generateTitle: (clientName: string) =>
+      `Digital Marketing Audit — ${clientName}`,
+    defaultContent: {
+      executiveSummary:
+        'We propose a comprehensive audit of your current digital marketing efforts. This includes analysis of your website, SEO, social media, paid advertising, and content strategy — with actionable recommendations for improvement.',
+      problemStatement:
+        'Unclear picture of current digital marketing effectiveness\nNo structured framework for measuring performance\nPotential gaps in strategy that may be costing revenue\nNeed for an objective, expert assessment',
+      proposedSolution:
+        'A thorough 360-degree audit covering website performance, SEO health, social media effectiveness, paid advertising efficiency, and content strategy alignment. Delivered as a detailed report with prioritized recommendations.',
+      whyFreakingMinds:
+        'Deep Expertise: Specialists across SEO, social, paid ads, and web development\nObjective Analysis: Data-driven audit methodology, not opinion-based\nActionable Output: Every finding comes with a prioritized recommendation\nImplementation Support: We can execute recommendations after approval',
+      nextSteps:
+        '1. Proposal Approval: Approve and process payment\n2. Access Setup: Provide analytics, ad accounts, and platform access\n3. Audit Execution: 2-3 weeks comprehensive analysis\n4. Report Delivery: Detailed findings and recommendations\n5. Strategy Session: 1-hour walkthrough of key findings',
+      termsAndConditions:
+        'All prices are in INR and exclude GST (18% additional)\nFull payment required before audit commencement\nClient to provide all necessary account access within 5 business days\nAudit report delivered within 3 weeks of receiving full access\nOne revision of the final report included',
+    },
+  },
+];
 
 // Default Proposal Content
 export const DEFAULT_PROPOSAL_CONTENT = {
