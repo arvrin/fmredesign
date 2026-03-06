@@ -32,26 +32,12 @@ export async function GET(
       );
     }
 
-    // Find linked team_member record (if talent was onboarded as freelancer)
-    const { data: teamMember } = await supabase
-      .from('team_members')
-      .select('id')
-      .eq('talent_profile_id', profile.id)
-      .single();
-
-    if (!teamMember) {
-      return NextResponse.json({
-        success: true,
-        data: [],
-        message: 'No project assignments found.',
-      });
-    }
-
-    // Get assignments for this team member
+    // Get talent assignments directly (bypasses team_members entirely)
     const { data: assignments, error: assignError } = await supabase
-      .from('team_assignments')
+      .from('talent_assignments')
       .select('*')
-      .eq('team_member_id', teamMember.id)
+      .eq('talent_id', profile.id)
+      .in('status', ['active', 'completed'])
       .order('created_at', { ascending: false });
 
     if (assignError) throw assignError;

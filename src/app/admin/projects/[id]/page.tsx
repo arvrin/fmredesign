@@ -585,10 +585,40 @@ export default function ProjectDetailPage({
                 </div>
 
                 {/* Assigned Talent */}
-                {(project.assignedTalent || []).length > 0 ? (
+                {project.assignedTalentDetails && project.assignedTalentDetails.length > 0 ? (
                   <div>
                     <p className="text-xs font-semibold text-fm-neutral-500 uppercase tracking-wider mb-3">
-                      Assigned Talent ({(project.assignedTalent || []).length})
+                      Assigned Freelancers ({project.assignedTalentDetails.length})
+                    </p>
+                    <div className="space-y-2">
+                      {project.assignedTalentDetails.map((talent) => (
+                        <div
+                          key={talent.assignmentId}
+                          className="flex items-center gap-3 p-3 bg-fm-neutral-50 rounded-lg border border-fm-neutral-200"
+                        >
+                          <AvatarInitials name={talent.name} size="sm" className="bg-blue-100 text-blue-600" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-fm-neutral-900">{talent.name}</p>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <span className="text-xs text-fm-neutral-500 capitalize">{talent.category.replace(/_/g, ' ')}</span>
+                              <span className="text-xs text-fm-neutral-400">&middot;</span>
+                              <span className="text-xs text-fm-magenta-600 font-medium">{talent.role}</span>
+                              {talent.hoursAllocated > 0 && (
+                                <>
+                                  <span className="text-xs text-fm-neutral-400">&middot;</span>
+                                  <span className="text-xs text-fm-neutral-500">{talent.hoursAllocated}h</span>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (project.assignedTalent || []).length > 0 ? (
+                  <div>
+                    <p className="text-xs font-semibold text-fm-neutral-500 uppercase tracking-wider mb-3">
+                      Assigned Freelancers ({(project.assignedTalent || []).length})
                     </p>
                     <div className="space-y-2">
                       {(project.assignedTalent || []).map((member, index) => (
@@ -603,7 +633,7 @@ export default function ProjectDetailPage({
                     </div>
                   </div>
                 ) : (
-                  <p className="text-fm-neutral-500 text-sm">No team members assigned.</p>
+                  <p className="text-fm-neutral-500 text-sm">No freelancers assigned.</p>
                 )}
               </div>
             </CardContent>

@@ -10,7 +10,7 @@ export const sendNotificationFn = inngest.createFunction(
   { id: 'send-notification', retries: 3 },
   { event: 'notification/send' },
   async ({ event, step }) => {
-    const { recipientType, recipientId, clientId, type, title, message, priority, actionUrl, metadata } =
+    const { recipientType, recipientId, clientId, talentId, type, title, message, priority, actionUrl, metadata } =
       event.data;
 
     await step.run('insert-notification', async () => {
@@ -19,6 +19,7 @@ export const sendNotificationFn = inngest.createFunction(
         recipient_type: recipientType,
         recipient_id: recipientId || null,
         client_id: clientId || null,
+        talent_id: talentId || null,
         type,
         title,
         message: message || '',
@@ -51,6 +52,7 @@ export const sendNotificationBulkFn = inngest.createFunction(
           recipient_type: n.recipientType,
           recipient_id: n.recipientId || null,
           client_id: n.clientId || null,
+          talent_id: n.talentId || null,
           type: n.type,
           title: n.title,
           message: n.message || '',

@@ -18,6 +18,7 @@ import {
   notifyTeam, notifyRecipient,
   talentApplicationReceivedEmail, talentApplicationTeamEmail, talentApprovedEmail, talentRejectedEmail,
 } from '@/lib/email/send';
+import { notifyTalent } from '@/lib/notifications';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -420,12 +421,25 @@ export async function PUT(request: NextRequest) {
 
       if (profileError) throw profileError;
 
-      // Fire-and-forget: notify approved applicant
+      // Fire-and-forget: notify approved applicant (include login credentials)
       const approvedEmail = personalInfo.email as string | undefined;
       if (approvedEmail && profileSlug) {
-        const emailData = talentApprovedEmail({ fullName, profileSlug });
+        const emailData = talentApprovedEmail({
+          fullName,
+          profileSlug,
+          tempPassword,
+          portalEmail: portalEmail || undefined,
+        });
         notifyRecipient(approvedEmail, emailData.subject, emailData.html);
       }
+
+      // In-app notification for talent portal
+      notifyTalent(profileRecord.id as string, {
+        type: 'talent_approved',
+        title: 'Welcome to CreativeMinds!',
+        message: 'Your application has been approved. Explore your portal to get started.',
+        actionUrl: `/creativeminds/portal/${profileSlug}`,
+      });
     }
 
     // Fire-and-forget: notify rejected applicant

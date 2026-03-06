@@ -9,7 +9,7 @@ import { ProjectUtils } from '@/lib/admin/project-types';
 import { requireAdminAuth, requirePermission } from '@/lib/admin-auth-middleware';
 import { createProjectSchema, updateProjectSchema, validateBody } from '@/lib/validations/schemas';
 import { logAuditEvent, getClientIP } from '@/lib/admin/audit-log';
-import { notifyClient } from '@/lib/notifications';
+import { notifyClient, notifyTalent } from '@/lib/notifications';
 
 // GET /api/projects
 export async function GET(request: NextRequest) {
@@ -27,6 +27,42 @@ export async function GET(request: NextRequest) {
       if (error || !data) {
         return NextResponse.json({ success: false, error: 'Project not found' }, { status: 404 });
       }
+
+      // Fetch rich talent assignment details
+      let assignedTalentDetails: { id: string; assignmentId: string; name: string; category: string; role: string; hoursAllocated: number }[] = [];
+      try {
+        const { data: assignments } = await supabase
+          .from('talent_assignments')
+          .select('id, talent_id, role, hours_allocated')
+          .eq('project_id', id)
+          .eq('status', 'active');
+
+        if (assignments && assignments.length > 0) {
+          const talentIds = assignments.map((a: any) => a.talent_id);
+          const { data: profiles } = await supabase
+            .from('talent_profiles')
+            .select('id, personal_info, professional_details')
+            .in('id', talentIds);
+
+          const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
+          assignedTalentDetails = assignments.map((a: any) => {
+            const profile = profileMap.get(a.talent_id) as any;
+            const personalInfo = profile?.personal_info || {};
+            const professionalDetails = profile?.professional_details || {};
+            return {
+              id: a.talent_id,
+              assignmentId: a.id,
+              name: personalInfo.fullName || 'Unknown',
+              category: professionalDetails.primaryCategory || 'other',
+              role: a.role || 'Freelancer',
+              hoursAllocated: a.hours_allocated || 0,
+            };
+          });
+        }
+      } catch {
+        // Non-fatal — talent_assignments table may not exist yet
+      }
+
       const project = {
         id: data.id,
         clientId: data.client_id,
@@ -41,6 +77,7 @@ export async function GET(request: NextRequest) {
         estimatedHours: data.estimated_hours,
         projectManager: data.project_manager,
         assignedTalent: data.assigned_talent || [],
+        assignedTalentDetails,
         budget: data.budget,
         spent: data.spent,
         hourlyRate: data.hourly_rate,
@@ -212,6 +249,42 @@ export async function POST(request: NextRequest) {
 
     if (error) throw error;
 
+    // Sync talent_assignments for assigned talent (non-fatal)
+    const assignedTalentIds: string[] = (rawBody as any).assignedTalent || [];
+    if (assignedTalentIds.length > 0 && data.client_id) {
+      try {
+        const assignmentRows = assignedTalentIds.map((talentId: string) => ({
+          talent_id: talentId,
+          client_id: data.client_id,
+          project_id: data.id,
+          role: 'Freelancer',
+          status: 'active',
+          start_date: data.start_date || new Date().toISOString().split('T')[0],
+        }));
+        await supabase.from('talent_assignments').insert(assignmentRows);
+
+        // Resolve slugs for notification URLs
+        const { data: talentProfiles } = await supabase
+          .from('talent_profiles')
+          .select('id, profile_slug')
+          .in('id', assignedTalentIds);
+        const slugMap = new Map((talentProfiles || []).map((p: { id: string; profile_slug: string }) => [p.id, p.profile_slug]));
+
+        // Notify each assigned talent about the new brief
+        for (const talentId of assignedTalentIds) {
+          const talentSlug = slugMap.get(talentId) || talentId;
+          notifyTalent(talentId, {
+            type: 'brief_assigned',
+            title: 'New project brief',
+            message: `You've been assigned to ${data.name}`,
+            actionUrl: `/creativeminds/portal/${talentSlug}/briefs`,
+          });
+        }
+      } catch (assignErr) {
+        console.error('Non-fatal: failed to create talent_assignments:', assignErr);
+      }
+    }
+
     // Response in camelCase
     const responseProject = {
       id: data.id,
@@ -225,7 +298,7 @@ export async function POST(request: NextRequest) {
       endDate: data.end_date,
       estimatedHours: data.estimated_hours,
       projectManager: data.project_manager,
-      assignedTalent: [],
+      assignedTalent: assignedTalentIds,
       budget: data.budget,
       hourlyRate: data.hourly_rate,
       progress: 0,
@@ -340,6 +413,34 @@ export async function PUT(request: NextRequest) {
         { success: false, error: 'Project not found' },
         { status: 404 }
       );
+    }
+
+    // Sync talent_assignments when assignedTalent changes (non-fatal)
+    if (body.assignedTalent !== undefined && data.client_id) {
+      try {
+        // Remove existing active assignments for this project
+        await supabase
+          .from('talent_assignments')
+          .delete()
+          .eq('project_id', body.id)
+          .eq('status', 'active');
+
+        // Insert new assignments
+        const talentIds: string[] = body.assignedTalent || [];
+        if (talentIds.length > 0) {
+          const assignmentRows = talentIds.map((talentId: string) => ({
+            talent_id: talentId,
+            client_id: data.client_id,
+            project_id: data.id,
+            role: 'Freelancer',
+            status: 'active',
+            start_date: data.start_date || new Date().toISOString().split('T')[0],
+          }));
+          await supabase.from('talent_assignments').insert(assignmentRows);
+        }
+      } catch (assignErr) {
+        console.error('Non-fatal: failed to sync talent_assignments:', assignErr);
+      }
     }
 
     const responseProject = {

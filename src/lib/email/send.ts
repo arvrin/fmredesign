@@ -306,10 +306,32 @@ export function talentApplicationTeamEmail(data: TalentApplicationData): { subje
 interface TalentApprovedData {
   fullName: string;
   profileSlug: string;
+  tempPassword?: string;
+  portalEmail?: string;
 }
 
 export function talentApprovedEmail(data: TalentApprovedData): { subject: string; html: string } {
   const profileUrl = `https://freakingminds.in/talent/${data.profileSlug}`;
+  const portalUrl = `https://freakingminds.in/talent/${data.profileSlug}/portal`;
+
+  // Login credentials section (only if tempPassword is provided)
+  const credentialsSection = data.tempPassword && data.portalEmail ? `
+    <div style="margin:20px 0;padding:20px 24px;background:#f0fdf4;border-radius:10px;border:1px solid #bbf7d0">
+      <p style="margin:0 0 12px;color:${HEADING_COLOR};font-size:14px;font-weight:700">Your Portal Login Credentials</p>
+      <table cellpadding="0" cellspacing="0" style="width:100%">
+        <tr>
+          <td style="padding:4px 0;color:${MUTED_COLOR};font-size:13px;width:80px">Email</td>
+          <td style="padding:4px 0;color:${HEADING_COLOR};font-size:14px;font-weight:600">${data.portalEmail}</td>
+        </tr>
+        <tr>
+          <td style="padding:4px 0;color:${MUTED_COLOR};font-size:13px">Password</td>
+          <td style="padding:4px 0"><code style="background:#e2e8f0;padding:2px 8px;border-radius:4px;font-size:14px;font-weight:600;color:${HEADING_COLOR};letter-spacing:0.5px">${data.tempPassword}</code></td>
+        </tr>
+      </table>
+      <p style="margin:10px 0 0;color:${MUTED_COLOR};font-size:11px">Please change your password after first login.</p>
+    </div>
+    ${ctaButton('Login to Portal', portalUrl, '#22c55e')}
+  ` : '';
 
   const body = `
     <p style="margin:0 0 8px;color:${HEADING_COLOR};font-size:18px;font-weight:700">Congratulations, ${data.fullName}!</p>
@@ -317,7 +339,8 @@ export function talentApprovedEmail(data: TalentApprovedData): { subject: string
     <div style="margin:20px 0;padding:16px 20px;background:#faf8f9;border-radius:10px;border-left:3px solid #22c55e">
       <p style="margin:0;color:${TEXT_COLOR};font-size:13px;line-height:1.5"><strong>What this means:</strong><br>Clients and brands browsing our talent network can now discover your profile. You may be contacted for project opportunities that match your skills.</p>
     </div>
-    ${ctaButton('View Your Profile', profileUrl, '#22c55e')}
+    ${credentialsSection}
+    ${ctaButton('View Your Profile', profileUrl, data.tempPassword ? BRAND_MAGENTA : '#22c55e')}
     <p style="margin:16px 0 0;color:${TEXT_COLOR};font-size:15px;line-height:1.6">Welcome to the network!<br><strong>The FreakingMinds Team</strong></p>
   `;
 

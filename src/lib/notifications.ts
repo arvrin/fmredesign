@@ -34,13 +34,16 @@ export type NotificationType =
   | 'proposal_declined'
   | 'proposal_edit_requested'
   | 'team_member_assigned'
+  | 'brief_assigned'
+  | 'talent_approved'
   | 'general';
 
 export interface NotificationRecord {
   id: string;
-  recipientType: 'admin' | 'client';
+  recipientType: 'admin' | 'client' | 'talent';
   recipientId: string | null;
   clientId: string | null;
+  talentId: string | null;
   type: NotificationType;
   title: string;
   message: string;
@@ -58,11 +61,13 @@ export interface NotificationRecord {
 
 interface CreateOpts {
   /** Who sees this notification */
-  recipientType: 'admin' | 'client';
+  recipientType: 'admin' | 'client' | 'talent';
   /** Specific user ID (for admin) or null (broadcast to all admins) */
   recipientId?: string;
   /** Client ID — required for client notifications, optional for admin */
   clientId?: string;
+  /** Talent profile ID — required for talent notifications */
+  talentId?: string;
   type: NotificationType;
   title: string;
   message?: string;
@@ -75,7 +80,7 @@ interface CreateOpts {
 
 export async function createNotification(opts: CreateOpts): Promise<void> {
   try {
-    // Dynamic import to avoid bundling Inngest in client-side code
+    // PRIMARY: Inngest event (durable, retried)
     const { inngest } = await import('@/lib/inngest/client');
     await inngest.send({
       name: 'notification/send',
@@ -83,6 +88,7 @@ export async function createNotification(opts: CreateOpts): Promise<void> {
         recipientType: opts.recipientType,
         recipientId: opts.recipientId,
         clientId: opts.clientId,
+        talentId: opts.talentId,
         type: opts.type,
         title: opts.title,
         message: opts.message,
@@ -91,8 +97,26 @@ export async function createNotification(opts: CreateOpts): Promise<void> {
         metadata: opts.metadata,
       },
     });
-  } catch (err) {
-    console.error('Failed to send notification event:', err);
+  } catch {
+    // FALLBACK: Direct Supabase insert (same pattern as logAuditEvent)
+    try {
+      const { getSupabaseAdmin } = await import('@/lib/supabase');
+      const supabase = getSupabaseAdmin();
+      await supabase.from('notifications').insert({
+        recipient_type: opts.recipientType,
+        recipient_id: opts.recipientId || null,
+        client_id: opts.clientId || null,
+        talent_id: opts.talentId || null,
+        type: opts.type,
+        title: opts.title,
+        message: opts.message || '',
+        priority: opts.priority || 'normal',
+        action_url: opts.actionUrl || null,
+        metadata: opts.metadata || {},
+      });
+    } catch (fallbackErr) {
+      console.error('Notification: both Inngest and fallback failed:', fallbackErr);
+    }
   }
 }
 
@@ -113,6 +137,14 @@ export function notifyClient(
   return createNotification({ ...opts, recipientType: 'client', clientId });
 }
 
+/** Notify a specific talent */
+export function notifyTalent(
+  talentId: string,
+  opts: Omit<CreateOpts, 'recipientType' | 'talentId'>
+): Promise<void> {
+  return createNotification({ ...opts, recipientType: 'talent', talentId });
+}
+
 // ---------------------------------------------------------------------------
 // Transform DB row → API response
 // ---------------------------------------------------------------------------
@@ -120,9 +152,10 @@ export function notifyClient(
 export function transformNotification(row: Record<string, unknown>): NotificationRecord {
   return {
     id: row.id as string,
-    recipientType: row.recipient_type as 'admin' | 'client',
+    recipientType: row.recipient_type as 'admin' | 'client' | 'talent',
     recipientId: row.recipient_id as string | null,
     clientId: row.client_id as string | null,
+    talentId: (row.talent_id as string | null) ?? null,
     type: row.type as NotificationType,
     title: row.title as string,
     message: row.message as string,

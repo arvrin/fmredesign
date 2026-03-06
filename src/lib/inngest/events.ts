@@ -12,9 +12,10 @@ import type { EventType as PlatformEventType } from '@/lib/events/types';
 // ---------------------------------------------------------------------------
 
 export interface NotificationSendData {
-  recipientType: 'admin' | 'client';
+  recipientType: 'admin' | 'client' | 'talent';
   recipientId?: string;
   clientId?: string;
+  talentId?: string;
   type: NotificationType;
   title: string;
   message?: string;

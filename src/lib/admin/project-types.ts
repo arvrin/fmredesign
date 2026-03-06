@@ -49,6 +49,14 @@ export interface Project {
   // Team
   projectManager: string;
   assignedTalent: string[];
+  assignedTalentDetails?: {
+    id: string;
+    assignmentId: string;
+    name: string;
+    category: string;
+    role: string;
+    hoursAllocated: number;
+  }[];
   
   // Project Structure
   milestones: ProjectMilestone[];
