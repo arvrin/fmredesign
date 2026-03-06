@@ -106,6 +106,9 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
+  other: {
+    "facebook-domain-verification": "xiphsre5jv2g5mdb452vtwos8vysba",
+  },
 };
 
 export default function RootLayout({
