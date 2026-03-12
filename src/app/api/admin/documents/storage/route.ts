@@ -4,9 +4,10 @@
  * PUT  { clientId, storageLimitMb } — update client's storage limit
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { requireAdminAuth } from '@/lib/admin-auth-middleware';
 import { getSupabaseAdmin } from '@/lib/supabase';
+import { ApiResponse } from '@/lib/api-response';
 
 export async function GET(request: NextRequest) {
   const authError = await requireAdminAuth(request);
@@ -14,7 +15,7 @@ export async function GET(request: NextRequest) {
 
   const clientId = request.nextUrl.searchParams.get('clientId');
   if (!clientId) {
-    return NextResponse.json({ success: false, error: 'clientId is required' }, { status: 400 });
+    return ApiResponse.validationError('clientId is required');
   }
 
   const supabase = getSupabaseAdmin();
@@ -35,14 +36,11 @@ export async function GET(request: NextRequest) {
   const limitMb = client?.storage_limit_mb || 500;
   const limitBytes = limitMb * 1024 * 1024;
 
-  return NextResponse.json({
-    success: true,
-    data: {
-      usedBytes,
-      limitBytes,
-      percentage: Math.round((usedBytes / limitBytes) * 100),
-      fileCount: (docs || []).length,
-    },
+  return ApiResponse.success({
+    usedBytes,
+    limitBytes,
+    percentage: Math.round((usedBytes / limitBytes) * 100),
+    fileCount: (docs || []).length,
   });
 }
 
@@ -54,10 +52,7 @@ export async function PUT(request: NextRequest) {
     const { clientId, storageLimitMb } = await request.json();
 
     if (!clientId || typeof storageLimitMb !== 'number' || storageLimitMb < 1) {
-      return NextResponse.json(
-        { success: false, error: 'clientId and valid storageLimitMb are required' },
-        { status: 400 }
-      );
+      return ApiResponse.validationError('clientId and valid storageLimitMb are required');
     }
 
     const supabase = getSupabaseAdmin();
@@ -67,11 +62,12 @@ export async function PUT(request: NextRequest) {
       .eq('id', clientId);
 
     if (error) {
-      return NextResponse.json({ success: false, error: 'Update failed' }, { status: 500 });
+      return ApiResponse.error('Update failed');
     }
 
-    return NextResponse.json({ success: true });
-  } catch {
-    return NextResponse.json({ success: false, error: 'Invalid request' }, { status: 400 });
+    return ApiResponse.success(null);
+  } catch (error) {
+    console.error('Storage limit update error:', error);
+    return ApiResponse.validationError('Invalid request');
   }
 }

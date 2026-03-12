@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { resolveClientId } from '@/lib/client-portal/resolve-client';
 import { requireClientAuth } from '@/lib/client-session';
+import { toCamelCaseKeys } from '@/lib/supabase-utils';
 import { notifyTeam, newSupportTicketEmail } from '@/lib/email/send';
 import { notifyAdmins } from '@/lib/notifications';
 
@@ -62,14 +63,9 @@ export async function GET(
         return NextResponse.json({ success: true, data: [] });
       }
 
-      const transformed = (replies || []).map((r: Record<string, unknown>) => ({
-        id: r.id,
-        ticketId: r.ticket_id,
-        senderType: r.sender_type,
-        senderName: r.sender_name,
-        message: r.message,
-        createdAt: r.created_at,
-      }));
+      const transformed = (replies || []).map((r: Record<string, unknown>) =>
+        toCamelCaseKeys(r)
+      );
 
       return NextResponse.json({ success: true, data: transformed });
     }
@@ -318,14 +314,7 @@ export async function PUT(
 
     return NextResponse.json({
       success: true,
-      data: {
-        id: reply.id,
-        ticketId: reply.ticket_id,
-        senderType: reply.sender_type,
-        senderName: reply.sender_name,
-        message: reply.message,
-        createdAt: reply.created_at,
-      },
+      data: toCamelCaseKeys(reply),
     });
   } catch (error) {
     console.error('Error sending reply:', error);

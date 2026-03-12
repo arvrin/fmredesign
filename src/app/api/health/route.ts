@@ -1,6 +1,10 @@
 /**
  * Health check endpoint.
  * Returns DB connection status and basic system info.
+ *
+ * AUTH: Intentionally public — used by uptime monitors and load balancers.
+ * Only exposes boolean connectivity status and latency, no credentials,
+ * connection strings, or environment variables.
  */
 
 import { NextResponse } from 'next/server';

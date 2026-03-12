@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
-import { calculateLeadScore, determineLeadPriority } from '@/lib/supabase-utils';
+import { calculateLeadScore, determineLeadPriority, toCamelCaseKeys } from '@/lib/supabase-utils';
 import type { LeadInput } from '@/lib/admin/lead-types';
 import { rateLimit, getClientIp } from '@/lib/rate-limiter';
 import { requireAdminAuth, requirePermission } from '@/lib/admin-auth-middleware';
@@ -106,38 +106,10 @@ export async function GET(request: NextRequest) {
     }
 
     // Transform to camelCase for frontend
-    const leads = (data || []).map((row: Record<string, any>) => ({
-      id: row.id,
-      name: row.name,
-      email: row.email,
-      phone: row.phone,
-      company: row.company,
-      website: row.website,
-      jobTitle: row.job_title,
-      companySize: row.company_size,
-      industry: row.industry,
-      projectType: row.project_type,
-      projectDescription: row.project_description,
-      budgetRange: row.budget_range,
-      timeline: row.timeline,
-      primaryChallenge: row.primary_challenge,
-      additionalChallenges: row.additional_challenges || [],
-      specificRequirements: row.specific_requirements,
-      status: row.status,
-      priority: row.priority,
-      source: row.source,
-      leadScore: row.lead_score,
-      assignedTo: row.assigned_to,
-      nextAction: row.next_action,
-      followUpDate: row.follow_up_date,
-      notes: row.notes,
-      tags: row.tags || [],
-      customFields: row.custom_fields || {},
-      createdAt: row.created_at,
-      updatedAt: row.updated_at,
-      convertedToClientAt: row.converted_to_client_at,
-      clientId: row.client_id,
-    }));
+    const leadDefaults = { additionalChallenges: [], tags: [], customFields: {} };
+    const leads = (data || []).map((row: Record<string, unknown>) =>
+      toCamelCaseKeys(row, leadDefaults)
+    );
 
     const responseBody: Record<string, unknown> = {
       success: true,
@@ -278,32 +250,7 @@ export async function POST(request: NextRequest) {
     notifyTeam(emailData.subject, emailData.html);
 
     // Build camelCase response
-    const lead = {
-      id: data.id,
-      name: data.name,
-      email: data.email,
-      phone: data.phone,
-      company: data.company,
-      website: data.website,
-      jobTitle: data.job_title,
-      companySize: data.company_size,
-      industry: data.industry,
-      projectType: data.project_type,
-      projectDescription: data.project_description,
-      budgetRange: data.budget_range,
-      timeline: data.timeline,
-      primaryChallenge: data.primary_challenge,
-      additionalChallenges: data.additional_challenges,
-      specificRequirements: data.specific_requirements,
-      status: data.status,
-      priority: data.priority,
-      source: data.source,
-      leadScore: data.lead_score,
-      tags: data.tags,
-      notes: data.notes,
-      createdAt: data.created_at,
-      updatedAt: data.updated_at,
-    };
+    const lead = toCamelCaseKeys(data);
 
     return NextResponse.json(
       { success: true, data: lead, message: 'Lead created successfully' },
@@ -375,7 +322,7 @@ export async function PUT(request: NextRequest) {
     const { id, ...updateData } = body;
 
     // Map camelCase fields to snake_case for Supabase
-    const updates: Record<string, any> = {};
+    const updates: Record<string, unknown> = {};
     if (updateData.status !== undefined) updates.status = updateData.status;
     if (updateData.assignedTo !== undefined) updates.assigned_to = updateData.assignedTo;
     if (updateData.nextAction !== undefined) updates.next_action = updateData.nextAction;
@@ -418,35 +365,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Transform response
-    const updatedLead = {
-      id: data.id,
-      name: data.name,
-      email: data.email,
-      phone: data.phone,
-      company: data.company,
-      website: data.website,
-      jobTitle: data.job_title,
-      companySize: data.company_size,
-      industry: data.industry,
-      projectType: data.project_type,
-      projectDescription: data.project_description,
-      budgetRange: data.budget_range,
-      timeline: data.timeline,
-      primaryChallenge: data.primary_challenge,
-      additionalChallenges: data.additional_challenges,
-      specificRequirements: data.specific_requirements,
-      status: data.status,
-      priority: data.priority,
-      source: data.source,
-      leadScore: data.lead_score,
-      assignedTo: data.assigned_to,
-      nextAction: data.next_action,
-      followUpDate: data.follow_up_date,
-      notes: data.notes,
-      tags: data.tags,
-      createdAt: data.created_at,
-      updatedAt: data.updated_at,
-    };
+    const updatedLead = toCamelCaseKeys(data);
 
     // Fire-and-forget audit log
     await logAuditEvent({

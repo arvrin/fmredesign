@@ -153,7 +153,6 @@ export async function PUT(
         .eq('id', resolved.id)
         .then(({ error: syncErr }) => {
           if (syncErr) console.error('Failed to sync contract data to client:', syncErr);
-          else console.log(`Synced contract data to client ${resolved.id}`);
         });
 
       // Activate all planning projects for this client
@@ -162,9 +161,8 @@ export async function PUT(
         .update({ status: 'active', updated_at: now })
         .eq('client_id', resolved.id)
         .eq('status', 'planning')
-        .then(({ error: projErr, count }) => {
+        .then(({ error: projErr }) => {
           if (projErr) console.error('Failed to activate projects:', projErr);
-          else console.log(`Activated ${count ?? 0} planning projects for client ${resolved.id}`);
         });
     }
 

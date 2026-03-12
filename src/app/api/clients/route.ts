@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
+import { toCamelCaseKeys } from '@/lib/supabase-utils';
 import { requireAdminAuth, requirePermission } from '@/lib/admin-auth-middleware';
 import { createClientSchema, updateClientSchema, validateBody } from '@/lib/validations/schemas';
 import { logAuditEvent, getClientIP } from '@/lib/admin/audit-log';
@@ -58,47 +59,13 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ success: false, error: 'Client not found' }, { status: 404 });
       }
 
-      const formatted = {
-        id: data.id,
-        name: data.name,
-        email: data.email,
-        phone: data.phone,
-        address: data.address,
-        city: data.city,
-        state: data.state,
-        zipCode: data.zip_code,
-        country: data.country,
-        gstNumber: data.gst_number,
-        industry: data.industry,
-        companySize: data.company_size,
-        website: data.website,
-        status: data.status,
-        health: data.health,
-        accountManager: data.account_manager,
-        contractType: data.contract_type,
-        contractValue: data.contract_value,
-        contractStartDate: data.contract_start_date,
-        contractEndDate: data.contract_end_date,
-        billingCycle: data.billing_cycle,
-        services: data.services,
-        createdAt: data.created_at,
-        updatedAt: data.updated_at,
-        totalValue: data.total_value,
-        tags: data.tags,
-        notes: data.notes,
-        brandName: data.brand_name,
-        parentClientId: data.parent_client_id,
-        isBrandGroup: data.is_brand_group,
-        logoUrl: data.logo_url,
-        brandColors: data.brand_colors,
-        brandFonts: data.brand_fonts,
-        tagline: data.tagline,
-        brandGuidelinesUrl: data.brand_guidelines_url,
-        contentPillars: data.content_pillars || [],
-        contentEvents: data.content_events || [],
-        contentPreferences: data.content_preferences || null,
-        competitorSocialUrls: data.competitor_social_urls || [],
+      const CLIENT_DEFAULTS = {
+        contentPillars: [] as string[],
+        contentEvents: [] as string[],
+        contentPreferences: null,
+        competitorSocialUrls: [] as string[],
       };
+      const formatted = toCamelCaseKeys(data, CLIENT_DEFAULTS);
 
       return NextResponse.json({ success: true, data: formatted });
     }
@@ -142,47 +109,13 @@ export async function GET(request: NextRequest) {
     }
 
     // Transform snake_case to camelCase for frontend compatibility
-    const formatted = (clients || []).map((c) => ({
-      id: c.id,
-      name: c.name,
-      email: c.email,
-      phone: c.phone,
-      address: c.address,
-      city: c.city,
-      state: c.state,
-      zipCode: c.zip_code,
-      country: c.country,
-      gstNumber: c.gst_number,
-      industry: c.industry,
-      companySize: c.company_size,
-      website: c.website,
-      status: c.status,
-      health: c.health,
-      accountManager: c.account_manager,
-      contractType: c.contract_type,
-      contractValue: c.contract_value,
-      contractStartDate: c.contract_start_date,
-      contractEndDate: c.contract_end_date,
-      billingCycle: c.billing_cycle,
-      services: c.services,
-      createdAt: c.created_at,
-      updatedAt: c.updated_at,
-      totalValue: c.total_value,
-      tags: c.tags,
-      notes: c.notes,
-      brandName: c.brand_name,
-      parentClientId: c.parent_client_id,
-      isBrandGroup: c.is_brand_group,
-      logoUrl: c.logo_url,
-      brandColors: c.brand_colors,
-      brandFonts: c.brand_fonts,
-      tagline: c.tagline,
-      brandGuidelinesUrl: c.brand_guidelines_url,
-      contentPillars: c.content_pillars || [],
-      contentEvents: c.content_events || [],
-      contentPreferences: c.content_preferences || null,
-      competitorSocialUrls: c.competitor_social_urls || [],
-    }));
+    const clientDefaults = {
+      contentPillars: [] as string[],
+      contentEvents: [] as string[],
+      contentPreferences: null,
+      competitorSocialUrls: [] as string[],
+    };
+    const formatted = (clients || []).map((c) => toCamelCaseKeys(c, clientDefaults));
 
     const body: Record<string, unknown> = {
       success: true,

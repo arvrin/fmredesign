@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
-import { normalizeMobileNumber, getRolePermissions } from '@/lib/supabase-utils';
+import { normalizeMobileNumber, getRolePermissions, toCamelCaseKeys } from '@/lib/supabase-utils';
 import { requireAdminAuth, requirePermission } from '@/lib/admin-auth-middleware';
 import { createUserSchema, updateUserSchema, validateBody } from '@/lib/validations/schemas';
 import { logAuditEvent, getClientIP } from '@/lib/admin/audit-log';
@@ -24,20 +24,7 @@ export async function GET(request: NextRequest) {
 
     if (error) throw error;
 
-    const formattedUsers = (users || []).map((u) => ({
-      id: u.id,
-      mobileNumber: u.mobile_number,
-      name: u.name,
-      email: u.email,
-      role: u.role,
-      permissions: u.permissions,
-      status: u.status,
-      createdBy: u.created_by,
-      createdAt: u.created_at,
-      updatedAt: u.updated_at,
-      lastLogin: u.last_login,
-      notes: u.notes,
-    }));
+    const formattedUsers = (users || []).map((u) => toCamelCaseKeys(u));
 
     return NextResponse.json({
       success: true,

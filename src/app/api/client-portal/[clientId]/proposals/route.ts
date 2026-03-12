@@ -9,6 +9,7 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { resolveClientId } from '@/lib/client-portal/resolve-client';
 import { requireClientAuth } from '@/lib/client-session';
+import { toCamelCaseKeys } from '@/lib/supabase-utils';
 import { notifyAdmins } from '@/lib/notifications';
 import { proposalActionSchema, validateBody } from '@/lib/validations/schemas';
 import { notifyTeam, proposalStatusEmail } from '@/lib/email/send';
@@ -44,29 +45,16 @@ export async function GET(
       return NextResponse.json({ success: true, data: [], total: 0 });
     }
 
-    const transformed = (proposals || []).map((p) => ({
-      id: p.id,
-      proposalNumber: p.proposal_number,
-      title: p.title,
-      proposalType: p.proposal_type,
-      status: p.status,
-      validUntil: p.valid_until,
-      investment: p.investment || {},
-      currency: p.currency || 'INR',
-      servicePackages: p.service_packages || [],
-      customServices: p.custom_services || [],
-      timeline: p.timeline || {},
-      executiveSummary: p.executive_summary,
-      problemStatement: p.problem_statement,
-      proposedSolution: p.proposed_solution,
-      whyFreakingMinds: p.why_freaking_minds,
-      nextSteps: p.next_steps,
-      termsAndConditions: p.terms_and_conditions,
-      sentAt: p.sent_at,
-      viewedAt: p.viewed_at,
-      approvedAt: p.approved_at,
-      createdAt: p.created_at,
-    }));
+    const proposalDefaults = {
+      investment: {},
+      currency: 'INR',
+      servicePackages: [],
+      customServices: [],
+      timeline: {},
+    };
+    const transformed = (proposals || []).map((p) =>
+      toCamelCaseKeys(p, proposalDefaults)
+    );
 
     return NextResponse.json({
       success: true,

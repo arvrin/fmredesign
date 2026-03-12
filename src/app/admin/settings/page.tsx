@@ -288,7 +288,7 @@ export default function SettingsPage() {
       .then(r => r.json())
       .then(result => {
         if (result.success && Array.isArray(result.data)) {
-          setClients(result.data.map((c: any) => ({ id: c.id, name: c.name })));
+          setClients(result.data.map((c: { id: string; name: string }) => ({ id: c.id, name: c.name })));
         }
       })
       .catch(() => {});
@@ -330,7 +330,7 @@ export default function SettingsPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const saveSettings = async (section: keyof AdminSettings, data: any) => {
+  const saveSettings = async (section: keyof AdminSettings, data: Record<string, unknown>) => {
     setSaving(true);
     setMessage(null);
 

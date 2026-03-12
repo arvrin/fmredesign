@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin, getSupabaseAdmin } from '@/lib/supabase';
 import { resolveClientId } from '@/lib/client-portal/resolve-client';
 import { requireClientAuth } from '@/lib/client-session';
+import { toCamelCaseKeys } from '@/lib/supabase-utils';
 import {
   uploadFile,
   ensureClientFolder,
@@ -71,21 +72,17 @@ export async function GET(
     );
     const limitMb = client?.storage_limit_mb || 500;
 
-    const transformed = (documents || []).map((doc) => ({
-      id: doc.id,
-      name: doc.name,
-      description: doc.description || '',
-      fileUrl: doc.file_url,
-      fileType: doc.file_type || 'document',
-      fileSize: doc.file_size || 0,
-      category: doc.category || 'general',
-      uploadedBy: doc.uploaded_by || 'admin',
-      uploadedByName: doc.uploaded_by_name || '',
-      driveWebViewLink: doc.drive_web_view_link || null,
-      version: doc.version || 1,
-      createdAt: doc.created_at,
-      updatedAt: doc.updated_at,
-    }));
+    const docDefaults = {
+      description: '',
+      fileType: 'document',
+      fileSize: 0,
+      category: 'general',
+      uploadedBy: 'admin',
+      uploadedByName: '',
+      driveWebViewLink: null,
+      version: 1,
+    };
+    const transformed = (documents || []).map((doc) => toCamelCaseKeys(doc, docDefaults));
 
     return NextResponse.json({
       success: true,

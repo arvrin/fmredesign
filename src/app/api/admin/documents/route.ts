@@ -6,9 +6,10 @@
  * DELETE — Delete a document
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { requirePermission } from '@/lib/admin-auth-middleware';
 import { getSupabaseAdmin } from '@/lib/supabase';
+import { ApiResponse } from '@/lib/api-response';
 
 // Vercel: increase timeout for Google Drive operations
 export const maxDuration = 60;
@@ -38,10 +39,7 @@ export async function GET(request: NextRequest) {
   const category = searchParams.get('category');
 
   if (!clientId) {
-    return NextResponse.json(
-      { success: false, error: 'clientId is required' },
-      { status: 400 }
-    );
+    return ApiResponse.validationError('clientId is required');
   }
 
   const supabase = getSupabaseAdmin();
@@ -60,7 +58,7 @@ export async function GET(request: NextRequest) {
 
   if (error) {
     console.error('Documents query error:', error);
-    return NextResponse.json({ success: true, data: [], total: 0 });
+    return ApiResponse.success([], { total: 0 });
   }
 
   // Compute storage usage
@@ -78,17 +76,18 @@ export async function GET(request: NextRequest) {
 
   const limitMb = client?.storage_limit_mb || 500;
 
-  return NextResponse.json({
-    success: true,
-    data: (documents || []).map(transformDocumentRow),
-    total: (documents || []).length,
-    storage: {
-      usedBytes: totalBytes,
-      limitBytes: limitMb * 1024 * 1024,
-      percentage: Math.round((totalBytes / (limitMb * 1024 * 1024)) * 100),
-      fileCount: (documents || []).length,
-    },
-  });
+  return ApiResponse.success(
+    (documents || []).map(transformDocumentRow),
+    {
+      total: (documents || []).length,
+      storage: {
+        usedBytes: totalBytes,
+        limitBytes: limitMb * 1024 * 1024,
+        percentage: Math.round((totalBytes / (limitMb * 1024 * 1024)) * 100),
+        fileCount: (documents || []).length,
+      },
+    }
+  );
 }
 
 // ── POST (Upload) ────────────────────────────────────────
@@ -106,17 +105,11 @@ export async function POST(request: NextRequest) {
     const isPublic = formData.get('isPublic') === 'true';
 
     if (!file || !clientId) {
-      return NextResponse.json(
-        { success: false, error: 'file and clientId are required' },
-        { status: 400 }
-      );
+      return ApiResponse.validationError('file and clientId are required');
     }
 
     if (file.size > MAX_FILE_SIZE_ADMIN) {
-      return NextResponse.json(
-        { success: false, error: 'File exceeds 250 MB limit' },
-        { status: 413 }
-      );
+      return ApiResponse.error('File exceeds 250 MB limit', 413);
     }
 
     const supabase = getSupabaseAdmin();
@@ -129,10 +122,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (!client) {
-      return NextResponse.json(
-        { success: false, error: 'Client not found' },
-        { status: 404 }
-      );
+      return ApiResponse.notFound('Client not found');
     }
 
     const limitBytes = (client.storage_limit_mb || 500) * 1024 * 1024;
@@ -149,12 +139,9 @@ export async function POST(request: NextRequest) {
     );
 
     if (currentUsage + file.size > limitBytes) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: `Storage limit exceeded. Used: ${Math.round(currentUsage / 1024 / 1024)} MB, Limit: ${client.storage_limit_mb} MB`,
-        },
-        { status: 413 }
+      return ApiResponse.error(
+        `Storage limit exceeded. Used: ${Math.round(currentUsage / 1024 / 1024)} MB, Limit: ${client.storage_limit_mb} MB`,
+        413
       );
     }
 
@@ -214,10 +201,7 @@ export async function POST(request: NextRequest) {
 
     if (insertError) {
       console.error('Insert error:', insertError);
-      return NextResponse.json(
-        { success: false, error: 'Failed to save document record' },
-        { status: 500 }
-      );
+      return ApiResponse.error('Failed to save document record');
     }
 
     // Audit log (fire-and-forget)
@@ -256,17 +240,11 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({
-      success: true,
-      data: transformDocumentRow(doc),
-    });
+    return ApiResponse.success(transformDocumentRow(doc));
   } catch (err) {
     console.error('Document upload error:', err);
     const message = err instanceof Error ? err.message : String(err);
-    return NextResponse.json(
-      { success: false, error: `Upload failed: ${message}` },
-      { status: 500 }
-    );
+    return ApiResponse.error(`Upload failed: ${message}`);
   }
 }
 
@@ -280,10 +258,7 @@ export async function PUT(request: NextRequest) {
     const { id, name, description, category, clientVisible, isPublic } = body;
 
     if (!id) {
-      return NextResponse.json(
-        { success: false, error: 'id is required' },
-        { status: 400 }
-      );
+      return ApiResponse.validationError('id is required');
     }
 
     const supabase = getSupabaseAdmin();
@@ -304,22 +279,13 @@ export async function PUT(request: NextRequest) {
 
     if (error) {
       console.error('Update error:', error);
-      return NextResponse.json(
-        { success: false, error: 'Failed to update document' },
-        { status: 500 }
-      );
+      return ApiResponse.error('Failed to update document');
     }
 
-    return NextResponse.json({
-      success: true,
-      data: transformDocumentRow(doc),
-    });
+    return ApiResponse.success(transformDocumentRow(doc));
   } catch (err) {
     console.error('Document update error:', err);
-    return NextResponse.json(
-      { success: false, error: 'Update failed' },
-      { status: 500 }
-    );
+    return ApiResponse.error('Update failed');
   }
 }
 
@@ -332,10 +298,7 @@ export async function DELETE(request: NextRequest) {
   const id = searchParams.get('id');
 
   if (!id) {
-    return NextResponse.json(
-      { success: false, error: 'id is required' },
-      { status: 400 }
-    );
+    return ApiResponse.validationError('id is required');
   }
 
   const supabase = getSupabaseAdmin();
@@ -348,10 +311,7 @@ export async function DELETE(request: NextRequest) {
     .single();
 
   if (fetchError || !doc) {
-    return NextResponse.json(
-      { success: false, error: 'Document not found' },
-      { status: 404 }
-    );
+    return ApiResponse.notFound('Document not found');
   }
 
   // Delete from Drive
@@ -371,10 +331,7 @@ export async function DELETE(request: NextRequest) {
 
   if (deleteError) {
     console.error('DB delete error:', deleteError);
-    return NextResponse.json(
-      { success: false, error: 'Failed to delete document' },
-      { status: 500 }
-    );
+    return ApiResponse.error('Failed to delete document');
   }
 
   // Audit log
@@ -387,5 +344,5 @@ export async function DELETE(request: NextRequest) {
     details: { fileName: doc.name, clientId: doc.client_id },
   });
 
-  return NextResponse.json({ success: true });
+  return ApiResponse.success(null);
 }

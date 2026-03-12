@@ -178,7 +178,7 @@ export function HeaderV2() {
             >
               <img
                 src="/logo.png"
-                alt="Freaking Minds"
+                alt="FreakingMinds logo"
                 width={200}
                 height={56}
                 className="w-auto group-hover:scale-105 transition-transform duration-300"

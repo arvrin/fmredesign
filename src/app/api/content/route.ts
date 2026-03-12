@@ -11,6 +11,7 @@ import { createContentSchema, updateContentSchema, validateBody } from '@/lib/va
 import { logAuditEvent, getClientIP } from '@/lib/admin/audit-log';
 import { notifyClient } from '@/lib/notifications';
 
+
 // GET /api/content
 export async function GET(request: NextRequest) {
   const authError = await requireAdminAuth(request);
@@ -132,7 +133,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Transform to camelCase for frontend
-    const contentItems = (data || []).map((item: Record<string, any>) => ({
+    const contentItems = (data || []).map((item: Record<string, unknown>) => ({
       id: item.id,
       projectId: item.project_id,
       clientId: item.client_id,
@@ -299,7 +300,7 @@ export async function PUT(request: NextRequest) {
     }
     const body = rawBody;
 
-    const updates: Record<string, any> = {};
+    const updates: Record<string, unknown> = {};
     if (body.title !== undefined) updates.title = body.title;
     if (body.description !== undefined) updates.description = body.description;
     if (body.content !== undefined) updates.content = body.content;

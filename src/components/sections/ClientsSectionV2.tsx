@@ -223,8 +223,9 @@ export function ClientsSectionV2() {
                   >
                     <img
                       src={`/clients/${logo}`}
-                      alt="Client logo"
+                      alt=""
                       role="presentation"
+                      aria-hidden="true"
                       loading="lazy"
                       width={140}
                       height={80}
@@ -246,8 +247,9 @@ export function ClientsSectionV2() {
                   >
                     <img
                       src={`/clients/${logo}`}
-                      alt="Client logo"
+                      alt=""
                       role="presentation"
+                      aria-hidden="true"
                       loading="lazy"
                       width={140}
                       height={80}
@@ -283,7 +285,7 @@ export function ClientsSectionV2() {
       >
         <img
           src="/3dasset/brain-creative.png"
-          alt="Creative Energy"
+          alt="FreakingMinds brain mascot"
           loading="lazy"
           className="animate-v2-clients-float"
           style={{

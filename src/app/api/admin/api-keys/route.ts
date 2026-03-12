@@ -1,8 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { requirePermission } from '@/lib/admin-auth-middleware';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { generateApiKey } from '@/lib/api-key-auth';
 import { logAuditEvent, getClientIP } from '@/lib/admin/audit-log';
+import { ApiResponse } from '@/lib/api-response';
 
 export async function GET(request: NextRequest) {
   const auth = await requirePermission(request, 'settings.read');
@@ -17,12 +18,10 @@ export async function GET(request: NextRequest) {
 
     if (error) throw error;
 
-    return NextResponse.json({ success: true, data });
-  } catch {
-    return NextResponse.json(
-      { success: false, error: 'Failed to fetch API keys' },
-      { status: 500 }
-    );
+    return ApiResponse.success(data);
+  } catch (error) {
+    console.error('Failed to fetch API keys:', error);
+    return ApiResponse.error('Failed to fetch API keys');
   }
 }
 
@@ -35,17 +34,11 @@ export async function POST(request: NextRequest) {
     const { name, permissions, rate_limit, expires_at } = body;
 
     if (!name || typeof name !== 'string') {
-      return NextResponse.json(
-        { success: false, error: 'Name is required' },
-        { status: 400 }
-      );
+      return ApiResponse.validationError('Name is required');
     }
 
     if (!Array.isArray(permissions) || permissions.length === 0) {
-      return NextResponse.json(
-        { success: false, error: 'At least one permission is required' },
-        { status: 400 }
-      );
+      return ApiResponse.validationError('At least one permission is required');
     }
 
     const { key, hash, prefix } = generateApiKey();
@@ -78,16 +71,13 @@ export async function POST(request: NextRequest) {
     });
 
     // Return the full key ONCE — it cannot be retrieved again
-    return NextResponse.json({
-      success: true,
-      data: { ...data, key },
-      message: 'API key created. Copy the key now — it will not be shown again.',
-    });
-  } catch {
-    return NextResponse.json(
-      { success: false, error: 'Failed to create API key' },
-      { status: 500 }
+    return ApiResponse.success(
+      { ...data, key },
+      { message: 'API key created. Copy the key now — it will not be shown again.' }
     );
+  } catch (error) {
+    console.error('Failed to create API key:', error);
+    return ApiResponse.error('Failed to create API key');
   }
 }
 
@@ -100,10 +90,7 @@ export async function PUT(request: NextRequest) {
     const { id, name, permissions, rate_limit, is_active } = body;
 
     if (!id) {
-      return NextResponse.json(
-        { success: false, error: 'API key ID is required' },
-        { status: 400 }
-      );
+      return ApiResponse.validationError('API key ID is required');
     }
 
     const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
@@ -132,12 +119,10 @@ export async function PUT(request: NextRequest) {
       ip_address: getClientIP(request),
     });
 
-    return NextResponse.json({ success: true, data });
-  } catch {
-    return NextResponse.json(
-      { success: false, error: 'Failed to update API key' },
-      { status: 500 }
-    );
+    return ApiResponse.success(data);
+  } catch (error) {
+    console.error('Failed to update API key:', error);
+    return ApiResponse.error('Failed to update API key');
   }
 }
 
@@ -150,10 +135,7 @@ export async function DELETE(request: NextRequest) {
     const id = searchParams.get('id');
 
     if (!id) {
-      return NextResponse.json(
-        { success: false, error: 'API key ID is required' },
-        { status: 400 }
-      );
+      return ApiResponse.validationError('API key ID is required');
     }
 
     // Soft delete
@@ -174,11 +156,9 @@ export async function DELETE(request: NextRequest) {
       ip_address: getClientIP(request),
     });
 
-    return NextResponse.json({ success: true });
-  } catch {
-    return NextResponse.json(
-      { success: false, error: 'Failed to delete API key' },
-      { status: 500 }
-    );
+    return ApiResponse.success(null);
+  } catch (error) {
+    console.error('Failed to delete API key:', error);
+    return ApiResponse.error('Failed to delete API key');
   }
 }

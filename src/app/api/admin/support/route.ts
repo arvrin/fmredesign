@@ -3,16 +3,17 @@
  * GET  — list all tickets across all clients (with client name); fetch replies with ?ticketId=X&replies=true
  * PUT  — update ticket status / assigned_to
  * POST — send an admin reply to a ticket OR create a new ticket on behalf of a client
- *        { ticketId, message }                              → reply to existing ticket
- *        { clientId, title, description, priority?, category? } → create new ticket
+ *        { ticketId, message }                              -> reply to existing ticket
+ *        { clientId, title, description, priority?, category? } -> create new ticket
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { requireAdminAuth, requirePermission } from '@/lib/admin-auth-middleware';
 import { notifyRecipient, ticketStatusUpdateEmail } from '@/lib/email/send';
 import { notifyClient } from '@/lib/notifications';
 import { logAuditEvent, getClientIP } from '@/lib/admin/audit-log';
+import { ApiResponse } from '@/lib/api-response';
 
 export async function GET(request: NextRequest) {
   const authError = await requireAdminAuth(request);
@@ -48,7 +49,7 @@ export async function GET(request: NextRequest) {
 
       if (repliesErr) {
         console.error('Replies query error:', repliesErr);
-        return NextResponse.json({ success: true, data: [] });
+        return ApiResponse.success([]);
       }
 
       const transformed = (replies || []).map((r: Record<string, unknown>) => ({
@@ -60,14 +61,14 @@ export async function GET(request: NextRequest) {
         createdAt: r.created_at,
       }));
 
-      return NextResponse.json({ success: true, data: transformed });
+      return ApiResponse.success(transformed);
     }
 
     const { data: tickets, error } = await query;
 
     if (error) {
       console.error('Admin support tickets query error:', error);
-      return NextResponse.json({ success: true, data: [], total: 0 });
+      return ApiResponse.success([], { total: 0 });
     }
 
     // Fetch all unique client IDs to get names
@@ -102,17 +103,10 @@ export async function GET(request: NextRequest) {
       updatedAt: t.updated_at,
     }));
 
-    return NextResponse.json({
-      success: true,
-      data: transformed,
-      total: transformed.length,
-    });
+    return ApiResponse.success(transformed, { total: transformed.length });
   } catch (error) {
     console.error('Error fetching admin support tickets:', error);
-    return NextResponse.json(
-      { success: false, error: 'Failed to fetch support tickets' },
-      { status: 500 }
-    );
+    return ApiResponse.error('Failed to fetch support tickets');
   }
 }
 
@@ -125,10 +119,7 @@ export async function PUT(request: NextRequest) {
     const { ticketId, status, assignedTo } = body;
 
     if (!ticketId) {
-      return NextResponse.json(
-        { success: false, error: 'Ticket ID is required' },
-        { status: 400 }
-      );
+      return ApiResponse.validationError('Ticket ID is required');
     }
 
     const updates: Record<string, string> = { updated_at: new Date().toISOString() };
@@ -144,10 +135,7 @@ export async function PUT(request: NextRequest) {
 
     if (error) {
       console.error('Admin ticket update error:', error);
-      return NextResponse.json(
-        { success: false, error: 'Failed to update ticket' },
-        { status: 500 }
-      );
+      return ApiResponse.error('Failed to update ticket');
     }
 
     // Fire-and-forget: notify client about status change
@@ -195,21 +183,15 @@ export async function PUT(request: NextRequest) {
       ip_address: getClientIP(request),
     });
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        id: ticket.id,
-        status: ticket.status,
-        assignedTo: ticket.assigned_to,
-        updatedAt: ticket.updated_at,
-      },
+    return ApiResponse.success({
+      id: ticket.id,
+      status: ticket.status,
+      assignedTo: ticket.assigned_to,
+      updatedAt: ticket.updated_at,
     });
   } catch (error) {
     console.error('Error updating support ticket:', error);
-    return NextResponse.json(
-      { success: false, error: 'Failed to update ticket' },
-      { status: 500 }
-    );
+    return ApiResponse.error('Failed to update ticket');
   }
 }
 
@@ -224,10 +206,7 @@ export async function POST(request: NextRequest) {
     // ── Branch: Create a new ticket on behalf of a client ──
     if (clientId && !ticketId) {
       if (!title?.trim() || !description?.trim()) {
-        return NextResponse.json(
-          { success: false, error: 'Title and description are required' },
-          { status: 400 }
-        );
+        return ApiResponse.validationError('Title and description are required');
       }
 
       const { data: newTicket, error: insertErr } = await supabaseAdmin
@@ -246,10 +225,7 @@ export async function POST(request: NextRequest) {
 
       if (insertErr) {
         console.error('Create ticket error:', insertErr);
-        return NextResponse.json(
-          { success: false, error: 'Failed to create ticket' },
-          { status: 500 }
-        );
+        return ApiResponse.error('Failed to create ticket');
       }
 
       // Notify client in-app
@@ -271,28 +247,22 @@ export async function POST(request: NextRequest) {
         ip_address: getClientIP(request),
       });
 
-      return NextResponse.json({
-        success: true,
-        data: {
-          id: newTicket.id,
-          clientId: newTicket.client_id,
-          title: newTicket.title,
-          description: newTicket.description,
-          status: newTicket.status,
-          priority: newTicket.priority,
-          category: newTicket.category,
-          assignedTo: newTicket.assigned_to,
-          createdAt: newTicket.created_at,
-        },
+      return ApiResponse.success({
+        id: newTicket.id,
+        clientId: newTicket.client_id,
+        title: newTicket.title,
+        description: newTicket.description,
+        status: newTicket.status,
+        priority: newTicket.priority,
+        category: newTicket.category,
+        assignedTo: newTicket.assigned_to,
+        createdAt: newTicket.created_at,
       });
     }
 
     // ── Branch: Reply to an existing ticket ──
     if (!ticketId || !message?.trim()) {
-      return NextResponse.json(
-        { success: false, error: 'Ticket ID and message are required' },
-        { status: 400 }
-      );
+      return ApiResponse.validationError('Ticket ID and message are required');
     }
 
     // Get the ticket to find client_id
@@ -303,10 +273,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (ticketErr || !ticket) {
-      return NextResponse.json(
-        { success: false, error: 'Ticket not found' },
-        { status: 404 }
-      );
+      return ApiResponse.notFound('Ticket not found');
     }
 
     // Insert reply
@@ -323,10 +290,7 @@ export async function POST(request: NextRequest) {
 
     if (replyErr) {
       console.error('Insert reply error:', replyErr);
-      return NextResponse.json(
-        { success: false, error: 'Failed to send reply' },
-        { status: 500 }
-      );
+      return ApiResponse.error('Failed to send reply');
     }
 
     // Update ticket's updated_at
@@ -356,22 +320,16 @@ export async function POST(request: NextRequest) {
       ip_address: getClientIP(request),
     });
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        id: reply.id,
-        ticketId: reply.ticket_id,
-        senderType: reply.sender_type,
-        senderName: reply.sender_name,
-        message: reply.message,
-        createdAt: reply.created_at,
-      },
+    return ApiResponse.success({
+      id: reply.id,
+      ticketId: reply.ticket_id,
+      senderType: reply.sender_type,
+      senderName: reply.sender_name,
+      message: reply.message,
+      createdAt: reply.created_at,
     });
   } catch (error) {
     console.error('Error in POST /api/admin/support:', error);
-    return NextResponse.json(
-      { success: false, error: 'Failed to process request' },
-      { status: 500 }
-    );
+    return ApiResponse.error('Failed to process request');
   }
 }

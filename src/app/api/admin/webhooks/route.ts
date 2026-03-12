@@ -1,8 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { randomBytes } from 'crypto';
 import { requirePermission } from '@/lib/admin-auth-middleware';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { logAuditEvent, getClientIP } from '@/lib/admin/audit-log';
+import { ApiResponse } from '@/lib/api-response';
 
 export async function GET(request: NextRequest) {
   const auth = await requirePermission(request, 'settings.read');
@@ -22,9 +23,9 @@ export async function GET(request: NextRequest) {
       .limit(50);
 
     if (error) {
-      return NextResponse.json({ success: false, error: 'Failed to fetch deliveries' }, { status: 500 });
+      return ApiResponse.error('Failed to fetch deliveries');
     }
-    return NextResponse.json({ success: true, data });
+    return ApiResponse.success(data);
   }
 
   try {
@@ -36,9 +37,10 @@ export async function GET(request: NextRequest) {
 
     if (error) throw error;
 
-    return NextResponse.json({ success: true, data });
-  } catch {
-    return NextResponse.json({ success: false, error: 'Failed to fetch webhooks' }, { status: 500 });
+    return ApiResponse.success(data);
+  } catch (error) {
+    console.error('Failed to fetch webhooks:', error);
+    return ApiResponse.error('Failed to fetch webhooks');
   }
 }
 
@@ -51,10 +53,7 @@ export async function POST(request: NextRequest) {
     const { name, url, events, secret } = body;
 
     if (!name || !url || !Array.isArray(events) || events.length === 0) {
-      return NextResponse.json(
-        { success: false, error: 'name, url, and events[] are required' },
-        { status: 400 }
-      );
+      return ApiResponse.validationError('name, url, and events[] are required');
     }
 
     const webhookSecret = secret || randomBytes(32).toString('hex');
@@ -84,13 +83,13 @@ export async function POST(request: NextRequest) {
       ip_address: getClientIP(request),
     });
 
-    return NextResponse.json({
-      success: true,
-      data: { ...data, secret: webhookSecret },
-      message: 'Webhook created. Save the signing secret — it will not be shown again.',
-    });
-  } catch {
-    return NextResponse.json({ success: false, error: 'Failed to create webhook' }, { status: 500 });
+    return ApiResponse.success(
+      { ...data, secret: webhookSecret },
+      { message: 'Webhook created. Save the signing secret — it will not be shown again.' }
+    );
+  } catch (error) {
+    console.error('Failed to create webhook:', error);
+    return ApiResponse.error('Failed to create webhook');
   }
 }
 
@@ -103,7 +102,7 @@ export async function PUT(request: NextRequest) {
     const { id, name, url, events, is_active } = body;
 
     if (!id) {
-      return NextResponse.json({ success: false, error: 'Webhook ID is required' }, { status: 400 });
+      return ApiResponse.validationError('Webhook ID is required');
     }
 
     const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
@@ -132,9 +131,10 @@ export async function PUT(request: NextRequest) {
       ip_address: getClientIP(request),
     });
 
-    return NextResponse.json({ success: true, data });
-  } catch {
-    return NextResponse.json({ success: false, error: 'Failed to update webhook' }, { status: 500 });
+    return ApiResponse.success(data);
+  } catch (error) {
+    console.error('Failed to update webhook:', error);
+    return ApiResponse.error('Failed to update webhook');
   }
 }
 
@@ -146,7 +146,7 @@ export async function DELETE(request: NextRequest) {
   const id = searchParams.get('id');
 
   if (!id) {
-    return NextResponse.json({ success: false, error: 'Webhook ID is required' }, { status: 400 });
+    return ApiResponse.validationError('Webhook ID is required');
   }
 
   try {
@@ -167,8 +167,9 @@ export async function DELETE(request: NextRequest) {
       ip_address: getClientIP(request),
     });
 
-    return NextResponse.json({ success: true });
-  } catch {
-    return NextResponse.json({ success: false, error: 'Failed to delete webhook' }, { status: 500 });
+    return ApiResponse.success(null);
+  } catch (error) {
+    console.error('Failed to delete webhook:', error);
+    return ApiResponse.error('Failed to delete webhook');
   }
 }

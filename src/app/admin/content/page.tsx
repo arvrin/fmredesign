@@ -72,7 +72,7 @@ export default function ContentCalendarPage() {
   const [page, setPage] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
-  const [projects, setProjects] = useState<any[]>([]);
+  const [projects, setProjects] = useState<{ id: string; name: string }[]>([]);
   const [clients, setClients] = useState<{ id: string; name: string }[]>([]);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'grouped' | 'flat' | 'calendar' | 'kanban'>('grouped');
@@ -104,7 +104,7 @@ export default function ContentCalendarPage() {
       const result = await response.json();
 
       if (result.success) {
-        const mapped: CalendarContentItem[] = (result.data || []).map((c: any) => ({
+        const mapped: CalendarContentItem[] = (result.data || []).map((c: Record<string, unknown>) => ({
           id: c.id,
           title: c.title || 'Untitled',
           scheduledDate: c.scheduledDate || '',
@@ -185,8 +185,8 @@ export default function ContentCalendarPage() {
         if (result.success) {
           setClients(
             (result.data || [])
-              .filter((c: any) => c.status === 'active')
-              .map((c: any) => ({ id: c.id, name: c.name }))
+              .filter((c: { id: string; name: string; status: string }) => c.status === 'active')
+              .map((c: { id: string; name: string }) => ({ id: c.id, name: c.name }))
           );
         }
       })

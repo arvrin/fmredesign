@@ -39,13 +39,39 @@ export function toSnakeCaseKeys<T extends Record<string, any>>(
   return result;
 }
 
-/** Transform all object keys from snake_case to camelCase */
+/**
+ * Transform all object keys from snake_case to camelCase.
+ * Handles nested objects, arrays, and null/undefined values.
+ * Optionally accepts a defaults map to provide fallback values for specific camelCase keys.
+ */
 export function toCamelCaseKeys<T extends Record<string, any>>(
-  obj: T
+  obj: T,
+  defaults?: Record<string, unknown>
 ): Record<string, any> {
+  if (obj === null || obj === undefined) return obj;
   const result: Record<string, any> = {};
   for (const key of Object.keys(obj)) {
-    result[snakeToCamel(key)] = obj[key];
+    const camelKey = snakeToCamel(key);
+    const value = obj[key];
+    if (Array.isArray(value)) {
+      result[camelKey] = value.map((item) =>
+        item !== null && typeof item === 'object' && !Array.isArray(item)
+          ? toCamelCaseKeys(item)
+          : item
+      );
+    } else if (value !== null && typeof value === 'object' && !(value instanceof Date)) {
+      result[camelKey] = toCamelCaseKeys(value);
+    } else {
+      result[camelKey] = value;
+    }
+  }
+  // Apply defaults for any key that is null or undefined
+  if (defaults) {
+    for (const [dKey, dVal] of Object.entries(defaults)) {
+      if (result[dKey] === null || result[dKey] === undefined) {
+        result[dKey] = dVal;
+      }
+    }
   }
   return result;
 }

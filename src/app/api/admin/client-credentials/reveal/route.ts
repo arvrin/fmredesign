@@ -36,7 +36,8 @@ export async function GET(request: NextRequest) {
   try {
     const decrypted = JSON.parse(decryptToken(data.credentials));
     return NextResponse.json({ success: true, data: decrypted });
-  } catch {
+  } catch (error) {
+    console.error('Credential decryption error:', error);
     return NextResponse.json({ success: false, error: 'Failed to decrypt credential' }, { status: 500 });
   }
 }

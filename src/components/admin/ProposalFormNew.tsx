@@ -239,12 +239,6 @@ export function ProposalFormNew({ initialProposal, onSaveSuccess }: ProposalForm
     ProposalNumbering.previewNextProposalNumber().then(setNextPreview);
   }, []);
 
-  // Recalculate pricing
-  useEffect(() => {
-    recalculatePricing();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedPackages, customServices, clientSizeMultiplier, urgencyMultiplier, retainerDuration, currency]);
-
   // ---- Pricing calculator ---------------------------------------------------
 
   const recalculatePricing = useCallback(() => {
@@ -290,6 +284,11 @@ export function ProposalFormNew({ initialProposal, onSaveSuccess }: ProposalForm
       customServices: customServices.map(({ id: _id, ...rest }) => rest),
     }));
   }, [selectedPackages, customServices, clientSizeMultiplier, urgencyMultiplier, retainerDuration, currency, proposal.proposalType, proposal.investment?.paymentTerms]);
+
+  // Recalculate pricing when dependencies change
+  useEffect(() => {
+    recalculatePricing();
+  }, [recalculatePricing]);
 
   // ---- PDF lazy-load --------------------------------------------------------
 
