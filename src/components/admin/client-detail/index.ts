@@ -6,3 +6,4 @@ export { ContentTab } from './ContentTab';
 export { SupportTab } from './SupportTab';
 export { DocumentsTab } from './DocumentsTab';
 export { BrandIdentitySection } from './BrandIdentitySection';
+export { CredentialsTab } from './CredentialsTab';

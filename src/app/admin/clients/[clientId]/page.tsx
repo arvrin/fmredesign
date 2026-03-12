@@ -27,6 +27,7 @@ const DocumentsTab = dynamic(() => import('@/components/admin/client-detail/Docu
 const ContentStrategyTab = dynamic(() => import('@/components/admin/clients/ContentStrategyTab').then(m => ({ default: m.ContentStrategyTab })), { loading: TabSkeleton });
 const GrowthEngine = dynamic(() => import('@/components/admin/GrowthEngine').then(m => ({ default: m.GrowthEngine })), { loading: TabSkeleton });
 const CommunicationHub = dynamic(() => import('@/components/admin/CommunicationHub').then(m => ({ default: m.CommunicationHub })), { loading: TabSkeleton });
+const CredentialsTab = dynamic(() => import('@/components/admin/client-detail/CredentialsTab').then(m => ({ default: m.CredentialsTab })), { loading: TabSkeleton });
 
 // ────────────────────────────────────────────────────────────
 // Helpers
@@ -144,6 +145,7 @@ export default function AdminClientDetail() {
               {/* Business */}
               <TabsTrigger value="contracts" className="text-xs sm:text-sm">Contracts</TabsTrigger>
               <TabsTrigger value="documents" className="text-xs sm:text-sm">Documents</TabsTrigger>
+              <TabsTrigger value="credentials" className="text-xs sm:text-sm">Credentials</TabsTrigger>
               {/* People & Communication */}
               <TabsTrigger value="team" className="text-xs sm:text-sm">Team</TabsTrigger>
               <TabsTrigger value="messages" className="text-xs sm:text-sm">Messages</TabsTrigger>
@@ -204,6 +206,12 @@ export default function AdminClientDetail() {
           <TabsContent value="documents" className="space-y-6">
             <SectionErrorBoundary section="Documents">
               <DocumentsTab clientId={clientId} clientName={clientProfile?.name} />
+            </SectionErrorBoundary>
+          </TabsContent>
+
+          <TabsContent value="credentials" className="space-y-6">
+            <SectionErrorBoundary section="Credentials">
+              <CredentialsTab clientId={clientId} clientName={clientProfile?.name} />
             </SectionErrorBoundary>
           </TabsContent>
 

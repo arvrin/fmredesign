@@ -18,6 +18,7 @@ import {
   FileText,
   ScrollText,
   Settings,
+  KeyRound,
 } from 'lucide-react';
 import {
   ClientPortalProvider,
@@ -161,6 +162,7 @@ export default function ClientDashboardLayout({
         { label: 'Proposals', href: `${basePath}/proposals`, icon: <ScrollText className="w-5 h-5" /> },
         { label: 'Support', href: `${basePath}/support`, icon: <MessageSquare className="w-5 h-5" /> },
         { label: 'Contracts', href: `${basePath}/contracts`, icon: <FileText className="w-5 h-5" /> },
+        { label: 'Credentials', href: `${basePath}/credentials`, icon: <KeyRound className="w-5 h-5" /> },
         { label: 'Settings', href: `${basePath}/settings`, icon: <Settings className="w-5 h-5" /> },
       ],
     },
