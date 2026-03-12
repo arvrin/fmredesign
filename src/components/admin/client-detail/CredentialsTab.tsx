@@ -160,6 +160,7 @@ export function CredentialsTab({ clientId, clientName }: CredentialsTabProps) {
         <AdminCredentialForm
           clientId={clientId}
           editingId={editingId}
+          existingCredential={editingId ? credentials.find((c) => c.id === editingId) : undefined}
           onClose={() => { setShowAddForm(false); setEditingId(null); }}
           onSaved={() => {
             setShowAddForm(false);
@@ -291,44 +292,63 @@ export function CredentialsTab({ clientId, clientName }: CredentialsTabProps) {
 function AdminCredentialForm({
   clientId,
   editingId,
+  existingCredential,
   onClose,
   onSaved,
 }: {
   clientId: string;
   editingId: string | null;
+  existingCredential?: ClientCredentialMasked;
   onClose: () => void;
   onSaved: () => void;
 }) {
-  const [selectedPlatform, setSelectedPlatform] = useState('');
-  const [selectedCredType, setSelectedCredType] = useState<CredentialType>('login');
-  const [label, setLabel] = useState('');
-  const [notes, setNotes] = useState('');
+  const isEditing = !!editingId;
+  const [selectedPlatform, setSelectedPlatform] = useState(existingCredential?.platform || '');
+  const [selectedCredType, setSelectedCredType] = useState<CredentialType>(existingCredential?.credential_type || 'login');
+  const [label, setLabel] = useState(existingCredential?.label || '');
+  const [notes, setNotes] = useState(existingCredential?.notes || '');
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [platformUserChanged, setPlatformUserChanged] = useState(false);
 
   const preset = getPlatformPreset(selectedPlatform);
   const credTypeConfig = preset?.credentialTypes.find((ct) => ct.type === selectedCredType);
   const fields: PlatformField[] = credTypeConfig?.fields || [];
 
   useEffect(() => {
-    if (preset && preset.credentialTypes.length > 0) {
+    if (platformUserChanged && preset && preset.credentialTypes.length > 0) {
       setSelectedCredType(preset.credentialTypes[0].type);
       setFieldValues({});
+      setPlatformUserChanged(false);
     }
-  }, [selectedPlatform]);
+  }, [selectedPlatform, platformUserChanged]);
 
   const handleSubmit = async () => {
     if (!selectedPlatform) {
       setError('Please select a platform');
       return;
     }
-    for (const field of fields) {
-      if (field.required && !fieldValues[field.key]?.trim()) {
-        setError(`${field.label} is required`);
-        return;
+    if (!isEditing) {
+      for (const field of fields) {
+        if (field.required && !fieldValues[field.key]?.trim()) {
+          setError(`${field.label} is required`);
+          return;
+        }
       }
     }
+
+    // For edits, only send fields the user actually filled in
+    const credentialsToSend: Record<string, string> = {};
+    let hasAnyField = false;
+    for (const field of fields) {
+      const val = fieldValues[field.key]?.trim();
+      if (val) {
+        credentialsToSend[field.key] = val;
+        hasAnyField = true;
+      }
+    }
+    const sendCredentials = !isEditing || hasAnyField;
 
     setSaving(true);
     setError('');
@@ -341,8 +361,10 @@ function AdminCredentialForm({
         credential_type: selectedCredType,
         label: label || null,
         notes: notes || null,
-        credentials: fieldValues,
       };
+      if (sendCredentials) {
+        body.credentials = isEditing ? credentialsToSend : fieldValues;
+      }
       if (editingId) body.id = editingId;
 
       const res = await fetch('/api/admin/client-credentials', {
@@ -383,7 +405,7 @@ function AdminCredentialForm({
             {PLATFORM_PRESETS.map((p) => (
               <button
                 key={p.id}
-                onClick={() => setSelectedPlatform(p.id)}
+                onClick={() => { setPlatformUserChanged(true); setSelectedPlatform(p.id); }}
                 className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border transition-all text-sm ${
                   selectedPlatform === p.id
                     ? 'border-fm-magenta-600 bg-fm-magenta-50 font-medium'
@@ -423,21 +445,34 @@ function AdminCredentialForm({
 
         {/* Dynamic fields */}
         {fields.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {fields.map((field) => (
-              <div key={field.key}>
-                <label className="block text-sm font-medium text-fm-neutral-700 mb-1">
-                  {field.label}
-                  {field.required && <span className="text-red-500 ml-0.5">*</span>}
-                </label>
-                <AdminCredentialInput
-                  type={field.type}
-                  placeholder={field.placeholder}
-                  value={fieldValues[field.key] || ''}
-                  onChange={(val) => setFieldValues((prev) => ({ ...prev, [field.key]: val }))}
-                />
-              </div>
-            ))}
+          <div className="space-y-3">
+            {isEditing && (
+              <p className="text-xs text-fm-neutral-500 bg-fm-neutral-50 rounded-lg px-3 py-2">
+                Leave fields blank to keep existing values. Only fill in fields you want to change.
+              </p>
+            )}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {fields.map((field) => {
+                const maskedValue = existingCredential?.credentials_masked?.[field.key];
+                const editPlaceholder = isEditing && maskedValue
+                  ? `Current: ${maskedValue}`
+                  : field.placeholder;
+                return (
+                  <div key={field.key}>
+                    <label className="block text-sm font-medium text-fm-neutral-700 mb-1">
+                      {field.label}
+                      {field.required && !isEditing && <span className="text-red-500 ml-0.5">*</span>}
+                    </label>
+                    <AdminCredentialInput
+                      type={field.type}
+                      placeholder={editPlaceholder}
+                      value={fieldValues[field.key] || ''}
+                      onChange={(val) => setFieldValues((prev) => ({ ...prev, [field.key]: val }))}
+                    />
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
 

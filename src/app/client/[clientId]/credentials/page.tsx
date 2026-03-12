@@ -168,6 +168,7 @@ export default function ClientCredentialsPage() {
         <CredentialForm
           clientId={clientId}
           editingId={editingId}
+          existingCredential={editingId ? credentials.find((c) => c.id === editingId) : undefined}
           onClose={() => { setShowAdd(false); setEditingId(null); }}
           onSaved={() => {
             setShowAdd(false);
@@ -317,34 +318,39 @@ export default function ClientCredentialsPage() {
 function CredentialForm({
   clientId,
   editingId,
+  existingCredential,
   onClose,
   onSaved,
 }: {
   clientId: string;
   editingId: string | null;
+  existingCredential?: ClientCredentialMasked;
   onClose: () => void;
   onSaved: () => void;
 }) {
-  const [selectedPlatform, setSelectedPlatform] = useState<string>('');
-  const [selectedCredType, setSelectedCredType] = useState<CredentialType>('login');
-  const [label, setLabel] = useState('');
-  const [notes, setNotes] = useState('');
+  const isEditing = !!editingId;
+  const [selectedPlatform, setSelectedPlatform] = useState<string>(existingCredential?.platform || '');
+  const [selectedCredType, setSelectedCredType] = useState<CredentialType>(existingCredential?.credential_type || 'login');
+  const [label, setLabel] = useState(existingCredential?.label || '');
+  const [notes, setNotes] = useState(existingCredential?.notes || '');
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [platformUserChanged, setPlatformUserChanged] = useState(false);
 
   const preset = getPlatformPreset(selectedPlatform);
   const credTypeConfig = preset?.credentialTypes.find((ct) => ct.type === selectedCredType);
   const fields: PlatformField[] = credTypeConfig?.fields || [];
 
-  // When platform changes, reset credential type to first available
+  // When platform changes by user action, reset credential type to first available
   useEffect(() => {
-    if (preset && preset.credentialTypes.length > 0) {
+    if (platformUserChanged && preset && preset.credentialTypes.length > 0) {
       setSelectedCredType(preset.credentialTypes[0].type);
       setFieldValues({});
+      setPlatformUserChanged(false);
     }
-  }, [selectedPlatform]);
+  }, [selectedPlatform, platformUserChanged]);
 
   const handleSubmit = async () => {
     if (!selectedPlatform) {
@@ -352,13 +358,30 @@ function CredentialForm({
       return;
     }
 
-    // Validate required fields
-    for (const field of fields) {
-      if (field.required && !fieldValues[field.key]?.trim()) {
-        setError(`${field.label} is required`);
-        return;
+    // For new credentials, validate required fields
+    // For edits, only validate if user typed something (empty = keep existing)
+    if (!isEditing) {
+      for (const field of fields) {
+        if (field.required && !fieldValues[field.key]?.trim()) {
+          setError(`${field.label} is required`);
+          return;
+        }
       }
     }
+
+    // For edits, build credentials from only the fields the user actually filled in
+    const credentialsToSend: Record<string, string> = {};
+    let hasAnyField = false;
+    for (const field of fields) {
+      const val = fieldValues[field.key]?.trim();
+      if (val) {
+        credentialsToSend[field.key] = val;
+        hasAnyField = true;
+      }
+    }
+
+    // For edits with no credential changes, don't send credentials key at all
+    const sendCredentials = !isEditing || hasAnyField;
 
     setSaving(true);
     setError('');
@@ -371,8 +394,10 @@ function CredentialForm({
         credential_type: selectedCredType,
         label: label || null,
         notes: notes || null,
-        credentials: fieldValues,
       };
+      if (sendCredentials) {
+        body.credentials = isEditing ? credentialsToSend : fieldValues;
+      }
       if (editingId) body.id = editingId;
 
       const res = await fetch(url, {
@@ -420,7 +445,7 @@ function CredentialForm({
               {PLATFORM_PRESETS.map((p) => (
                 <button
                   key={p.id}
-                  onClick={() => setSelectedPlatform(p.id)}
+                  onClick={() => { setPlatformUserChanged(true); setSelectedPlatform(p.id); }}
                   className={`flex flex-col items-center gap-1.5 p-3 rounded-lg border-2 transition-all text-sm ${
                     selectedPlatform === p.id
                       ? 'border-fm-magenta-600 bg-fm-magenta-50'
@@ -463,20 +488,31 @@ function CredentialForm({
           {/* Dynamic fields */}
           {fields.length > 0 && (
             <div className="space-y-3">
-              {fields.map((field) => (
-                <div key={field.key}>
-                  <label className="block text-sm font-medium text-fm-neutral-700 mb-1">
-                    {field.label}
-                    {field.required && <span className="text-red-500 ml-0.5">*</span>}
-                  </label>
-                  <CredentialInput
-                    type={field.type}
-                    placeholder={field.placeholder}
-                    value={fieldValues[field.key] || ''}
-                    onChange={(val) => setFieldValues((prev) => ({ ...prev, [field.key]: val }))}
-                  />
-                </div>
-              ))}
+              {isEditing && (
+                <p className="text-xs text-fm-neutral-500 bg-fm-neutral-50 rounded-lg px-3 py-2">
+                  Leave fields blank to keep existing values. Only fill in fields you want to change.
+                </p>
+              )}
+              {fields.map((field) => {
+                const maskedValue = existingCredential?.credentials_masked?.[field.key];
+                const editPlaceholder = isEditing && maskedValue
+                  ? `Current: ${maskedValue}`
+                  : field.placeholder;
+                return (
+                  <div key={field.key}>
+                    <label className="block text-sm font-medium text-fm-neutral-700 mb-1">
+                      {field.label}
+                      {field.required && !isEditing && <span className="text-red-500 ml-0.5">*</span>}
+                    </label>
+                    <CredentialInput
+                      type={field.type}
+                      placeholder={editPlaceholder}
+                      value={fieldValues[field.key] || ''}
+                      onChange={(val) => setFieldValues((prev) => ({ ...prev, [field.key]: val }))}
+                    />
+                  </div>
+                );
+              })}
             </div>
           )}
 
