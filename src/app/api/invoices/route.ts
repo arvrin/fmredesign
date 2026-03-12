@@ -113,6 +113,22 @@ export async function GET(request: NextRequest) {
 
   try {
     const { searchParams } = new URL(request.url);
+    const singleId = searchParams.get('id');
+
+    // Single invoice fetch by ID
+    if (singleId) {
+      const supabase = getSupabaseAdmin();
+      const { data, error } = await supabase
+        .from('invoices')
+        .select(SELECT_COLS)
+        .eq('id', singleId)
+        .single();
+      if (error || !data) {
+        return NextResponse.json({ success: false, error: 'Invoice not found' }, { status: 404 });
+      }
+      return NextResponse.json({ success: true, data: transformInvoice(data as unknown as Record<string, unknown>) });
+    }
+
     const clientId = searchParams.get('clientId');
     const status = searchParams.get('status');
     const search = searchParams.get('search');

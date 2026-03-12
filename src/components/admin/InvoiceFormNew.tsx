@@ -169,6 +169,8 @@ function getGSTLabel(type: 'intra' | 'inter' | 'export', taxRate: number): strin
 export function InvoiceFormNew() {
   const searchParams = useSearchParams();
   const duplicateId = searchParams.get('duplicate');
+  const editId = searchParams.get('edit');
+  const [isEditMode, setIsEditMode] = useState(false);
 
   const [invoice, setInvoice] = useState<Invoice>(() => {
     const invoiceDate = new Date();
@@ -314,6 +316,55 @@ export function InvoiceFormNew() {
     loadDuplicate();
   }, [duplicateId]);
 
+  // ---- Pre-populate from existing invoice (edit mode) ----
+  useEffect(() => {
+    if (!editId) return;
+    const loadForEdit = async () => {
+      try {
+        const res = await fetch(`/api/invoices?id=${editId}`);
+        const result = await res.json();
+        if (result.success && result.data) {
+          const src = result.data;
+          setInvoice(prev => ({
+            ...prev,
+            id: src.id, // Keep original ID for upsert
+            invoiceNumber: src.invoiceNumber || prev.invoiceNumber,
+            date: src.date ? src.date.split('T')[0] : prev.date,
+            dueDate: src.dueDate ? src.dueDate.split('T')[0] : prev.dueDate,
+            client: src.client || prev.client,
+            lineItems: (src.lineItems || []).map((item: Record<string, unknown>, idx: number) => ({
+              id: `item-edit-${Date.now()}-${idx}`,
+              serviceId: (item.serviceId as string) || '',
+              description: (item.description as string) || '',
+              sacCode: (item.sacCode as string) || '',
+              quantity: (item.quantity as number) || 1,
+              rate: (item.rate as number) || 0,
+              amount: (item.amount as number) || 0,
+            })),
+            subtotal: src.subtotal ?? prev.subtotal,
+            taxRate: src.taxRate ?? prev.taxRate,
+            taxAmount: src.taxAmount ?? prev.taxAmount,
+            total: src.total ?? prev.total,
+            currency: src.currency ?? prev.currency,
+            cgstAmount: src.cgstAmount ?? prev.cgstAmount,
+            sgstAmount: src.sgstAmount ?? prev.sgstAmount,
+            igstAmount: src.igstAmount ?? prev.igstAmount,
+            placeOfSupply: src.placeOfSupply ?? prev.placeOfSupply,
+            companyGstin: src.companyGstin ?? prev.companyGstin,
+            notes: src.notes ?? prev.notes,
+            terms: src.terms ?? prev.terms,
+            status: src.status ?? prev.status,
+          }));
+          setIsEditMode(true);
+          adminToast.success('Invoice loaded for editing');
+        }
+      } catch {
+        adminToast.error('Failed to load invoice for editing');
+      }
+    };
+    loadForEdit();
+  }, [editId]);
+
   // ---- Recalculate totals with GST split ----
   const recalcTotals = useCallback(() => {
     const subtotal = invoice.lineItems.reduce((s, i) => s + i.amount, 0);
@@ -430,14 +481,14 @@ export function InvoiceFormNew() {
   // ---- Save / Preview / Download ----
   const handleSave = async () => {
     try {
-      // Get a confirmed invoice number from API
-      if (!invoice.invoiceNumber || invoice.invoiceNumber === nextPreview) {
+      // In edit mode, keep existing invoice number; for new invoices, get next number
+      if (!isEditMode && (!invoice.invoiceNumber || invoice.invoiceNumber === nextPreview)) {
         const num = await InvoiceNumbering.getNextInvoiceNumber();
         invoice.invoiceNumber = num;
         setInvoice(prev => ({ ...prev, invoiceNumber: num }));
       }
       await saveToAPI(invoice);
-      adminToast.success('Invoice saved successfully!');
+      adminToast.success(isEditMode ? 'Invoice updated successfully!' : 'Invoice saved successfully!');
     } catch {
       adminToast.error('Error saving invoice. Please try again.');
     }
@@ -485,13 +536,17 @@ export function InvoiceFormNew() {
   const handleDownload = async () => {
     try {
       // Claim a permanent invoice number if not yet claimed
-      if (!invoice.invoiceNumber || invoice.invoiceNumber === nextPreview) {
+      if (!isEditMode && (!invoice.invoiceNumber || invoice.invoiceNumber === nextPreview)) {
         const num = await InvoiceNumbering.getNextInvoiceNumber();
         invoice.invoiceNumber = num;
         setInvoice(prev => ({ ...prev, invoiceNumber: num }));
       }
+      const { SimplePDFGenerator } = await import('@/lib/admin/pdf-simple');
+      const defaultName = SimplePDFGenerator.getDefaultFilename(invoice);
+      const customName = window.prompt('Filename for the PDF:', defaultName);
+      if (customName === null) return; // User cancelled
       const gen = await getPdfGenerator();
-      await gen.downloadPDF(invoice);
+      await gen.downloadPDF(invoice, customName || defaultName);
     } catch {
       adminToast.error('Error downloading PDF.');
     }

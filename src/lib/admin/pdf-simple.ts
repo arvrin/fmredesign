@@ -169,14 +169,22 @@ export class SimplePDFGenerator {
     return this.doc.output('datauristring');
   }
 
-  async downloadPDF(invoice: Invoice): Promise<void> {
-    await this.generateInvoice(invoice);
+  /** Generate the default filename for an invoice */
+  static getDefaultFilename(invoice: { invoiceNumber: string; date: string; client: { name: string } }): string {
     const d = new Date(invoice.date);
     const month = d.toLocaleString('en-US', { month: 'long' });
     const year = d.getFullYear();
     const invoiceNum = invoice.invoiceNumber.replace(/[/\\]/g, '-');
     const brandName = invoice.client.name.replace(/[^a-zA-Z0-9 ]/g, '').replace(/\s+/g, '-');
-    this.doc.save(`${invoiceNum}-${brandName}-${month}-${year}.pdf`);
+    return `${invoiceNum}-${brandName}-${month}-${year}`;
+  }
+
+  async downloadPDF(invoice: Invoice, customFilename?: string): Promise<void> {
+    await this.generateInvoice(invoice);
+    const filename = customFilename || SimplePDFGenerator.getDefaultFilename(invoice);
+    // Ensure .pdf extension
+    const finalName = filename.endsWith('.pdf') ? filename : `${filename}.pdf`;
+    this.doc.save(finalName);
   }
 
   // ---- Header -------------------------------------------------------------

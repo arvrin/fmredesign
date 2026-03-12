@@ -6,6 +6,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -24,6 +25,7 @@ import {
   Send,
   Trash2,
   RefreshCw,
+  Pencil,
 } from 'lucide-react';
 import {
   DashboardCard as Card,
@@ -125,6 +127,7 @@ export default function InvoicesPage() {
     return pdfGeneratorRef.current;
   };
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const menuBtnRefs = useRef<Record<string, HTMLButtonElement | null>>({});
 
   // ---- Fetch invoices ----
   const fetchInvoices = useCallback(async () => {
@@ -193,8 +196,12 @@ export default function InvoicesPage() {
 
   const downloadPDF = async (invoice: InvoiceListItem) => {
     try {
+      const { SimplePDFGenerator } = await import('@/lib/admin/pdf-simple');
+      const defaultName = SimplePDFGenerator.getDefaultFilename(invoice);
+      const customName = window.prompt('Filename for the PDF:', defaultName);
+      if (customName === null) return; // User cancelled
       const gen = await getPdfGenerator();
-      await gen.downloadPDF(invoice as any);
+      await gen.downloadPDF(invoice as any, customName || defaultName);
     } catch {
       adminToast.error('Error downloading PDF');
     }
@@ -432,85 +439,17 @@ export default function InvoicesPage() {
                             </button>
 
                             {/* More menu */}
-                            <div className="relative">
-                              <button
-                                onClick={() =>
-                                  setOpenMenu(
-                                    openMenu === inv.id ? null : inv.id,
-                                  )
-                                }
-                                className="p-1.5 rounded hover:bg-fm-neutral-100 text-fm-neutral-500 hover:text-fm-neutral-700"
-                              >
-                                <MoreHorizontal className="w-4 h-4" />
-                              </button>
-
-                              {openMenu === inv.id && (
-                                <>
-                                  <div
-                                    className="fixed inset-0"
-                                    style={{ zIndex: 39 }}
-                                    onClick={() => setOpenMenu(null)}
-                                  />
-                                  <div
-                                    className="absolute right-0 top-8 w-48 bg-white rounded-lg shadow-lg border border-fm-neutral-200 py-1"
-                                    style={{ zIndex: 40 }}
-                                  >
-                                    {inv.status === 'draft' && (
-                                      <MenuBtn
-                                        icon={<Send className="w-4 h-4" />}
-                                        label="Mark as Sent"
-                                        onClick={() =>
-                                          updateStatus(inv.id, 'sent')
-                                        }
-                                      />
-                                    )}
-                                    {(inv.status === 'sent' ||
-                                      inv.status === 'overdue') && (
-                                      <MenuBtn
-                                        icon={
-                                          <CheckCircle2 className="w-4 h-4" />
-                                        }
-                                        label="Mark as Paid"
-                                        onClick={() =>
-                                          updateStatus(inv.id, 'paid')
-                                        }
-                                      />
-                                    )}
-                                    {inv.status === 'sent' && (
-                                      <MenuBtn
-                                        icon={
-                                          <AlertCircle className="w-4 h-4" />
-                                        }
-                                        label="Mark as Overdue"
-                                        onClick={() =>
-                                          updateStatus(inv.id, 'overdue')
-                                        }
-                                      />
-                                    )}
-                                    <MenuBtn
-                                      icon={<Copy className="w-4 h-4" />}
-                                      label="Duplicate"
-                                      onClick={() => {
-                                        setOpenMenu(null);
-                                        router.push(`/admin/invoice?duplicate=${inv.id}`);
-                                      }}
-                                    />
-                                    <div className="border-t border-fm-neutral-100 my-1" />
-                                    <MenuBtn
-                                      icon={
-                                        <Trash2 className="w-4 h-4 text-red-500" />
-                                      }
-                                      label="Delete"
-                                      onClick={() => {
-                                        setOpenMenu(null);
-                                        setDeleteConfirm(inv.id);
-                                      }}
-                                      danger
-                                    />
-                                  </div>
-                                </>
-                              )}
-                            </div>
+                            <button
+                              ref={el => { menuBtnRefs.current[inv.id] = el; }}
+                              onClick={() =>
+                                setOpenMenu(
+                                  openMenu === inv.id ? null : inv.id,
+                                )
+                              }
+                              className="p-1.5 rounded hover:bg-fm-neutral-100 text-fm-neutral-500 hover:text-fm-neutral-700"
+                            >
+                              <MoreHorizontal className="w-4 h-4" />
+                            </button>
                           </div>
                         </td>
                       </tr>
@@ -535,7 +474,120 @@ export default function InvoicesPage() {
         }}
         onCancel={() => setDeleteConfirm(null)}
       />
+
+      {/* Portal-rendered dropdown — avoids overflow clipping from Card/table */}
+      {openMenu && typeof document !== 'undefined' &&
+        createPortal(
+          <InvoiceActionMenu
+            invoice={invoices.find(i => i.id === openMenu)!}
+            anchorEl={menuBtnRefs.current[openMenu]}
+            onClose={() => setOpenMenu(null)}
+            onEdit={(id) => {
+              setOpenMenu(null);
+              router.push(`/admin/invoice?edit=${id}`);
+            }}
+            onDuplicate={(id) => {
+              setOpenMenu(null);
+              router.push(`/admin/invoice?duplicate=${id}`);
+            }}
+            onStatusChange={(id, status) => updateStatus(id, status)}
+            onDelete={(id) => {
+              setOpenMenu(null);
+              setDeleteConfirm(id);
+            }}
+          />,
+          document.body,
+        )
+      }
     </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Portal-based action menu (renders outside Card overflow)
+// ---------------------------------------------------------------------------
+
+function InvoiceActionMenu({
+  invoice,
+  anchorEl,
+  onClose,
+  onEdit,
+  onDuplicate,
+  onStatusChange,
+  onDelete,
+}: {
+  invoice: InvoiceListItem;
+  anchorEl: HTMLButtonElement | null;
+  onClose: () => void;
+  onEdit: (id: string) => void;
+  onDuplicate: (id: string) => void;
+  onStatusChange: (id: string, status: string) => void;
+  onDelete: (id: string) => void;
+}) {
+  if (!invoice || !anchorEl) return null;
+
+  const rect = anchorEl.getBoundingClientRect();
+  const menuWidth = 192; // w-48
+  // Position below the button, right-aligned
+  let top = rect.bottom + 4;
+  let left = rect.right - menuWidth;
+
+  // Keep within viewport bounds
+  if (left < 8) left = 8;
+  if (top + 300 > window.innerHeight) top = rect.top - 8; // flip above if near bottom
+
+  return (
+    <>
+      <div className="fixed inset-0" style={{ zIndex: 9998 }} onClick={onClose} />
+      <div
+        className="fixed w-48 bg-white rounded-lg shadow-lg border border-fm-neutral-200 py-1"
+        style={{ zIndex: 9999, top, left }}
+      >
+        {/* Edit — always available */}
+        <MenuBtn
+          icon={<Pencil className="w-4 h-4" />}
+          label="Edit Invoice"
+          onClick={() => onEdit(invoice.id)}
+        />
+
+        {/* Status transitions */}
+        {invoice.status === 'draft' && (
+          <MenuBtn
+            icon={<Send className="w-4 h-4" />}
+            label="Mark as Sent"
+            onClick={() => onStatusChange(invoice.id, 'sent')}
+          />
+        )}
+        {(invoice.status === 'sent' || invoice.status === 'overdue') && (
+          <MenuBtn
+            icon={<CheckCircle2 className="w-4 h-4" />}
+            label="Mark as Paid"
+            onClick={() => onStatusChange(invoice.id, 'paid')}
+          />
+        )}
+        {invoice.status === 'sent' && (
+          <MenuBtn
+            icon={<AlertCircle className="w-4 h-4" />}
+            label="Mark as Overdue"
+            onClick={() => onStatusChange(invoice.id, 'overdue')}
+          />
+        )}
+
+        <MenuBtn
+          icon={<Copy className="w-4 h-4" />}
+          label="Duplicate"
+          onClick={() => onDuplicate(invoice.id)}
+        />
+
+        <div className="border-t border-fm-neutral-100 my-1" />
+        <MenuBtn
+          icon={<Trash2 className="w-4 h-4 text-red-500" />}
+          label="Delete"
+          onClick={() => onDelete(invoice.id)}
+          danger
+        />
+      </div>
+    </>
   );
 }
 
