@@ -83,6 +83,34 @@ export function CredentialsTab({ clientId, clientName }: CredentialsTabProps) {
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ClientCredentialMasked | null>(null);
+  // Revealed credentials: credentialId → decrypted key-value pairs
+  const [revealedCreds, setRevealedCreds] = useState<Record<string, Record<string, string>>>({});
+  const [revealingId, setRevealingId] = useState<string | null>(null);
+
+  const handleReveal = async (credId: string) => {
+    // Toggle off if already revealed
+    if (revealedCreds[credId]) {
+      setRevealedCreds((prev) => {
+        const next = { ...prev };
+        delete next[credId];
+        return next;
+      });
+      return;
+    }
+    // Fetch decrypted values
+    setRevealingId(credId);
+    try {
+      const res = await fetch(`/api/admin/client-credentials/reveal?id=${credId}`);
+      if (res.ok) {
+        const json = await res.json();
+        setRevealedCreds((prev) => ({ ...prev, [credId]: json.data }));
+      }
+    } catch (err) {
+      console.error('Error revealing credential:', err);
+    } finally {
+      setRevealingId(null);
+    }
+  };
 
   const fetchCredentials = useCallback(async () => {
     try {
@@ -213,15 +241,28 @@ export function CredentialsTab({ clientId, clientName }: CredentialsTabProps) {
                         </span>
                       </div>
 
-                      {/* Masked credential fields */}
-                      <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1.5">
-                        {Object.entries(cred.credentials_masked).map(([key, value]) => (
-                          <div key={key} className="text-xs">
-                            <span className="text-fm-neutral-400 capitalize">{key.replace(/_/g, ' ')}: </span>
-                            <span className="text-fm-neutral-600 font-mono">{value}</span>
+                      {/* Credential fields — masked or revealed */}
+                      {revealedCreds[cred.id] ? (
+                        <div className="mt-1.5 bg-amber-50 border border-amber-200 rounded-lg p-2.5">
+                          <div className="flex flex-wrap gap-x-4 gap-y-1.5">
+                            {Object.entries(revealedCreds[cred.id]).map(([key, value]) => (
+                              <div key={key} className="text-xs">
+                                <span className="text-amber-600 capitalize font-medium">{key.replace(/_/g, ' ')}: </span>
+                                <span className="text-fm-neutral-900 font-mono select-all">{value}</span>
+                              </div>
+                            ))}
                           </div>
-                        ))}
-                      </div>
+                        </div>
+                      ) : (
+                        <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1.5">
+                          {Object.entries(cred.credentials_masked).map(([key, value]) => (
+                            <div key={key} className="text-xs">
+                              <span className="text-fm-neutral-400 capitalize">{key.replace(/_/g, ' ')}: </span>
+                              <span className="text-fm-neutral-600 font-mono">{value}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
 
                       {cred.notes && (
                         <p className="text-xs text-fm-neutral-400 mt-1 italic">{cred.notes}</p>
@@ -237,6 +278,24 @@ export function CredentialsTab({ clientId, clientName }: CredentialsTabProps) {
                   </div>
 
                   <div className="flex items-center gap-1 ml-2 flex-shrink-0">
+                    <button
+                      onClick={() => handleReveal(cred.id)}
+                      disabled={revealingId === cred.id}
+                      className={`p-2 rounded-lg transition-colors ${
+                        revealedCreds[cred.id]
+                          ? 'text-amber-600 bg-amber-50 hover:bg-amber-100'
+                          : 'text-fm-neutral-500 hover:text-amber-600 hover:bg-amber-50'
+                      }`}
+                      title={revealedCreds[cred.id] ? 'Hide credentials' : 'Reveal credentials'}
+                    >
+                      {revealingId === cred.id ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : revealedCreds[cred.id] ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </button>
                     <button
                       onClick={() => { setEditingId(cred.id); setShowAddForm(true); }}
                       className="p-2 text-fm-neutral-500 hover:text-fm-magenta-600 hover:bg-fm-neutral-100 rounded-lg"
