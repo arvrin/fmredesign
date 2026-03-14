@@ -22,6 +22,7 @@ import { StatusBadge } from '@/components/ui/status-badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { adminToast } from '@/lib/admin/toast';
+import { useAdminAuth } from '@/lib/admin/auth';
 
 import { TodaySection } from '@/components/admin/dashboard/TodaySection';
 import { OverdueItems } from '@/components/admin/dashboard/OverdueItems';
@@ -87,15 +88,17 @@ function DashboardSkeleton() {
 
 /* ── Quick Action type ── */
 const quickActions = [
-  { title: 'New Project', href: '/admin/projects/new', icon: Briefcase, color: 'bg-fm-magenta-50 text-fm-magenta-700', action: 'project' },
-  { title: 'Schedule Content', href: '/admin/content/new', icon: Calendar, color: 'bg-violet-50 text-violet-700', action: 'content' },
-  { title: 'Create Invoice', href: '/admin/invoice', icon: FileText, color: 'bg-sky-50 text-sky-700', action: 'invoice' },
-  { title: 'Add Client', href: '/admin/clients', icon: Users, color: 'bg-emerald-50 text-emerald-700', action: 'client' },
+  { title: 'New Project', href: '/admin/projects/new', icon: Briefcase, color: 'bg-fm-magenta-50 text-fm-magenta-700', action: 'project', requiresFinance: false },
+  { title: 'Schedule Content', href: '/admin/content/new', icon: Calendar, color: 'bg-violet-50 text-violet-700', action: 'content', requiresFinance: false },
+  { title: 'Create Invoice', href: '/admin/invoice', icon: FileText, color: 'bg-sky-50 text-sky-700', action: 'invoice', requiresFinance: true },
+  { title: 'Add Client', href: '/admin/clients', icon: Users, color: 'bg-emerald-50 text-emerald-700', action: 'client', requiresFinance: false },
 ];
 
 /* ── Main dashboard ── */
 export default function AdminDashboard() {
   const router = useRouter();
+  const { hasPermission } = useAdminAuth();
+  const canViewFinance = hasPermission('finance.read');
   const [data, setData] = useState<TodayData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -143,14 +146,16 @@ export default function AdminDashboard() {
           change={{ value: stats.totalClients, type: stats.totalClients > 0 ? 'increase' : 'neutral', period: 'total' }}
           variant="admin"
         />
-        <MetricCard
-          title="Revenue"
-          value={stats.totalRevenue}
-          subtitle="Total collected"
-          icon={<DollarSign className="w-6 h-6" />}
-          formatter={(val) => InvoiceUtils.formatCurrency(Number(val))}
-          variant="admin"
-        />
+        {canViewFinance && (
+          <MetricCard
+            title="Revenue"
+            value={stats.totalRevenue}
+            subtitle="Total collected"
+            icon={<DollarSign className="w-6 h-6" />}
+            formatter={(val) => InvoiceUtils.formatCurrency(Number(val))}
+            variant="admin"
+          />
+        )}
         <MetricCard
           title="Active Projects"
           value={stats.activeProjects}
@@ -170,7 +175,7 @@ export default function AdminDashboard() {
 
       {/* Quick Actions */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-        {quickActions.map((action) => {
+        {quickActions.filter(a => !a.requiresFinance || canViewFinance).map((action) => {
           const Icon = action.icon;
           return (
             <Link
@@ -231,7 +236,7 @@ export default function AdminDashboard() {
       )}
 
       {/* Recent Invoices */}
-      {recentInvoices.length > 0 && (
+      {canViewFinance && recentInvoices.length > 0 && (
         <TodaySection title="Recent Invoices" viewAllHref="/admin/invoices">
           <div className="divide-y divide-fm-neutral-100">
             {recentInvoices.map((invoice: any) => (
