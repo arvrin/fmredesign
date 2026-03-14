@@ -396,7 +396,9 @@ export type TeamRole =
   | 'copywriter'
   | 'project-manager'
   | 'business-analyst'
-  | 'data-analyst';
+  | 'data-analyst'
+  | 'operations-manager'
+  | 'admin-manager';
 
 export type TeamDepartment = 
   | 'creative' 
@@ -468,7 +470,9 @@ export const TEAM_ROLES: Record<TeamRole, string> = {
   'copywriter': 'Copywriter',
   'project-manager': 'Project Manager',
   'business-analyst': 'Business Analyst',
-  'data-analyst': 'Data Analyst'
+  'data-analyst': 'Data Analyst',
+  'operations-manager': 'Operations Manager',
+  'admin-manager': 'Admin Manager'
 };
 
 export const TEAM_DEPARTMENTS: Record<TeamDepartment, string> = {

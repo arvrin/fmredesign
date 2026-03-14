@@ -11,6 +11,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
 import { SectionErrorBoundary } from '@/components/admin/SectionErrorBoundary';
 import { useClientDetail } from '@/hooks/admin/useClientDetail';
+import { useAdminAuth } from '@/lib/admin/auth';
 import { ArrowLeft, AlertCircle } from 'lucide-react';
 
 // Lazy-load tab content — only active tab loads its bundle
@@ -77,6 +78,8 @@ export default function AdminClientDetail() {
     activityLoading,
   } = useClientDetail(clientId);
 
+  const { hasPermission } = useAdminAuth();
+  const canViewFinance = hasPermission('finance.read');
   const [activeTab, setActiveTab] = useState('overview');
 
   // ── Loading state ──
@@ -143,7 +146,7 @@ export default function AdminClientDetail() {
               <TabsTrigger value="strategy" className="text-xs sm:text-sm">Strategy</TabsTrigger>
               <TabsTrigger value="growth" className="text-xs sm:text-sm">Growth</TabsTrigger>
               {/* Business */}
-              <TabsTrigger value="contracts" className="text-xs sm:text-sm">Contracts</TabsTrigger>
+              {canViewFinance && <TabsTrigger value="contracts" className="text-xs sm:text-sm">Contracts</TabsTrigger>}
               <TabsTrigger value="documents" className="text-xs sm:text-sm">Documents</TabsTrigger>
               <TabsTrigger value="credentials" className="text-xs sm:text-sm">Credentials</TabsTrigger>
               {/* People & Communication */}
@@ -197,11 +200,13 @@ export default function AdminClientDetail() {
             </SectionErrorBoundary>
           </TabsContent>
 
-          <TabsContent value="contracts" className="space-y-6">
-            <SectionErrorBoundary section="Contracts">
-              <ContractsTab clientId={clientId} clientName={clientProfile?.name} />
-            </SectionErrorBoundary>
-          </TabsContent>
+          {canViewFinance && (
+            <TabsContent value="contracts" className="space-y-6">
+              <SectionErrorBoundary section="Contracts">
+                <ContractsTab clientId={clientId} clientName={clientProfile?.name} />
+              </SectionErrorBoundary>
+            </TabsContent>
+          )}
 
           <TabsContent value="documents" className="space-y-6">
             <SectionErrorBoundary section="Documents">

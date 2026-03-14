@@ -8,7 +8,9 @@ FreakingMinds is a digital marketing agency platform built with Next.js 15 and T
 - **Public website** — Marketing site with V2 dark magenta/purple theme, 3D brain decorations, glass-morphism
 - **Admin dashboard** — Full agency management (clients, projects, content, invoices, proposals, leads, team, discovery, talent, contracts, social publishing, audit)
 - **Client portal** — Client-facing dashboard (project tracking, content approval, contracts, documents, reports, support)
-- **CreativeMinds** — Talent marketplace for freelance creatives
+- **CreativeMinds** — Talent marketplace for freelance creatives (public application + authenticated talent portal)
+- **Talent portal** — Authenticated dashboard for freelance creatives (briefs, profile, settings)
+- **MCP server** — Model Context Protocol endpoint for AI integrations
 - **Blog** — Hardcoded blog with SEO (sitemap, JSON-LD, Open Graph)
 
 ## Tech Stack
@@ -148,8 +150,9 @@ src/
 │   │   ├── invoice/        # Single invoice form
 │   │   ├── invoices/       # Invoice list
 │   │   ├── leads/          # Lead management + analytics
+│   │   ├── my-work/        # Personal admin work dashboard
 │   │   ├── projects/       # Project list + [id] detail/edit + new
-│   │   ├── proposals/      # Proposal list
+│   │   ├── proposals/      # Proposal list + create/edit
 │   │   ├── scraped-contacts/ # Scraped contacts + scrape-jobs sub-page
 │   │   ├── settings/       # App settings
 │   │   ├── support/        # Support ticket management
@@ -157,12 +160,16 @@ src/
 │   │   ├── team/           # Team list + [memberId] detail/edit/assignments/documents/performance + new
 │   │   └── users/          # Authorized user management (roles/permissions)
 │   ├── api/
-│   │   ├── admin/          # Admin APIs (auth, users, support, audit, social, messages, notifications, growth, scrape-jobs, webhooks, api-keys, settings, documents)
+│   │   ├── admin/          # Admin APIs (auth, users, support, audit, social, messages, notifications, growth, scrape-jobs, webhooks, api-keys, settings, documents, client-credentials)
 │   │   │   ├── api-keys/        # External API key management
-│   │   │   ├── content/generate/ # AI content generation
+│   │   │   ├── client-credentials/ # Client credential management (CRUD + reveal/decrypt)
+│   │   │   ├── content/         # AI content (generate, refine, context)
 │   │   │   ├── documents/       # Document management (CRUD, download, health, preview, storage)
 │   │   │   ├── invoice-sequence/ # Invoice numbering API (persistent, Supabase-backed)
+│   │   │   ├── my-work/         # Personal work items API
+│   │   │   ├── proposal-sequence/ # Proposal numbering API (persistent, Supabase-backed)
 │   │   │   ├── scrape-jobs/     # Web scraping job management APIs (CRUD, config, execute, runs)
+│   │   │   ├── today/           # Admin "Today" dashboard data
 │   │   │   ├── scraped-contacts/ # Scraped contact management
 │   │   │   ├── social/          # Social publishing APIs (accounts, publish, verify-token)
 │   │   │   ├── upload-logo/     # Client logo upload
@@ -170,15 +177,22 @@ src/
 │   │   ├── client-portal/  # Client portal APIs (profile, projects, content, contracts, etc.)
 │   │   │   └── [clientId]/ # All client-scoped endpoints
 │   │   ├── contracts/      # Contract CRUD API
-│   │   ├── shared/[token]/ # Public share link resolver
+│   │   ├── shared/[token]/ # Public share link resolver + download
+│   │   ├── health/         # Health check endpoint (public, for uptime monitors)
+│   │   ├── vitals/         # Web Vitals metrics (public, rate-limited)
 │   │   ├── discovery/      # Discovery session API
-│   │   ├── talent/         # CreativeMinds talent API + [slug]
+│   │   ├── talent/         # CreativeMinds talent API + [slug] (profile, briefs, notifications, password, login, logout)
+│   │   ├── mcp/            # MCP (Model Context Protocol) server endpoint
+│   │   ├── webhooks/[provider] # Inbound webhook receiver
+│   │   ├── docs/           # API documentation endpoint
 │   │   └── ...             # Other APIs (clients, projects, invoices, leads, proposals, team, content)
 │   ├── client/             # Client portal
 │   │   ├── login/          # Client login page
-│   │   └── [clientId]/     # Dashboard pages (overview, projects, content, contracts, reports, documents, support, settings)
+│   │   └── [clientId]/     # Dashboard pages (overview, projects, content, contracts, reports, documents, credentials, support, settings)
 │   ├── shared/[token]/     # Public shared resource viewer (documents, reports, content)
-│   ├── creativeminds/      # Public talent application page
+│   ├── creativeminds/      # Public talent application + login + authenticated portal
+│   │   ├── login/          # Talent login page
+│   │   └── portal/[slug]/  # Talent dashboard (overview, briefs, profile, settings)
 │   ├── talent/[slug]/      # Public talent profile viewer
 │   ├── blog/               # Blog list + [slug] detail
 │   ├── get-started/        # Lead capture / onboarding form
@@ -193,9 +207,13 @@ src/
 │   └── layout.tsx          # Root layout (fonts, JSON-LD, analytics pixel)
 ├── components/
 │   ├── admin/              # Admin components (modals, forms, dashboards)
-│   │   ├── client-detail/  # Client detail page sections
+│   │   ├── client-detail/  # Client detail page sections (OverviewTab, ProjectsTab, CredentialsTab, etc.)
+│   │   ├── clients/        # Client-specific tabs (ContentStrategyTab)
+│   │   ├── content/        # Content management UI (KanbanBoard, ContentGenerationModal)
 │   │   ├── creativeminds/  # Talent pool management UI
+│   │   ├── dashboard/      # Dashboard widgets (OverdueItems, PendingApprovals, ProjectPulse, TodayContent)
 │   │   ├── discovery/      # Discovery wizard section components
+│   │   ├── drawers/        # Slide-over panels (QuickAddContent, QuickAddProject, SlideOverPanel)
 │   │   ├── leads/          # Lead pipeline management UI
 │   │   ├── scrape-jobs/    # Scrape job management UI
 │   │   ├── scraped-contacts/ # Scraped contacts UI
@@ -206,17 +224,19 @@ src/
 │   ├── public/             # TalentApplicationForm
 │   ├── sections/           # Homepage sections (Hero, Services, Features, Testimonials, CTA)
 │   └── ui/                 # Shared UI (Badge, Input, Toggle, tabs)
-├── design-system/          # DashboardLayout, Card, Button, MetricCard, IconBox
-├── hooks/                  # useAdminAuth, useAdminData, useBreadcrumbs, useCountUp, useGSAP, useMagneticEffect, useAdminFilters
-│   └── admin/              # useClientDetail, useTeamMembers, useSocialAccounts, useCreativeMinds, useLeads, useScrapedContacts, useScrapeJobs
+├── design-system/          # DashboardLayout, Card, Button, MetricCard, IconBox, LinkButton, GlassCard, StatCard, Headline, Badge
+├── hooks/                  # useAdminAuth, useAdminData, useBreadcrumbs, useCountUp, useGSAP, useMagneticEffect, useAdminFilters, useApiQuery, useSlideOver, useBulkSelection, useKeyboardShortcuts, useSwipeGesture
+│   └── admin/              # useClientDetail, useTeamMembers, useTeamMember, useSocialAccounts, useCreativeMinds, useLeads, useScrapedContacts, useScrapeJobs
 ├── lib/
 │   ├── admin/              # Admin types, auth, services, permissions, audit-log, PDF generators
 │   │   ├── permissions.ts  # Role-based permission system (23 permissions, 5 roles)
 │   │   ├── audit-log.ts    # Admin action audit logging
+│   │   ├── credential-types.ts # Platform credential types, 14 presets, mask/encrypt helpers
 │   │   ├── invoice-numbering.ts  # API-backed invoice numbering (FM164/2025 format, Supabase persistence, localStorage fallback)
-│   │   ├── proposal-numbering.ts # Auto-incrementing proposal numbers
+│   │   ├── proposal-numbering.ts # API-backed proposal numbering (PM1/2026 format, Supabase persistence, localStorage fallback)
 │   │   ├── pdf-simple.ts   # Invoice PDF generator (jsPDF) — GST-compliant, multi-currency, SAC codes
-│   │   ├── proposal-pdf-generator.ts # Proposal PDF generator
+│   │   ├── proposal-pdf-generator.ts # Proposal PDF generator (branded, multi-currency, autoTable)
+│   │   ├── project-types.ts # Project/content types, ProjectUtils, PROJECT_TEMPLATES
 │   │   ├── discovery-service.ts # Discovery session CRUD
 │   │   ├── discovery-types.ts # Discovery session types (10-section wizard)
 │   │   ├── talent-types.ts # CreativeMinds talent pool types
@@ -234,19 +254,31 @@ src/
 │   ├── social/             # Social publishing (meta-api, publish-engine, token-crypto, types)
 │   ├── email/              # Email notifications (Resend integration — send.ts, resend.ts)
 │   ├── webhooks/           # Outgoing webhooks (deliver.ts, processor.ts, verify.ts)
+│   ├── ai/                 # AI content generation system
+│   │   ├── context/        # Context assembly for AI prompts
+│   │   ├── data/           # Reference data (holidays, etc.)
+│   │   ├── generators/     # Calendar, refine, single-post generators
+│   │   ├── prompts/        # System prompts, output schemas, platform guidelines
+│   │   └── providers/      # LLM providers (Anthropic, Gemini, OpenAI)
+│   ├── events/             # Event system (emitter.ts, types.ts)
+│   ├── openapi/            # OpenAPI documentation generation (generator.ts, registry.ts)
 │   ├── validations/        # Zod schemas (schemas.ts) — shared by API routes + forms
 │   ├── api-key-auth.ts     # API key authentication (validateApiKey)
+│   ├── api-response.ts     # Standardized API response builder (ApiResponse.success/error/notFound/etc.)
 │   ├── admin-auth-middleware.ts  # requireAdminAuth() — admin API route guard
 │   ├── client-session.ts   # requireClientAuth(), session cookies — client API route guard
+│   ├── document-types.ts   # Document types, categories, file size limits
+│   ├── talent-session.ts   # requireTalentAuth(), session cookies — talent portal API route guard
+│   ├── mcp/                # MCP server (handler.ts, tools.ts)
 │   ├── rate-limiter.ts     # In-memory rate limiter (5 req/60s per IP)
 │   ├── env.ts              # Zod-validated environment variables
 │   ├── blog-data.ts        # Hardcoded blog posts (add new posts here)
 │   ├── notifications.ts    # In-app notification system (createNotification, notifyAdmins, notifyClient)
 │   ├── supabase.ts         # Supabase admin client (getSupabaseAdmin + legacy supabaseAdmin Proxy)
-│   ├── supabase-utils.ts   # Supabase helper utilities
+│   ├── supabase-utils.ts   # Supabase helper utilities (toCamelCaseKeys — use for DB→API transforms)
 │   └── utils.ts            # cn() classname utility
 ├── providers/              # SmoothScrollProvider (disabled — passes through)
-├── middleware.ts           # Edge Runtime route protection (admin + client auth)
+├── middleware.ts           # Edge Runtime route protection (admin + client + talent auth)
 └── styles/                 # Additional CSS (performance-fixes.css)
 ```
 
@@ -275,8 +307,12 @@ src/
 | `leads` | Lead capture (get-started form) | id, name, email, phone, company, budget, services, source, status, score, notes, created_at |
 | `invoices` | Invoice management | id, client_id, invoice_number, line_items (jsonb), subtotal, tax_rate, tax_amount, total, status, due_date, currency, cgst_amount, sgst_amount, igst_amount, place_of_supply, company_gstin |
 | `invoice_sequences` | Persistent invoice numbering | id, prefix, current_counter, current_year, updated_at |
-| `proposals` | Proposal management | id, client_id, proposal_number, title, sections (jsonb), total, status, valid_until |
+| `proposals` | Proposal management | id, client_id, proposal_number, title, service_packages (jsonb), custom_services (jsonb), investment (jsonb), timeline (jsonb), status, valid_until, currency, discovery_id, version |
+| `proposal_sequences` | Persistent proposal numbering | id, prefix, current_counter, current_year, updated_at |
 | `talent_applications` | CreativeMinds applications | id, name, email, phone, category, skills, portfolio_url, experience, status |
+| `talent_profiles` | Talent portal profiles | id, slug, name, email, portal_password, category, skills, avatar_url, status |
+| `talent_sessions` | Talent portal sessions | id, talent_id, email, talent_name, expires_at |
+| `talent_assignments` | Talent-to-project assignments | id, talent_id, project_id, client_id, role, status |
 | `team_members` | Agency team profiles | id, name, email, role, department, skills, avatar_url, status |
 | `team_assignments` | Team member project assignments | id, team_member_id, client_id, project_id, role, hours_allocated, status |
 | `ticket_replies` | Support ticket replies | id, ticket_id, sender, message, created_at |
@@ -288,6 +324,7 @@ src/
 | `scraped_contacts` | Scraped contact data | id, job_id, name, email, phone, company, source |
 | `outgoing_webhooks` | Webhook definitions | id, name, url, events, secret, status |
 | `outgoing_webhook_deliveries` | Webhook delivery logs | id, webhook_id, event, payload, response_code, delivered_at |
+| `client_credentials` | Encrypted platform credentials | id, client_id, platform, credential_type, label, credentials (AES-256-CBC encrypted), status, notes, added_by, created_at, updated_at |
 
 ### resolveClientId Pattern
 URL param `[clientId]` can be **slug OR database ID**. Always use the resolver:
@@ -321,12 +358,21 @@ if (!resolved) return 404;
 - **API**: `POST /api/client-portal/login`, `POST /api/client-portal/logout`
 - **Auth helper**: `requireClientAuth(request, clientId)` in `src/lib/client-session.ts` — use in **all** client portal API routes. Validates signed cookie AND ensures session belongs to the requested clientId.
 
+### Talent Portal Auth
+- **Method**: Email + `portal_password` field in `talent_profiles` table (bcrypt hashed)
+- **Cookie**: `fm_talent_session` (HMAC-signed, httpOnly, secure, sameSite=lax, 7-day expiry)
+- **Session storage**: `talent_sessions` table in Supabase (7-day duration)
+- **Rate limiting**: 5 attempts/minute per IP on login endpoint
+- **API**: `POST /api/talent/login`, `POST /api/talent/logout`
+- **Auth helper**: `requireTalentAuth(request, slug)` in `src/lib/talent-session.ts` — use in **all** talent portal API routes
+
 ### Middleware (`src/middleware.ts`)
 - **Runtime**: Edge Runtime — uses Web Crypto API (`crypto.subtle`), NOT Node.js `crypto`
-- **Protects**: `/admin/*` (validates HMAC session cookie), `/client/*` (validates HMAC-signed session cookie + expiry)
-- **Allows through**: `/admin/auth/*`, `/client/login`
+- **Protects**: `/admin/*` (validates HMAC session cookie), `/client/*` (validates HMAC-signed session cookie + expiry), `/creativeminds/portal/*` (validates talent session cookie + expiry)
+- **Allows through**: `/admin/auth/*`, `/client/login`, `/creativeminds/login`
 - **Cross-client prevention**: Compares session's clientId/slug against URL's clientId — redirects to own portal if mismatch
-- **Does NOT apply to**: Public pages, API routes (APIs do their own auth via `requireAdminAuth`/`requireClientAuth`)
+- **Cross-talent prevention**: Compares session's talent slug against URL's slug — redirects to own portal if mismatch
+- **Does NOT apply to**: Public pages, API routes (APIs do their own auth via `requireAdminAuth`/`requireClientAuth`/`requireTalentAuth`)
 
 ---
 
@@ -340,10 +386,11 @@ if (!resolved) return 404;
   └─ DashboardLayout variant="admin" with NavigationGroup[] navigation
 ```
 
-### Admin Pages (34 total)
+### Admin Pages (35 total)
 | Route | Purpose |
 |-------|---------|
 | `/admin` | Main dashboard (overview metrics) |
+| `/admin/my-work` | Personal admin work dashboard |
 | `/admin/clients` | Client list |
 | `/admin/clients/[clientId]` | Client detail |
 | `/admin/projects` | Project list |
@@ -393,8 +440,13 @@ if (!resolved) return 404;
 | `/api/admin/growth` | GET | Growth metrics/analytics |
 | `/api/admin/settings` | GET, PUT | Admin app settings |
 | `/api/admin/invoice-sequence` | GET, POST | Persistent invoice numbering (preview/increment) |
+| `/api/admin/proposal-sequence` | GET, POST | Persistent proposal numbering (preview/increment) |
+| `/api/admin/today` | GET | Admin "Today" dashboard data |
+| `/api/admin/my-work` | GET | Personal work items for logged-in admin |
 | `/api/admin/upload-logo` | POST | Client logo upload |
 | `/api/admin/content/generate` | POST | AI content generation |
+| `/api/admin/content/refine` | POST | AI content refinement |
+| `/api/admin/content/context` | GET | AI content context retrieval |
 | `/api/admin/documents` | GET, POST, PUT, DELETE | Document management |
 | `/api/admin/documents/download` | GET | Document file download |
 | `/api/admin/documents/health` | GET | Document storage health check |
@@ -409,6 +461,8 @@ if (!resolved) return 404;
 | `/api/admin/social/accounts` | GET, POST, PUT, DELETE | Social media account CRUD |
 | `/api/admin/social/publish` | POST | Publish content to Meta (Facebook/Instagram) |
 | `/api/admin/social/verify-token` | POST | Verify Meta Graph API access token |
+| `/api/admin/client-credentials` | GET, POST, PUT, DELETE | Client credential management (admin view of any client) |
+| `/api/admin/client-credentials/reveal` | GET | Decrypt and reveal masked credential values (admin-only, auditable) |
 | `/api/clients` | GET, POST, PUT | Client CRUD |
 | `/api/projects` | GET, POST, PUT | Project CRUD (supports `?id=xxx` single-item fetch) |
 | `/api/content` | GET, POST, PUT, DELETE | Content CRUD (supports `?id=xxx` single-item fetch, server-side pagination `?page=X&pageSize=Y`, filters `?status=&type=&platform=&startDate=&endDate=`) |
@@ -416,16 +470,27 @@ if (!resolved) return 404;
 | `/api/invoices` | GET, POST, PUT, DELETE | Invoice management (pagination `?page=X&pageSize=Y`, filters `?clientId=&status=&search=`) |
 | `/api/proposals` | GET, POST, PUT, DELETE | Proposal management |
 | `/api/team` | GET, POST, PUT | Team member management |
-| `/api/leads` | GET, POST | Lead management |
+| `/api/leads` | GET, POST, PUT, DELETE | Lead management |
 | `/api/leads/analytics` | GET | Lead analytics |
 | `/api/leads/convert` | POST | Convert lead to client |
 | `/api/talent` | GET, POST | CreativeMinds talent applications |
 | `/api/talent/[slug]` | GET | Individual talent profile |
+| `/api/talent/[slug]/briefs` | GET | Talent assigned project briefs |
+| `/api/talent/[slug]/profile` | GET, PUT | Talent profile management |
+| `/api/talent/[slug]/password` | POST | Talent password change |
+| `/api/talent/[slug]/notifications` | GET, POST | Talent notifications |
+| `/api/talent/login` | POST | Talent portal login |
+| `/api/talent/logout` | POST | Talent portal logout |
+| `/api/team/assignments` | GET | Team member assignments list |
+| `/api/team/documents` | GET | Team member documents |
 | `/api/discovery` | GET, POST | Discovery session CRUD |
+| `/api/mcp` | POST | MCP (Model Context Protocol) server endpoint |
+| `/api/webhooks/[provider]` | POST | Inbound webhook receiver for external providers |
+| `/api/docs` | GET | API documentation endpoint |
 
 ### Rate Limiting
 - `src/lib/rate-limiter.ts` — in-memory sliding window (5 requests/60s per IP)
-- Applied to: admin login (password + mobile), client portal login
+- Applied to: admin login (password + mobile), client portal login, talent portal login
 - Uses `x-forwarded-for` / `x-real-ip` headers
 - Returns 429 when exceeded
 - **Caveat**: In-memory map resets on serverless cold starts
@@ -440,7 +505,7 @@ if (!resolved) return 404;
   ├─ Fetches profile from /api/client-portal/[clientId]/profile
   ├─ ClientPortalProvider context (profile, clientId, slug, refreshProfile)
   └─ DashboardLayout variant="client" with NavigationGroup[] navigation
-       Pages: Overview, Projects, Content, Contracts, Reports, Documents, Support, Settings
+       Pages: Overview, Projects, Content, Contracts, Reports, Documents, Credentials, Support, Settings
 ```
 
 ### Client Portal API Routes
@@ -459,6 +524,8 @@ if (!resolved) return 404;
 | `/api/client-portal/[clientId]/documents` | GET | Document vault |
 | `/api/client-portal/[clientId]/activity` | GET | Activity feed |
 | `/api/client-portal/[clientId]/share` | GET, POST, DELETE | Share link CRUD |
+| `/api/client-portal/[clientId]/password` | POST | Client password change |
+| `/api/client-portal/[clientId]/credentials` | GET | Client credentials (read-only, masked values) |
 | `/api/client-portal/[clientId]/support/tickets` | GET, POST | Support tickets |
 | `/api/shared/[token]` | GET | Public share link resolver |
 
@@ -481,20 +548,48 @@ const { profile, clientId, slug, refreshProfile } = useClientPortal();
 
 ## CreativeMinds (Talent Marketplace)
 
-A talent pool platform connecting freelance creatives with the agency.
+A talent pool platform connecting freelance creatives with the agency. Includes public application, admin review, and an authenticated talent portal.
 
 ### How It Works
 1. **Public application** (`/creativeminds`): Creatives apply via `TalentApplicationForm` with name, email, category, skills, portfolio, experience
 2. **API submission** (`POST /api/talent`): Saves application to Supabase `talent_applications` table
 3. **Admin review** (`/admin/creativeminds`): Team reviews, approves/rejects applications
 4. **Public profiles** (`/talent/[slug]`): Approved talent get public profile pages
+5. **Talent portal** (`/creativeminds/portal/[slug]`): Approved talent get an authenticated dashboard
+
+### Talent Portal
+Authenticated dashboard for freelance creatives — similar to the client portal but for talent.
+
+**Pages:**
+| Route | Purpose |
+|-------|---------|
+| `/creativeminds/login` | Talent login page |
+| `/creativeminds/portal/[slug]` | Talent dashboard overview |
+| `/creativeminds/portal/[slug]/briefs` | Assigned project briefs |
+| `/creativeminds/portal/[slug]/profile` | Talent profile editor |
+| `/creativeminds/portal/[slug]/settings` | Talent account settings |
+
+**API Routes:**
+| Route | Methods | Purpose |
+|-------|---------|---------|
+| `/api/talent/login` | POST | Talent authentication |
+| `/api/talent/logout` | POST | Talent logout |
+| `/api/talent/[slug]/briefs` | GET | List assigned briefs/projects |
+| `/api/talent/[slug]/profile` | GET, PUT | Profile management |
+| `/api/talent/[slug]/password` | POST | Password change |
+| `/api/talent/[slug]/notifications` | GET, POST | Talent notifications |
+
+**Auth**: `requireTalentAuth(request, slug)` in `src/lib/talent-session.ts` — validates `fm_talent_session` cookie, ensures session belongs to the requested slug.
 
 ### Key Files
 - `src/app/creativeminds/page.tsx` — Public landing + application form
+- `src/app/creativeminds/login/page.tsx` — Talent login page
+- `src/app/creativeminds/portal/[slug]/` — Talent portal pages (layout, overview, briefs, profile, settings)
 - `src/components/public/TalentApplicationForm.tsx` — Application form component
 - `src/app/talent/[slug]/page.tsx` — Public talent profile viewer
 - `src/app/admin/creativeminds/page.tsx` — Admin talent management
 - `src/lib/admin/talent-types.ts` — TalentProfile, TalentApplication types
+- `src/lib/talent-session.ts` — Talent portal session management (create, validate, destroy)
 - `src/app/api/talent/route.ts` — GET (list) / POST (apply)
 - `src/app/api/talent/[slug]/route.ts` — GET individual profile
 
@@ -515,11 +610,16 @@ A talent pool platform connecting freelance creatives with the agency.
 - **API**: `GET/POST/PUT/DELETE /api/invoices`
 
 ### Proposals
-- **Admin page** (`/admin/proposals`): List + creation
-- **Component**: `src/components/admin/ProposalFormNew.tsx` — Multi-section proposal builder
-- **PDF**: `src/lib/admin/proposal-pdf-generator.ts` — Proposal PDF output
-- **Numbering**: `src/lib/admin/proposal-numbering.ts` — Auto-incrementing `PM{counter}/{year}` format (e.g., `PM164/2025`), localStorage-based
-- **Storage**: `src/lib/admin/proposal-storage.ts` — Proposal persistence
+- **Admin page** (`/admin/proposals`): List + creation with 60/40 layout form, live preview, template picker
+- **Component**: `src/components/admin/ProposalFormNew.tsx` — 60/40 grid form matching invoice layout (template picker, service packages, pricing modifiers, content sections, live A4 preview)
+- **Dashboard**: `src/components/admin/ProposalDashboard.tsx` — Proposal list with filters, stats, PDF preview
+- **PDF**: `src/lib/admin/proposal-pdf-generator.ts` — Branded PDF output matching invoice design (purple/magenta, autoTable, multi-currency, company info from env vars)
+- **Numbering**: `src/lib/admin/proposal-numbering.ts` — API-backed `PM{counter}/{year}` format (e.g., `PM1/2026`), Supabase persistence via `proposal_sequences` table, localStorage fallback
+- **Sequence API**: `GET/POST /api/admin/proposal-sequence` — GET previews next number, POST atomically increments
+- **Types**: `src/lib/admin/proposal-types.ts` — Proposal interface, DIGITAL_MARKETING_PACKAGES, PRICING_MODIFIERS, PROPOSAL_TEMPLATES (5 templates: retainer-indian, retainer-international, project-indian, project-international, audit)
+- **Multi-currency**: INR, USD, GBP, AED, EUR — uses `CURRENCY_OPTIONS` from `types.ts`, auto-switch based on client country
+- **Status transitions**: draft → sent → viewed → approved/declined → converted (validated server-side in PUT handler)
+- **Client portal**: Clients can view, download PDF, approve/decline/request edits on sent proposals
 - **API**: `GET/POST/PUT/DELETE /api/proposals`
 
 ---
@@ -607,6 +707,25 @@ Client contract management integrated into both admin dashboard and client porta
 - `src/app/api/contracts/route.ts` — Admin contract CRUD
 - `src/app/api/client-portal/[clientId]/contracts/route.ts` — Client-side contract API
 - `src/app/client/[clientId]/contracts/page.tsx` — Client portal contracts page
+
+---
+
+## Credentials Management
+
+Secure storage and management of client platform credentials (social media logins, CMS access, ad accounts, etc.).
+
+### Key Files
+- `src/lib/admin/credential-types.ts` — Platform types, 14 presets (Google, Meta, WordPress, etc.), mask/encrypt helpers
+- `src/components/admin/client-detail/CredentialsTab.tsx` — Admin UI for managing client credentials
+- `src/app/api/admin/client-credentials/route.ts` — Admin CRUD (GET, POST, PUT, DELETE)
+- `src/app/api/admin/client-credentials/reveal/route.ts` — Decrypt and reveal masked values (admin-only, audited)
+- `src/app/api/client-portal/[clientId]/credentials/route.ts` — Client-side read-only access (masked)
+- `src/app/client/[clientId]/credentials/page.tsx` — Client portal credentials page
+
+### Security
+- Credentials encrypted with AES-256-CBC before storage in `client_credentials` table
+- Reveal endpoint is admin-only and generates audit log entries
+- Client portal only sees masked values (e.g., `****word`)
 
 ---
 
@@ -727,6 +846,51 @@ Inngest uses `node:async_hooks` which cannot be bundled for client-side. All ada
 
 ---
 
+## AI Content Generation
+
+Multi-provider AI content generation system for social media and marketing content.
+
+### Architecture
+```
+src/lib/ai/
+├── types.ts           # Shared types (GenerationRequest, GenerationResult, Provider)
+├── context/           # Context assembly — gathers client, brand, and content history for prompts
+├── data/              # Reference data (holidays, trending topics, etc.)
+├── generators/        # Calendar generator, single-post generator, content refiner
+├── prompts/           # System prompts, output schemas, platform-specific guidelines
+└── providers/         # LLM provider adapters (Anthropic, Google Gemini, OpenAI)
+```
+
+### API Routes
+- `POST /api/admin/content/generate` — Generate content (returns `{ status: 'queued' }`, processed via Inngest)
+- `POST /api/admin/content/refine` — Refine existing content with AI
+- `GET /api/admin/content/context` — Get AI generation context for a client
+
+### Key Component
+- `src/components/admin/content/ContentGenerationModal.tsx` — UI for AI content generation (provider selection, prompts, batch generation)
+
+---
+
+## MCP Server (Model Context Protocol)
+
+Exposes an MCP endpoint for AI-powered integrations and tooling.
+
+- **API route**: `POST /api/mcp` — MCP server handler
+- **Handler**: `src/lib/mcp/handler.ts` — Request processing
+- **Tools**: `src/lib/mcp/tools.ts` — Available MCP tool definitions
+
+---
+
+## API Documentation (OpenAPI)
+
+Auto-generated API documentation available at `/api/docs`.
+
+- `src/lib/openapi/generator.ts` — OpenAPI spec generator
+- `src/lib/openapi/registry.ts` — Route registry for documentation
+- `src/app/api/docs/route.ts` — Serves generated OpenAPI JSON/HTML
+
+---
+
 ## Permission System (RBAC)
 
 Defined in `src/lib/admin/permissions.ts`. Used for admin user management.
@@ -762,7 +926,7 @@ PermissionService.canManageRole('admin', 'editor'); // true (higher hierarchy)
 
 ---
 
-## GSAP Animation Hooks
+## Hooks
 
 Custom hooks in `src/hooks/`:
 
@@ -771,6 +935,24 @@ Custom hooks in `src/hooks/`:
 | `useGSAP` | Core GSAP + ScrollTrigger setup for component animations |
 | `useMagneticEffect` | Mouse-following magnetic effect on elements |
 | `useCountUp` | Animated number counter (for stats/metrics) |
+| `useApiQuery` | Generic API data fetching hook |
+| `useSlideOver` | Slide-over panel state management |
+| `useBulkSelection` | Multi-select / bulk action state |
+| `useKeyboardShortcuts` | Keyboard shortcut registration |
+| `useSwipeGesture` | Touch swipe gesture detection |
+
+Admin-specific hooks in `src/hooks/admin/`:
+
+| Hook | Purpose |
+|------|---------|
+| `useClientDetail` | Client detail page data |
+| `useTeamMembers` | Team member list data |
+| `useTeamMember` | Individual team member data |
+| `useSocialAccounts` | Connected social media accounts |
+| `useCreativeMinds` | Talent pool management data |
+| `useLeads` | Lead pipeline data |
+| `useScrapedContacts` | Scraped contacts data |
+| `useScrapeJobs` | Scrape job management data |
 
 GSAP animations work with native browser scroll (Lenis is disabled). ScrollTrigger-based animations fire on scroll position.
 
@@ -1017,6 +1199,8 @@ GOOGLE_SHEETS_SPREADSHEET_ID=...
 - Use `requireAdminAuth(request)` in **all** admin API routes (`src/lib/admin-auth-middleware.ts`)
 - Use `requireClientAuth(request, clientId)` in **all** client portal API routes (`src/lib/client-session.ts`)
 - Use `resolveClientId()` in all client portal API routes (handles slug OR ID)
+- Use `ApiResponse.success()` / `ApiResponse.error()` from `src/lib/api-response.ts` for standardized API responses
+- Use `toCamelCaseKeys(row, defaults?)` from `src/lib/supabase-utils.ts` for DB→API snake_case→camelCase transforms
 - Wrap navigation in `NavigationGroup[]` for `DashboardLayout` (not flat arrays)
 - Use `variant="client"` for client portal components, `variant="admin"` for admin
 - Use `useClientPortal()` hook in all client portal pages
@@ -1031,6 +1215,17 @@ GOOGLE_SHEETS_SPREADSHEET_ID=...
 - Access Supabase tables without RLS awareness — admin client bypasses RLS
 - Store secrets in client-side code — use `NEXT_PUBLIC_` prefix only for public values
 - Mix V1 and V2 design patterns
+
+## Event System
+
+Internal event bus for cross-module communication (triggers webhooks, Inngest jobs, etc.).
+
+- `src/lib/events/emitter.ts` — `emitEvent(eventType, payload)` — routes to Inngest `platform/event`; falls back to local EventEmitter
+- `src/lib/events/types.ts` — Event type constants (client-safe imports)
+- Events: `lead.status_changed`, `client.created`, `invoice.created`, `content.published`, etc.
+- Used by API routes to trigger outgoing webhooks and cross-cutting concerns without tight coupling
+
+---
 
 ## Zod Validation Schemas
 
@@ -1066,6 +1261,19 @@ if (!body.success) return NextResponse.json({ error: body.error.flatten() }, { s
 | `Pagination` | `admin/Pagination.tsx` | Reusable pagination component |
 | `AdminSystem` | `admin/AdminSystem.tsx` | System health diagnostics |
 | `AdminErrorBoundary` | `admin/AdminErrorBoundary.tsx` | Error boundary for admin pages |
+| `BulkActionBar` | `admin/BulkActionBar.tsx` | Bulk action toolbar for multi-select lists |
+| `ConfirmDialog` | `admin/ConfirmDialog.tsx` | Reusable confirmation dialog |
+| `ContractsTab` | `admin/ContractsTab.tsx` | Contract management UI (client detail tab) |
+| `FloatingActionButton` | `admin/FloatingActionButton.tsx` | Mobile floating action button |
+| `KeyboardShortcutsHelp` | `admin/KeyboardShortcutsHelp.tsx` | Keyboard shortcuts help overlay |
+| `MobileBottomNav` | `admin/MobileBottomNav.tsx` | Mobile bottom navigation bar |
+| `SavedViewsDropdown` | `admin/SavedViewsDropdown.tsx` | Saved filter views dropdown |
+| `SectionErrorBoundary` | `admin/SectionErrorBoundary.tsx` | Section-level error boundary |
+| `SkillSelector` | `admin/SkillSelector.tsx` | Skill tag selector component |
+| `SwipeableRow` | `admin/SwipeableRow.tsx` | Swipe-to-action row for mobile |
+| `TeamMemberSelect` | `admin/TeamMemberSelect.tsx` | Team member picker dropdown |
+| `UploadModal` | `admin/UploadModal.tsx` | File upload modal |
+| `UserFormModal` | `admin/UserFormModal.tsx` | User create/edit form modal |
 | `SectionErrorBoundary` | `admin/SectionErrorBoundary.tsx` | Error boundary for dashboard sections |
 | `ConfirmDialog` | `admin/ConfirmDialog.tsx` | Confirmation modal dialog (delete, destructive actions) |
 | `ContractsTab` | `admin/ContractsTab.tsx` | Contract management UI for client detail page |

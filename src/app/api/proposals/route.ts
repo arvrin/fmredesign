@@ -13,8 +13,8 @@ import { notifyClient } from '@/lib/notifications';
 
 // GET /api/proposals - Fetch all proposals
 export async function GET(request: NextRequest) {
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+  const auth = await requirePermission(request, 'finance.read');
+  if ('error' in auth) return auth.error;
 
   try {
     const supabase = getSupabaseAdmin();

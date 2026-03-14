@@ -17,8 +17,8 @@ import { notifyTeam, contractCreatedEmail, contractStatusEmail } from '@/lib/ema
 import { notifyClient } from '@/lib/notifications';
 
 export async function GET(request: NextRequest) {
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+  const auth = await requirePermission(request, 'finance.read');
+  if ('error' in auth) return auth.error;
 
   try {
     const { searchParams } = new URL(request.url);
@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const auth = await requirePermission(request, 'clients.write');
+  const auth = await requirePermission(request, 'finance.write');
   if ('error' in auth) return auth.error;
 
   try {
@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
-  const auth = await requirePermission(request, 'clients.write');
+  const auth = await requirePermission(request, 'finance.write');
   if ('error' in auth) return auth.error;
 
   try {
@@ -207,7 +207,7 @@ export async function PUT(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  const auth = await requirePermission(request, 'clients.delete');
+  const auth = await requirePermission(request, 'finance.delete');
   if ('error' in auth) return auth.error;
 
   try {

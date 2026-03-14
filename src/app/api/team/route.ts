@@ -46,8 +46,8 @@ function transformMember(row: any) {
 
 // GET /api/team - Fetch all team members, or a single member via ?id=
 export async function GET(request: NextRequest) {
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+  const auth = await requirePermission(request, 'users.read');
+  if ('error' in auth) return auth.error;
 
   try {
     const supabase = getSupabaseAdmin();

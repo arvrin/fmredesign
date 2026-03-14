@@ -226,3 +226,72 @@ CREATE INDEX IF NOT EXISTS idx_campaigns_status ON campaigns(status);
 CREATE TRIGGER campaigns_updated_at
   BEFORE UPDATE ON campaigns
   FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+-- =============================================================
+-- 8. TEAM_MEMBERS
+-- =============================================================
+CREATE TABLE IF NOT EXISTS team_members (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  email TEXT NOT NULL,
+  phone TEXT,
+  avatar_url TEXT,
+  type TEXT NOT NULL CHECK (type IN ('employee', 'freelancer', 'contractor')),
+  status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'inactive', 'on-leave', 'terminated')),
+  start_date DATE,
+  end_date DATE,
+  role TEXT NOT NULL,
+  department TEXT NOT NULL,
+  seniority TEXT DEFAULT 'mid' CHECK (seniority IN ('junior', 'mid', 'senior', 'lead', 'director')),
+  skills JSONB DEFAULT '[]',
+  certifications JSONB DEFAULT '[]',
+  compensation JSONB DEFAULT '{}',
+  work_type TEXT DEFAULT 'full-time' CHECK (work_type IN ('full-time', 'part-time', 'contract', 'freelance')),
+  location TEXT DEFAULT 'office' CHECK (location IN ('office', 'remote', 'hybrid')),
+  capacity_hours INTEGER DEFAULT 40,
+  assigned_client_ids JSONB DEFAULT '[]',
+  current_project_ids JSONB DEFAULT '[]',
+  workload INTEGER DEFAULT 0,
+  client_ratings DECIMAL DEFAULT 0,
+  tasks_completed INTEGER DEFAULT 0,
+  efficiency INTEGER DEFAULT 0,
+  documents JSONB DEFAULT '[]',
+  notes TEXT DEFAULT '',
+  emergency_contact JSONB,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_team_members_status ON team_members(status);
+CREATE INDEX IF NOT EXISTS idx_team_members_role ON team_members(role);
+CREATE INDEX IF NOT EXISTS idx_team_members_department ON team_members(department);
+
+CREATE TRIGGER team_members_updated_at
+  BEFORE UPDATE ON team_members
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+-- =============================================================
+-- 9. TEAM_ASSIGNMENTS
+-- =============================================================
+CREATE TABLE IF NOT EXISTS team_assignments (
+  id TEXT PRIMARY KEY,
+  team_member_id TEXT NOT NULL REFERENCES team_members(id) ON DELETE CASCADE,
+  client_id TEXT NOT NULL,
+  project_id TEXT,
+  role TEXT NOT NULL,
+  start_date DATE NOT NULL,
+  end_date DATE,
+  hours_allocated DECIMAL NOT NULL DEFAULT 0,
+  is_lead BOOLEAN DEFAULT FALSE,
+  status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'completed', 'paused')),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_team_assignments_member ON team_assignments(team_member_id);
+CREATE INDEX IF NOT EXISTS idx_team_assignments_client ON team_assignments(client_id);
+CREATE INDEX IF NOT EXISTS idx_team_assignments_status ON team_assignments(status);
+
+CREATE TRIGGER team_assignments_updated_at
+  BEFORE UPDATE ON team_assignments
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at();

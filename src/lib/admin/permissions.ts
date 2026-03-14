@@ -216,11 +216,8 @@ export const ROLES: Role[] = [
     permissions: [
       'system.view_analytics',
       'content.read', 'content.write', 'content.publish',
-      'users.read',
       'clients.read', 'clients.write', 'clients.portal',
-      'projects.read', 'projects.write', 'projects.timeline',
-      'finance.read', 'finance.write', 'finance.reports',
-      'settings.read'
+      'projects.read', 'projects.write', 'projects.timeline'
     ],
     hierarchy: 70
   },
@@ -231,8 +228,7 @@ export const ROLES: Role[] = [
     permissions: [
       'content.read', 'content.write',
       'clients.read', 'clients.write',
-      'projects.read', 'projects.write',
-      'finance.read'
+      'projects.read', 'projects.write'
     ],
     hierarchy: 50
   },
@@ -243,8 +239,7 @@ export const ROLES: Role[] = [
     permissions: [
       'content.read',
       'clients.read',
-      'projects.read',
-      'finance.read'
+      'projects.read'
     ],
     hierarchy: 10
   }

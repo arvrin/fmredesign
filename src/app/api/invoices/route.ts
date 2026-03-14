@@ -112,8 +112,8 @@ function buildRecord(body: Record<string, unknown>) {
 // ---------------------------------------------------------------------------
 
 export async function GET(request: NextRequest) {
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+  const auth = await requirePermission(request, 'finance.read');
+  if ('error' in auth) return auth.error;
 
   try {
     const { searchParams } = new URL(request.url);
