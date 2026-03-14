@@ -302,7 +302,7 @@ src/
 | `client_documents` | Shared files | id, client_id, name, file_url, file_type, category, file_size |
 | `share_links` | Public share tokens | id, client_id, token (unique), resource_type, resource_id, expires_at |
 | `client_sessions` | Portal sessions | id, client_id, email, client_name, expires_at |
-| `authorized_users` | Admin team members | id, mobile_number, name, email, role, permissions, status |
+| `authorized_users` | Admin login accounts (mobile-based auth, role/permissions) | id, mobile_number, name, email, role, permissions, status |
 | `admin_audit_log` | Audit trail | id, user_id, user_name, action, resource_type, resource_id, details (jsonb), ip_address, created_at |
 | `leads` | Lead capture (get-started form) | id, name, email, phone, company, budget, services, source, status, score, notes, created_at |
 | `invoices` | Invoice management | id, client_id, invoice_number, line_items (jsonb), subtotal, tax_rate, tax_amount, total, status, due_date, currency, cgst_amount, sgst_amount, igst_amount, place_of_supply, company_gstin |
@@ -899,13 +899,20 @@ Defined in `src/lib/admin/permissions.ts`. Used for admin user management.
 | Role | Hierarchy | Description |
 |------|-----------|-------------|
 | `super_admin` | 100 | Full system access (`system.full_access`) |
-| `admin` | 90 | All permissions except super_admin-only |
-| `manager` | 70 | Clients, projects, content, finance (read/write) |
-| `editor` | 50 | Content + clients + projects (read/write), finance (read) |
-| `viewer` | 10 | Read-only across content, clients, projects, finance |
+| `admin` | 90 | All permissions — finance, team, users, system, settings |
+| `manager` | 70 | Clients, projects, content (read/write) — **NO finance, team, users, settings** |
+| `editor` | 50 | Content + clients + projects (read/write) — **NO finance, team, users, settings** |
+| `viewer` | 10 | Read-only across content, clients, projects — **NO finance, team, users, settings** |
 
 ### Permission Categories
 `system` (2), `content` (4), `users` (4), `clients` (4), `projects` (4), `finance` (4), `settings` (3) — **23 total permissions**
+
+### Admin-Only Sections
+The following are restricted to `admin`/`super_admin` roles only:
+- **Finance**: Invoices, Proposals, Contracts (including Contracts tab in client detail)
+- **Team**: Team member management (`/admin/team`)
+- **System**: Users, Audit Log, Admin System, Settings
+- APIs enforce this via `requirePermission()` with `finance.*`, `users.*`, `settings.*` checks
 
 ### Usage
 ```ts
